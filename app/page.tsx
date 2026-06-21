@@ -43,8 +43,8 @@ export default function Home() {
           アーリーアクセス版・完全無料
         </p>
 
-        {/* 送客フッター */}
-        <div className="mt-16 pt-8 border-t border-gray-800">
+        {/* フッター */}
+        <div className="mt-16 pt-8 border-t border-gray-800 space-y-3">
           <p className="text-sm text-gray-500">
             労務・社会保険の相談は{' '}
             <a
@@ -57,6 +57,10 @@ export default function Home() {
             </a>
             {' '}（無料）
           </p>
+          <div className="flex gap-4 justify-center text-xs text-gray-600">
+            <Link href="/privacy" className="hover:text-gray-400">プライバシーポリシー</Link>
+            <Link href="/terms" className="hover:text-gray-400">利用規約</Link>
+          </div>
         </div>
       </div>
     </main>

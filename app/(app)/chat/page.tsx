@@ -1,11 +1,15 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import { Toast } from '@/components/ui/Toast'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  isTyping?: boolean
 }
 
 const ONBOARDING_MESSAGE: Message = {
@@ -17,15 +21,40 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([ONBOARDING_MESSAGE])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [toast, setToast] = useState({ show: false, message: '' })
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const showToast = useCallback((message: string) => {
+    setToast({ show: true, message })
+  }, [])
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
   function resetConversation() {
+    setShowResetConfirm(false)
     setMessages([ONBOARDING_MESSAGE])
     setInput('')
+  }
+
+  async function saveMemory(msgs: Message[]) {
+    try {
+      const res = await fetch('/api/memory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: msgs }),
+      })
+      if (res.ok) showToast('記憶を更新しました')
+    } catch {}
   }
 
   async function sendMessage() {
@@ -50,7 +79,8 @@ export default function ChatPage() {
       const decoder = new TextDecoder()
       let assistantContent = ''
 
-      setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+      // タイピングアニメーション開始
+      setMessages(prev => [...prev, { role: 'assistant', content: '', isTyping: true }])
 
       if (reader) {
         while (true) {
@@ -59,21 +89,17 @@ export default function ChatPage() {
           assistantContent += decoder.decode(value)
           setMessages(prev => [
             ...prev.slice(0, -1),
-            { role: 'assistant', content: assistantContent },
+            { role: 'assistant', content: assistantContent, isTyping: false },
           ])
         }
       }
 
       const finalMessages = [...newMessages, { role: 'assistant' as const, content: assistantContent }]
 
-      // 10メッセージごとに記憶保存（オンボーディングメッセージを除くカウント）
-      const userMessages = finalMessages.filter(m => m.role === 'user')
-      if (userMessages.length % 5 === 0) {
-        fetch('/api/memory', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: finalMessages }),
-        })
+      // 初回は3メッセージ後、以降は5往復ごとに記憶保存
+      const userCount = finalMessages.filter(m => m.role === 'user').length
+      if (userCount === 3 || (userCount > 3 && userCount % 5 === 0)) {
+        saveMemory(finalMessages)
       }
     } catch {
       setMessages(prev => [
@@ -88,13 +114,13 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen max-w-3xl mx-auto">
       {/* ヘッダー */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800 shrink-0">
         <span className="text-xl font-bold">
           <span className="text-violet-400">Memo</span>ly
         </span>
         <div className="flex items-center gap-4">
           <button
-            onClick={resetConversation}
+            onClick={() => setShowResetConfirm(true)}
             className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
           >
             新しい会話
@@ -102,6 +128,12 @@ export default function ChatPage() {
           <Link href="/memory" className="text-sm text-gray-400 hover:text-violet-400 transition-colors">
             記憶を見る
           </Link>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-600 hover:text-gray-400 transition-colors"
+          >
+            ログアウト
+          </button>
         </div>
       </header>
 
@@ -114,15 +146,28 @@ export default function ChatPage() {
                 ? 'bg-violet-600 text-white rounded-br-sm'
                 : 'bg-gray-800 text-gray-100 rounded-bl-sm'
             }`}>
-              {msg.content || <span className="opacity-50">...</span>}
+              {msg.isTyping ? (
+                <span className="flex gap-1 items-center h-4">
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
+                </span>
+              ) : (
+                msg.content
+              )}
             </div>
           </div>
         ))}
         <div ref={bottomRef} />
       </div>
 
+      {/* AI免責テキスト */}
+      <p className="text-center text-xs text-gray-700 px-4 pb-1">
+        AIの回答は参考情報です。重要な判断は専門家にご相談ください。
+      </p>
+
       {/* 入力エリア */}
-      <div className="px-4 py-4 border-t border-gray-800">
+      <div className="px-4 py-3 border-t border-gray-800 shrink-0">
         <div className="flex gap-2">
           <textarea
             value={input}
@@ -146,6 +191,37 @@ export default function ChatPage() {
           </button>
         </div>
       </div>
+
+      {/* リセット確認ダイアログ */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-sm w-full">
+            <p className="text-white font-semibold mb-2">会話をリセットしますか？</p>
+            <p className="text-gray-400 text-sm mb-6">現在の会話履歴は消えます。記憶はMemory Dashboardに保存されます。</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 py-2 border border-gray-600 text-gray-300 rounded-xl text-sm hover:border-gray-400 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={resetConversation}
+                className="flex-1 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm transition-colors"
+              >
+                リセット
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* トースト通知 */}
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        onHide={() => setToast(prev => ({ ...prev, show: false }))}
+      />
     </div>
   )
 }

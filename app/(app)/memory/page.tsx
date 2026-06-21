@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 
 interface Memory {
@@ -21,6 +21,7 @@ export default function MemoryPage() {
   const [memories, setMemories] = useState<Memory[]>([])
   const [profile, setProfile] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     fetch('/api/memory')
@@ -42,10 +43,23 @@ export default function MemoryPage() {
     else setProfile(prev => prev.filter(p => p.id !== id))
   }
 
+  const filteredMemories = useMemo(() =>
+    memories.filter(m => m.content.toLowerCase().includes(search.toLowerCase())),
+    [memories, search]
+  )
+
+  const filteredProfile = useMemo(() =>
+    profile.filter(p =>
+      p.key.toLowerCase().includes(search.toLowerCase()) ||
+      p.value.toLowerCase().includes(search.toLowerCase())
+    ),
+    [profile, search]
+  )
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <Link href="/chat" className="text-sm text-gray-500 hover:text-gray-300 mb-1 block">
             ← チャットに戻る
@@ -54,7 +68,19 @@ export default function MemoryPage() {
             <span className="text-violet-400">Memo</span>lyが覚えていること
           </h1>
         </div>
+        <span className="text-xs text-gray-600">{memories.length + profile.length}件</span>
       </div>
+
+      {/* 検索 */}
+      {(memories.length > 0 || profile.length > 0) && (
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="記憶を検索..."
+          className="w-full bg-gray-800 text-gray-100 placeholder-gray-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-violet-500 mb-6"
+        />
+      )}
 
       {loading && <p className="text-gray-500 text-center py-12">読み込み中...</p>}
 
@@ -70,13 +96,13 @@ export default function MemoryPage() {
       )}
 
       {/* プロファイル属性 */}
-      {profile.length > 0 && (
+      {filteredProfile.length > 0 && (
         <section className="mb-10">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
             あなたについて
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {profile.map(p => (
+            {filteredProfile.map(p => (
               <div key={p.id} className="bg-gray-800 rounded-xl px-4 py-3 flex items-start justify-between gap-2">
                 <div>
                   <p className="text-xs text-violet-400 mb-1">{p.key}</p>
@@ -95,13 +121,13 @@ export default function MemoryPage() {
       )}
 
       {/* 会話サマリー */}
-      {memories.length > 0 && (
+      {filteredMemories.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
             過去の会話
           </h2>
           <div className="space-y-3">
-            {memories.map(m => (
+            {filteredMemories.map(m => (
               <div key={m.id} className="bg-gray-800 rounded-xl px-4 py-3 flex items-start justify-between gap-2">
                 <div className="flex-1">
                   <p className="text-sm text-gray-100 leading-relaxed">{m.content}</p>
@@ -120,6 +146,12 @@ export default function MemoryPage() {
           </div>
         </section>
       )}
+
+      {/* フッター */}
+      <div className="mt-12 pt-6 border-t border-gray-800 flex gap-4 text-xs text-gray-600">
+        <Link href="/privacy" className="hover:text-gray-400">プライバシーポリシー</Link>
+        <Link href="/terms" className="hover:text-gray-400">利用規約</Link>
+      </div>
     </div>
   )
 }
