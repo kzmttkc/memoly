@@ -89,8 +89,12 @@ export default function ChatPage() {
           showToast('会話を記憶しました')
         }
         setMemoryCount(prev => (prev ?? 0) + 1)
+      } else {
+        showToast('記憶の保存に失敗しました。通信を確認してください。')
       }
-    } catch {}
+    } catch {
+      showToast('記憶の保存に失敗しました。通信を確認してください。')
+    }
   }
 
   async function reportMessage(content: string) {

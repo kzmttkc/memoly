@@ -1,22 +1,47 @@
 {
-  "name": "Memoly",
+  "name": "Memoly — あなたのことを覚えているAI",
   "short_name": "Memoly",
-  "description": "あなたのことを覚えているAI",
+  "description": "会話を重ねるごとにあなたのことを深く覚えていくパーソナルAIチャット。毎回ゼロから説明しなくていい。",
   "start_url": "/chat",
   "display": "standalone",
   "background_color": "#030712",
   "theme_color": "#7c3aed",
   "orientation": "portrait",
+  "lang": "ja",
+  "categories": ["productivity", "lifestyle", "utilities"],
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "チャット画面"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "チャットを始める",
+      "url": "/chat",
+      "description": "Memolyとの会話を始める"
+    },
+    {
+      "name": "記憶を見る",
+      "url": "/memory",
+      "description": "Memolyが覚えていることを確認する"
     }
   ]
 }
