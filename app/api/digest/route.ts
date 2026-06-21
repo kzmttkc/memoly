@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { anthropic, MEMORY_MODEL } from '@/lib/claude'
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly.vercel.app'
+
 // Vercel Cronから呼ばれる週次ダイジェストメール送信API
 // Authorization: Bearer CRON_SECRET で保護
 export async function GET(req: Request) {
@@ -85,15 +87,15 @@ export async function GET(req: Request) {
           to: email,
           subject: '今週Memolyが覚えたこと 🧠',
           headers: {
-            'List-Unsubscribe': '<https://memoly-chat.vercel.app/unsubscribe>',
+            'List-Unsubscribe': `<${APP_URL}/unsubscribe>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
-          text: `${body}\n\n→ チャットを続ける: https://memoly-chat.vercel.app/chat\n\n配信停止: https://memoly-chat.vercel.app/unsubscribe\n\n送信者: kazumototakeshi@gmail.com`,
+          text: `${body}\n\n→ チャットを続ける: ${APP_URL}/chat\n\n配信停止: ${APP_URL}/unsubscribe\n\n送信者: kazumototakeshi@gmail.com`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
             <h2 style="color:#7c3aed">今週Memolyが覚えたこと 🧠</h2>
             <p style="color:#374151;line-height:1.8">${body.replace(/\n/g, '<br>')}</p>
             <hr style="border-color:#e5e7eb;margin:24px 0">
-            <a href="https://memoly-chat.vercel.app/chat" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block">チャットを続ける</a>
+            <a href="${APP_URL}/chat" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block">チャットを続ける</a>
             <hr style="border-color:#e5e7eb;margin:24px 0">
             <p style="color:#9ca3af;font-size:11px;line-height:1.8">
               【送信者情報】<br>
@@ -102,7 +104,7 @@ export async function GET(req: Request) {
               所在地：日本<br>
               お問い合わせ：kazumototakeshi@gmail.com<br><br>
               このメールはMemolyの週次ダイジェストとして送信されています。<br>
-              <a href="https://memoly-chat.vercel.app/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>
+              <a href="${APP_URL}/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>
             </p>
           </div>`
         }),
