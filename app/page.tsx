@@ -24,11 +24,17 @@ export default function Home() {
       <div className="max-w-xl w-full">
 
         {/* ロゴ */}
-        <div className="mb-6">
+        <div className="mb-4">
           <span className="text-5xl font-bold tracking-tight">
             <span className="text-violet-400">Memo</span>
             <span className="text-white">ly</span>
           </span>
+        </div>
+
+        {/* ローンチバッジ */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-950 border border-violet-700 text-violet-300 text-xs font-medium mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+          7/1 一般公開
         </div>
 
         {/* キャッチコピー */}
