@@ -25,6 +25,8 @@ export default function MemoryPage() {
   const [search, setSearch] = useState('')
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -45,6 +47,16 @@ export default function MemoryPage() {
     })
     if (type === 'memory') setMemories(prev => prev.filter(m => m.id !== id))
     else setProfile(prev => prev.filter(p => p.id !== id))
+  }
+
+  async function saveEdit(id: string) {
+    await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, value: editValue }),
+    })
+    setProfile(prev => prev.map(p => p.id === id ? { ...p, value: editValue } : p))
+    setEditingId(null)
   }
 
   async function deleteAccount() {
@@ -71,6 +83,14 @@ export default function MemoryPage() {
     [profile, search]
   )
 
+  // 「○ヶ月前の記憶」をランダムに1件取得
+  const oldMemory = useMemo(() => {
+    const threeMonthsAgo = new Date()
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+    const old = memories.filter(m => new Date(m.created_at) < threeMonthsAgo)
+    return old.length > 0 ? old[Math.floor(Math.random() * old.length)] : null
+  }, [memories])
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       {/* ヘッダー */}
@@ -85,6 +105,16 @@ export default function MemoryPage() {
         </div>
         <span className="text-xs text-gray-600">{memories.length + profile.length}件</span>
       </div>
+
+      {/* 過去の記憶ハイライト */}
+      {oldMemory && (
+        <div className="bg-violet-950/40 border border-violet-800/30 rounded-xl px-4 py-3 mb-6">
+          <p className="text-xs text-violet-400 mb-1">
+            {Math.floor((Date.now() - new Date(oldMemory.created_at).getTime()) / (1000 * 60 * 60 * 24 * 30))}ヶ月前の記憶
+          </p>
+          <p className="text-sm text-gray-300">{oldMemory.content}</p>
+        </div>
+      )}
 
       {/* 検索 */}
       {(memories.length > 0 || profile.length > 0) && (
@@ -118,17 +148,44 @@ export default function MemoryPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filteredProfile.map(p => (
-              <div key={p.id} className="bg-gray-800 rounded-xl px-4 py-3 flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-xs text-violet-400 mb-1">{p.key}</p>
-                  <p className="text-sm text-gray-100">{p.value}</p>
-                </div>
-                <button
-                  onClick={() => deleteItem(p.id, 'profile')}
-                  className="text-gray-600 hover:text-red-400 transition-colors text-xs mt-1 shrink-0"
-                >
-                  削除
-                </button>
+              <div key={p.id} className="bg-gray-800 rounded-xl px-4 py-3">
+                <p className="text-xs text-violet-400 mb-1">{p.key}</p>
+                {editingId === p.id ? (
+                  <div className="flex gap-2 items-center mt-1">
+                    <input
+                      value={editValue}
+                      onChange={e => setEditValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveEdit(p.id) }}
+                      autoFocus
+                      className="flex-1 bg-gray-700 text-gray-100 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-violet-500"
+                    />
+                    <button onClick={() => saveEdit(p.id)} className="text-violet-400 text-xs hover:text-violet-300">保存</button>
+                    <button onClick={() => setEditingId(null)} className="text-gray-500 text-xs hover:text-gray-300">キャンセル</button>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-2">
+                    <p
+                      className="text-sm text-gray-100 cursor-pointer hover:text-violet-300 transition-colors"
+                      onClick={() => { setEditingId(p.id); setEditValue(p.value) }}
+                    >
+                      {p.value}
+                    </p>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => { setEditingId(p.id); setEditValue(p.value) }}
+                        className="text-gray-600 hover:text-violet-400 transition-colors text-xs"
+                      >
+                        編集
+                      </button>
+                      <button
+                        onClick={() => deleteItem(p.id, 'profile')}
+                        className="text-gray-600 hover:text-red-400 transition-colors text-xs"
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

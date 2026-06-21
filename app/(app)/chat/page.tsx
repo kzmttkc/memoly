@@ -17,14 +17,34 @@ const ONBOARDING_MESSAGE: Message = {
   content: 'こんにちは！私はMemolyです。会話を重ねるごとに、あなたのことを覚えていきます。\n\nまず教えてください — お仕事は何をされていますか？',
 }
 
+const SAMPLE_PROMPTS = [
+  '今週の仕事の悩みを聞いて',
+  '私の1週間を振り返りたい',
+  '明日の優先タスクを整理して',
+  '最近気になっていることを話したい',
+]
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([ONBOARDING_MESSAGE])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState({ show: false, message: '' })
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [memoryCount, setMemoryCount] = useState<number | null>(null)
+  const [isFirstMessage, setIsFirstMessage] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  // 記憶件数を取得
+  useEffect(() => {
+    fetch('/api/memory')
+      .then(r => r.json())
+      .then(data => {
+        const count = (data.memories?.length ?? 0) + (data.profile?.length ?? 0)
+        setMemoryCount(count)
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -42,8 +62,12 @@ export default function ChatPage() {
 
   function resetConversation() {
     setShowResetConfirm(false)
-    setMessages([ONBOARDING_MESSAGE])
+    const countMsg = memoryCount && memoryCount > 0
+      ? `新しい会話を始めます。\n\nMemolyはあなたの${memoryCount}件の記憶を保持しています。前回の続きもいつでも話せます。`
+      : 'こんにちは！私はMemolyです。会話を重ねるごとに、あなたのことを覚えていきます。\n\nまず教えてください — お仕事は何をされていますか？'
+    setMessages([{ role: 'assistant', content: countMsg }])
     setInput('')
+    setIsFirstMessage(true)
   }
 
   async function saveMemory(msgs: Message[]) {
@@ -53,14 +77,30 @@ export default function ChatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: msgs }),
       })
-      if (res.ok) showToast('記憶を更新しました')
+      if (res.ok) {
+        const data = await res.json()
+        // 具体的な内容をトーストで表示
+        const extracted = data.extraction
+        if (extracted?.profile && Object.keys(extracted.profile).length > 0) {
+          const [key, val] = Object.entries(extracted.profile)[0] as [string, string]
+          showToast(`「${key}：${val}」を記憶しました`)
+        } else if (extracted?.summary) {
+          showToast('会話を記憶しました')
+        } else {
+          showToast('記憶を更新しました')
+        }
+        // バッジカウントを更新
+        setMemoryCount(prev => (prev ?? 0) + 1)
+      }
     } catch {}
   }
 
-  async function sendMessage() {
-    if (!input.trim() || loading) return
+  async function sendMessage(text?: string) {
+    const content = text ?? input
+    if (!content.trim() || loading) return
 
-    const userMessage: Message = { role: 'user', content: input }
+    setIsFirstMessage(false)
+    const userMessage: Message = { role: 'user', content }
     const newMessages = [...messages, userMessage]
     setMessages(newMessages)
     setInput('')
@@ -79,7 +119,6 @@ export default function ChatPage() {
       const decoder = new TextDecoder()
       let assistantContent = ''
 
-      // タイピングアニメーション開始
       setMessages(prev => [...prev, { role: 'assistant', content: '', isTyping: true }])
 
       if (reader) {
@@ -95,8 +134,6 @@ export default function ChatPage() {
       }
 
       const finalMessages = [...newMessages, { role: 'assistant' as const, content: assistantContent }]
-
-      // 初回は3メッセージ後、以降は5往復ごとに記憶保存
       const userCount = finalMessages.filter(m => m.role === 'user').length
       if (userCount === 3 || (userCount > 3 && userCount % 5 === 0)) {
         saveMemory(finalMessages)
@@ -112,12 +149,22 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto">
+    <div className="flex flex-col max-w-3xl mx-auto" style={{ height: '100dvh' }}>
       {/* ヘッダー */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800 shrink-0">
-        <span className="text-xl font-bold">
-          <span className="text-violet-400">Memo</span>ly
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xl font-bold">
+            <span className="text-violet-400">Memo</span>ly
+          </span>
+          {memoryCount !== null && memoryCount > 0 && (
+            <Link
+              href="/memory"
+              className="text-xs bg-violet-900/50 text-violet-300 px-2 py-0.5 rounded-full hover:bg-violet-800/60 transition-colors"
+            >
+              記憶 {memoryCount}件
+            </Link>
+          )}
+        </div>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setShowResetConfirm(true)}
@@ -158,11 +205,27 @@ export default function ChatPage() {
             </div>
           </div>
         ))}
+
+        {/* 初回サンプルプロンプトチップ */}
+        {isFirstMessage && messages.length === 1 && (
+          <div className="flex flex-wrap gap-2 justify-center mt-4">
+            {SAMPLE_PROMPTS.map(prompt => (
+              <button
+                key={prompt}
+                onClick={() => sendMessage(prompt)}
+                className="text-xs px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl border border-gray-700 hover:border-gray-500 transition-colors"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
       {/* AI免責テキスト */}
-      <p className="text-center text-xs text-gray-700 px-4 pb-1">
+      <p className="text-center text-xs text-gray-700 px-4 pb-1 shrink-0">
         AIの回答は参考情報です。重要な判断は専門家にご相談ください。
       </p>
 
@@ -183,7 +246,7 @@ export default function ChatPage() {
             className="flex-1 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-xl px-4 py-3 text-sm resize-none outline-none focus:ring-1 focus:ring-violet-500"
           />
           <button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
             className="px-4 py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition-colors text-sm font-medium"
           >
@@ -197,7 +260,12 @@ export default function ChatPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-sm w-full">
             <p className="text-white font-semibold mb-2">会話をリセットしますか？</p>
-            <p className="text-gray-400 text-sm mb-6">現在の会話履歴は消えます。記憶はMemory Dashboardに保存されます。</p>
+            <p className="text-gray-400 text-sm mb-6">
+              現在の会話履歴は消えます。
+              {memoryCount && memoryCount > 0
+                ? `記憶（${memoryCount}件）はそのまま保持されます。`
+                : '記憶はMemory Dashboardに保存されます。'}
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowResetConfirm(false)}
@@ -216,7 +284,6 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* トースト通知 */}
       <Toast
         show={toast.show}
         message={toast.message}

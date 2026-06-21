@@ -34,6 +34,9 @@ export async function POST(req: Request) {
       const email = authUser?.user?.email
       if (!email) continue
 
+      // 配信停止チェック
+      if (authUser?.user?.user_metadata?.digest_unsubscribed) continue
+
       // 直近7日の記憶を取得
       const { data: memories } = await admin
         .from('memoly_memories')
@@ -81,13 +84,20 @@ export async function POST(req: Request) {
           from: 'Memoly <noreply@memoly-chat.vercel.app>',
           to: email,
           subject: '今週Memolyが覚えたこと 🧠',
-          text: `${body}\n\n→ チャットを続ける: https://memoly-chat.vercel.app/chat\n\n配信停止はアカウント設定から`,
+          headers: {
+            'List-Unsubscribe': '<https://memoly-chat.vercel.app/unsubscribe>',
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
+          text: `${body}\n\n→ チャットを続ける: https://memoly-chat.vercel.app/chat\n\n配信停止: https://memoly-chat.vercel.app/unsubscribe\n\n送信者: kazumototakeshi@gmail.com`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
             <h2 style="color:#7c3aed">今週Memolyが覚えたこと 🧠</h2>
             <p style="color:#374151;line-height:1.8">${body.replace(/\n/g, '<br>')}</p>
             <hr style="border-color:#e5e7eb;margin:24px 0">
             <a href="https://memoly-chat.vercel.app/chat" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block">チャットを続ける</a>
-            <p style="color:#9ca3af;font-size:12px;margin-top:24px">配信停止は<a href="https://memoly-chat.vercel.app/memory" style="color:#7c3aed">アカウント設定</a>から</p>
+            <p style="color:#9ca3af;font-size:12px;margin-top:24px">
+              このメールは週次ダイジェストとして送信されています。<br>
+              <a href="https://memoly-chat.vercel.app/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>　|　送信者: kazumototakeshi@gmail.com
+            </p>
           </div>`
         }),
       })
