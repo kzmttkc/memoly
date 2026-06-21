@@ -32,10 +32,10 @@ export default function ChatPage() {
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [memoryCount, setMemoryCount] = useState<number | null>(null)
   const [isFirstMessage, setIsFirstMessage] = useState(true)
+  const [reportingIndex, setReportingIndex] = useState<number | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
-  // 記憶件数を取得
   useEffect(() => {
     fetch('/api/memory')
       .then(r => r.json())
@@ -79,20 +79,26 @@ export default function ChatPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        // 具体的な内容をトーストで表示
         const extracted = data.extraction
         if (extracted?.profile && Object.keys(extracted.profile).length > 0) {
           const [key, val] = Object.entries(extracted.profile)[0] as [string, string]
           showToast(`「${key}：${val}」を記憶しました`)
-        } else if (extracted?.summary) {
-          showToast('会話を記憶しました')
         } else {
-          showToast('記憶を更新しました')
+          showToast('会話を記憶しました')
         }
-        // バッジカウントを更新
         setMemoryCount(prev => (prev ?? 0) + 1)
       }
     } catch {}
+  }
+
+  async function reportMessage(content: string) {
+    await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, reason: '不適切なAI回答' }),
+    })
+    setReportingIndex(null)
+    showToast('報告しました。ありがとうございます。')
   }
 
   async function sendMessage(text?: string) {
@@ -113,6 +119,14 @@ export default function ChatPage() {
         body: JSON.stringify({ messages: newMessages }),
       })
 
+      if (res.status === 429) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'リクエストが多すぎます。1分後にもう一度お試しください。',
+        }])
+        setLoading(false)
+        return
+      }
       if (!res.ok) throw new Error('Chat failed')
 
       const reader = res.body?.getReader()
@@ -153,13 +167,14 @@ export default function ChatPage() {
       {/* ヘッダー */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-xl font-bold">
+          <span className="text-xl font-bold" aria-label="Memoly">
             <span className="text-violet-400">Memo</span>ly
           </span>
           {memoryCount !== null && memoryCount > 0 && (
             <Link
               href="/memory"
               className="text-xs bg-violet-900/50 text-violet-300 px-2 py-0.5 rounded-full hover:bg-violet-800/60 transition-colors"
+              aria-label={`記憶 ${memoryCount}件 - Memory Dashboardを開く`}
             >
               記憶 {memoryCount}件
             </Link>
@@ -169,6 +184,7 @@ export default function ChatPage() {
           <button
             onClick={() => setShowResetConfirm(true)}
             className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            aria-label="会話をリセット"
           >
             新しい会話
           </button>
@@ -178,6 +194,7 @@ export default function ChatPage() {
           <button
             onClick={handleLogout}
             className="text-sm text-gray-600 hover:text-gray-400 transition-colors"
+            aria-label="ログアウト"
           >
             ログアウト
           </button>
@@ -185,22 +202,50 @@ export default function ChatPage() {
       </header>
 
       {/* メッセージ一覧 */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div
+        className="flex-1 overflow-y-auto px-4 py-6 space-y-6"
+        role="log"
+        aria-live="polite"
+        aria-label="チャット履歴"
+      >
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-              msg.role === 'user'
-                ? 'bg-violet-600 text-white rounded-br-sm'
-                : 'bg-gray-800 text-gray-100 rounded-bl-sm'
-            }`}>
-              {msg.isTyping ? (
-                <span className="flex gap-1 items-center h-4">
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
-                </span>
-              ) : (
-                msg.content
+            <div className="group relative">
+              <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                msg.role === 'user'
+                  ? 'bg-violet-600 text-white rounded-br-sm'
+                  : 'bg-gray-800 text-gray-100 rounded-bl-sm'
+              }`}>
+                {msg.isTyping ? (
+                  <span className="flex gap-1 items-center h-4" aria-label="入力中">
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full motion-safe:animate-bounce [animation-delay:0ms]" />
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full motion-safe:animate-bounce [animation-delay:150ms]" />
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full motion-safe:animate-bounce [animation-delay:300ms]" />
+                  </span>
+                ) : (
+                  msg.content
+                )}
+              </div>
+              {/* AI回答の報告ボタン */}
+              {msg.role === 'assistant' && !msg.isTyping && (
+                <div className="absolute -bottom-5 left-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {reportingIndex === i ? (
+                    <button
+                      onClick={() => reportMessage(msg.content)}
+                      className="text-xs text-red-400 hover:text-red-300"
+                    >
+                      この回答を報告する
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setReportingIndex(i)}
+                      className="text-xs text-gray-700 hover:text-gray-500"
+                      aria-label="この回答を報告"
+                    >
+                      報告
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -208,7 +253,7 @@ export default function ChatPage() {
 
         {/* 初回サンプルプロンプトチップ */}
         {isFirstMessage && messages.length === 1 && (
-          <div className="flex flex-wrap gap-2 justify-center mt-4">
+          <div className="flex flex-wrap gap-2 justify-center mt-4" role="group" aria-label="会話の始め方の例">
             {SAMPLE_PROMPTS.map(prompt => (
               <button
                 key={prompt}
@@ -243,12 +288,14 @@ export default function ChatPage() {
             }}
             placeholder="メッセージを入力... (Enterで送信)"
             rows={1}
-            className="flex-1 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-xl px-4 py-3 text-sm resize-none outline-none focus:ring-1 focus:ring-violet-500"
+            aria-label="メッセージを入力"
+            className="flex-1 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-xl px-4 py-3 text-sm resize-none outline-none focus:ring-2 focus:ring-violet-500"
           />
           <button
             onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
-            className="px-4 py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition-colors text-sm font-medium"
+            aria-label="送信"
+            className="px-4 py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-400"
           >
             {loading ? '...' : '送信'}
           </button>
@@ -257,9 +304,14 @@ export default function ChatPage() {
 
       {/* リセット確認ダイアログ */}
       {showResetConfirm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6">
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reset-dialog-title"
+        >
           <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-sm w-full">
-            <p className="text-white font-semibold mb-2">会話をリセットしますか？</p>
+            <p id="reset-dialog-title" className="text-white font-semibold mb-2">会話をリセットしますか？</p>
             <p className="text-gray-400 text-sm mb-6">
               現在の会話履歴は消えます。
               {memoryCount && memoryCount > 0
@@ -269,13 +321,13 @@ export default function ChatPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowResetConfirm(false)}
-                className="flex-1 py-2 border border-gray-600 text-gray-300 rounded-xl text-sm hover:border-gray-400 transition-colors"
+                className="flex-1 py-2 border border-gray-600 text-gray-300 rounded-xl text-sm hover:border-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 キャンセル
               </button>
               <button
                 onClick={resetConversation}
-                className="flex-1 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm transition-colors"
+                className="flex-1 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-violet-400"
               >
                 リセット
               </button>

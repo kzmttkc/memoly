@@ -94,9 +94,15 @@ export async function GET(req: Request) {
             <p style="color:#374151;line-height:1.8">${body.replace(/\n/g, '<br>')}</p>
             <hr style="border-color:#e5e7eb;margin:24px 0">
             <a href="https://memoly-chat.vercel.app/chat" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block">チャットを続ける</a>
-            <p style="color:#9ca3af;font-size:12px;margin-top:24px">
-              このメールは週次ダイジェストとして送信されています。<br>
-              <a href="https://memoly-chat.vercel.app/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>　|　送信者: kazumototakeshi@gmail.com
+            <hr style="border-color:#e5e7eb;margin:24px 0">
+            <p style="color:#9ca3af;font-size:11px;line-height:1.8">
+              【送信者情報】<br>
+              サービス名：Memoly<br>
+              運営者：Kazumoto Takeshi<br>
+              所在地：日本<br>
+              お問い合わせ：kazumototakeshi@gmail.com<br><br>
+              このメールはMemolyの週次ダイジェストとして送信されています。<br>
+              <a href="https://memoly-chat.vercel.app/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>
             </p>
           </div>`
         }),
