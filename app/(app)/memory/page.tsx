@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface Memory {
   id: string
@@ -22,6 +23,9 @@ export default function MemoryPage() {
   const [profile, setProfile] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     fetch('/api/memory')
@@ -41,6 +45,17 @@ export default function MemoryPage() {
     })
     if (type === 'memory') setMemories(prev => prev.filter(m => m.id !== id))
     else setProfile(prev => prev.filter(p => p.id !== id))
+  }
+
+  async function deleteAccount() {
+    setDeleting(true)
+    try {
+      const res = await fetch('/api/account', { method: 'DELETE' })
+      if (res.ok) router.push('/?deleted=1')
+    } finally {
+      setDeleting(false)
+      setShowDeleteAccount(false)
+    }
   }
 
   const filteredMemories = useMemo(() =>
@@ -148,10 +163,45 @@ export default function MemoryPage() {
       )}
 
       {/* フッター */}
-      <div className="mt-12 pt-6 border-t border-gray-800 flex gap-4 text-xs text-gray-600">
-        <Link href="/privacy" className="hover:text-gray-400">プライバシーポリシー</Link>
-        <Link href="/terms" className="hover:text-gray-400">利用規約</Link>
+      <div className="mt-12 pt-6 border-t border-gray-800 space-y-4">
+        <div className="flex gap-4 text-xs text-gray-600">
+          <Link href="/privacy" className="hover:text-gray-400">プライバシーポリシー</Link>
+          <Link href="/terms" className="hover:text-gray-400">利用規約</Link>
+        </div>
+        <button
+          onClick={() => setShowDeleteAccount(true)}
+          className="text-xs text-red-800 hover:text-red-500 transition-colors"
+        >
+          アカウントを削除する
+        </button>
       </div>
+
+      {/* アカウント削除確認ダイアログ */}
+      {showDeleteAccount && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-sm w-full">
+            <p className="text-white font-semibold mb-2">アカウントを削除しますか？</p>
+            <p className="text-gray-400 text-sm mb-6">
+              全ての記憶・会話・プロフィールデータが完全に削除されます。この操作は取り消せません。
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteAccount(false)}
+                className="flex-1 py-2 border border-gray-600 text-gray-300 rounded-xl text-sm hover:border-gray-400 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={deleteAccount}
+                disabled={deleting}
+                className="flex-1 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-40 text-white rounded-xl text-sm transition-colors"
+              >
+                {deleting ? '削除中...' : '削除する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

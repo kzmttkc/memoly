@@ -4,14 +4,31 @@ import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"] });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
+
 export const metadata: Metadata = {
   title: "Memoly — あなたのことを覚えているAI",
-  description: "長期記憶を持つパーソナルAIチャットアシスタント。毎回ゼロから説明しなくていい。",
+  description: "毎回ゼロから説明しなくていい。会話のたびにAIがあなたのことを深く覚えていくパーソナルAIアシスタント。",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Memoly",
+  },
+  openGraph: {
+    title: "Memoly — あなたのことを覚えているAI",
+    description: "毎回ゼロから説明しなくていい。会話のたびにAIがあなたのことを深く覚えていくパーソナルAIアシスタント。",
+    url: APP_URL,
+    siteName: "Memoly",
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Memoly — あなたのことを覚えているAI",
+    description: "毎回ゼロから説明しなくていい。会話のたびにAIがあなたのことを深く覚えていくパーソナルAIアシスタント。",
+    site: "@takeshi_ai_jp",
+    creator: "@takeshi_ai_jp",
   },
 };
 

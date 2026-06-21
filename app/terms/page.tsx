@@ -16,12 +16,23 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-white font-semibold text-base mb-3">2. AIの回答について</h2>
+          <h2 className="text-white font-semibold text-base mb-3">2. 利用資格・年齢制限</h2>
+          <p className="text-yellow-400/80 font-medium">本サービスは13歳以上の方のみご利用いただけます。</p>
+          <p className="mt-2">18歳未満の方は、保護者の同意のもとでご利用ください。</p>
+        </section>
+
+        <section>
+          <h2 className="text-white font-semibold text-base mb-3">3. AIの回答について</h2>
           <p className="text-yellow-400/80">AIの回答は参考情報であり、正確性・完全性を保証するものではありません。医療・法律・財務等の専門的判断が必要な事項については、必ず専門家にご相談ください。</p>
         </section>
 
         <section>
-          <h2 className="text-white font-semibold text-base mb-3">3. 禁止事項</h2>
+          <h2 className="text-white font-semibold text-base mb-3">4. データの保持期間</h2>
+          <p>収集したデータ（会話サマリー・プロファイル属性）はアカウントが存在する限り保持されます。アカウント削除と同時に全データを削除します。Memory Dashboardから個別の記憶・属性を随時削除できます。</p>
+        </section>
+
+        <section>
+          <h2 className="text-white font-semibold text-base mb-3">5. 禁止事項</h2>
           <ul className="list-disc list-inside space-y-1 text-gray-400">
             <li>違法行為・犯罪に関する情報の取得</li>
             <li>他者への誹謗中傷・ハラスメント</li>
@@ -32,22 +43,22 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-white font-semibold text-base mb-3">4. 免責事項</h2>
+          <h2 className="text-white font-semibold text-base mb-3">6. 免責事項</h2>
           <p>本サービスの利用により生じた損害について、運営者は一切の責任を負いません。サービスは予告なく変更・停止される場合があります。</p>
         </section>
 
         <section>
-          <h2 className="text-white font-semibold text-base mb-3">5. 知的財産</h2>
+          <h2 className="text-white font-semibold text-base mb-3">7. 知的財産</h2>
           <p>ユーザーが入力したコンテンツの権利はユーザーに帰属します。AIが生成したコンテンツの利用はAnthropicの利用規約に従います。</p>
         </section>
 
         <section>
-          <h2 className="text-white font-semibold text-base mb-3">6. 準拠法</h2>
+          <h2 className="text-white font-semibold text-base mb-3">8. 準拠法</h2>
           <p>本規約は日本法に準拠します。</p>
         </section>
 
         <section>
-          <h2 className="text-white font-semibold text-base mb-3">7. お問い合わせ</h2>
+          <h2 className="text-white font-semibold text-base mb-3">9. お問い合わせ</h2>
           <p><a href="mailto:kazumototakeshi@gmail.com" className="text-violet-400 underline">kazumototakeshi@gmail.com</a></p>
         </section>
       </div>
