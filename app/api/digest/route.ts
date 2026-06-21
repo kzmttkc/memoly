@@ -81,7 +81,7 @@ export async function POST(req: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Memoly <noreply@memoly-chat.vercel.app>',
+          from: 'Memoly <onboarding@resend.dev>',
           to: email,
           subject: '今週Memolyが覚えたこと 🧠',
           headers: {
