@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { anthropic, MEMORY_MODEL } from '@/lib/claude'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly.vercel.app'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
 
 // Vercel Cronから呼ばれる週次ダイジェストメール送信API
 // Authorization: Bearer CRON_SECRET で保護

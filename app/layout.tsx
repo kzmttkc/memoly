@@ -6,7 +6,7 @@ import { CookieBanner } from "@/components/ui/CookieBanner";
 
 const geist = Geist({ subsets: ["latin"] });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly.vercel.app'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
 const DESC = '毎回ゼロから説明しなくていい。会話のたびにAIがあなたのことを深く覚えていくパーソナルAIアシスタント。'
 
 export const metadata: Metadata = {
