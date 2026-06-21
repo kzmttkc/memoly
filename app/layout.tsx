@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     siteName: "Memoly",
     locale: "ja_JP",
     type: "website",
+    images: [{ url: `${APP_URL}/og-image.png`, width: 1200, height: 630, alt: "Memoly" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
     description: DESC,
     site: "@takeshi_ai_jp",
     creator: "@takeshi_ai_jp",
+    images: [`${APP_URL}/og-image.png`],
   },
 };
 
