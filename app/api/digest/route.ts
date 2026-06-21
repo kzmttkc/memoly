@@ -4,7 +4,7 @@ import { anthropic, MEMORY_MODEL } from '@/lib/claude'
 
 // Vercel Cronから呼ばれる週次ダイジェストメール送信API
 // Authorization: Bearer CRON_SECRET で保護
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
