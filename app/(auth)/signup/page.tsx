@@ -8,6 +8,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [birthYear, setBirthYear] = useState('')
+  const [digestOptIn, setDigestOptIn] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -29,7 +30,10 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${location.origin}/chat` },
+      options: {
+        emailRedirectTo: `${location.origin}/chat`,
+        data: { digest_unsubscribed: !digestOptIn },
+      },
     })
 
     if (error) {
@@ -99,6 +103,19 @@ export default function SignupPage() {
               ))}
             </select>
           </div>
+
+          {/* 週次ダイジェストオプトイン */}
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={digestOptIn}
+              onChange={e => setDigestOptIn(e.target.checked)}
+              className="mt-0.5 accent-violet-500"
+            />
+            <span className="text-xs text-gray-400">
+              週1回「Memolyが覚えたこと」をメールで受け取る（任意・いつでも停止可能）
+            </span>
+          </label>
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 

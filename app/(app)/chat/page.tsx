@@ -18,11 +18,13 @@ const ONBOARDING_MESSAGE: Message = {
 }
 
 const SAMPLE_PROMPTS = [
-  '今週の仕事の悩みを聞いて',
-  '私の1週間を振り返りたい',
-  '明日の優先タスクを整理して',
-  '最近気になっていることを話したい',
+  '今週の仕事で一番しんどかったことを聞いて',
+  '副業を始めたいけど何から考えればいい？',
+  '私の1週間を振り返って整理して',
+  '最近モヤモヤしていることを話したい',
 ]
+
+const ROUMU_TRIGGER_PATTERN = /社会保険|雇用保険|有給|残業代|副業.*確定申告|sharoushi-agent/
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([ONBOARDING_MESSAGE])
@@ -226,21 +228,30 @@ export default function ChatPage() {
                   msg.content
                 )}
               </div>
-              {/* AI回答の報告ボタン */}
-              {msg.role === 'assistant' && !msg.isTyping && (
-                <div className="absolute -bottom-5 left-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* AI回答の報告（タップ/クリック対応・モバイル完全動作） */}
+              {msg.role === 'assistant' && !msg.isTyping && msg.content && (
+                <div className="mt-1">
                   {reportingIndex === i ? (
-                    <button
-                      onClick={() => reportMessage(msg.content)}
-                      className="text-xs text-red-400 hover:text-red-300"
-                    >
-                      この回答を報告する
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => reportMessage(msg.content)}
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        aria-label="この回答を報告する"
+                      >
+                        この回答を報告する
+                      </button>
+                      <button
+                        onClick={() => setReportingIndex(null)}
+                        className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
                   ) : (
                     <button
                       onClick={() => setReportingIndex(i)}
-                      className="text-xs text-gray-700 hover:text-gray-500"
-                      aria-label="この回答を報告"
+                      className="text-xs text-gray-700 hover:text-gray-500 transition-colors"
+                      aria-label="回答を報告"
                     >
                       報告
                     </button>
@@ -273,6 +284,23 @@ export default function ChatPage() {
       <p className="text-center text-xs text-gray-700 px-4 pb-1 shrink-0">
         AIの回答は参考情報です。重要な判断は専門家にご相談ください。
       </p>
+
+      {/* 労務送客バナー — 労務トピックが検出されたとき or 常時表示 */}
+      {messages.some(m => m.role === 'assistant' && ROUMU_TRIGGER_PATTERN.test(m.content)) && (
+        <div className="px-4 pb-2 shrink-0">
+          <a
+            href="https://sharoushi-agent.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-950 border border-indigo-800 hover:bg-indigo-900 transition-colors text-xs"
+            onClick={() => { try { (window as any).plausible?.('memoly_sharoushi_click') } catch {} }}
+          >
+            <span>⚖️</span>
+            <span className="text-indigo-300">労務・社会保険の詳しい相談は <strong className="text-indigo-200">sharoushi-agent.com</strong>（無料）</span>
+            <span className="text-indigo-500 ml-auto">›</span>
+          </a>
+        </div>
+      )}
 
       {/* 入力エリア */}
       <div className="px-4 py-3 border-t border-gray-800 shrink-0">

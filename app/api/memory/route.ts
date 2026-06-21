@@ -8,8 +8,15 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { messages, conversationId } = await req.json()
+  const body = await req.json()
+  const { messages, conversationId } = body
   if (!messages?.length) return NextResponse.json({ ok: true })
+
+  // 入力サイズ制限（50KB超は拒否）
+  const bodySize = JSON.stringify(body).length
+  if (bodySize > 50_000) {
+    return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+  }
 
   const extraction = await extractMemory(messages)
 

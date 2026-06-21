@@ -235,9 +235,14 @@ export default function MemoryPage() {
 
       {/* アカウント削除確認ダイアログ */}
       {showDeleteAccount && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6">
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-account-title"
+        >
           <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-sm w-full">
-            <p className="text-white font-semibold mb-2">アカウントを削除しますか？</p>
+            <p id="delete-account-title" className="text-white font-semibold mb-2">アカウントを削除しますか？</p>
             <p className="text-gray-400 text-sm mb-6">
               全ての記憶・会話・プロフィールデータが完全に削除されます。この操作は取り消せません。
             </p>
