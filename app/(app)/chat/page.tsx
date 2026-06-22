@@ -14,7 +14,7 @@ interface Message {
 
 const ONBOARDING_MESSAGE: Message = {
   role: 'assistant',
-  content: 'こんにちは！私はMemolyです。会話を重ねるごとに、あなたのことを覚えていきます。\n\nまず教えてください — お仕事は何をされていますか？',
+  content: 'こんにちは！私はMemolyです。話すほどあなたのことを覚えていくので、毎回「私は○○です」と説明しなくていいのが特長です。\n\nまず教えてください — お仕事は何をされていますか？（答えると、次回からその文脈で返答できます）',
 }
 
 const SAMPLE_PROMPTS = [
