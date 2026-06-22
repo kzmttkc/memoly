@@ -24,7 +24,7 @@ const SAMPLE_PROMPTS = [
   '最近モヤモヤしていることを話したい',
 ]
 
-const ROUMU_TRIGGER_PATTERN = /社会保険|雇用保険|有給|残業代|副業.*確定申告|sharoushi-agent/
+const ROUMU_TRIGGER_PATTERN = /社会保険|雇用保険|有給|残業代|副業.*確定申告|sharoushi-agent|労働|退職|解雇|失業/
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([ONBOARDING_MESSAGE])
@@ -289,8 +289,11 @@ export default function ChatPage() {
         AIの回答は参考情報です。重要な判断は専門家にご相談ください。
       </p>
 
-      {/* 労務送客バナー — 労務トピックが検出されたとき or 常時表示 */}
-      {messages.some(m => m.role === 'assistant' && ROUMU_TRIGGER_PATTERN.test(m.content)) && (
+      {/* 労務送客バナー — 労務トピック検出 OR 5ターン以上でハイブリッド表示 */}
+      {(
+        messages.some(m => ROUMU_TRIGGER_PATTERN.test(m.content)) ||
+        messages.filter(m => m.role === 'user').length >= 5
+      ) && (
         <div className="px-4 pb-2 shrink-0">
           <a
             href="https://sharoushi-agent.com"
