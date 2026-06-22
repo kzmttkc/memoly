@@ -34,7 +34,7 @@ export default function Home() {
         {/* ローンチバッジ */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-950 border border-violet-700 text-violet-300 text-xs font-medium mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-          7/1 一般公開
+          アーリーアクセス受付中
         </div>
 
         {/* キャッチコピー */}
