@@ -155,7 +155,7 @@ export default function ChatPage() {
 
       const finalMessages = [...newMessages, { role: 'assistant' as const, content: assistantContent }]
       const userCount = finalMessages.filter(m => m.role === 'user').length
-      if (userCount === 3 || (userCount > 3 && userCount % 5 === 0)) {
+      if (userCount === 2 || (userCount > 3 && userCount % 5 === 0)) {
         saveMemory(finalMessages)
       }
     } catch {
