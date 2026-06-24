@@ -42,3 +42,26 @@ next-env.d.ts
 
 # supabase
 supabase/.temp/
+
+# === Kizuna Creation 標準セキュリティ除外（2026-06-23 追加・全リポジトリ共通） ===
+# 秘密情報・認証ファイルは絶対にコミットしない（env.txt は .env* に一致しない穴を塞ぐ）
+.env
+.env.*
+!.env.example
+!.env.local.example
+env.txt
+secrets.json
+credentials.json
+config/x_keys.json
+# 署名鍵・証明書・パスワードファイル
+*.keystore
+*.jks
+*.pem
+*.key
+keystore.properties
+# ビルド成果物
+*.aab
+*.apk
+
+# ローカルハーネス/エディタ設定（コミットしない）
+.claude/
