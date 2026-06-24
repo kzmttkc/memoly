@@ -3,7 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
 
-// Vercel Cronから毎時呼ばれる Day 2 リマインドメール送信API
+// Vercel Cronから1日1回呼ばれる Day 2 リマインドメール送信API
+// （Hobbyプランは日次cronのみ。対象ウィンドウが24時間幅＋day2_sent_atフラグのため
+//   日次実行でも全ユーザーをちょうど1回ずつ捕捉でき重複もしない）
 // 初回チャット（記憶保存）から 24〜48 時間後に1回だけ送信
 // Authorization: Bearer CRON_SECRET で保護
 
