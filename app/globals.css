@@ -8,8 +8,73 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* フォント: 日本語=Noto Sans JP / 欧文・数字=Geist。両方を root layout が
+     CSS変数(--font-noto-jp / --font-geist-sans)で公開する。 */
+  --font-sans: var(--font-noto-jp), var(--font-geist-sans), system-ui,
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
+}
+
+/* ==========================================================================
+   番頭(Banto) デザイントークン — 加算的。既存ページは未参照のため無害。
+   BtoB労務向け: ライト基調 + 濃紺/インディゴ(一段彩度を抑えたbrand)。
+   Tailwind v4 @theme記法。--color-* は bg-brand-600 等で利用可能。
+   ========================================================================== */
+@theme {
+  /* brand: 濃紺/インディゴ系。CTA / リンク / 選択状態 */
+  --color-brand-50: #eef2fb;
+  --color-brand-100: #d9e0f4;
+  --color-brand-200: #b6c4e9;
+  --color-brand-300: #8ba2d9;
+  --color-brand-400: #5e7cc4;
+  --color-brand-500: #3f5da8;
+  --color-brand-600: #324a8a;
+  --color-brand-700: #283c6f;
+  --color-brand-800: #21305a;
+  --color-brand-900: #1b2747;
+  --color-brand-950: #11182e;
+
+  /* neutral: 面 / 境界 / テキスト階層 */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+  --color-neutral-950: #020617;
+
+  /* semantic: label とペアで使う前提(success/warning/danger/info) */
+  --color-success-50: #ecfdf5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+
+  --color-danger-50: #fff1f2;
+  --color-danger-500: #f43f5e;
+  --color-danger-600: #e11d48;
+  --color-danger-700: #be123c;
+
+  --color-info-50: #eff6ff;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+
+  /* radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-2xl: 1rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +87,62 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 数字を等幅で表示したい箇所(席数・金額・診断スコア等)で使う */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   会社版(番頭) ライト基調 — P0 止血。
+   /company 配下は app/(app)/company/layout.tsx で .company-light を付与。
+   個別ページは消費者Memoly由来のダーク系ユーティリティ(text-gray-100 等)を
+   ハードコードしているため、P1/P2で各ページを再スタイルするまでの暫定として
+   .company-light スコープ内でのみ「ダーク前提のクラス」を白基調で読める色へ
+   再マップする。スコープを必ず .company-light に限定し、消費者ページ
+   (/chat /memory 等)には一切波及させない。
+   ========================================================================== */
+.company-light {
+  background: #ffffff;
+  color: var(--color-neutral-900);
+}
+
+/* --- テキスト階層: ダーク前提の薄い文字 → ライトで読める濃さへ --- */
+.company-light .text-gray-100 { color: var(--color-neutral-900); }
+.company-light .text-gray-200 { color: var(--color-neutral-800); }
+.company-light .text-gray-300 { color: var(--color-neutral-700); }
+.company-light .text-gray-400 { color: var(--color-neutral-600); }
+.company-light .text-gray-500 { color: var(--color-neutral-500); }
+.company-light .text-gray-600 { color: var(--color-neutral-500); }
+.company-light .text-gray-700 { color: var(--color-neutral-400); }
+
+/* brand(濃紺/インディゴ)へ寄せる: violet見出し/リンク → brand */
+.company-light .text-violet-300 { color: var(--color-brand-500); }
+.company-light .text-violet-400 { color: var(--color-brand-600); }
+
+/* --- 面(サーフェス): ダークの面 → ライトのカード/入力面へ --- */
+.company-light .bg-gray-700 { background-color: var(--color-neutral-200); }
+.company-light .bg-gray-800 { background-color: var(--color-neutral-100); }
+.company-light .bg-gray-900\/30 { background-color: var(--color-neutral-50); }
+.company-light .bg-gray-900\/50 { background-color: var(--color-neutral-50); }
+.company-light .bg-gray-900\/60 { background-color: var(--color-neutral-50); }
+
+/* --- 境界線: ダークの暗い境界 → ライトの淡い境界へ --- */
+.company-light .border-gray-500 { border-color: var(--color-neutral-300); }
+.company-light .border-gray-700 { border-color: var(--color-neutral-200); }
+.company-light .border-gray-800 { border-color: var(--color-neutral-200); }
+
+/* --- CTA(violet → brand 濃紺/インディゴ) --- */
+.company-light .bg-violet-500 { background-color: var(--color-brand-500); }
+.company-light .bg-violet-600 { background-color: var(--color-brand-600); }
+.company-light .hover\:bg-violet-500:hover { background-color: var(--color-brand-500); }
+.company-light .hover\:bg-violet-600:hover { background-color: var(--color-brand-600); }
+.company-light .hover\:border-gray-500:hover { border-color: var(--color-neutral-400); }
+.company-light .hover\:text-violet-300:hover { color: var(--color-brand-500); }
+
+/* --- 入力プレースホルダ --- */
+.company-light .placeholder-gray-500::placeholder { color: var(--color-neutral-400); }
+
+/* semantic系(red/amber/emerald/rose)はライト白背景でもおおむね可読のため
+   P0では触らない。P1で success/warning/danger/info トークンへ寄せる。 */

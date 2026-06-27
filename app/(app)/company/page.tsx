@@ -106,6 +106,13 @@ export default function CompanyHomePage() {
         return
       }
       setName('')
+      // 作成直後は「5問 構造化ウィザード」へ誘導（集合知の正規化属性を取る入口）。
+      //   スキップ可。companyId が取れない場合のみ一覧再読込にフォールバック。
+      const newId = data.company?.companyId
+      if (newId) {
+        router.push(`/company/onboarding?companyId=${newId}`)
+        return
+      }
       await load()
     } catch {
       setError('会社の作成に失敗しました。通信を確認してください。')

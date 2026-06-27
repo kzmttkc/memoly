@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Toast } from '@/components/ui/Toast'
+import { track, trackReturningVisit } from '@/lib/analytics'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -39,6 +40,8 @@ export default function ChatPage() {
   const router = useRouter()
 
   useEffect(() => {
+    // リテンション最小代理: 別日の再訪なら returning_user を発火
+    trackReturningVisit()
     fetch('/api/memory')
       .then(r => r.json())
       .then(data => {
@@ -82,12 +85,16 @@ export default function ChatPage() {
       if (res.ok) {
         const data = await res.json()
         const extracted = data.extraction
-        if (extracted?.profile && Object.keys(extracted.profile).length > 0) {
+        const hasProfile = !!(extracted?.profile && Object.keys(extracted.profile).length > 0)
+        if (hasProfile) {
           const [key, val] = Object.entries(extracted.profile)[0] as [string, string]
           showToast(`「${key}：${val}」を記憶しました`)
         } else {
           showToast('会話を記憶しました')
         }
+        // 活性化の核: 記憶が保存された瞬間（保存POST成功地点）。
+        // PII は送らない。記憶種別（プロフィール属性 or 会話サマリー）のみ
+        track('memory_created', { memory_type: hasProfile ? 'profile' : 'summary' })
         setMemoryCount(prev => (prev ?? 0) + 1)
       } else {
         showToast('記憶の保存に失敗しました。通信を確認してください。')
@@ -111,6 +118,8 @@ export default function ChatPage() {
     const content = text ?? input
     if (!content.trim() || loading) return
 
+    // 活性化入口: このセッションでの初回メッセージ送信を1回だけ計測
+    if (isFirstMessage) track('first_message_sent')
     setIsFirstMessage(false)
     const userMessage: Message = { role: 'user', content }
     const newMessages = [...messages, userMessage]

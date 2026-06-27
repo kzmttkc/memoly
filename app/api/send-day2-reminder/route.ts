@@ -3,6 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
 
+// 送信元アドレス（digest と共通）。独自ドメイン認証後に DIGEST_FROM_EMAIL を設定する。
+// 未設定時はメール送信をスキップ（resend.devサンドボックスへフォールバックしない）。
+const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL
+
 // Vercel Cronから1日1回呼ばれる Day 2 リマインドメール送信API
 // （Hobbyプランは日次cronのみ。対象ウィンドウが24時間幅＋day2_sent_atフラグのため
 //   日次実行でも全ユーザーをちょうど1回ずつ捕捉でき重複もしない）
@@ -13,6 +17,14 @@ export async function GET(req: Request) {
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // 送信元が未設定なら配信しない（サンドボックス送信元で本番に出さない安全動作）
+  if (!DIGEST_FROM_EMAIL) {
+    console.warn(
+      '[memoly:day2] DIGEST_FROM_EMAIL 未設定のため Day2 リマインド配信をスキップしました。'
+    )
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' })
   }
 
   const admin = createClient(
@@ -127,7 +139,7 @@ export async function GET(req: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Memoly <onboarding@resend.dev>',
+          from: DIGEST_FROM_EMAIL,
           to: email,
           subject: '昨日の会話、覚えています',
           headers: {
