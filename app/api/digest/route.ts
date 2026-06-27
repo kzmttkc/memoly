@@ -4,12 +4,27 @@ import { anthropic, MEMORY_MODEL } from '@/lib/claude'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
 
+// 送信元アドレス。独自ドメイン認証後に DIGEST_FROM_EMAIL を設定する。
+// 例: "Memoly <digest@memoly.app>"。表示名なしのアドレスのみでも可。
+// 未設定時はメール送信をスキップ（resend.devサンドボックスへフォールバックしない）。
+// → 到達率/迷惑メールリスクのある送信元で本番配信されるのを構造的に防ぐ。
+const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL
+
 // Vercel Cronから呼ばれる週次ダイジェストメール送信API
 // Authorization: Bearer CRON_SECRET で保護
 export async function GET(req: Request) {
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // 送信元が未設定なら配信しない（サンドボックス送信元で本番に出さない安全動作）
+  if (!DIGEST_FROM_EMAIL) {
+    console.warn(
+      '[memoly:digest] DIGEST_FROM_EMAIL 未設定のためダイジェスト配信をスキップしました。' +
+        '独自ドメイン認証後に環境変数 DIGEST_FROM_EMAIL を設定してください。'
+    )
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' })
   }
 
   const admin = createClient(
@@ -83,7 +98,7 @@ export async function GET(req: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Memoly <onboarding@resend.dev>',
+          from: DIGEST_FROM_EMAIL,
           to: email,
           subject: '今週Memolyが覚えたこと 🧠',
           headers: {

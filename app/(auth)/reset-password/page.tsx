@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -24,40 +26,29 @@ export default function ResetPasswordPage() {
       setError('パスワードの更新に失敗しました。リンクが期限切れの可能性があります。')
       setLoading(false)
     } else {
-      router.push('/chat')
+      router.push('/company')
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="max-w-sm w-full">
-        <div className="mb-8 text-center">
-          <span className="text-2xl font-bold">
-            <span className="text-violet-400">Memo</span><span className="text-white">ly</span>
-          </span>
-          <h1 className="text-xl font-semibold text-white mt-4">新しいパスワードを設定</h1>
-        </div>
+    <div>
+      <p className="mb-6 text-center text-sm text-neutral-600">新しいパスワードを設定</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="新しいパスワード（8文字以上）"
-            required
-            minLength={8}
-            className="w-full bg-gray-800 text-gray-100 placeholder-gray-500 rounded-xl px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-violet-500"
-          />
-          {error && <p className="text-red-400 text-xs">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading || !password}
-            className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white rounded-xl text-sm font-medium transition-colors"
-          >
-            {loading ? '更新中...' : 'パスワードを更新する'}
-          </button>
-        </form>
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="新しいパスワード（8文字以上）"
+          autoComplete="new-password"
+          required
+          minLength={8}
+        />
+        {error && <p className="text-xs text-danger-600">{error}</p>}
+        <Button type="submit" size="lg" disabled={loading || !password} className="w-full">
+          {loading ? '更新中...' : 'パスワードを更新する'}
+        </Button>
+      </form>
     </div>
   )
 }
