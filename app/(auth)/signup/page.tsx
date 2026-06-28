@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -29,6 +29,12 @@ function SignupForm() {
   const nextRaw = searchParams.get('next') || '/company'
   const next = nextRaw.startsWith('/') ? nextRaw : '/company'
 
+  // 計測: 登録フォーム到達（/signup の pageview とは別に「signUp 試行の母数」を明示）。
+  //   これで 登録フォーム到達→完了/失敗 の各段が Plausible で読める。PIIは送らない。
+  useEffect(() => {
+    track('signup_started')
+  }, [])
+
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -53,7 +59,10 @@ function SignupForm() {
     })
 
     if (error) {
-      setError(error.message === 'User already registered' ? 'このメールアドレスはすでに登録されています。' : error.message)
+      const already = error.message === 'User already registered'
+      // 計測: 登録失敗を可視化（今まで完全に不可視だった）。既登録の再訪＝ログイン迷子は別問題として切り分け。
+      track('signup_failed', { reason: already ? 'already_registered' : 'other' })
+      setError(already ? 'このメールアドレスはすでに登録されています。' : error.message)
       setLoading(false)
     } else {
       // 活性化ファネル: 登録完了（email+password の signUp 成功地点）

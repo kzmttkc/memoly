@@ -48,6 +48,9 @@ function OnboardingInner() {
   const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
 
   const homeHref = `/company/home?companyId=${companyId}`
+  // TTV: 5問の回答を「集めて終わり」にせず、登録直後に自社専用のリスク診断を即提示する。
+  //   空のホームでなく、答えた内容がその場で診断結果になる＝「会社が覚えられた」を最短で体感させる。
+  const riskHref = `/company/risk?companyId=${companyId}&from=onboarding`
 
   async function save() {
     if (saving || !companyId) return
@@ -73,7 +76,8 @@ function OnboardingInner() {
       }
       // 計測: 会社プロファイルの初回登録成功＝活性化（活性化〜蓄積ファネルの起点）。PIIは送らない。
       track('company_activated')
-      router.push(homeHref)
+      // 登録直後に診断へ送り、答えた内容を即「自社のリスク結果」として返す（TTV短縮）。
+      router.push(riskHref)
     } catch {
       showToast('保存に失敗しました。通信を確認してください。')
       setSaving(false)

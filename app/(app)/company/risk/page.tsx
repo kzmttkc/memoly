@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Share2, MessageSquareText, ClipboardList } from 'lucide-react'
@@ -52,6 +52,9 @@ const SEVERITY: Record<TopRisk['severity'], { label: string; tone: 'danger' | 'w
 function RiskInner() {
   const params = useSearchParams()
   const companyId = params.get('companyId') ?? ''
+  // オンボ直後の遷移なら、ボタンを押させず即診断を走らせる（TTV短縮の本体）。
+  const fromOnboarding = params.get('from') === 'onboarding'
+  const autoFired = useRef(false)
 
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<RiskResult | null>(null)
@@ -85,6 +88,17 @@ function RiskInner() {
       cancelled = true
     }
   }, [companyId])
+
+  // オンボ直後（from=onboarding）は属性確認が済み次第、自動で1回だけ診断を実行。
+  //   登録した内容がそのまま「自社のリスク結果」になり、空状態を渡さない。
+  useEffect(() => {
+    if (!fromOnboarding || !attrsChecked || autoFired.current || !companyId) return
+    autoFired.current = true
+    track('onboarding_to_risk')
+    run()
+    // run は安定参照不要（autoFired で単発保証）。companyId/attrsChecked 確定後に発火。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromOnboarding, attrsChecked, companyId])
 
   async function run() {
     if (loading) return
