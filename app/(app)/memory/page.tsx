@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { track } from '@/lib/analytics'
 
 interface Memory {
   id: string
@@ -30,6 +31,8 @@ export default function MemoryPage() {
   const router = useRouter()
 
   useEffect(() => {
+    // 価値実感地点: 記憶ダッシュボード閲覧を計測
+    track('memory_dashboard_viewed')
     fetch('/api/memory')
       .then(r => r.json())
       .then(data => {

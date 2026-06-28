@@ -20,6 +20,25 @@ export async function POST(req: NextRequest) {
 
   const extraction = await extractMemory(messages)
 
+  // 抽出が劣化した場合は明示的に記録（無言失敗を防ぐ）。
+  // ログ保存はベストエフォート：失敗してもユーザーリクエストは止めない。
+  if (extraction.degraded) {
+    console.error('[memoly:memory] 記憶抽出が劣化', {
+      userId: user.id,
+      reason: extraction.degraded,
+      recoveredSummary: Boolean(extraction.summary),
+    })
+    try {
+      await supabase.from('memoly_extraction_logs').insert({
+        user_id: user.id,
+        reason: extraction.degraded,
+        recovered: Boolean(extraction.summary),
+      })
+    } catch {
+      // テーブル未作成等は無視（console.errorで既に可視化済み）
+    }
+  }
+
   // サマリーをmemoriesテーブルへ保存
   if (extraction.summary) {
     await supabase.from('memoly_memories').insert({

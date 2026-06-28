@@ -3,7 +3,13 @@ import { createClient } from '@supabase/supabase-js'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
 
-// Vercel Cronから毎時呼ばれる Day 2 リマインドメール送信API
+// 送信元アドレス（digest と共通）。独自ドメイン認証後に DIGEST_FROM_EMAIL を設定する。
+// 未設定時はメール送信をスキップ（resend.devサンドボックスへフォールバックしない）。
+const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL
+
+// Vercel Cronから1日1回呼ばれる Day 2 リマインドメール送信API
+// （Hobbyプランは日次cronのみ。対象ウィンドウが24時間幅＋day2_sent_atフラグのため
+//   日次実行でも全ユーザーをちょうど1回ずつ捕捉でき重複もしない）
 // 初回チャット（記憶保存）から 24〜48 時間後に1回だけ送信
 // Authorization: Bearer CRON_SECRET で保護
 
@@ -11,6 +17,14 @@ export async function GET(req: Request) {
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // 送信元が未設定なら配信しない（サンドボックス送信元で本番に出さない安全動作）
+  if (!DIGEST_FROM_EMAIL) {
+    console.warn(
+      '[memoly:day2] DIGEST_FROM_EMAIL 未設定のため Day2 リマインド配信をスキップしました。'
+    )
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' })
   }
 
   const admin = createClient(
@@ -125,14 +139,14 @@ export async function GET(req: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Memoly <onboarding@resend.dev>',
+          from: DIGEST_FROM_EMAIL,
           to: email,
           subject: '昨日の会話、覚えています',
           headers: {
             'List-Unsubscribe': `<${APP_URL}/unsubscribe>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
-          text: `${bodyText}\n\n→ チャットを続ける: ${APP_URL}/chat\n\n配信停止: ${APP_URL}/unsubscribe\n\n送信者: kazumototakeshi@gmail.com`,
+          text: `${bodyText}\n\n→ チャットを続ける: ${APP_URL}/chat\n\n配信停止: ${APP_URL}/unsubscribe\n\n送信者: kzmttkc314@gmail.com`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
             <h2 style="color:#7c3aed">昨日の会話、覚えています 🧠</h2>
             ${bodyHtml}
@@ -144,7 +158,7 @@ export async function GET(req: Request) {
               サービス名：Memoly<br>
               運営者：Kazumoto Takeshi<br>
               所在地：日本<br>
-              お問い合わせ：kazumototakeshi@gmail.com<br><br>
+              お問い合わせ：kzmttkc314@gmail.com<br><br>
               このメールはMemolyのDay2リマインドとして1回のみ送信されます。<br>
               <a href="${APP_URL}/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>
             </p>

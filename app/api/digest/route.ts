@@ -4,12 +4,27 @@ import { anthropic, MEMORY_MODEL } from '@/lib/claude'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
 
+// 送信元アドレス。独自ドメイン認証後に DIGEST_FROM_EMAIL を設定する。
+// 例: "Memoly <digest@memoly.app>"。表示名なしのアドレスのみでも可。
+// 未設定時はメール送信をスキップ（resend.devサンドボックスへフォールバックしない）。
+// → 到達率/迷惑メールリスクのある送信元で本番配信されるのを構造的に防ぐ。
+const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL
+
 // Vercel Cronから呼ばれる週次ダイジェストメール送信API
 // Authorization: Bearer CRON_SECRET で保護
 export async function GET(req: Request) {
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // 送信元が未設定なら配信しない（サンドボックス送信元で本番に出さない安全動作）
+  if (!DIGEST_FROM_EMAIL) {
+    console.warn(
+      '[memoly:digest] DIGEST_FROM_EMAIL 未設定のためダイジェスト配信をスキップしました。' +
+        '独自ドメイン認証後に環境変数 DIGEST_FROM_EMAIL を設定してください。'
+    )
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' })
   }
 
   const admin = createClient(
@@ -83,14 +98,14 @@ export async function GET(req: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Memoly <onboarding@resend.dev>',
+          from: DIGEST_FROM_EMAIL,
           to: email,
           subject: '今週Memolyが覚えたこと 🧠',
           headers: {
             'List-Unsubscribe': `<${APP_URL}/unsubscribe>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
-          text: `${body}\n\n→ チャットを続ける: ${APP_URL}/chat\n\n配信停止: ${APP_URL}/unsubscribe\n\n送信者: kazumototakeshi@gmail.com`,
+          text: `${body}\n\n→ チャットを続ける: ${APP_URL}/chat\n\n配信停止: ${APP_URL}/unsubscribe\n\n送信者: kzmttkc314@gmail.com`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
             <h2 style="color:#7c3aed">今週Memolyが覚えたこと 🧠</h2>
             <p style="color:#374151;line-height:1.8">${body.replace(/\n/g, '<br>')}</p>
@@ -102,7 +117,7 @@ export async function GET(req: Request) {
               サービス名：Memoly<br>
               運営者：Kazumoto Takeshi<br>
               所在地：日本<br>
-              お問い合わせ：kazumototakeshi@gmail.com<br><br>
+              お問い合わせ：kzmttkc314@gmail.com<br><br>
               このメールはMemolyの週次ダイジェストとして送信されています。<br>
               <a href="${APP_URL}/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>
             </p>

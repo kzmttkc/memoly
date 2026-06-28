@@ -1,14 +1,14 @@
 {
-  "name": "Memoly — あなたのことを覚えているAI",
-  "short_name": "Memoly",
-  "description": "会話を重ねるごとにあなたのことを深く覚えていくパーソナルAIチャット。毎回ゼロから説明しなくていい。",
-  "start_url": "/chat",
+  "name": "番頭(Banto) — 会社を覚える労務AI",
+  "short_name": "番頭",
+  "description": "会社のルール・規程・労務の判断を、AIが覚えて最適解を提供。企業ごとにデータを完全分離。",
+  "start_url": "/company",
   "display": "standalone",
-  "background_color": "#030712",
-  "theme_color": "#7c3aed",
+  "background_color": "#ffffff",
+  "theme_color": "#324a8a",
   "orientation": "portrait",
   "lang": "ja",
-  "categories": ["productivity", "lifestyle", "utilities"],
+  "categories": ["productivity", "business", "utilities"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -23,25 +23,11 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "チャット画面"
-    }
-  ],
   "shortcuts": [
     {
-      "name": "チャットを始める",
-      "url": "/chat",
-      "description": "Memolyとの会話を始める"
-    },
-    {
-      "name": "記憶を見る",
-      "url": "/memory",
-      "description": "Memolyが覚えていることを確認する"
+      "name": "相談を始める",
+      "url": "/company",
+      "description": "番頭に労務の相談をする"
     }
   ]
 }

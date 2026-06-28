@@ -1,16 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // 番頭(Banto) の動線では /company へ。?next を尊重しつつ既定は /company。
+  const next = searchParams.get('next') || '/company'
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -24,62 +37,51 @@ export default function LoginPage() {
       setError('メールアドレスまたはパスワードが正しくありません')
       setLoading(false)
     } else {
-      router.push('/chat')
+      router.push(next.startsWith('/') ? next : '/company')
     }
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold">
-            <span className="text-violet-400">Memo</span>ly
+    <div>
+      <p className="mb-6 text-center text-sm text-neutral-600">ログイン</p>
+
+      <form onSubmit={handleLogin} className="space-y-4">
+        <Input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="メールアドレス"
+          autoComplete="email"
+          required
+        />
+        <Input
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="パスワード"
+          autoComplete="current-password"
+          required
+        />
+
+        {error && <p className="text-sm text-danger-600">{error}</p>}
+
+        <Button type="submit" size="lg" disabled={loading} className="w-full">
+          {loading ? 'ログイン中...' : 'ログイン'}
+        </Button>
+      </form>
+
+      <div className="mt-6 space-y-2 text-center text-sm text-neutral-500">
+        <p>
+          アカウントがない方は{' '}
+          <Link href="/signup" className="font-medium text-brand-600 hover:text-brand-700">
+            新規登録
           </Link>
-          <p className="text-gray-400 mt-2 text-sm">ログイン</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="メールアドレス"
-            required
-            className="w-full bg-gray-800 text-gray-100 placeholder-gray-500 rounded-xl px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-violet-500"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="パスワード"
-            required
-            className="w-full bg-gray-800 text-gray-100 placeholder-gray-500 rounded-xl px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-violet-500"
-          />
-
-          {error && <p className="text-red-400 text-sm">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white font-semibold rounded-xl transition-colors"
-          >
-            {loading ? 'ログイン中...' : 'ログイン'}
-          </button>
-        </form>
-
-        <div className="text-center text-sm text-gray-500 mt-6 space-y-2">
-          <p>
-            アカウントがない方は{' '}
-            <Link href="/signup" className="text-violet-400 hover:text-violet-300">
-              新規登録
-            </Link>
-          </p>
-          <p>
-            <Link href="/forgot-password" className="text-gray-500 hover:text-gray-300">
-              パスワードを忘れた方
-            </Link>
-          </p>
-        </div>
+        </p>
+        <p>
+          <Link href="/forgot-password" className="text-neutral-500 hover:text-neutral-700">
+            パスワードを忘れた方
+          </Link>
+        </p>
       </div>
     </div>
   )
