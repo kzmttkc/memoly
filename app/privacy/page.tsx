@@ -19,7 +19,7 @@ export default function PrivacyPage() {
               <li><span className="text-neutral-800">事業者名：</span>Kizuna Creation（責任者 / Kazumoto Takeshi）</li>
               <li><span className="text-neutral-800">代表者：</span>Kazumoto Takeshi</li>
               <li><span className="text-neutral-800">所在地：</span>日本</li>
-              <li><span className="text-neutral-800">お問い合わせ：</span><a href="mailto:kazumototakeshi@gmail.com" className="text-brand-600 underline">kazumototakeshi@gmail.com</a></li>
+              <li><span className="text-neutral-800">お問い合わせ：</span><a href="mailto:kzmttkc314@gmail.com" className="text-brand-600 underline">kzmttkc314@gmail.com</a></li>
             </ul>
           </section>
 
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
               <li>処理の制限・異議申立て（GDPR対象者）</li>
               <li>データポータビリティ（GDPR対象者）</li>
             </ul>
-            <p className="mt-2">上記権利の行使は <a href="mailto:kazumototakeshi@gmail.com" className="text-brand-600 underline">kazumototakeshi@gmail.com</a> までご連絡ください。</p>
+            <p className="mt-2">上記権利の行使は <a href="mailto:kzmttkc314@gmail.com" className="text-brand-600 underline">kzmttkc314@gmail.com</a> までご連絡ください。</p>
           </section>
 
           <section>
@@ -89,7 +89,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">9. お問い合わせ</h2>
-            <p><a href="mailto:kazumototakeshi@gmail.com" className="text-brand-600 underline">kazumototakeshi@gmail.com</a></p>
+            <p><a href="mailto:kzmttkc314@gmail.com" className="text-brand-600 underline">kzmttkc314@gmail.com</a></p>
           </section>
         </div>
       </div>

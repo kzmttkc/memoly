@@ -50,7 +50,7 @@ export default function UnsubscribePage() {
           <>
             <p className="text-2xl mb-4">❌</p>
             <h1 className="text-xl font-bold text-white mb-2">処理に失敗しました</h1>
-            <p className="text-gray-400 text-sm">時間をおいて再度お試しください。解決しない場合は kazumototakeshi@gmail.com までご連絡ください。</p>
+            <p className="text-gray-400 text-sm">時間をおいて再度お試しください。解決しない場合は kzmttkc314@gmail.com までご連絡ください。</p>
             <Link href="/company" className="mt-6 inline-block text-gray-300 hover:text-white underline text-sm">
               ホームに戻る →
             </Link>

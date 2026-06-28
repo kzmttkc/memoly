@@ -68,7 +68,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">10. お問い合わせ</h2>
-            <p><a href="mailto:kazumototakeshi@gmail.com" className="text-brand-600 underline">kazumototakeshi@gmail.com</a></p>
+            <p><a href="mailto:kzmttkc314@gmail.com" className="text-brand-600 underline">kzmttkc314@gmail.com</a></p>
           </section>
         </div>
       </div>

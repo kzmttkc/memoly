@@ -146,7 +146,7 @@ export async function GET(req: Request) {
             'List-Unsubscribe': `<${APP_URL}/unsubscribe>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
-          text: `${bodyText}\n\n→ チャットを続ける: ${APP_URL}/chat\n\n配信停止: ${APP_URL}/unsubscribe\n\n送信者: kazumototakeshi@gmail.com`,
+          text: `${bodyText}\n\n→ チャットを続ける: ${APP_URL}/chat\n\n配信停止: ${APP_URL}/unsubscribe\n\n送信者: kzmttkc314@gmail.com`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
             <h2 style="color:#7c3aed">昨日の会話、覚えています 🧠</h2>
             ${bodyHtml}
@@ -158,7 +158,7 @@ export async function GET(req: Request) {
               サービス名：Memoly<br>
               運営者：Kazumoto Takeshi<br>
               所在地：日本<br>
-              お問い合わせ：kazumototakeshi@gmail.com<br><br>
+              お問い合わせ：kzmttkc314@gmail.com<br><br>
               このメールはMemolyのDay2リマインドとして1回のみ送信されます。<br>
               <a href="${APP_URL}/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>
             </p>
