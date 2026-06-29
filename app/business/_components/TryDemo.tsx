@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Brain, Building2, MessageSquareText, ArrowRight } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { track } from '@/lib/analytics'
 
 // ============================================================================
 // TryDemo — /business 公開LPの「体験デモ」セクション（'use client'）
@@ -79,6 +80,8 @@ export default function TryDemo() {
   const nextId = useRef(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  // デモに初めて触れた瞬間(アハ到達の代理)を1回だけ計測するためのフラグ。
+  const engagedRef = useRef(false)
 
   const isBusy = typing !== null
 
@@ -126,8 +129,14 @@ export default function TryDemo() {
   }, [turns, typedLen, typing, reducedMotion])
 
   const ask = useCallback(
-    (qa: QA) => {
+    (qa: QA, qIndex: number) => {
       if (isBusy) return // タイプ中は次の質問を受け付けない（順に積み上げる）。
+      // 初回タッチ=デモ到達(アハ代理)を1回だけ計測。以降は質問別クリックのみ。
+      if (!engagedRef.current) {
+        engagedRef.current = true
+        track('demo_engaged')
+      }
+      track('demo_question_clicked', { q_index: qIndex })
       setStarted(true)
       const id = nextId.current++
       setTypedLen(0)
@@ -221,11 +230,11 @@ export default function TryDemo() {
               質問を選んで試す
             </p>
             <div className="flex flex-wrap gap-2">
-              {QA_LIST.map(qa => (
+              {QA_LIST.map((qa, i) => (
                 <button
                   key={qa.q}
                   type="button"
-                  onClick={() => ask(qa)}
+                  onClick={() => ask(qa, i)}
                   disabled={isBusy}
                   className={
                     'inline-flex items-center gap-1.5 rounded-full border border-neutral-200 ' +
@@ -255,7 +264,16 @@ export default function TryDemo() {
             自社の規程を覚えさせれば、自社専用の答えが返ります。
           </p>
           <div className="mt-4 flex justify-center">
-            <Link href="/signup" className={buttonClass({ variant: 'primary' })}>
+            <Link
+              href="/signup"
+              className={buttonClass({ variant: 'primary' })}
+              onClick={() =>
+                track('signup_cta_clicked', {
+                  location: 'trydemo',
+                  engaged: started,
+                })
+              }
+            >
               自社の規程を覚えさせて、自社専用で試す
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>

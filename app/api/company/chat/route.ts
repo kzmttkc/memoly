@@ -155,10 +155,21 @@ export async function POST(req: NextRequest) {
     content: lastUserMessage,
   })
 
+  // --- prompt caching（粗利改善）---
+  //   system には会社コンテキスト（自社ルール/過去判断/関係者状況/確定ファクト/法令一次情報）を
+  //   毎ターン丸ごと注入している。これは同一会話の往復で（ほぼ）不変の大きな前置きなので、
+  //   Anthropic prompt caching の cache_control を system 末尾ブロックに付け、2ターン目以降の
+  //   入力トークン課金を圧縮する（キャッシュヒット時は入力単価が大幅減）。
+  //   注意点と安全策:
+  //     - system を string→単一 text ブロック配列に変える（messages 本体は不変）。
+  //     - cache の最小トークン要件に満たない短い system はヒットせず「素通り」になるだけで
+  //       挙動は変わらない（キャッシュは課金最適化であって正しさには影響しない）。
+  //     - userQuery 連動で system は会話ごとに変わるが、同一会話内の連続ターンでは安定し、
+  //       直近プレフィクスのヒットで効く。完全一致でなくても前方一致分は再利用される。
   const stream = await anthropic.messages.stream({
     model: CHAT_MODEL,
     max_tokens: 2048,
-    system,
+    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
     messages: sanitizedMessages,
   })
 

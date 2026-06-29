@@ -11,6 +11,19 @@ import type Stripe from 'stripe'
 //     - checkout.session.completed         → plan/seats 付与・customer/sub 保存
 //     - customer.subscription.updated      → active/trialing なら維持、それ以外は free 降格
 //     - customer.subscription.deleted      → free 降格（席は購入数を1に戻さず保持＝再開容易）
+//     - invoice.payment_failed             → dunning。即 free 降格せず past_due(grace) に。
+//                                            plan は維持し、Stripe の自動リトライ(smart retries)を待つ。
+//     - invoice.payment_succeeded          → past_due からの復帰。status を active に戻す。
+//   ★【要・Stripeダッシュボードで購読追加】invoice.payment_failed / invoice.payment_succeeded を
+//     この webhook エンドポイントの購読イベントに追加する（Takeshi 手動。コードは実装済み）。
+//
+//   dunning 設計（failed由来 vs 自発解約の区別）:
+//     - 支払い失敗(invoice.payment_failed)は「払う意思はあるが決済が通らなかった」状態。
+//       即 free 降格すると、カード更新待ちの優良顧客を機能停止で取り逃がす。だから
+//       plan は維持したまま status='past_due'(grace) に置き、Stripe のリトライ＋催促を待つ。
+//     - 自発解約(customer.subscription.deleted)は「払う意思の撤回」。こちらは free 降格。
+//     - リトライ全敗で Stripe が最終的に subscription.deleted を送れば、そこで free に落ちる。
+//       ＝ grace→（回収成功なら active 復帰／全敗なら deleted で free）の二分岐になる。
 //
 //   設計原則（Gokaku webhook の作法を踏襲し、席課金向けに拡張）:
 //     1. **署名検証必須**: constructEvent で stripe-signature を検証。失敗は 400。
@@ -247,6 +260,76 @@ export async function POST(req: NextRequest) {
         .update({ plan: 'free', status: 'canceled' })
         .eq('stripe_subscription_id', sub.id)
       if (error) throw error
+    }
+
+    // ----------------------------------------------------------------------
+    // invoice.payment_failed — dunning。即 free 降格せず past_due(grace) へ。
+    //   plan は維持（払う意思のある顧客を機能停止で逃さない）。Stripe の自動リトライを待つ。
+    //   失敗由来であることが status='past_due' で判別できる（自発解約は 'canceled'）。
+    // ----------------------------------------------------------------------
+    if (event.type === 'invoice.payment_failed') {
+      const invoice = event.data.object as Stripe.Invoice & { subscription?: string | null }
+      const subId = typeof invoice.subscription === 'string' ? invoice.subscription : null
+      if (!subId) return new Response('ignored: invoice without subscription', { status: 200 })
+
+      // クロス配信ガード: この subscription が番頭の会社に紐づくか。companies に
+      // stripe_subscription_id が在る＝自製品の課金。無ければ他製品の invoice として無視。
+      const { data: company } = await supabase
+        .from('companies')
+        .select('id, plan')
+        .eq('stripe_subscription_id', subId)
+        .maybeSingle()
+      if (!company) return new Response('ignored: not a banto subscription', { status: 200 })
+
+      const rec = await recordEvent(supabase, {
+        event_id: event.id,
+        company_id: company.id,
+        event_type: event.type,
+        stripe_subscription_id: subId,
+      })
+      if (rec.duplicate) return new Response('ok: duplicate', { status: 200 })
+
+      // plan は触らず status のみ past_due へ（grace）。回収成功 or 最終 deleted で確定する。
+      const { error } = await supabase
+        .from('companies')
+        .update({ status: 'past_due' })
+        .eq('id', company.id)
+      if (error) throw error
+    }
+
+    // ----------------------------------------------------------------------
+    // invoice.payment_succeeded — 支払い成功。past_due(grace) からの復帰。
+    //   通常の継続課金成功でも飛ぶため、active 以外（past_due）のときだけ active に戻す。
+    //   active のときは何もしない（冪等・無駄な更新を避ける）。
+    // ----------------------------------------------------------------------
+    if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object as Stripe.Invoice & { subscription?: string | null }
+      const subId = typeof invoice.subscription === 'string' ? invoice.subscription : null
+      if (!subId) return new Response('ignored: invoice without subscription', { status: 200 })
+
+      const { data: company } = await supabase
+        .from('companies')
+        .select('id, status')
+        .eq('stripe_subscription_id', subId)
+        .maybeSingle()
+      if (!company) return new Response('ignored: not a banto subscription', { status: 200 })
+
+      const rec = await recordEvent(supabase, {
+        event_id: event.id,
+        company_id: company.id,
+        event_type: event.type,
+        stripe_subscription_id: subId,
+      })
+      if (rec.duplicate) return new Response('ok: duplicate', { status: 200 })
+
+      // past_due からの復帰時のみ active へ。既に active なら更新しない（冪等）。
+      if (company.status === 'past_due') {
+        const { error } = await supabase
+          .from('companies')
+          .update({ status: 'active' })
+          .eq('id', company.id)
+        if (error) throw error
+      }
     }
   } catch (e) {
     // 5xx を返すと Stripe が指数バックオフで再送する（課金済みユーザーの取り残しを防ぐ）。

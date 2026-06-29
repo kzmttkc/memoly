@@ -14,7 +14,7 @@ const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-jp",
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://banto-roumu.com'
 const TITLE = '番頭(Banto) — 会社を覚える労務AI'
 const DESC = '会社の規程・労務の判断を、AIが覚えて最適解を提供。汎用AIは毎回説明が必要。番頭は自社の規程を完璧に記憶。企業ごとにデータを完全分離して保管。'
 

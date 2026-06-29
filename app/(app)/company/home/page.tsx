@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { buttonClass } from '@/components/ui/Button'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { WeeklyDigest } from '../_components/WeeklyDigest'
+import { MemoryBalanceMeter } from '../_components/MemoryBalanceMeter'
 
 // ============================================================================
 // /company/home — 会社を選択した先のトップ（ダッシュボード）。
@@ -26,6 +27,11 @@ function HomeInner() {
         title="自社のホーム"
         description="今週、自社に関係する変更をまずお届けします。気になったカードから、その場で相談・書類作成・診断に進めます。"
       />
+
+      {/* 記憶残高メーター（解約防止の主装置・沈没コストの可視化）。フィードの直前に常設。 */}
+      <div className="mb-6">
+        <MemoryBalanceMeter companyId={companyId} />
+      </div>
 
       <WeeklyDigest companyId={companyId} />
 

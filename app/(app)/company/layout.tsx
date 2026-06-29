@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { AppShell } from './_components/AppShell'
+import { CompanyHeartbeat } from './_components/CompanyHeartbeat'
 
 // ============================================================================
 // /company レイアウト — 番頭(Banto) 会社版のアプリシェルでラップする。
@@ -28,6 +29,7 @@ export default function CompanyLayout({
 }) {
   return (
     <div className="company-light">
+      <CompanyHeartbeat />
       <Suspense fallback={<div className="min-h-[100dvh] bg-neutral-50" />}>
         <AppShell>{children}</AppShell>
       </Suspense>

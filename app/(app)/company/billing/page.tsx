@@ -11,6 +11,8 @@ import { StatPill } from '@/components/ui/StatPill'
 import { Toast } from '@/components/ui/Toast'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { PLANS, PAID_PLAN_IDS, type PlanId } from '@/lib/plans'
+import { trackSubscriptionStarted, trackBillingStatus } from '@/lib/analytics'
+import { MemoryLossWarning } from '../_components/MemoryLossWarning'
 
 // ============================================================================
 // /company/billing — プラン / 席 / アップグレード（admin向け）
@@ -61,6 +63,9 @@ function BillingInner() {
         return
       }
       setState(data)
+      // 収益コホート計装: 観測した課金ステータスの遷移から
+      //   payment_failed / payment_recovered / churned を派生発火する（差分時1回）。
+      trackBillingStatus(data.status, data.plan)
     } catch {
       setError('読み込みに失敗しました')
     }
@@ -76,10 +81,18 @@ function BillingInner() {
     const billing = params.get('billing')
     if (billing === 'success') {
       setToast({ show: true, message: 'お手続きを受け付けました。反映まで少しお待ちください。' })
+      // 収益コホート計装: checkout 成功で1回だけ subscription_started を発火。
+      // plan は遷移直後で webhook 未反映のこともあるため state があれば現プラン、無ければ未確定。
+      trackSubscriptionStarted(state?.plan ?? 'unknown')
+      // 二重発火を避けるため success フラグを URL から消す。
+      params.delete('billing')
+      const qs = params.toString()
+      window.history.replaceState(null, '', `${window.location.pathname}${qs ? `?${qs}` : ''}`)
     } else if (billing === 'canceled') {
       setToast({ show: true, message: 'お手続きをキャンセルしました。' })
     }
-  }, [])
+    // state を依存に含めるが、URL の billing を上で消すため再発火しない。
+  }, [state])
 
   async function startCheckout(planId: PlanId) {
     if (!state || submitting) return
@@ -164,6 +177,11 @@ function BillingInner() {
           </div>
         </div>
       </Card>
+
+      {/* ===== 解約導線手前の記憶喪失警告（課金中adminのみ・正規の引き止め）===== */}
+      {isAdmin && state.plan !== 'free' && state.status === 'active' && (
+        <MemoryLossWarning companyId={companyId} />
+      )}
 
       {/* ===== 無料モニターの告知（billing無効時）===== */}
       {!billingOn && (

@@ -1,0 +1,97 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Brain, ArrowRight } from 'lucide-react'
+import { Card } from '@/components/ui/Card'
+
+// ============================================================================
+// MemoryBalanceMeter — 「番頭が御社について覚えていること：N件」を常時表示する。
+// ----------------------------------------------------------------------------
+//   LTV施策(解約防止の主装置)。番頭の価値は「使うほど自社を覚える＝乗り換えると
+//   ゼロからやり直し」という沈没コストにある。それを毎週増える実数として見せ、
+//   解約の心理的コストを上げる（ダークパターンではなく事実の可視化）。
+//
+//   - 実数は /api/company/memory/stats（company_memories + company_profiles の件数）。
+//   - 記憶0件のとき（新規会社）は煽らず「これから覚えていきます」と前向きに出す。
+//   - クリックで /company/memory（会社の記憶）へ。中身を実際に確認できる導線にする。
+//   - Phase1コンプラ: 断定/誇大なし。配色は @theme トークンのみ。
+// ============================================================================
+
+interface MemoryStats {
+  total: number
+  memories: number
+  decisions: number
+  rules: number
+  profiles: number
+}
+
+export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
+  const [stats, setStats] = useState<MemoryStats | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    if (!companyId) return
+    let alive = true
+    fetch(`/api/company/memory/stats?companyId=${companyId}`)
+      .then(res => (res.ok ? res.json() : Promise.reject()))
+      .then((data: MemoryStats) => {
+        if (alive) setStats(data)
+      })
+      .catch(() => {
+        if (alive) setFailed(true)
+      })
+    return () => {
+      alive = false
+    }
+  }, [companyId])
+
+  // 取得失敗時はカードごと出さない（壊れた数字を見せない）。
+  if (failed) return null
+
+  const total = stats?.total ?? 0
+  const decisions = stats?.decisions ?? 0
+  const loading = stats === null
+
+  return (
+    <Link
+      href={`/company/memory?companyId=${companyId}`}
+      className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      aria-label="会社の記憶を見る"
+    >
+      <Card interactive className="bg-brand-50/40">
+        <div className="flex items-center gap-4">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+            <Brain className="h-5.5 w-5.5" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-neutral-500">番頭が御社について覚えていること</p>
+            {loading ? (
+              <p className="mt-0.5 text-sm text-neutral-400">読み込み中...</p>
+            ) : total > 0 ? (
+              <p className="mt-0.5 flex items-baseline gap-1.5">
+                <span className="text-2xl font-bold tabular-nums text-neutral-900">{total}</span>
+                <span className="text-sm text-neutral-600">件</span>
+                {decisions > 0 && (
+                  <span className="text-xs text-neutral-500">
+                    （うち過去の判断 {decisions}件）
+                  </span>
+                )}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-sm text-neutral-700">
+                相談を重ねるほど、御社のことを覚えていきます。
+              </p>
+            )}
+          </div>
+          <ArrowRight className="h-4.5 w-4.5 shrink-0 text-neutral-400" aria-hidden />
+        </div>
+        {!loading && total > 0 && (
+          <p className="mt-3 text-xs leading-relaxed text-neutral-500">
+            相談・判断・自社ルールを使うほど積み上がります。これは番頭だけが覚えている御社固有の記憶です。
+          </p>
+        )}
+      </Card>
+    </Link>
+  )
+}

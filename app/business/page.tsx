@@ -25,7 +25,10 @@ import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import TryDemo from './_components/TryDemo'
+import { TrackedCTA } from './_components/TrackedCTA'
+import LeadCapture from './_components/LeadCapture'
 import { PLANS } from '@/lib/plans'
+import { USECASE_LIST } from '@/lib/usecase'
 
 // ============================================================================
 // /business — 番頭(Banto) 公開ランディングページ（認証不要・公開ルート）
@@ -55,10 +58,64 @@ import { PLANS } from '@/lib/plans'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: '番頭(Banto) — 会社を覚える労務AI',
+  title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
   description:
     '会社のルール・規程をAIが覚えて、人事・労務の判断即答。汎用AIは毎回説明が必要。番頭は自社の規程を記憶。自社にパーソナライズしたAIを活用できます。',
+  alternates: { canonical: '/business' },
+  openGraph: {
+    title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
+    description:
+      '会社のルール・規程をAIが覚えて、人事・労務の判断即答。汎用AIは毎回説明が必要。番頭は自社の規程を記憶。自社にパーソナライズしたAIを活用できます。',
+    url: 'https://banto-roumu.com/business',
+    siteName: '番頭(Banto)',
+    locale: 'ja_JP',
+    type: 'website',
+    images: [
+      {
+        url: 'https://banto-roumu.com/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: '番頭｜会社の規程を覚える労務AI',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
+    description:
+      '会社のルール・規程をAIが覚えて、人事・労務の判断即答。汎用AIは毎回説明が必要。番頭は自社の規程を記憶。自社にパーソナライズしたAIを活用できます。',
+    images: ['https://banto-roumu.com/og-image.png'],
+  },
 }
+
+// FAQ — 検索意図の長尾を本文で拾い、同内容を FAQPage 構造化データにも対にする。
+//   Phase1 厳守: 就業規則の作成代行は不可・一般情報のみと明記。免責は答えに織り込む。
+const FAQ = [
+  {
+    q: '料金はいくらですか',
+    a: '無料プランから始められます。記憶のフル活用や規程ドラフト作成が必要になったら有料プランに切り替えられます。料金は本ページの料金セクションをご確認ください。',
+  },
+  {
+    q: '無料で使えますか',
+    a: '会社を登録して最初の相談を投げるところまで、無料で試せます。前提を説明し直さない労務相談の体験に費用はかかりません。',
+  },
+  {
+    q: '自社の労務データは安全に保管されますか',
+    a: '企業ごとにデータを分離して保管する設計です。自社の規程や相談内容が他社と混ざることはありません。機密の労務データを預ける前提で設計しています。',
+  },
+  {
+    q: '就業規則の作成代行を依頼できますか',
+    a: '番頭が提供するのは一般的な情報提供と、自社の数値を入れた下書きの補助です。就業規則の作成代行や個別の法的助言ではありません。最終的な判断は、必要に応じて専門家にご確認ください。',
+  },
+  {
+    q: '社労士資格との関係はどうなっていますか',
+    a: '運営者は社会保険労務士の資格を保有しています。一方で番頭は、資格者による個別相談・書類作成代行を行うサービスではなく、自社の規程を覚えて一般的な情報を即答するツールです。',
+  },
+  {
+    q: '中小企業の総務・経営者でも使えますか',
+    a: '中小企業の総務担当や経営者が、社内規程の管理や日々の労務管理の調べ物を減らす用途を想定しています。専任の労務担当がいなくても、自社の前提に合わせた答えを得られます。',
+  },
+]
 
 // 機能4軸。「自社に合わせて」を繰り返さず、各軸がもたらす"成果"で差別化する。
 const FEATURES = [
@@ -439,12 +496,12 @@ export default function BusinessLandingPage() {
             >
               ログイン
             </Link>
-            <Link
-              href="/signup"
+            <TrackedCTA
+              location="header"
               className={buttonClass({ variant: 'primary', size: 'sm' })}
             >
               無料で始める
-            </Link>
+            </TrackedCTA>
           </nav>
         </div>
       </header>
@@ -467,15 +524,16 @@ export default function BusinessLandingPage() {
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg lg:mx-0">
               所定労働時間も、休日のルールも、過去の相談も番頭が覚えています。
               前提を説明し直さずに、自社の状況に合わせた答えがすぐ返ります。
+              中小企業の総務・経営者が、社内規程の管理と日々の労務管理の調べ物を減らせます。
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <Link
-                href="/signup"
+              <TrackedCTA
+                location="hero"
                 className={buttonClass({ variant: 'primary', size: 'lg' })}
               >
                 無料で会社を登録して試す
                 <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
+              </TrackedCTA>
             </div>
           </div>
 
@@ -568,6 +626,12 @@ export default function BusinessLandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ===== micro-CV（本登録の手前の軽い一歩：メアドだけでチェックリストDL） =====
+          会社作成は重い。その手前に「無料配布フック→メアド」の軽いCVを置き、
+          ファネルの漏れを塞ぐ。薄いclientコンポーネント＝SSR/SEO/metadataは無傷。
+          送信成功で lead_captured(source) を計測。詳細は _components/LeadCapture.tsx。 */}
+      <LeadCapture />
 
       {/* ===== 体験デモ（早めに体験させる：サンプル会社でアハを安全に） =====
           スクリプト型デモ。本物のAPIは叩かず、用意済みの回答をタイプ表示する
@@ -780,20 +844,102 @@ export default function BusinessLandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/signup"
+                <TrackedCTA
+                  location={`pricing_${p.name}`}
                   className={buttonClass({
                     variant: p.featured ? 'primary' : 'secondary',
                     className: 'mt-6 w-full',
                   })}
                 >
                   無料で試す
-                </Link>
+                </TrackedCTA>
               </Card>
             ))}
           </div>
         </div>
       </section>
+
+      {/* ===== よくある質問（FAQ）===== */}
+      <section className="border-t border-neutral-200 bg-neutral-50">
+        <div className="mx-auto max-w-3xl px-6 py-20">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+              よくある質問
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-neutral-600">
+              中小企業の総務・経営者からよく寄せられる質問をまとめました。
+            </p>
+          </div>
+          <dl className="space-y-4">
+            {FAQ.map(item => (
+              <div
+                key={item.q}
+                className="rounded-2xl border border-neutral-200 bg-white p-5"
+              >
+                <dt className="text-base font-semibold text-neutral-900">
+                  {item.q}
+                </dt>
+                <dd className="mt-2 text-sm leading-relaxed text-neutral-600">
+                  {item.a}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* ===== 構造化データ（rich results 適格化）=====
+          FAQPage は上の可視FAQと対。Organization=Kizuna Creation。
+          BreadcrumbList=トップ > 番頭（業務効率化）。aggregateRating は捏造しない。 */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: FAQ.map(item => ({
+              '@type': 'Question',
+              name: item.q,
+              acceptedAnswer: { '@type': 'Answer', text: item.a },
+            })),
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Kizuna Creation',
+            url: 'https://banto-roumu.com/business',
+            logo: 'https://banto-roumu.com/og-image.png',
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'トップ',
+                item: 'https://banto-roumu.com/business',
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: '番頭（会社を覚える労務AI）',
+                item: 'https://banto-roumu.com/business',
+              },
+            ],
+          }),
+        }}
+      />
 
       {/* ===== 末尾CTA ===== */}
       <section className="mx-auto max-w-5xl px-6 py-20">
@@ -808,8 +954,8 @@ export default function BusinessLandingPage() {
             会社を登録して、最初の相談を投げてみてください。前提を説明し直さない労務相談を体験できます。
           </p>
           <div className="mt-7 flex justify-center">
-            <Link
-              href="/signup"
+            <TrackedCTA
+              location="final"
               className={buttonClass({
                 variant: 'secondary',
                 size: 'lg',
@@ -817,9 +963,27 @@ export default function BusinessLandingPage() {
             >
               無料で会社を登録して試す
               <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
+            </TrackedCTA>
           </div>
         </Card>
+      </section>
+
+      {/* ===== 検索意図別の使い方（関連LPへの内部リンク・クラスタ） ===== */}
+      <section className="mx-auto max-w-5xl px-6 pb-16">
+        <p className="mb-4 text-center text-xs font-medium text-neutral-400">
+          目的別の使い方を見る
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {USECASE_LIST.map((u) => (
+            <Link
+              key={u.slug}
+              href={`/roumu/${u.slug}`}
+              className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+            >
+              {u.ogCategory}
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* ===== フッタ ===== */}
@@ -836,9 +1000,9 @@ export default function BusinessLandingPage() {
               <Link href="/login?next=/company" className="hover:text-brand-700">
                 ログイン
               </Link>
-              <Link href="/signup" className="hover:text-brand-700">
+              <TrackedCTA location="footer" className="hover:text-brand-700">
                 無料で始める
-              </Link>
+              </TrackedCTA>
               <Link href="/terms" className="hover:text-brand-700">
                 利用規約
               </Link>
