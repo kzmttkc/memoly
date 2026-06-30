@@ -2,11 +2,11 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { track } from '@/lib/analytics'
 import { Input } from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import { Button, buttonClass } from '@/components/ui/Button'
 
 export default function SignupPage() {
   return (
@@ -24,6 +24,9 @@ function SignupForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
+  const [resent, setResent] = useState(false)
+  const [resending, setResending] = useState(false)
+  const router = useRouter()
   const searchParams = useSearchParams()
   // 番頭(Banto) の動線では確認後に /company へ。?next を尊重しつつ既定は /company。
   const nextRaw = searchParams.get('next') || '/company'
@@ -49,7 +52,7 @@ function SignupForm() {
 
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -68,17 +71,71 @@ function SignupForm() {
       // 活性化ファネル: 登録完了（email+password の signUp 成功地点）
       // PII は送らない。確認メール送信前のサインアップ確定をカウント
       track('signup_completed')
+      // 実挙動で分岐する（表示vs実挙動）。Supabase のメール確認が無効(autoconfirm)なら
+      // signUp 応答に session が同梱される＝この場で認証済み。その場合は確認メール待ちの
+      // デッドエンドを出さず、活性化の次の一歩(/company もしくは ?next)へ直行させる。
+      // 確認必須(session 無し)なら、次の一歩を明示したガイド付き done 画面を出す。
+      if (data.session) {
+        router.push(next)
+        return
+      }
       setDone(true)
+      setLoading(false)
     }
+  }
+
+  // メール確認必須フロー用の確認メール再送（迷子＝メール未着の復帰導線）。
+  async function handleResend() {
+    if (resending) return
+    setResending(true)
+    setError('')
+    const supabase = createClient()
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${location.origin}${next}` },
+    })
+    if (error) {
+      setError('確認メールの再送に失敗しました。時間をおいて試してください。')
+    } else {
+      setResent(true)
+    }
+    setResending(false)
   }
 
   if (done) {
     return (
       <div className="text-center">
         <h2 className="mb-2 text-lg font-semibold text-neutral-900">確認メールを送りました</h2>
-        <p className="text-sm text-neutral-600">
-          {email} に届いたリンクをクリックして登録を完了してください
+        <p className="text-sm leading-relaxed text-neutral-600">
+          {email} に確認メールをお送りしました。メール内のリンクを開くと登録が完了し、そのまま会社の登録画面に進めます。
         </p>
+        <p className="mt-3 text-xs leading-relaxed text-neutral-500">
+          数分待ってもメールが届かない場合は、迷惑メールフォルダもご確認ください。
+        </p>
+
+        <div className="mt-6 space-y-3">
+          {resent ? (
+            <p className="text-sm text-success-700">確認メールを再送しました。</p>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              onClick={handleResend}
+              disabled={resending}
+              className="w-full"
+            >
+              {resending ? '再送中...' : '確認メールを再送する'}
+            </Button>
+          )}
+
+          <Link href={`/login?next=${encodeURIComponent(next)}`} className={buttonClass({ variant: 'ghost', size: 'lg', className: 'w-full' })}>
+            ログイン画面へ
+          </Link>
+        </div>
+
+        {error && <p className="mt-4 text-sm text-danger-600">{error}</p>}
       </div>
     )
   }

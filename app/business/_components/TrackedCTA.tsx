@@ -20,7 +20,9 @@ import { track } from '@/lib/analytics'
 export function TrackedCTA({
   location,
   className,
-  href = '/signup',
+  // 既定で確認後/登録後の着地を /company に固定（活性化の次の一歩を保証）。
+  // signup ページは ?next を読んで尊重する実装になっている。
+  href = '/signup?next=/company',
   children,
 }: {
   location: string

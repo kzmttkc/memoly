@@ -265,7 +265,7 @@ export default function TryDemo() {
           </p>
           <div className="mt-4 flex justify-center">
             <Link
-              href="/signup"
+              href="/signup?next=/company"
               className={buttonClass({ variant: 'primary' })}
               onClick={() =>
                 track('signup_cta_clicked', {

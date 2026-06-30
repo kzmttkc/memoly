@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatPill } from '@/components/ui/StatPill'
 import { Badge } from '@/components/ui/Badge'
+import { track } from '@/lib/analytics'
 
 // ============================================================================
 // /company — 会社オンボーディング / ハブ
@@ -105,6 +106,9 @@ export default function CompanyHomePage() {
         setError(data.error ?? '会社の作成に失敗しました')
         return
       }
+      // 活性化ファネル: 会社作成の確定（登録→会社作成の到達を可視化）。
+      // POST 成功(res.ok)を確認した後にのみ発火＝失敗と取り違えない。PIIは載せない。
+      track('company_created')
       setName('')
       // 作成直後は「5問 構造化ウィザード」へ誘導（集合知の正規化属性を取る入口）。
       //   スキップ可。companyId が取れない場合のみ一覧再読込にフォールバック。
