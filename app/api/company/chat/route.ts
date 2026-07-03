@@ -7,6 +7,7 @@ import {
   getMembership,
   resolveDefaultCompany,
   loadCompanyContext,
+  loadRelevantRuleExcerpts,
 } from '@/lib/company'
 import { maybeAskDifyForQuery } from '@/lib/dify'
 import { checkAndIncrement } from '@/lib/rate-limit'
@@ -86,11 +87,14 @@ export async function POST(req: NextRequest) {
   const lastUserMessage =
     sanitizedMessages.findLast(m => m.role === 'user')?.content ?? ''
 
-  // --- 会社コンテキスト + Dify 一次情報 を並列取得 ---
+  // --- 会社コンテキスト + 規程原文の関連抜粋 + Dify 一次情報 を並列取得 ---
   //   loadCompanyContext に lastUserMessage を渡し、今回の相談に関連する記憶を
   //   recency+キーワードで優先選択する（縦深: 過去の自社判断・人ごとの状況を含む）。
-  const [ctx, difyContext] = await Promise.all([
+  //   loadRelevantRuleExcerpts は F1 規程まるごと取込: 取込済み規程（就業規則等）から
+  //   関連条文の原文抜粋を引く（未取込/テーブル未適用なら空＝既存挙動と同一）。
+  const [ctx, ruleExcerpts, difyContext] = await Promise.all([
     loadCompanyContext(companyId, MAX_MEMORIES, lastUserMessage),
+    loadRelevantRuleExcerpts(companyId, lastUserMessage),
     maybeAskDifyForQuery(lastUserMessage, companyId),
   ])
 
@@ -113,6 +117,7 @@ export async function POST(req: NextRequest) {
     ctx.decisions,
     ctx.peopleSituations,
     decisionConflicts,
+    ruleExcerpts,
   )
 
   const supabase = await createServerSupabaseClient()

@@ -35,7 +35,9 @@ export async function middleware(req: NextRequest) {
 
   if (isProtected && !user) {
     const loginUrl = new URL('/login', req.url)
-    loginUrl.searchParams.set('next', path)
+    // pathname だけだと ?companyId= 等のクエリが落ち、ログイン後に別会社/別状態へ戻る。
+    // クエリごと next に保存する（login 側は相対パスのみ許可＝open redirect 不可）。
+    loginUrl.searchParams.set('next', path + req.nextUrl.search)
     return NextResponse.redirect(loginUrl)
   }
 

@@ -26,7 +26,9 @@ import { getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
 const BASE = 'https://banto-roumu.com'
 
 // CTA = 番頭 無料登録（会社登録の入口）。/business と同一導線。
-const SIGNUP_HREF = '/login?next=/company'
+//   新規訪問者（SEO記事経由）は signup へ直行させる。login 着地だと「新規登録」の
+//   小リンクを自力で見つける必要があり、北極星（無料登録）直前の蛇口が細くなる。
+const SIGNUP_HREF = '/signup?next=/company'
 
 export function generateStaticParams() {
   return USECASE_SLUGS.map((slug) => ({ slug }))

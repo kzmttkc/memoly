@@ -611,7 +611,7 @@ export default function BusinessLandingPage() {
                 {[
                   '会社プロファイルを一度登録すれば再入力不要',
                   '自社の前提に合わせた精度の高い回答',
-                  '低コストで企業社労士のように活用できる',
+                  '自社の前提を覚えた回答が、いつでも低コストで返ってくる',
                 ].map(item => (
                   <li
                     key={item}
@@ -834,7 +834,7 @@ export default function BusinessLandingPage() {
                   <span className="text-3xl font-bold tracking-tight text-neutral-900 tabular-nums">
                     &yen;{p.price}
                   </span>
-                  <span className="text-sm text-neutral-500">/月</span>
+                  <span className="text-sm text-neutral-500">/席・月</span>
                 </p>
                 <ul className="mt-5 space-y-2.5">
                   {p.features.map(feat => (

@@ -37,7 +37,8 @@ function LoginForm() {
       setError('メールアドレスまたはパスワードが正しくありません')
       setLoading(false)
     } else {
-      router.push(next.startsWith('/') ? next : '/company')
+      // 相対パスのみ許可（'//evil.com' はプロトコル相対URL＝open redirect になるため除外）。
+      router.push(next.startsWith('/') && !next.startsWith('//') ? next : '/company')
     }
   }
 
@@ -73,7 +74,11 @@ function LoginForm() {
       <div className="mt-6 space-y-2 text-center text-sm text-neutral-500">
         <p>
           アカウントがない方は{' '}
-          <Link href="/signup" className="font-medium text-brand-600 hover:text-brand-700">
+          {/* ログインに ?next= 付きで来た人が新規登録へ流れても行き先を失わないよう引き継ぐ */}
+          <Link
+            href={next.startsWith('/') && !next.startsWith('//') ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}
+            className="font-medium text-brand-600 hover:text-brand-700"
+          >
             新規登録
           </Link>
         </p>

@@ -170,7 +170,7 @@ export function WeeklyDigest({ companyId }: { companyId: string }) {
           <BookOpenCheck className="mx-auto h-6 w-6 text-brand-600" aria-hidden />
           <p className="text-sm font-medium text-neutral-900">まず自社のことを教えてください</p>
           <p className="text-xs leading-relaxed text-neutral-500">
-            業種や従業員数などの自社プロファイルを登録すると、自社に関係する変更だけを自動で抽出してお届けできます。
+            所定労働時間・36協定の状況・有給の付与・給与締め日などの自社ルールを登録すると、自社に関係する変更だけを自動で抽出してお届けできます。
           </p>
           <Link
             href={`/company/rules?companyId=${companyId}`}

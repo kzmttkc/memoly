@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { track } from '@/lib/analytics'
+import { track, trackThenNavigate } from '@/lib/analytics'
 import { Input } from '@/components/ui/Input'
 import { Button, buttonClass } from '@/components/ui/Button'
 
@@ -19,7 +19,7 @@ export default function SignupPage() {
 function SignupForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [birthYear, setBirthYear] = useState('')
+  const [ageOk, setAgeOk] = useState(false)
   const [digestOptIn, setDigestOptIn] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -42,11 +42,9 @@ function SignupForm() {
     e.preventDefault()
     setError('')
 
-    // 年齢確認（13歳以上）
-    const year = parseInt(birthYear, 10)
-    const currentYear = new Date().getFullYear()
-    if (!year || currentYear - year < 13) {
-      setError('本サービスは13歳以上の方のみご利用いただけます。')
+    // 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け）
+    if (!ageOk) {
+      setError('事業者としてのご利用（18歳以上）に同意のうえチェックをお願いします。')
       return
     }
 
@@ -68,17 +66,39 @@ function SignupForm() {
       setError(already ? 'このメールアドレスはすでに登録されています。' : error.message)
       setLoading(false)
     } else {
-      // 活性化ファネル: 登録完了（email+password の signUp 成功地点）
-      // PII は送らない。確認メール送信前のサインアップ確定をカウント
-      track('signup_completed')
+      // 活性化ファネル: 登録完了（email+password の signUp 成功地点＝北極星イベント）。
+      // PII は送らない。遷移する経路では trackThenNavigate で「送出確定を待ってから」
+      // 遷移する（fire-and-forget + 直後 router.push だとビーコンが破棄され北極星が計測漏れ）。
+      //
       // 実挙動で分岐する（表示vs実挙動）。Supabase のメール確認が無効(autoconfirm)なら
       // signUp 応答に session が同梱される＝この場で認証済み。その場合は確認メール待ちの
       // デッドエンドを出さず、活性化の次の一歩(/company もしくは ?next)へ直行させる。
       // 確認必須(session 無し)なら、次の一歩を明示したガイド付き done 画面を出す。
       if (data.session) {
-        router.push(next)
+        trackThenNavigate('signup_completed', () => router.push(next))
         return
       }
+      // メール確認必須だが既定SMTPは届かない（無料モニター期の暫定）。
+      // サーバ側で確認済みにして即ログインし、確認メール待ちのデッドエンドを回避する。
+      // 失敗時は従来の確認メール待ち画面にフォールバック（挙動を悪化させない）。
+      try {
+        const res = await fetch('/api/auth/confirm-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        })
+        if (res.ok) {
+          const signin = await supabase.auth.signInWithPassword({ email, password })
+          if (!signin.error) {
+            trackThenNavigate('signup_completed', () => router.push(next))
+            return
+          }
+        }
+      } catch {
+        // フォールバックへ
+      }
+      // 確認メール待ち画面（遷移しない＝ビーコンは通常どおり送出される）。
+      track('signup_completed')
       setDone(true)
       setLoading(false)
     }
@@ -140,9 +160,6 @@ function SignupForm() {
     )
   }
 
-  const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: 80 }, (_, i) => currentYear - 13 - i)
-
   return (
     <div>
       <p className="mb-6 text-center text-sm text-neutral-600">無料で始める</p>
@@ -166,24 +183,19 @@ function SignupForm() {
           autoComplete="new-password"
         />
 
-        {/* 年齢確認（COPPA / 個情法対応） */}
-        <div>
-          <label htmlFor="birthYear" className="mb-1.5 block text-xs text-neutral-500">
-            生まれた年（年齢確認）
-          </label>
-          <select
-            id="birthYear"
-            value={birthYear}
-            onChange={e => setBirthYear(e.target.value)}
+        {/* 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け） */}
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={ageOk}
+            onChange={e => setAgeOk(e.target.checked)}
             required
-            className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-          >
-            <option value="">選択してください</option>
-            {years.map(y => (
-              <option key={y} value={y}>{y}年</option>
-            ))}
-          </select>
-        </div>
+            className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/30"
+          />
+          <span className="text-xs text-neutral-600">
+            事業者として利用します（18歳以上）
+          </span>
+        </label>
 
         {/* 更新情報オプトイン */}
         <label className="flex cursor-pointer items-start gap-3">

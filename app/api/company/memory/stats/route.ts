@@ -5,16 +5,22 @@ import { getCurrentUser, getMembership } from '@/lib/company'
 // ============================================================================
 // /api/company/memory/stats — 記憶残高（沈没コスト可視化）の件数を返す（GET）
 // ----------------------------------------------------------------------------
-//   LTV施策(解約防止の主装置): ダッシュボードに「番頭が御社について覚えていること：N件」
+//   LTV施策(解約防止の主装置): ダッシュボードに「番頭が自社について覚えていること：N件」
 //   を常時表示するための実数ソース。company_memories（自社の長期記憶）と
-//   company_profiles（承認済み自社ルール）の実件数を数える。
+//   company_profiles（承認済み自社ルール）に加え、オンボーディングで登録した
+//   company_attributes（業種・規模・制度有無）の充足フィールド数も数える。
 //
-//   返却: { total, memories, decisions, rules, profiles }
-//     - memories  : memory_type='summary'（相談の記憶）
-//     - decisions : memory_type='decision'（過去の自社判断＝差別化の核）
-//     - rules     : memory_type='rule'（承認待ち候補も含む抽出事実）
-//     - profiles  : company_profiles（admin承認済みの自社ルール）
-//     - total     : これらの合計＝「御社について覚えていること」の総量
+//   ★なぜ attributes を数えるか: オンボ5問の回答先は company_attributes であり、
+//   ここを数えないと「登録直後にメーターが 0件＝まだ何も覚えていません」と表示され、
+//   moat（会社を覚える）の可視化がアクティベーションの瞬間に自己否定する。
+//
+//   返却: { total, memories, decisions, rules, profiles, profileFacts }
+//     - memories     : memory_type='summary'（相談の記憶）
+//     - decisions    : memory_type='decision'（過去の自社判断＝差別化の核）
+//     - rules        : memory_type='rule'（承認待ち候補も含む抽出事実）
+//     - profiles     : company_profiles（admin承認済みの自社ルール）
+//     - profileFacts : company_attributes の非null充足フィールド数（業種/規模/制度3問・0〜5）
+//     - total        : これらの合計＝「自社について覚えていること」の総量
 //
 //   可視性は RLS 下の anon(=ユーザーJWT) で担保（自社のみ可視）。head:true の
 //   count クエリで件数だけを軽量に取得し、本文（PII）は一切返さない。
@@ -42,11 +48,20 @@ export async function GET(req: NextRequest) {
     return q
   }
 
-  const [sum, dec, rule, prof] = await Promise.all([
+  // company_attributes は会社につき1行。head:count では「非nullフィールド数」が出せないため
+  // 該当行を1本だけ読み、充足フィールド（業種/規模/制度3問）を決定的に数える（PIIではない属性）。
+  const attrsQuery = supabase
+    .from('company_attributes')
+    .select('industry_major,employee_band,has_36kyotei,has_work_rules,has_fixed_ot')
+    .eq('company_id', companyId)
+    .maybeSingle()
+
+  const [sum, dec, rule, prof, attrs] = await Promise.all([
     countOf('company_memories', 'summary'),
     countOf('company_memories', 'decision'),
     countOf('company_memories', 'rule'),
     countOf('company_profiles'),
+    attrsQuery,
   ])
 
   const memories = sum.count ?? 0
@@ -54,11 +69,19 @@ export async function GET(req: NextRequest) {
   const rules = rule.count ?? 0
   const profiles = prof.count ?? 0
 
+  // 三値bool(null=未回答)も含め、非nullの登録済みフィールドだけを「覚えている事実」として数える。
+  const a = attrs.data
+  const profileFacts = a
+    ? (['industry_major', 'employee_band', 'has_36kyotei', 'has_work_rules', 'has_fixed_ot'] as const)
+        .filter((k) => a[k] !== null && a[k] !== undefined).length
+    : 0
+
   return NextResponse.json({
-    total: memories + decisions + rules + profiles,
+    total: memories + decisions + rules + profiles + profileFacts,
     memories,
     decisions,
     rules,
     profiles,
+    profileFacts,
   })
 }

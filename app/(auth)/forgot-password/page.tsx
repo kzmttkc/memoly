@@ -10,21 +10,19 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
     const supabase = createClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // メール存在オラクル遮断（CTO P2-1）:
+    //   error の有無で「登録済みか」を推測させないよう、成否にかかわらず同一の
+    //   「送信しました（該当すれば届きます）」を表示する。実送信は Supabase 側で
+    //   登録済みメールにのみ行われるため、正規ユーザーの復帰導線は壊れない。
+    await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${location.origin}/reset-password`,
     })
-    if (error) {
-      setError('メールの送信に失敗しました。メールアドレスを確認してください。')
-    } else {
-      setSent(true)
-    }
+    setSent(true)
     setLoading(false)
   }
 
@@ -33,7 +31,7 @@ export default function ForgotPasswordPage() {
       <div className="text-center">
         <h1 className="mb-2 text-lg font-semibold text-neutral-900">メールを送信しました</h1>
         <p className="text-sm leading-relaxed text-neutral-600">
-          {email} に再設定用リンクを送りました。<br />メールを確認してください。
+          入力されたメールアドレスが登録済みの場合、{email} に再設定用リンクを送りました。メールを確認してください。
         </p>
         <Link
           href="/login"
@@ -63,7 +61,6 @@ export default function ForgotPasswordPage() {
           autoComplete="email"
           required
         />
-        {error && <p className="text-xs text-danger-600">{error}</p>}
         <Button type="submit" size="lg" disabled={loading || !email} className="w-full">
           {loading ? '送信中...' : '再設定メールを送る'}
         </Button>

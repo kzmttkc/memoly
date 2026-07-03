@@ -6,14 +6,15 @@ import { Brain, ArrowRight } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 
 // ============================================================================
-// MemoryBalanceMeter — 「番頭が御社について覚えていること：N件」を常時表示する。
+// MemoryBalanceMeter — 「番頭が自社について覚えていること：N件」を常時表示する。
 // ----------------------------------------------------------------------------
 //   LTV施策(解約防止の主装置)。番頭の価値は「使うほど自社を覚える＝乗り換えると
 //   ゼロからやり直し」という沈没コストにある。それを毎週増える実数として見せ、
 //   解約の心理的コストを上げる（ダークパターンではなく事実の可視化）。
 //
-//   - 実数は /api/company/memory/stats（company_memories + company_profiles の件数）。
-//   - 記憶0件のとき（新規会社）は煽らず「これから覚えていきます」と前向きに出す。
+//   - 実数は /api/company/memory/stats（記憶 + 自社ルール + オンボ登録属性の件数）。
+//   - オンボ5問(company_attributes)も total に含むため、登録直後から 0件 にならない。
+//   - 真に何も無いとき（属性も記憶も0）だけ煽らず「これから覚えていきます」と前向きに出す。
 //   - クリックで /company/memory（会社の記憶）へ。中身を実際に確認できる導線にする。
 //   - Phase1コンプラ: 断定/誇大なし。配色は @theme トークンのみ。
 // ============================================================================
@@ -24,6 +25,7 @@ interface MemoryStats {
   decisions: number
   rules: number
   profiles: number
+  profileFacts: number
 }
 
 export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
@@ -65,7 +67,7 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
             <Brain className="h-5.5 w-5.5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-neutral-500">番頭が御社について覚えていること</p>
+            <p className="text-xs text-neutral-500">番頭が自社について覚えていること</p>
             {loading ? (
               <p className="mt-0.5 text-sm text-neutral-400">読み込み中...</p>
             ) : total > 0 ? (
@@ -80,7 +82,7 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
               </p>
             ) : (
               <p className="mt-0.5 text-sm text-neutral-700">
-                相談を重ねるほど、御社のことを覚えていきます。
+                相談を重ねるほど、自社のことを覚えていきます。
               </p>
             )}
           </div>
@@ -88,7 +90,7 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
         </div>
         {!loading && total > 0 && (
           <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-            相談・判断・自社ルールを使うほど積み上がります。これは番頭だけが覚えている御社固有の記憶です。
+            相談・判断・自社ルールを使うほど積み上がります。これは番頭だけが覚えている自社固有の記憶です。
           </p>
         )}
       </Card>

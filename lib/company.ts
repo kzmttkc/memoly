@@ -258,3 +258,174 @@ export async function loadCompanyContext(
 
   return { profiles, memories, decisions, peopleSituations }
 }
+
+// ============================================================================
+// F1 規程まるごと取込 — 規程原文（company_documents）の関連抜粋リトリーバ
+//   看板「会社を覚える」の実体: 取り込んだ就業規則等の原文から、今回の相談に
+//   関連する条文チャンクを選び、チャットの system に注入する
+//   （company_memories と同じ recency+キーワード方式・非ベクトル。
+//    pgvector 解禁時は relevanceScore と同様ここが差し替え点）。
+// ============================================================================
+
+/** チャットに注入する規程原文の抜粋（出典＝規程名つき）。 */
+export interface CompanyRuleExcerpt {
+  title: string   // 規程名（例「就業規則」）
+  excerpt: string // 条文チャンク（原文のまま・上限あり）
+}
+
+// 抜粋チャンクの上限（system 注入コストの天井。prompt caching 前提でも節度を持つ）。
+const EXCERPT_MAX_CHARS = 800
+const EXCERPT_MAX_COUNT = 4
+
+/**
+ * 規程原文を「条」単位のチャンクに分割する。
+ *   - 「第◯条」見出しを境界として優先（日本の規程はほぼこの形式）。
+ *   - 条見出しが無い/条が長すぎる場合は空行・サイズで分割する。
+ *   exported: ingest 側のプレビューや将来のテストからも使えるようにする。
+ */
+export function chunkRegulationText(text: string): string[] {
+  const normalized = text.replace(/\r\n/g, '\n').trim()
+  if (!normalized) return []
+
+  // 「第◯条」（漢数字・算用数字とも）の直前で切る。lookahead で見出し自体はチャンク先頭に残す。
+  const byArticle = normalized.split(/(?=第\s*[0-9０-９一二三四五六七八九十百]+\s*条)/)
+
+  const chunks: string[] = []
+  for (const part of byArticle) {
+    const p = part.trim()
+    if (!p) continue
+    if (p.length <= EXCERPT_MAX_CHARS) {
+      chunks.push(p)
+      continue
+    }
+    // 長すぎる塊は空行→サイズの順でさらに割る（原文の切れ目を極力尊重）。
+    let buf = ''
+    for (const para of p.split(/\n{2,}/)) {
+      const seg = para.trim()
+      if (!seg) continue
+      if ((buf + '\n\n' + seg).length > EXCERPT_MAX_CHARS && buf) {
+        chunks.push(buf)
+        buf = seg
+      } else {
+        buf = buf ? `${buf}\n\n${seg}` : seg
+      }
+      // 段落単体が上限超過なら固定長で強制分割
+      while (buf.length > EXCERPT_MAX_CHARS) {
+        chunks.push(buf.slice(0, EXCERPT_MAX_CHARS))
+        buf = buf.slice(EXCERPT_MAX_CHARS)
+      }
+    }
+    if (buf) chunks.push(buf)
+  }
+  return chunks
+}
+
+/** チャンクとクエリの素朴な関連度（relevanceScore と同じ n-gram トークン方式）。 */
+function chunkRelevance(chunk: string, tokens: string[]): number {
+  const c = chunk.toLowerCase()
+  let score = 0
+  for (const tok of tokens) {
+    if (c.includes(tok)) score += 1
+  }
+  return score
+}
+
+/**
+ * 今回の相談(userQuery)に関連する規程原文の抜粋を返す。
+ *   - RLS 下の anon(=ユーザーJWT) で company_documents を読む（自社のみ可視）。
+ *   - ★ベストエフォート: テーブル未適用/クエリ失敗/クエリ空 では [] を返し、
+ *     チャット等の既存機能を絶対に巻き添えにしない（loadCompanyAttributes と同じ流儀）。
+ *   - 選択は「関連スコア降順→規程の更新が新しい順」。スコア0のチャンクは注入しない
+ *     （無関係な条文で system を薄めない）。
+ */
+export async function loadRelevantRuleExcerpts(
+  companyId: string,
+  userQuery: string,
+  maxExcerpts = EXCERPT_MAX_COUNT,
+): Promise<CompanyRuleExcerpt[]> {
+  const q = (userQuery ?? '').trim()
+  if (!q) return []
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data, error } = await supabase
+      .from('company_documents')
+      .select('title, content, updated_at')
+      .eq('company_id', companyId)
+      .order('updated_at', { ascending: false })
+      .limit(5) // 規程は会社あたり数本の想定。読み過ぎない天井。
+    if (error || !data || data.length === 0) {
+      if (error) {
+        // テーブル未適用（migration前）は想定内なので info 級に留める。
+        console.error('[company:loadRelevantRuleExcerpts] select failed (non-fatal)', error.message)
+      }
+      return []
+    }
+
+    const tokens = extractTokens(q.toLowerCase())
+    const scored: { title: string; excerpt: string; score: number; docIdx: number }[] = []
+    data.forEach((doc, docIdx) => {
+      for (const chunk of chunkRegulationText(doc.content ?? '')) {
+        const score = chunkRelevance(chunk, tokens)
+        if (score > 0) scored.push({ title: doc.title, excerpt: chunk, score, docIdx })
+      }
+    })
+
+    return scored
+      .sort((a, b) => (b.score - a.score) || (a.docIdx - b.docIdx))
+      .slice(0, maxExcerpts)
+      .map(({ title, excerpt }) => ({ title, excerpt }))
+  } catch (e) {
+    console.error('[company:loadRelevantRuleExcerpts] threw (non-fatal)', (e as Error).message)
+    return []
+  }
+}
+
+/** company_attributes（オンボーディング5問の正規化属性）の値。null=未回答。 */
+export interface CompanyAttributesValues {
+  industry_major: string | null
+  employee_band: string | null
+  has_36kyotei: boolean | null
+  has_work_rules: boolean | null
+  has_fixed_ot: boolean | null
+}
+
+/**
+ * company_attributes（オンボーディング5問の正規化属性）を読む。
+ *   digest の空状態判定・生成コンテキスト注入の一次入力（risk-audit と同型の流儀）。
+ *   RLS 下の anon(=ユーザーJWT) で自社のみ可視。
+ *   ★ベストエフォート: テーブル未適用/RLS 失敗でも例外にせず全 null を返す
+ *     （呼び出し側のレスポンスを止めない＝既存 UX 非破壊）。
+ */
+export async function loadCompanyAttributes(companyId: string): Promise<CompanyAttributesValues> {
+  const empty: CompanyAttributesValues = {
+    industry_major: null,
+    employee_band: null,
+    has_36kyotei: null,
+    has_work_rules: null,
+    has_fixed_ot: null,
+  }
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data, error } = await supabase
+      .from('company_attributes')
+      .select('industry_major, employee_band, has_36kyotei, has_work_rules, has_fixed_ot')
+      .eq('company_id', companyId)
+      .maybeSingle()
+    if (error || !data) return empty
+    return {
+      industry_major: data.industry_major ?? null,
+      employee_band: data.employee_band ?? null,
+      has_36kyotei: data.has_36kyotei ?? null,
+      has_work_rules: data.has_work_rules ?? null,
+      has_fixed_ot: data.has_fixed_ot ?? null,
+    }
+  } catch (e) {
+    console.error('[company:loadCompanyAttributes] load threw (non-fatal)', (e as Error).message)
+    return empty
+  }
+}
+
+/** 回答済み（null 以外）の属性数。空状態(TTV)判定の材料に使う。 */
+export function countAnsweredAttributes(attrs: CompanyAttributesValues): number {
+  return Object.values(attrs).filter(v => v !== null).length
+}

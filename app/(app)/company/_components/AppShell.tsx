@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   Sparkles,
   History,
+  CalendarClock,
+  FileBarChart,
   CreditCard,
   LogOut,
   Menu,
@@ -33,6 +35,8 @@ import { CompanySwitcher } from './CompanySwitcher'
 interface NavItem {
   href: string
   label: string
+  /** モバイル下部タブ用の短縮ラベル（未指定なら label）。375px幅6枠でのはみ出し防止。 */
+  mobileLabel?: string
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
 }
 
@@ -46,15 +50,22 @@ const NAV: NavItem[] = [
   { href: '/company/memory', label: '会社の記憶', icon: History },
   { href: '/company/rules', label: '自社ルール', icon: BookOpenCheck },
   { href: '/company/documents', label: '書類', icon: FileText },
+  { href: '/company/deadlines', label: '期限', icon: CalendarClock },
+  { href: '/company/reports', label: 'まとめ・社労士メモ', mobileLabel: 'まとめ', icon: FileBarChart },
   { href: '/company/risk', label: 'リスク診断', icon: ShieldCheck },
-  { href: '/company/insights', label: '助成金・法改正', icon: Sparkles },
+  { href: '/company/insights', label: '助成金・法改正', mobileLabel: '助成金', icon: Sparkles },
   // 課金/席管理(admin向け)。サイドナビ/ドロワーには出すが、下部タブには出さない。
   { href: '/company/billing', label: 'プラン・席', icon: CreditCard },
 ]
 
-// モバイル下部タブは主要6導線に絞る（memory/billing はドロワー/サイドナビから到達）。
+// モバイル下部タブは主要6導線に絞る（memory/deadlines/billing はドロワー/サイドナビから到達）。
+// deadlines は下部タブの6枠を維持するため除外し、サイドナビ/ドロワーからのみ到達させる。
 const MOBILE_TAB_NAV: NavItem[] = NAV.filter(
-  n => n.href !== '/company/memory' && n.href !== '/company/billing',
+  n =>
+    n.href !== '/company/memory' &&
+    n.href !== '/company/deadlines' &&
+    n.href !== '/company/reports' &&
+    n.href !== '/company/billing',
 )
 
 function Wordmark() {
@@ -168,7 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label="会社版ナビゲーション（モバイル）"
       >
         <div className="mx-auto grid max-w-md grid-cols-6">
-          {MOBILE_TAB_NAV.map(({ href, label, icon: Icon }) => {
+          {MOBILE_TAB_NAV.map(({ href, label, mobileLabel, icon: Icon }) => {
             const active = isActive(href)
             return (
               <Link
@@ -182,7 +193,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden />
-                {label}
+                {mobileLabel ?? label}
               </Link>
             )
           })}

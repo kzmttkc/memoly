@@ -59,7 +59,9 @@ export interface PlanDef {
 }
 
 // ----------------------------------------------------------------------------
-// プラン本体（価格は project_vertical_saas_build メモリの確定値）。
+// プラン本体（価格は project_banto_pricing メモリ＝2026-06-29 Takeshi承認の確定構造:
+//   Entry¥3,980／Standard¥9,800／士業¥29,800。旧 vertical_saas_build 値からの更新
+//   を 2026-07-02 CPO監査で検出し整合）。
 //   無料モニター中は free が全社に割り当たる想定。Stripe結線後に有料へ昇格。
 // ----------------------------------------------------------------------------
 export const PLANS: Record<PlanId, PlanDef> = {
@@ -85,8 +87,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
   starter: {
     id: 'starter',
     displayName: 'Entry',
-    monthlyJpy: 2980,
-    stripeAmount: 2980,
+    monthlyJpy: 3980,
+    stripeAmount: 3980,
     priceEnvVar: 'STRIPE_PRICE_STARTER',
     seatCap: 5,
     multiClient: false,
@@ -103,8 +105,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
   standard: {
     id: 'standard',
     displayName: 'Standard',
-    monthlyJpy: 4980,
-    stripeAmount: 4980,
+    monthlyJpy: 9800,
+    stripeAmount: 9800,
     priceEnvVar: 'STRIPE_PRICE_STANDARD',
     seatCap: 20,
     multiClient: false,
@@ -121,8 +123,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
   shigyo: {
     id: 'shigyo',
     displayName: '士業',
-    monthlyJpy: 9800,
-    stripeAmount: 9800,
+    monthlyJpy: 29800,
+    stripeAmount: 29800,
     priceEnvVar: 'STRIPE_PRICE_SHIGYO',
     seatCap: 50,
     multiClient: true,

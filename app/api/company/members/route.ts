@@ -10,8 +10,15 @@ import { createAdminClient, getCurrentUser, getMembership } from '@/lib/company'
 //          company_members(member) に追加。席数超過は trg_company_seat_limit が弾く。
 //          → そのエラーを 409 で返し「席数上限」を明示する（トリガ実証点）。
 //   最小実装: 招待レコード方式ではなく「既存ユーザーのメール解決」方式。
-//             未登録メールは 404（招待メール送信はP1スコープ外）。
+//   ★メール存在オラクル緩和（CTO P2-1）: 「未登録404 / 既存は追加成功」の応答差で
+//     任意メールの登録有無が判定できてしまうため、未登録・既存（既メンバー含む）の
+//     いずれも同一文言の 200 で返す。既存ユーザーの即時追加という実機能は従来どおり
+//     （応答からは追加されたか推測できないだけ）。DBマイグレーション無しの最小修正。
 // ============================================================================
+
+// 招待応答の統一文言（未登録/既存/既メンバーのどれでも同じ＝存在が推測できない）。
+const INVITE_ACCEPTED_MESSAGE =
+  '招待を受け付けました。相手が番頭に登録済みの場合は即時追加され、未登録の場合は登録後に有効になります。'
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser()
@@ -54,15 +61,13 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
 
   // 既存auth.usersをメールで解決。Admin APIのlistUsersでフィルタ。
+  // 未登録でもエラーにせず統一文言で返す（存在オラクル緩和。登録済みなら下で即追加）。
   const target = await findUserByEmail(admin, String(email).toLowerCase())
   if (!target) {
-    return NextResponse.json(
-      { error: 'そのメールのユーザーは未登録です（先にサインアップが必要）' },
-      { status: 404 }
-    )
+    return NextResponse.json({ ok: true, message: INVITE_ACCEPTED_MESSAGE })
   }
 
-  // 既に席があるか
+  // 既に席がある場合も統一文言（「既にメンバーです」を返すと登録有無が漏れる）。
   const { data: existing } = await admin
     .from('company_members')
     .select('user_id')
@@ -70,7 +75,7 @@ export async function POST(req: NextRequest) {
     .eq('user_id', target.id)
     .maybeSingle()
   if (existing) {
-    return NextResponse.json({ error: '既にメンバーです' }, { status: 409 })
+    return NextResponse.json({ ok: true, message: INVITE_ACCEPTED_MESSAGE })
   }
 
   // 席追加。席数超過なら trg_company_seat_limit が EXCEPTION を投げる。
@@ -87,15 +92,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: insErr.message }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, userId: target.id, role: inviteRole })
+  // 追加成功も同一文言（userId 等の差分情報を返さない＝応答から存在を推測させない）。
+  return NextResponse.json({ ok: true, message: INVITE_ACCEPTED_MESSAGE })
 }
 
-// Admin API でメールからユーザーを解決（ページング対応・最大数ページ走査）
+// Admin API でメールからユーザーを解決（ページング対応）。
+//   走査上限は 5ページ×1000件（コスト増幅緩和: 1リクエストで Admin API を最大20回
+//   叩ける状態を解消。5,000ユーザー超は招待レコード方式へ移行するときに再設計する）。
 async function findUserByEmail(
   admin: ReturnType<typeof createAdminClient>,
   email: string
 ) {
-  for (let page = 1; page <= 20; page++) {
+  for (let page = 1; page <= 5; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
     if (error || !data) return null
     const hit = data.users.find(u => u.email?.toLowerCase() === email)

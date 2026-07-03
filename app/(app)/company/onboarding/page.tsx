@@ -52,6 +52,11 @@ function OnboardingInner() {
   //   空のホームでなく、答えた内容がその場で診断結果になる＝「会社が覚えられた」を最短で体感させる。
   const riskHref = `/company/risk?companyId=${companyId}&from=onboarding`
 
+  // 最低1問の回答があるか（全未回答の空登録を防ぐ。強制はしない＝「あとで入力する」で通れる）。
+  //   全未回答のまま登録→診断へ進むと、空の前提で診断が走り体験が薄くなるため。
+  const hasAnyAnswer =
+    industry !== '' || band !== '' || BOOL_QUESTIONS.some(q => tri[q.key] !== 'unknown')
+
   async function save() {
     if (saving || !companyId) return
     setSaving(true)
@@ -167,13 +172,18 @@ function OnboardingInner() {
         ))}
 
         <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-5">
-          <Button size="lg" onClick={save} disabled={saving}>
+          <Button size="lg" onClick={save} disabled={saving || !hasAnyAnswer}>
             <Check className="h-4 w-4" aria-hidden />
             {saving ? '保存中...' : '登録して始める'}
           </Button>
           <Link href={homeHref} className={buttonClass({ variant: 'ghost' })}>
             あとで入力する
           </Link>
+          {!hasAnyAnswer && (
+            <p className="w-full text-xs leading-relaxed text-neutral-500">
+              どれか1問に答えると登録できます（全部でなくて大丈夫です）。
+            </p>
+          )}
           <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-neutral-500">
             <Building2 className="h-3.5 w-3.5" aria-hidden />
             この情報は自社内でのみ利用されます

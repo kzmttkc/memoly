@@ -1,5 +1,11 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { createAdminClient, loadCompanyContext } from '@/lib/company'
+import {
+  createAdminClient,
+  loadCompanyContext,
+  loadCompanyAttributes,
+  type CompanyAttributesValues,
+} from '@/lib/company'
+import { INDUSTRY_MAJORS } from '@/lib/company-attributes'
 import { checkAndIncrement } from '@/lib/rate-limit'
 import type { PlanId } from '@/lib/plans'
 import { loadSubsidies, loadLawChanges } from '@/lib/insights-core'
@@ -164,6 +170,26 @@ function toCards(
   return cards
 }
 
+/**
+ * company_attributes（オンボーディング5問）をプロンプト注入用の KV へ整形する。
+ *   profiles が空でも 5問の回答があれば「業種・規模・制度有無」を生成の起点にできる
+ *   （空状態判定と同じ理由＝5問の回答は company_profiles に入らないため）。
+ *   未回答(null)の項目は出さない＝ノイズ・誤前提を作らない。
+ */
+function attributesToProfileKV(attrs: CompanyAttributesValues): CompanyProfileKV[] {
+  const kv: CompanyProfileKV[] = []
+  if (attrs.industry_major) {
+    const label = INDUSTRY_MAJORS.find(i => i.code === attrs.industry_major)?.label
+    if (label) kv.push({ key: '業種', value: label })
+  }
+  if (attrs.employee_band) kv.push({ key: '従業員数', value: `${attrs.employee_band}名` })
+  const yn = (v: boolean) => (v ? 'あり' : 'なし')
+  if (attrs.has_36kyotei !== null) kv.push({ key: '36協定', value: yn(attrs.has_36kyotei) })
+  if (attrs.has_work_rules !== null) kv.push({ key: '就業規則', value: yn(attrs.has_work_rules) })
+  if (attrs.has_fixed_ot !== null) kv.push({ key: '固定残業代', value: yn(attrs.has_fixed_ot) })
+  return kv
+}
+
 /** ISO日時を「YYYY年M月」へ（カード文面の時期提示用）。失敗時は空。 */
 function fmtMonth(iso: string): string {
   const d = new Date(iso)
@@ -289,7 +315,10 @@ export async function getOrGenerateDigest(
   }
 
   const ctx = await loadCompanyContext(companyId)
-  const profiles: CompanyProfileKV[] = ctx.profiles
+  // 正規化属性（オンボ5問）を KV 化して前置き＝profiles が薄くても自社起点で生成する
+  //  （risk-audit と同型の注入。読取りはベストエフォート＝失敗しても生成を止めない）。
+  const attributes = await loadCompanyAttributes(companyId)
+  const profiles: CompanyProfileKV[] = [...attributesToProfileKV(attributes), ...ctx.profiles]
 
   const [subsidyResult, lawChanges, liveCards] = await Promise.all([
     loadSubsidies(companyName, profiles, companyId),

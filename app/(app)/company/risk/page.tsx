@@ -91,14 +91,17 @@ function RiskInner() {
 
   // オンボ直後（from=onboarding）は属性確認が済み次第、自動で1回だけ診断を実行。
   //   登録した内容がそのまま「自社のリスク結果」になり、空状態を渡さない。
+  //   ★needAttrs（業種/規模が未回答）の間は保留する: フォーム入力中に自動診断が走ると
+  //     結果表示でフォームが unmount され入力が消える競合になるため。フォーム保存完了
+  //     （onSaved → needAttrs=false）を待ってから発火する。スキップして手動診断も可。
   useEffect(() => {
-    if (!fromOnboarding || !attrsChecked || autoFired.current || !companyId) return
+    if (!fromOnboarding || !attrsChecked || needAttrs || autoFired.current || !companyId) return
     autoFired.current = true
     track('onboarding_to_risk')
     run()
-    // run は安定参照不要（autoFired で単発保証）。companyId/attrsChecked 確定後に発火。
+    // run は安定参照不要（autoFired で単発保証）。companyId/attrsChecked/needAttrs 確定後に発火。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromOnboarding, attrsChecked, companyId])
+  }, [fromOnboarding, attrsChecked, needAttrs, companyId])
 
   async function run() {
     if (loading) return
@@ -136,7 +139,7 @@ function RiskInner() {
     ]
     if (top) lines.push(`いちばん気になった点：${top}`)
     lines.push('')
-    lines.push('会社を覚える労務AIで無料診断 → sharoushi-agent.com')
+    lines.push('会社を覚える労務AIで無料診断 → banto-roumu.com/business')
     lines.push('#労務 #労務リスク診断')
     return lines.join('\n')
   }

@@ -4,6 +4,8 @@ import {
   getMembership,
   resolveDefaultCompany,
   loadCompanyContext,
+  loadCompanyAttributes,
+  countAnsweredAttributes,
 } from '@/lib/company'
 import { getOrGenerateDigest } from '@/lib/digest'
 import { resolvePlan } from '@/lib/plans'
@@ -59,10 +61,13 @@ export async function POST(req: NextRequest) {
 
   // --- 空状態(TTV): 最低限のプロファイルが無ければ生成せず CTA へ倒す ---
   //   フィードは「自社プロファイルで対象判定」が生命線。空のままLLMを走らせると
-  //   汎用ニュース配信になり差別化が死ぬ。閾値=プロファイル1件以上を「最低限あり」とする。
+  //   汎用ニュース配信になり差別化が死ぬ。閾値=プロファイル or 正規化属性が1件以上。
+  //   ★オンボーディング5問の回答は company_profiles でなく company_attributes に入る。
+  //     profiles だけを見ると「5問に答えた直後のユーザー」に『まず自社のことを教えて
+  //     ください』が出る自己矛盾になるため、属性の回答数も「最低限あり」に数える。
   const ctx = await loadCompanyContext(companyId)
   const profileCount = ctx.profiles.length
-  if (profileCount === 0) {
+  if (profileCount === 0 && countAnsweredAttributes(await loadCompanyAttributes(companyId)) === 0) {
     return NextResponse.json({ profileEmpty: true, profileCount: 0 })
   }
 

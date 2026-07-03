@@ -21,6 +21,45 @@ export function track(event: string, props?: PlausibleProps) {
   }
 }
 
+/**
+ * イベントの送出確定を待ってから画面遷移する。
+ *   track() は window.plausible にキュー投入するだけ（fire-and-forget）。直後に
+ *   router.push すると、ビーコンが送出される前に SPA 遷移が走り、キュー内イベントが
+ *   破棄され得る。北極星（signup_completed）でこれが起きると登録が黙って計測漏れする。
+ *   → Plausible の callback（送出完了で発火）で遷移し、届かない環境に備え timeout で
+ *     必ず遷移する（計測より遷移の確実性を優先＝ユーザー体験は絶対に悪化させない）。
+ */
+export function trackThenNavigate(
+  event: string,
+  navigate: () => void,
+  props?: PlausibleProps,
+) {
+  if (typeof window === 'undefined') {
+    navigate()
+    return
+  }
+  let done = false
+  const go = () => {
+    if (done) return
+    done = true
+    navigate()
+  }
+  try {
+    const plausible = (window as unknown as {
+      plausible?: (e: string, opts?: { props?: PlausibleProps; callback?: () => void }) => void
+    }).plausible
+    if (!plausible) {
+      go()
+      return
+    }
+    // 送出確定で遷移。届かない場合に備え 300ms で必ず遷移する保険。
+    setTimeout(go, 300)
+    plausible(event, { ...(props ? { props } : {}), callback: go })
+  } catch {
+    go()
+  }
+}
+
 const RETURN_KEY = 'memoly_first_visit'
 
 /**

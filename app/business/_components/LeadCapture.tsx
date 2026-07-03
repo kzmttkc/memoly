@@ -74,11 +74,11 @@ export default function LeadCapture() {
           {state === 'done' ? (
             <>
               <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
-                チェックリストをお送りします
+                ご登録を受け付けました
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-                ご入力ありがとうございます。就業規則の見直しチェックリストを、ご登録のメールアドレス宛にお送りします。
-                自社の規程を覚える番頭を、登録なしの一歩から試していただけます。
+                ご登録ありがとうございます。就業規則の点検ポイントをまとめた資料は、準備が整い次第ご案内します。
+                お待ちいただく間に、自社の規程を覚える番頭を登録なしでそのままお試しいただけます。
               </p>
               <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-success-50 px-3 py-1 text-sm font-medium text-success-700">
                 <Check className="h-4 w-4" aria-hidden />
@@ -88,10 +88,10 @@ export default function LeadCapture() {
           ) : (
             <>
               <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
-                就業規則チェックリストを無料でお渡しします
+                自社の規程を覚える番頭を、無料で試せます
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-                見落としやすい規程のポイントをまとめた点検リストです。会社登録の前に、まずはこれだけ受け取ってご活用ください。メールアドレスのご入力だけで大丈夫です。
+                会社登録の前に、登録なしで番頭の使い心地を試せます。メールアドレスをご登録いただいた方には、就業規則の点検ポイントをまとめた資料が整い次第ご案内します。
               </p>
 
               <form onSubmit={onSubmit} className="mt-7 w-full max-w-md">

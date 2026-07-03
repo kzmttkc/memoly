@@ -10,6 +10,10 @@ import {
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { checkAndIncrement } from '@/lib/rate-limit'
 import { resolvePlan } from '@/lib/plans'
+import {
+  computeFallbackRiskAudit,
+  type RiskFallbackAttributes,
+} from '@/lib/risk-fallback'
 
 // ============================================================================
 // /api/company/risk-audit — 提案C 労務リスク・セルフ監査スコア（集客/バイラル）
@@ -94,6 +98,11 @@ export async function POST(req: NextRequest) {
   const profiles = ctx.profiles
   const answers = normalizeAnswers(bodyAnswers)
 
+  // オンボーディング5問（company_attributes: 業種/規模/36協定/就業規則/固定残業）を読む。
+  //   LLM 成功時は使わないが、失敗時の決定的フォールバック採点の一次入力になる。
+  //   ベストエフォート（テーブル未適用/RLS 失敗でも null 群を返して診断を止めない）。
+  const attributes = await loadCompanyAttributes(companyId)
+
   try {
     const resp = await anthropic.messages.create({
       model: CHAT_MODEL,
@@ -130,11 +139,61 @@ export async function POST(req: NextRequest) {
       disclaimer: RISK_AUDIT_DISCLAIMER,
     })
   } catch (e) {
-    console.error('[company:risk-audit] sonnet failed', (e as Error).message)
-    return NextResponse.json(
-      { error: '診断に失敗しました。時間をおいて再度お試しください。' },
-      { status: 502 },
+    // ★ LLM(Anthropic) 失敗のデッドエンドを埋める決定的フォールバック。
+    //   502「時間をおいて」で最初の1人を空手で帰さず、オンボーディング5問＋自社ルール
+    //   から必ずスコア＋TOP3指摘を 200 で返す（LLM を一切呼ばない・純ルール計算）。
+    console.error(
+      '[company:risk-audit] sonnet failed; serving deterministic fallback',
+      (e as Error).message,
     )
+    const fb = computeFallbackRiskAudit(attributes, profiles, answers)
+
+    // 従来成功時と同じく時系列へ書き戻す（悪化アラート/集合知の素を欠かさない）。
+    await saveRiskScore(companyId, fb.score, fb.categories)
+
+    return NextResponse.json({
+      score: fb.score,
+      level: fb.level,
+      categories: fb.categories,
+      topRisks: fb.topRisks,
+      summary: fb.summary,
+      disclaimer: RISK_AUDIT_DISCLAIMER,
+    })
+  }
+}
+
+/**
+ * company_attributes（オンボーディング5問の正規化属性）を読む。
+ *   フォールバック採点の一次入力。RLS 下の anon(=ユーザーJWT) で自社のみ可視。
+ *   ★ベストエフォート: テーブル未適用/RLS 失敗でも例外にせず全 null を返す
+ *     （診断レスポンスを止めない＝既存 UX 非破壊）。
+ */
+async function loadCompanyAttributes(companyId: string): Promise<RiskFallbackAttributes> {
+  const empty: RiskFallbackAttributes = {
+    industry_major: null,
+    employee_band: null,
+    has_36kyotei: null,
+    has_work_rules: null,
+    has_fixed_ot: null,
+  }
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data, error } = await supabase
+      .from('company_attributes')
+      .select('industry_major, employee_band, has_36kyotei, has_work_rules, has_fixed_ot')
+      .eq('company_id', companyId)
+      .maybeSingle()
+    if (error || !data) return empty
+    return {
+      industry_major: data.industry_major ?? null,
+      employee_band: data.employee_band ?? null,
+      has_36kyotei: data.has_36kyotei ?? null,
+      has_work_rules: data.has_work_rules ?? null,
+      has_fixed_ot: data.has_fixed_ot ?? null,
+    }
+  } catch (e) {
+    console.error('[company:risk-audit] attributes load threw (non-fatal)', (e as Error).message)
+    return empty
   }
 }
 

@@ -2,12 +2,12 @@
   "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/digest",
-      "schedule": "0 9 * * 1"
+      "path": "/api/company/weekly-email",
+      "schedule": "0 0 * * 1"
     },
     {
-      "path": "/api/send-day2-reminder",
-      "schedule": "0 0 * * *"
+      "path": "/api/company/deadline-reminder",
+      "schedule": "0 23 * * *"
     }
   ]
 }

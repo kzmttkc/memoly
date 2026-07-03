@@ -57,7 +57,7 @@ export function MemoryLossWarning({ companyId }: { companyId: string }) {
         </span>
         <div className="min-w-0">
           <p className="text-sm font-medium text-neutral-900">
-            解約すると、番頭が御社について覚えた {stats.total}件の記憶が使えなくなります
+            解約すると、番頭が自社について覚えた {stats.total}件の記憶が使えなくなります
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
             {stats.decisions > 0 && `過去に下した判断 ${stats.decisions}件を含む、`}

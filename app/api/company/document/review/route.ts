@@ -17,6 +17,12 @@ import { resolvePlan } from '@/lib/plans'
 //   現行労務法（令和7改正値）の観点で sonnet がレビューし、
 //   「危ない条文/不足/古い規定」を構造化リストで返す。
 //
+//   F1 規程まるごと取込（同一レビュー呼び出しに相乗り・追加LLMコストなし）:
+//     レビューと同時に「この規程から読み取れる自社ルール候補(companyFacts)」を
+//     抽出して応答に含める。ユーザーが候補を承認すると /api/company/document/ingest が
+//     規程原文まるごと＋承認済みルールを会社の記憶に保存する
+//     （本ルート自体は従来どおり本文を保存しない＝レビュー単体の挙動は不変）。
+//
 //   Phase1コンプラ: 断定的個別法律判断を避け条件形（プロンプトで強制）。免責を必ず付す。
 // ============================================================================
 
@@ -26,6 +32,12 @@ interface ReviewItem {
   clause: string
   issue: string
   suggestion: string
+}
+
+/** 規程から読み取れた自社ルール候補（company_profiles への保存はユーザー承認後）。 */
+interface CompanyFact {
+  key: string
+  value: string
 }
 
 const MAX_TEXT = 20_000
@@ -116,6 +128,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       items: [],
       summary: raw || 'レビュー結果を構造化できませんでした。',
+      companyFacts: [],
       disclaimer: REVIEW_DISCLAIMER,
     })
   }
@@ -123,6 +136,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     items: parsed.items,
     summary: parsed.summary,
+    companyFacts: parsed.companyFacts,
     disclaimer: REVIEW_DISCLAIMER,
   })
 }
@@ -133,7 +147,7 @@ export async function POST(req: NextRequest) {
  */
 function parseReviewJson(
   raw: string,
-): { items: ReviewItem[]; summary: string } | null {
+): { items: ReviewItem[]; summary: string; companyFacts: CompanyFact[] } | null {
   if (!raw) return null
   let s = raw.trim()
   // ```json ... ``` のフェンスを除去
@@ -145,6 +159,7 @@ function parseReviewJson(
     const obj = JSON.parse(s.slice(start, end + 1)) as {
       items?: unknown
       summary?: unknown
+      companyFacts?: unknown
     }
     const items: ReviewItem[] = Array.isArray(obj.items)
       ? obj.items
@@ -158,7 +173,19 @@ function parseReviewJson(
           }))
       : []
     const summary = typeof obj.summary === 'string' ? obj.summary : ''
-    return { items, summary }
+    // F1: 自社ルール候補。key/value とも空でないものだけ・長さ上限・最大12件に丸める
+    //     （company_profiles の UI 上限 key=100/value=500 と揃える）。
+    const companyFacts: CompanyFact[] = Array.isArray(obj.companyFacts)
+      ? obj.companyFacts
+          .filter((f): f is Record<string, unknown> => !!f && typeof f === 'object')
+          .map(f => ({
+            key: String(f.key ?? '').trim().slice(0, 100),
+            value: String(f.value ?? '').trim().slice(0, 500),
+          }))
+          .filter(f => f.key && f.value)
+          .slice(0, 12)
+      : []
+    return { items, summary, companyFacts }
   } catch {
     return null
   }
