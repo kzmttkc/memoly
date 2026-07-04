@@ -30,7 +30,8 @@ function SignupForm() {
   const searchParams = useSearchParams()
   // 番頭(Banto) の動線では確認後に /company へ。?next を尊重しつつ既定は /company。
   const nextRaw = searchParams.get('next') || '/company'
-  const next = nextRaw.startsWith('/') ? nextRaw : '/company'
+  // 相対パスのみ許可（'//evil.com' はプロトコル相対URL＝open redirect になるため除外）。login側と同一ガード。
+  const next = nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : '/company'
 
   // 帰属(attribution): Kotri→番頭 hire-bridge 等の流入元を計測に載せる。
   //   例: /signup?utm_source=kotri&utm_campaign=hire_bridge
