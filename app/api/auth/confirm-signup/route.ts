@@ -1,13 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-// 無料モニター期の暫定措置（2026-07-01）:
-// 番頭はメール確認必須(mailer_autoconfirm=false)だが、Supabase 既定SMTPは
-// レート制限つき・本番非推奨で確認メールが届かず、登録が確認待ちで止まる。
-// project config(mailer_autoconfirm)は Management API 権限が無く触れないため、
-// 登録直後にサーバ側(service_role)で当該ユーザーを email 確認済みにして、
-// 確認メール待ちのデッドエンドを回避する。Resend の独自SMTP を Supabase Auth に
-// 設定できたら、本ルートは撤去して通常のメール確認フローに戻す。
+// 状態（2026-07-04 更新・CMO/CPO 二次評価済み）:
+// 現在 Supabase Auth は mailer_autoconfirm=True（Management API で設定）。よって
+// signUp は即セッションを返し、signup/page.tsx は data.session 分岐で /company へ
+// 直行する＝本ルートは現ハッピーパスでは呼ばれない「休眠フォールバック」。
+//
+// 2026-07-04 に Resend 独自SMTP を Supabase Auth に配線済み（パスワード再設定リンクは
+// 本番ドメイン banto-roumu.com に着地・E2E実証済み）。ただし獲得フェーズでは登録摩擦を
+// 避けるため autoconfirm=True を意図的に維持する（北極星＝無料登録）。SMTP を繋いだ
+// 実利は「復旧メールの到達」であって、signup 確認クリックの必須化ではない（別の意思決定）。
+//
+// 本ルートは撤去せず安全網として残す: 将来 autoconfirm=False に切り替えると signup の
+// else 分岐が再発火し、既定SMTP依存の確認デッドエンドを本ルートが回避する。通常のメール
+// 確認フローへ戻す（＝本ルート撤去）場合は、実 inbox での signup 確認メール着地→リンク先
+// ドメイン→session 確立までの本番 E2E をパスさせてから出荷すること（recovery の実証は
+// signup 確認テンプレートの到達を保証しない）。
 //
 // セキュリティ: email を確認済みにするだけでは認証は付与されない（ログインには
 // パスワードが必要）。実質 autoconfirm=ON と同じ挙動で、意図どおり。

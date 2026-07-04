@@ -64,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script id="plausible-init" strategy="afterInteractive">{`
           window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)};
           plausible.init=plausible.init||function(){};
+          plausible.init();
         `}</Script>
         <script
           type="application/ld+json"
