@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Home, MessageSquareText, FileText, ShieldCheck, Sparkles, BookOpenCheck, History, Plus, Users } from 'lucide-react'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -33,9 +33,25 @@ interface ProfileSummary {
 }
 
 export default function CompanyHomePage() {
+  // useSearchParams は Suspense 境界を要求する（Next.js app router）。
+  // 既存の描画・挙動は CompanyHome にそのまま保持し、境界だけ追加する（additive）。
+  return (
+    <Suspense fallback={<p className="text-sm text-neutral-500">読み込み中...</p>}>
+      <CompanyHome />
+    </Suspense>
+  )
+}
+
+function CompanyHome() {
+  const searchParams = useSearchParams()
+  // Kotri→番頭 hire-bridge の会社名プリフィル。?company=<店名> が有れば会社名欄の初期値に。
+  //   ユーザーは編集可能。値が無ければ従来どおり空。過度に長い値は切り詰める。
+  //   Reactの標準エスケープに委ねる（dangerouslySetInnerHTML は使わない＝XSS安全）。
+  const prefillCompany = (searchParams.get('company') ?? '').trim().slice(0, 100)
+
   const [companies, setCompanies] = useState<Membership[] | null>(null)
   const [summaries, setSummaries] = useState<Record<string, ProfileSummary>>({})
-  const [name, setName] = useState('')
+  const [name, setName] = useState(prefillCompany)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -32,11 +32,30 @@ function SignupForm() {
   const nextRaw = searchParams.get('next') || '/company'
   const next = nextRaw.startsWith('/') ? nextRaw : '/company'
 
+  // 帰属(attribution): Kotri→番頭 hire-bridge 等の流入元を計測に載せる。
+  //   例: /signup?utm_source=kotri&utm_campaign=hire_bridge
+  //   非個人情報・低カーディナリティの流入元のみ。値が無ければ prop 自体を付けない
+  //   （既存イベントの母数を壊さない・undefined を送らない）。過度な長さは切り詰める。
+  const attribution = useMemo<{ source?: string; campaign?: string }>(() => {
+    const clean = (v: string | null) => {
+      if (!v) return undefined
+      const s = v.trim().slice(0, 64)
+      return s.length > 0 ? s : undefined
+    }
+    const source = clean(searchParams.get('utm_source'))
+    const campaign = clean(searchParams.get('utm_campaign'))
+    const props: { source?: string; campaign?: string } = {}
+    if (source) props.source = source
+    if (campaign) props.campaign = campaign
+    return props
+  }, [searchParams])
+
   // 計測: 登録フォーム到達（/signup の pageview とは別に「signUp 試行の母数」を明示）。
   //   これで 登録フォーム到達→完了/失敗 の各段が Plausible で読める。PIIは送らない。
+  //   attribution(source/campaign)が有れば付与＝流入元別コンバージョンが読める。
   useEffect(() => {
-    track('signup_started')
-  }, [])
+    track('signup_started', Object.keys(attribution).length ? attribution : undefined)
+  }, [attribution])
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -62,7 +81,7 @@ function SignupForm() {
     if (error) {
       const already = error.message === 'User already registered'
       // 計測: 登録失敗を可視化（今まで完全に不可視だった）。既登録の再訪＝ログイン迷子は別問題として切り分け。
-      track('signup_failed', { reason: already ? 'already_registered' : 'other' })
+      track('signup_failed', { reason: already ? 'already_registered' : 'other', ...attribution })
       setError(already ? 'このメールアドレスはすでに登録されています。' : error.message)
       setLoading(false)
     } else {
@@ -75,7 +94,7 @@ function SignupForm() {
       // デッドエンドを出さず、活性化の次の一歩(/company もしくは ?next)へ直行させる。
       // 確認必須(session 無し)なら、次の一歩を明示したガイド付き done 画面を出す。
       if (data.session) {
-        trackThenNavigate('signup_completed', () => router.push(next))
+        trackThenNavigate('signup_completed', () => router.push(next), Object.keys(attribution).length ? attribution : undefined)
         return
       }
       // メール確認必須だが既定SMTPは届かない（無料モニター期の暫定）。
@@ -90,7 +109,7 @@ function SignupForm() {
         if (res.ok) {
           const signin = await supabase.auth.signInWithPassword({ email, password })
           if (!signin.error) {
-            trackThenNavigate('signup_completed', () => router.push(next))
+            trackThenNavigate('signup_completed', () => router.push(next), Object.keys(attribution).length ? attribution : undefined)
             return
           }
         }
@@ -98,7 +117,7 @@ function SignupForm() {
         // フォールバックへ
       }
       // 確認メール待ち画面（遷移しない＝ビーコンは通常どおり送出される）。
-      track('signup_completed')
+      track('signup_completed', Object.keys(attribution).length ? attribution : undefined)
       setDone(true)
       setLoading(false)
     }
