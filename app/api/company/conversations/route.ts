@@ -44,7 +44,11 @@ export async function GET(req: NextRequest) {
     .limit(1)
     .maybeSingle()
 
-  if (convErr) return NextResponse.json({ error: convErr.message }, { status: 500 })
+  // 生の error.message を返さない（deadlines と同じく汎用文＝情報漏えい面を揃える）。
+  if (convErr) {
+    console.error('[company:conversations] conversation fetch failed', convErr.message)
+    return NextResponse.json({ error: '会話履歴の取得に失敗しました' }, { status: 500 })
+  }
   if (!conv) return NextResponse.json({ conversation: null, messages: [] })
 
   // メッセージ履歴（古い順で表示するため、直近N件を降順で取り reverse する）。
@@ -55,7 +59,10 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false })
     .limit(MAX_RESTORE_MESSAGES)
 
-  if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 })
+  if (msgErr) {
+    console.error('[company:conversations] messages fetch failed', msgErr.message)
+    return NextResponse.json({ error: '会話履歴の取得に失敗しました' }, { status: 500 })
+  }
 
   return NextResponse.json({
     conversation: { id: conv.id, title: conv.title, updatedAt: conv.updated_at },

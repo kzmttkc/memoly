@@ -111,7 +111,7 @@ export async function GET(req: Request) {
     .gte('updated_at', since)
   if (convErr) {
     console.error('[banto:weekly-email] active company query failed', convErr)
-    return NextResponse.json({ error: convErr.message }, { status: 500 })
+    return NextResponse.json({ error: '対象会社の集計に失敗しました' }, { status: 500 })
   }
 
   const companyIds = [...new Set((activeConvs ?? []).map(r => r.company_id))].slice(

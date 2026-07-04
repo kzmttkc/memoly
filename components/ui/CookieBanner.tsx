@@ -26,7 +26,7 @@ export function CookieBanner() {
     >
       <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <p className="text-xs text-neutral-600 leading-relaxed">
-          本サービスはログイン状態の維持にCookieを使用します。Vercel Analyticsによる匿名の統計収集を行うことがあります。
+          本サービスはログイン状態の維持にCookieを使用します。アクセス解析はPlausible Analytics（Cookie不使用・匿名計測）で行っています。
           <Link href="/privacy" className="text-brand-600 underline ml-1">詳細</Link>
         </p>
         <button

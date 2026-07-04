@@ -51,7 +51,8 @@ export default function PrivacyPage() {
             <ul className="mt-2 list-inside list-disc space-y-1 text-neutral-600">
               <li><strong className="text-neutral-800">Anthropic（Claude API）</strong>：AI回答生成のため相談内容を送信します。<a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropicのプライバシーポリシー</a>が適用されます。</li>
               <li><strong className="text-neutral-800">Supabase</strong>：データベース・認証サービス（米国）。<a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Supabaseのプライバシーポリシー</a></li>
-              <li><strong className="text-neutral-800">Vercel</strong>：ホスティング・匿名アクセス解析（米国）。Vercel Analyticsによりページビュー等の匿名統計を収集することがあります。</li>
+              <li><strong className="text-neutral-800">Vercel</strong>：ホスティング（米国）</li>
+              <li><strong className="text-neutral-800">Plausible Analytics</strong>：匿名アクセス解析（EU）。Cookieを使用せず、個人を特定しない形でページビュー等の統計のみを収集します。<a href="https://plausible.io/data-policy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Plausibleのデータポリシー</a></li>
               <li><strong className="text-neutral-800">Resend</strong>：お知らせメールの送信（米国）</li>
             </ul>
             <p className="mt-2 text-neutral-500">これらの第三者への情報提供は本サービス提供に必要な範囲に限定されます。EU/EEA在住の方：上記の第三国移転はGDPR第46条に基づく標準契約条項（SCC）に準拠します。</p>
@@ -69,7 +70,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">6. Cookieについて</h2>
-            <p>本サービスはログイン状態の維持にセッションCookieを使用します。個人を特定するCookieによる追跡は行っていません。Vercel Analyticsは匿名のページビュー統計を収集することがあります。</p>
+            <p>本サービスはログイン状態の維持にセッションCookieを使用します。個人を特定するCookieによる追跡は行っていません。アクセス解析にはPlausible Analyticsを使用しており、Cookieを使わず匿名のページビュー統計のみを収集します。</p>
           </section>
 
           <section>

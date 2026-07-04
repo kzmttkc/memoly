@@ -72,7 +72,11 @@ export async function POST(req: NextRequest) {
     )
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // 生の error.message を返さない（deadlines と同じく汎用文＝情報漏えい面を揃える）。
+  if (error) {
+    console.error('[company:attributes] upsert failed', error.message)
+    return NextResponse.json({ error: '会社属性の保存に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json({ attributes: data })
 }
 

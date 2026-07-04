@@ -167,7 +167,11 @@ export async function DELETE(req: NextRequest) {
     .eq('id', id)
     .eq('company_id', companyId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // 生の error.message を返さない（deadlines と同じく汎用文＝情報漏えい面を揃える）。
+  if (error) {
+    console.error('[company:document] delete failed', error.message)
+    return NextResponse.json({ error: '削除に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
 

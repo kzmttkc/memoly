@@ -222,7 +222,11 @@ async function approveFact(req: NextRequest): Promise<NextResponse> {
     .select('id, key, value')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // 生の error.message を返さない（deadlines と同じく汎用文＝情報漏えい面を揃える）。
+  if (error) {
+    console.error('[company:memory] approve upsert failed', error.message)
+    return NextResponse.json({ error: '承認の保存に失敗しました' }, { status: 500 })
+  }
 
   // 承認済みの rule 候補は片付ける（任意・memoryId指定時のみ）
   if (memoryId && typeof memoryId === 'string') {
@@ -257,6 +261,9 @@ export async function GET(req: NextRequest) {
   if (type === 'rule' || type === 'summary' || type === 'decision') q = q.eq('memory_type', type)
 
   const { data, error } = await q
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[company:memory] list failed', error.message)
+    return NextResponse.json({ error: '記憶の取得に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json({ memories: data ?? [] })
 }

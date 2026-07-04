@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { anthropic, CHAT_MODEL } from '@/lib/claude'
 import { buildSystemPromptWithRoumu } from '@/lib/prompts'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { checkAndIncrement } from '@/lib/rate-limit'
 
 // 記憶注入の上限（Token オーバーフロー防止）
 const MAX_MEMORIES = 10
@@ -60,6 +61,14 @@ export async function POST(req: NextRequest) {
 
   const memories = memoryRows?.map(r => r.content) ?? []
   const lastUserMessage = sanitizedMessages.findLast(m => m.role === 'user')?.content ?? ''
+
+  // --- 日次利用上限ガード（会社版 company/chat と同型・高コストLLM呼び出し前）。超過は429 ---
+  if (!(await checkAndIncrement(user.id, 'chat', 'free'))) {
+    return NextResponse.json(
+      { error: '本日の利用上限に達しました。時間をおいてお試しください。' },
+      { status: 429 },
+    )
+  }
 
   const stream = await anthropic.messages.stream({
     model: CHAT_MODEL,

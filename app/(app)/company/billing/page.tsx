@@ -209,7 +209,8 @@ function BillingInner() {
       <div className="grid items-start gap-5 sm:grid-cols-3">
         {PAID_PLAN_IDS.map(id => {
           const p = PLANS[id]
-          const featured = id === 'standard'
+          // 主役プランは SSOT(lib/plans.ts featured)を参照（LPと食い違わせない）。
+          const featured = p.featured
           const isCurrent = state.plan === id
           const seatVal = selectedSeats[id] ?? Math.max(state.seatsUsed, 1)
           return (
@@ -221,7 +222,7 @@ function BillingInner() {
             >
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-semibold text-neutral-900">{p.displayName}</h3>
-                {featured && <Badge tone="brand">主力</Badge>}
+                {featured && <Badge tone="brand">おすすめ</Badge>}
                 {isCurrent && <Badge tone="success">利用中</Badge>}
               </div>
               <p className="mt-4 flex items-baseline gap-1">
@@ -230,6 +231,11 @@ function BillingInner() {
                 </span>
                 <span className="text-sm text-neutral-500">/ 席・月</span>
               </p>
+              {p.yearlyJpy && (
+                <p className="mt-1 text-xs text-neutral-500 tabular-nums">
+                  年額 &yen;{p.yearlyJpy.toLocaleString()}（2ヶ月分お得）
+                </p>
+              )}
               <p className="mt-1 text-xs text-neutral-500">最大 {p.seatCap} 席</p>
 
               <ul className="mt-5 space-y-2">

@@ -38,7 +38,11 @@ export async function GET(req: NextRequest) {
     .eq('company_id', companyId)
     .order('created_at', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // 生の error.message を返さない（deadlines と同じく汎用文＝情報漏えい面を揃える）。
+  if (error) {
+    console.error('[company:members] list failed', error.message)
+    return NextResponse.json({ error: 'メンバー一覧の取得に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json({ members: data ?? [] })
 }
 
@@ -89,7 +93,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insErr.message, code: 'SEAT_LIMIT' }, { status: 409 })
     }
     console.error('[company:invite] insert failed', insErr)
-    return NextResponse.json({ error: insErr.message }, { status: 500 })
+    return NextResponse.json({ error: '招待の処理に失敗しました' }, { status: 500 })
   }
 
   // 追加成功も同一文言（userId 等の差分情報を返さない＝応答から存在を推測させない）。

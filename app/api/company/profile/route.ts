@@ -30,7 +30,11 @@ export async function GET(req: NextRequest) {
     .eq('company_id', companyId)
     .order('key', { ascending: true })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // 生の error.message を返さない（deadlines と同じく汎用文＝情報漏えい面を揃える）。
+  if (error) {
+    console.error('[company:profile] list failed', error.message)
+    return NextResponse.json({ error: '基本情報の取得に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json({ profiles: data ?? [] })
 }
 
@@ -53,7 +57,10 @@ export async function POST(req: NextRequest) {
     .select('id, key, value, updated_at')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[company:profile] upsert failed', error.message)
+    return NextResponse.json({ error: '保存に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json({ profile: data })
 }
 
@@ -73,7 +80,10 @@ export async function PATCH(req: NextRequest) {
     .eq('id', id)
     .eq('company_id', companyId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[company:profile] update failed', error.message)
+    return NextResponse.json({ error: '更新に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
 
@@ -91,7 +101,10 @@ export async function DELETE(req: NextRequest) {
     .eq('id', id)
     .eq('company_id', companyId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[company:profile] delete failed', error.message)
+    return NextResponse.json({ error: '削除に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
 

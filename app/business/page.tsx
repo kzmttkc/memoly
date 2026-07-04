@@ -93,7 +93,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: '料金はいくらですか',
-    a: '無料プランから始められます。記憶のフル活用や規程ドラフト作成が必要になったら有料プランに切り替えられます。料金は本ページの料金セクションをご確認ください。',
+    a: '現在は無料モニター期間のため、すべての機能を無料でご利用いただけます。有料プランの開始後は、本ページの料金セクションに記載の予定価格が適用されます。',
   },
   {
     q: '無料で使えますか',
@@ -173,34 +173,37 @@ const EFFICIENCY = [
   },
 ]
 
-// 表示名・価格は lib/plans.ts（SSOT）から引く。LP固有の訴求コピー（tagline/features/
-// badge）だけをここで持つ。これにより「価格が LP と課金で食い違う」事故を構造的に防ぐ。
-// price は SSOT の monthlyJpy をカンマ区切りに整形して使う。
+// 表示名・価格・主役(featured)・年額は lib/plans.ts（SSOT）から引く。LP固有の訴求コピー
+// （tagline/features/badge）だけをここで持つ。これにより「価格・主役が LP と課金で
+// 食い違う」事故を構造的に防ぐ（2026-06-29 Takeshi承認: Entryが主役・年額¥39,800）。
 const PLAN_COPY = [
   {
     name: PLANS.starter.displayName,
     price: PLANS.starter.monthlyJpy.toLocaleString(),
+    yearly: PLANS.starter.yearlyJpy,
     tagline: 'まず使ってみる',
-    badge: null,
+    badge: 'おすすめ',
     features: ['企業プロファイルの記憶', 'AIチャット相談', '労務リスク診断'],
-    featured: false,
+    featured: PLANS.starter.featured,
   },
   {
     name: PLANS.standard.displayName,
     price: PLANS.standard.monthlyJpy.toLocaleString(),
-    tagline: '記憶フル・主力プラン',
-    badge: '主力',
+    yearly: PLANS.standard.yearlyJpy,
+    tagline: '記憶フル・チーム利用',
+    badge: null,
     features: [
       'Entry のすべて',
       '相談履歴のフル記憶で精度向上',
       '規程ドラフト作成・レビュー',
       '助成金・法改正の自分ごと通知',
     ],
-    featured: true,
+    featured: PLANS.standard.featured,
   },
   {
     name: PLANS.shigyo.displayName,
     price: PLANS.shigyo.monthlyJpy.toLocaleString(),
+    yearly: PLANS.shigyo.yearlyJpy,
     tagline: '複数の顧問先を管理',
     badge: '士業向け',
     features: [
@@ -208,7 +211,7 @@ const PLAN_COPY = [
       '複数企業（顧問先）の切り替え',
       '企業ごとに記憶・データを分離',
     ],
-    featured: false,
+    featured: PLANS.shigyo.featured,
   },
 ]
 
@@ -836,6 +839,11 @@ export default function BusinessLandingPage() {
                   </span>
                   <span className="text-sm text-neutral-500">/席・月</span>
                 </p>
+                {p.yearly && (
+                  <p className="mt-1 text-xs text-neutral-500 tabular-nums">
+                    年額 &yen;{p.yearly.toLocaleString()}（2ヶ月分お得）
+                  </p>
+                )}
                 <ul className="mt-5 space-y-2.5">
                   {p.features.map(feat => (
                     <li key={feat} className="flex items-start gap-2 text-sm text-neutral-700">

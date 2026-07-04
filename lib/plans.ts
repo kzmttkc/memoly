@@ -46,6 +46,15 @@ export interface PlanDef {
   displayName: string
   /** 月額（円・税抜想定）。free は 0。表示は `¥${monthlyJpy.toLocaleString()}`。 */
   monthlyJpy: number
+  /** 年額（円）。年額を提供するプランのみ。提供しないプランは null。 */
+  yearlyJpy: number | null
+  /**
+   * 料金表示で主役（強調枠・primary CTA）にするか。
+   * SSOT: 2026-06-29 Takeshi承認の確定構造＝Entry(¥3,980)が主役。
+   * LP(/business)・課金UI(/company/billing)はこのフラグを参照し、各画面で
+   * 独自に featured を決めない（画面ごとの食い違いを構造的に防ぐ）。
+   */
+  featured: boolean
   /** Stripe Checkout の amount_total（JPY最小単位=円）。webhook の amount ガードに使う。free は null。 */
   stripeAmount: number | null
   /** Stripe Price ID を読む環境変数名。free/未設定は null。 */
@@ -70,6 +79,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
     id: 'free',
     displayName: '無料モニター',
     monthlyJpy: 0,
+    yearlyJpy: null,
+    featured: false,
     stripeAmount: null,
     priceEnvVar: null,
     seatCap: 3,
@@ -88,6 +99,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
     id: 'starter',
     displayName: 'Entry',
     monthlyJpy: 3980,
+    yearlyJpy: 39800,
+    featured: true,
     stripeAmount: 3980,
     priceEnvVar: 'STRIPE_PRICE_STARTER',
     seatCap: 5,
@@ -106,6 +119,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
     id: 'standard',
     displayName: 'Standard',
     monthlyJpy: 9800,
+    yearlyJpy: null,
+    featured: false,
     stripeAmount: 9800,
     priceEnvVar: 'STRIPE_PRICE_STANDARD',
     seatCap: 20,
@@ -124,6 +139,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
     id: 'shigyo',
     displayName: '士業',
     monthlyJpy: 29800,
+    yearlyJpy: null,
+    featured: false,
     stripeAmount: 29800,
     priceEnvVar: 'STRIPE_PRICE_SHIGYO',
     seatCap: 50,

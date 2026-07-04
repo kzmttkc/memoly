@@ -15,13 +15,13 @@ export default function TermsPage() {
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">1. サービス概要</h2>
-            <p>番頭（Banto、以下「本サービス」）は、会社のルール・規程・労務を覚えて回答するAIアシスタントです。運営は Kizuna Creation（Kazumoto Takeshi 個人事業）。<a href="https://www.anthropic.com/legal/consumer-usage-policy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropic（Claude API）</a>を使用してAI回答を生成します。</p>
+            <p>番頭（Banto、以下「本サービス」）は、会社のルール・規程・労務を覚えて回答するAIアシスタントです。運営は Kizuna Creation（Kazumoto Takeshi 個人事業）。<a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropic（Claude API）</a>を使用してAI回答を生成します。</p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">2. 利用資格・年齢制限</h2>
-            <p className="font-medium text-warning-700">本サービスは13歳以上の方のみご利用いただけます。13歳未満の方はご利用いただけません。</p>
-            <p className="mt-2">18歳未満の方は、保護者の同意のもとでご利用ください。</p>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">2. 利用資格</h2>
+            <p className="font-medium text-warning-700">本サービスは、事業のために利用する18歳以上の事業者（法人および個人事業主を含みます）のみご利用いただけます。</p>
+            <p className="mt-2">消費者としての個人利用は対象外です。登録時に「事業者として利用します（18歳以上）」への同意をお願いしています。</p>
           </section>
 
           <section>
@@ -48,7 +48,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">6. AIコンテンツの報告</h2>
-            <p>不適切なAIの回答はチャット画面内の「報告」ボタンから報告できます。報告内容は改善のために使用されます。</p>
+            <p>不適切なAIの回答は、お問い合わせ先（<a href="mailto:kzmttkc314@gmail.com" className="text-brand-600 underline">kzmttkc314@gmail.com</a>）へのご連絡で報告できます。報告内容は改善のために使用されます。</p>
           </section>
 
           <section>
@@ -58,7 +58,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">8. 知的財産</h2>
-            <p>ユーザーが入力したコンテンツの権利はユーザーに帰属します。AIが生成したコンテンツの利用は<a href="https://www.anthropic.com/legal/consumer-usage-policy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropicの利用規約</a>に従います。</p>
+            <p>ユーザーが入力したコンテンツの権利はユーザーに帰属します。AIが生成したコンテンツの利用は<a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropicの商用利用規約</a>に従います。</p>
           </section>
 
           <section>
