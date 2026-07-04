@@ -14,6 +14,12 @@ const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL
 // Authorization: Bearer CRON_SECRET で保護
 
 export async function GET(req: Request) {
+  // fail-safe: CRON_SECRET 未設定時は「Bearer undefined」一致で認可が通るため、認可より先に安全に停止
+  if (!process.env.CRON_SECRET) {
+    console.warn('[send-day2-reminder] CRON_SECRET 未設定のため配信をスキップしました。')
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' })
+  }
+
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
