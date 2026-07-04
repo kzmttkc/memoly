@@ -114,7 +114,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     },
   },
 
-  // Standard = 主力（記憶フル・書類・能動通知）。
+  // Standard = 上位プラン（記憶フル・書類・能動通知）。主役はEntry=starter（2026-06-29承認）。
   standard: {
     id: 'standard',
     displayName: 'Standard',
