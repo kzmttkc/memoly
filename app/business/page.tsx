@@ -529,15 +529,28 @@ export default function BusinessLandingPage() {
               前提を説明し直さずに、自社の状況に合わせた答えがすぐ返ります。
               中小企業の総務・経営者が、社内規程の管理と日々の労務管理の調べ物を減らせます。
             </p>
+            {/* 主CTA=デモ体験（登録不要）へページ内スクロール。冷たい初見客に
+                会社登録を先に迫らず、まず数秒でアハに届ける。純粋な内部アンカー
+                なので SSR/metadata は無傷。signup は下の従CTAに降格。 */}
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <TrackedCTA
-                location="hero"
+              <a
+                href="#demo"
                 className={buttonClass({ variant: 'primary', size: 'lg' })}
               >
-                無料で会社を登録して試す
+                サンプルで答え方を見てみる（登録不要）
+                <ArrowDown className="h-4 w-4" aria-hidden />
+              </a>
+              <TrackedCTA
+                location="hero"
+                className={buttonClass({ variant: 'ghost', size: 'lg' })}
+              >
+                会社を登録して始める
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </TrackedCTA>
             </div>
+            <p className="mt-3 text-center text-xs text-neutral-500 lg:text-left">
+              サンプル会社で答え方を体験できます。登録は後からで大丈夫です。
+            </p>
           </div>
 
           {/* 右：見て分かる */}
@@ -546,6 +559,15 @@ export default function BusinessLandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ===== 体験デモ（FV直下：初見客が数秒でアハに届く導線） =====
+          ヒーロー主CTA「まず無料で試す（登録不要）」の着地点。scroll-mt でスティッキー
+          ヘッダ(h-16)ぶんのオフセットを確保。スクリプト型デモ＝本物のAPIは叩かず用意済み
+          回答をタイプ表示するクライアントコンポーネント。デモ内の signup 転換CTA
+          (location="trydemo")は維持。詳細は _components/TryDemo.tsx を参照。 */}
+      <div id="demo" className="scroll-mt-20">
+        <TryDemo />
+      </div>
 
       {/* ===== 核の主張：汎用AI vs 番頭（左右対比・ここで一度だけ強く言う） ===== */}
       <section className="border-y border-neutral-200 bg-neutral-50">
@@ -635,11 +657,6 @@ export default function BusinessLandingPage() {
           ファネルの漏れを塞ぐ。薄いclientコンポーネント＝SSR/SEO/metadataは無傷。
           送信成功で lead_captured(source) を計測。詳細は _components/LeadCapture.tsx。 */}
       <LeadCapture />
-
-      {/* ===== 体験デモ（早めに体験させる：サンプル会社でアハを安全に） =====
-          スクリプト型デモ。本物のAPIは叩かず、用意済みの回答をタイプ表示する
-          クライアントコンポーネント。詳細は _components/TryDemo.tsx を参照。 */}
-      <TryDemo />
 
       {/* ===== 業務効率化（企業ニーズ起点：何がどれだけ楽になるか） ===== */}
       <section className="mx-auto max-w-5xl px-6 py-20">
