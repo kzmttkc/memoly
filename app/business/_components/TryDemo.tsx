@@ -80,8 +80,11 @@ export default function TryDemo() {
   const nextId = useRef(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  const sectionRef = useRef<HTMLElement | null>(null)
   // デモに初めて触れた瞬間(アハ到達の代理)を1回だけ計測するためのフラグ。
   const engagedRef = useRef(false)
+  // ビューポート進入での「受動再生」を1回だけ発火するためのフラグ。
+  const autoplayedRef = useRef(false)
 
   const isBusy = typing !== null
 
@@ -128,25 +131,56 @@ export default function TryDemo() {
     el.scrollTo({ top: el.scrollHeight, behavior: reducedMotion ? 'auto' : 'smooth' })
   }, [turns, typedLen, typing, reducedMotion])
 
+  // 回答の再生（タイプ開始）だけを行う共通ロジック。計測は呼び出し側で分ける。
+  const play = useCallback((qa: QA) => {
+    setStarted(true)
+    const id = nextId.current++
+    setTypedLen(0)
+    setTyping({ id, q: qa.q, full: qa.a })
+  }, [])
+
   const ask = useCallback(
     (qa: QA, qIndex: number) => {
       if (isBusy) return // タイプ中は次の質問を受け付けない（順に積み上げる）。
-      // 初回タッチ=デモ到達(アハ代理)を1回だけ計測。以降は質問別クリックのみ。
+      // 手動クリック=能動的アハ。初回タッチを demo_engaged で1回だけ計測。
+      // （自動再生はここを通らない＝engagedRef/demo_engaged を汚さない）
       if (!engagedRef.current) {
         engagedRef.current = true
         track('demo_engaged')
       }
       track('demo_question_clicked', { q_index: qIndex })
-      setStarted(true)
-      const id = nextId.current++
-      setTypedLen(0)
-      setTyping({ id, q: qa.q, full: qa.a })
+      play(qa)
     },
-    [isBusy],
+    [isBusy, play],
   )
 
+  // ビューポート進入で1問目を「受動再生」する（アハ体験の分母を作る）。
+  //   計測は autoplay 専用の demo_autoplayed のみ（engagedRef/demo_engaged/
+  //   demo_question_clicked は発火しない）。ユーザーが後から質問をクリックすれば
+  //   通常どおり demo_engaged が立ち、受動→能動の転換が測れる。
+  //   reduced-motion 時も自動再生は行う（既存のタイプ即確定パスに乗り即時全文表示）。
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
+    const el = sectionRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      entries => {
+        const entry = entries[0]
+        if (!entry || !entry.isIntersecting) return
+        if (autoplayedRef.current) return
+        autoplayedRef.current = true
+        observer.disconnect()
+        track('demo_autoplayed')
+        play(QA_LIST[0])
+      },
+      { threshold: 0.4 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [play])
+
   return (
-    <section className="mx-auto max-w-5xl px-6 py-20">
+    <section ref={sectionRef} className="mx-auto max-w-5xl px-6 py-20">
       <div className="mx-auto mb-10 max-w-2xl text-center">
         <p className="mb-3 text-sm font-semibold tracking-wide text-brand-600">
           体験デモ
