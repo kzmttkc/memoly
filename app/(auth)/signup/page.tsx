@@ -33,6 +33,23 @@ function SignupForm() {
   // 相対パスのみ許可（'//evil.com' はプロトコル相対URL＝open redirect になるため除外）。login側と同一ガード。
   const next = nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : '/company'
 
+  // Kotri→番頭 hire-bridge の「ここで入れたお店の名前は、引き継いで使えます」を実挙動にする。
+  //   Kotri /hire は /signup?company=<店名>&utm_source=kotri&utm_campaign=hire_bridge を送るが、
+  //   従来 signup は company を読まず router.push(next) で捨てていた（着地=/company の会社名欄が空＝再入力・約束と乖離）。
+  //   /company（会社作成画面）は既に ?company= を初期値にプリフィルする（commit a9c3015）。
+  //   よって遷移先(next)に company を載せて持ち回れば、着地で店名が入る＝約束が実挙動になる。
+  //   持ち回りは next の実体が /company の時だけ（onboarding 等 company を読まない先には付けない）。
+  //   emailRedirectTo（メール確認の全再読込）にも同じ nextDest を使う＝リンク着地でも店名が残る。
+  const companyParam = (searchParams.get('company') ?? '').trim().slice(0, 100)
+  const nextDest = useMemo(() => {
+    if (!companyParam) return next
+    const [path, query = ''] = next.split('?')
+    if (path !== '/company') return next
+    const sp = new URLSearchParams(query)
+    sp.set('company', companyParam)
+    return `${path}?${sp.toString()}`
+  }, [next, companyParam])
+
   // 帰属(attribution): Kotri→番頭 hire-bridge 等の流入元を計測に載せる。
   //   例: /signup?utm_source=kotri&utm_campaign=hire_bridge
   //   非個人情報・低カーディナリティの流入元のみ。値が無ければ prop 自体を付けない
@@ -95,7 +112,7 @@ function SignupForm() {
       email,
       password,
       options: {
-        emailRedirectTo: `${location.origin}${next}`,
+        emailRedirectTo: `${location.origin}${nextDest}`,
         data: { digest_unsubscribed: !digestOptIn },
       },
     })
@@ -116,7 +133,7 @@ function SignupForm() {
       // デッドエンドを出さず、活性化の次の一歩(/company もしくは ?next)へ直行させる。
       // 確認必須(session 無し)なら、次の一歩を明示したガイド付き done 画面を出す。
       if (data.session) {
-        trackThenNavigate('signup_completed', () => router.push(next), Object.keys(attribution).length ? attribution : undefined)
+        trackThenNavigate('signup_completed', () => router.push(nextDest), Object.keys(attribution).length ? attribution : undefined)
         return
       }
       // メール確認必須だが既定SMTPは届かない（無料モニター期の暫定）。
@@ -131,7 +148,7 @@ function SignupForm() {
         if (res.ok) {
           const signin = await supabase.auth.signInWithPassword({ email, password })
           if (!signin.error) {
-            trackThenNavigate('signup_completed', () => router.push(next), Object.keys(attribution).length ? attribution : undefined)
+            trackThenNavigate('signup_completed', () => router.push(nextDest), Object.keys(attribution).length ? attribution : undefined)
             return
           }
         }
@@ -154,7 +171,7 @@ function SignupForm() {
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: `${location.origin}${next}` },
+      options: { emailRedirectTo: `${location.origin}${nextDest}` },
     })
     if (error) {
       setError('確認メールの再送に失敗しました。時間をおいて試してください。')
@@ -191,7 +208,7 @@ function SignupForm() {
             </Button>
           )}
 
-          <Link href={`/login?next=${encodeURIComponent(next)}`} className={buttonClass({ variant: 'ghost', size: 'lg', className: 'w-full' })}>
+          <Link href={`/login?next=${encodeURIComponent(nextDest)}`} className={buttonClass({ variant: 'ghost', size: 'lg', className: 'w-full' })}>
             ログイン画面へ
           </Link>
         </div>
