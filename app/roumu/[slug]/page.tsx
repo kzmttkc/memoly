@@ -192,6 +192,27 @@ export default async function RoumuUseCasePage({
         </div>
       </section>
 
+      {/* ===== 関連の無料ツールへの内部リンク（記事→ツール送客・該当slugのみ） ===== */}
+      {u.slug === 'yukyu-5nichi-gimu' && (
+        <section className="mx-auto max-w-3xl px-6 pb-4">
+          <Card interactive padded={false}>
+            <Link href="/tools/yukyu-5nichi-check" className="block p-5 sm:p-6">
+              <p className="text-xs font-medium text-brand-700">無料ツール</p>
+              <p className="mt-1 text-sm font-semibold text-neutral-900">
+                年5日の有給取得義務を無料でセルフ点検する
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-neutral-600">
+                基準日と取得済みの日数を入れると、あと何日取らせる必要があるか、期限はいつかを画面で確認できます。登録不要・会社データは保存しません。
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+                ツールを開く
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </span>
+            </Link>
+          </Card>
+        </section>
+      )}
+
       {/* ===== 番頭がどう答えるか（具体例） ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <h2 className="text-lg font-bold tracking-tight text-neutral-900">番頭はこう答えます</h2>
