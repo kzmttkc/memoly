@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${BASE}/business`, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
     { url: `${BASE}/tools/yukyu-5nichi-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE}/tools/36kyotei-jougen-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     ...USECASE_SLUGS.map((slug) => ({
       url: `${BASE}/roumu/${slug}`,
       lastModified: now,

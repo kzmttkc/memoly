@@ -212,6 +212,25 @@ export default async function RoumuUseCasePage({
           </Card>
         </section>
       )}
+      {u.slug === '36kyotei-jougen' && (
+        <section className="mx-auto max-w-3xl px-6 pb-4">
+          <Card interactive padded={false}>
+            <Link href="/tools/36kyotei-jougen-check" className="block p-5 sm:p-6">
+              <p className="text-xs font-medium text-brand-700">無料ツール</p>
+              <p className="mt-1 text-sm font-semibold text-neutral-900">
+                36協定の時間外・休日労働の上限を無料でセルフ点検する
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-neutral-600">
+                自社の残業の実績を入れると、月45時間や単月100時間などの上限に照らして確認が要りそうな箇所を画面で整理できます。登録不要・会社データは保存しません。
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+                ツールを開く
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </span>
+            </Link>
+          </Card>
+        </section>
+      )}
 
       {/* ===== 番頭がどう答えるか（具体例） ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
