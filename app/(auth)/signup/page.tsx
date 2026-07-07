@@ -51,12 +51,33 @@ function SignupForm() {
     return props
   }, [searchParams])
 
+  // 継続コンテキスト（踏み板）: デモ/無料ツールで温まった文脈を、登録画面に持ち越す。
+  //   番頭起点の流入だけに1つの短い一文を出し、押した瞬間の温度落差での離脱を埋める。
+  //   判定＝「番頭のツール/デモ/LPから来たか」を、既存クエリの意味そのままで導出する:
+  //     - next が /company で始まる（デモ・LP・ツールの共通CTA着地）
+  //     - もしくは utm_source が有る（帰属付き流入）
+  //   直接 /signup（bare）に来た人には出さない＝現行のまま・登録母数を壊さない。
+  //   出し分けは2パターンのみ（過剰分岐しない）:
+  //     - utm_source=banto_tool（点検ツール由来）→「点検結果を…」
+  //     - それ以外の番頭起点（デモ/LP）→「さきほどの答え方を…」
+  //   ※判定は正規化後 next(既定/company)でなく生クエリで行う。bare /signup は
+  //     next 未指定＝踏み板を出さない（直接流入の母数を壊さない・上記コメントの意図に一致）。
+  const fromBanto = (searchParams.get('next') || '').startsWith('/company') || !!attribution.source
+  const fromTool = attribution.source === 'banto_tool'
+  const contextSource = fromTool ? 'banto_tool' : 'banto_demo'
+
   // 計測: 登録フォーム到達（/signup の pageview とは別に「signUp 試行の母数」を明示）。
   //   これで 登録フォーム到達→完了/失敗 の各段が Plausible で読める。PIIは送らない。
   //   attribution(source/campaign)が有れば付与＝流入元別コンバージョンが読める。
   useEffect(() => {
     track('signup_started', Object.keys(attribution).length ? attribution : undefined)
   }, [attribution])
+
+  // 計測: 踏み板が実際に表示された回数（表示→登録の効きを流入元別に読む）。
+  //   fromBanto の時だけ1回発火。PIIは載せない（低カーディナリティの source のみ）。
+  useEffect(() => {
+    if (fromBanto) track('signup_context_shown', { source: contextSource })
+  }, [fromBanto, contextSource])
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -182,6 +203,23 @@ function SignupForm() {
 
   return (
     <div>
+      {/* 継続コンテキスト（踏み板）: 番頭起点の流入だけに表示。デモ/ツールで温まった
+          文脈を「御社の前提で受け取るための登録」として言い直し、温度を持ち越す。
+          景表法＝果たせる約束のみ（会社登録は次画面・まず1社ぶんから無料で）。
+          フォーム自体は一切変えない＝純粋な追加表示。 */}
+      {fromBanto && (
+        <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-sm leading-relaxed text-neutral-700">
+          <p>
+            {fromTool
+              ? 'さきほどの点検結果を、御社の前提でそのまま受け取るための登録です。'
+              : 'さきほどの答え方を、御社の前提でそのまま受け取るための登録です。'}
+          </p>
+          <p className="mt-1 text-neutral-600">
+            会社の登録は次の画面で、まず1社ぶんから無料で始められます。
+          </p>
+        </div>
+      )}
+
       <p className="mb-6 text-center text-sm text-neutral-600">無料で始める</p>
 
       <form onSubmit={handleSignup} className="space-y-4">
