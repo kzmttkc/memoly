@@ -519,10 +519,13 @@ export default function BusinessLandingPage() {
             <Badge tone="brand" className="mb-6">
               会社を覚える労務AI
             </Badge>
+            {/* 意味単位の inline-block で折り返し位置を制御（lg 2カラムでは
+                「自社のことを覚えている、」が1行に収まらず語中で改行されるため） */}
             <h1 className="text-4xl font-bold leading-[1.18] tracking-tight text-neutral-900 sm:text-5xl">
-              自社のことを覚えている、
+              <span className="inline-block">自社のことを</span>
+              <span className="inline-block">覚えている、</span>
               <br className="hidden sm:block" />
-              労務のAI相談役
+              <span className="inline-block">労務のAI相談役</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg lg:mx-0">
               所定労働時間も、休日のルールも、過去の相談も番頭が覚えています。

@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // $HOME直下の迷子package-lock.jsonをワークスペースルートと誤検出し
+  // dev(Turbopack)がモジュール解決に失敗するため明示
+  turbopack: {
+    root: __dirname,
+  },
   async headers() {
     return [
       {
