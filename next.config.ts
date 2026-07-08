@@ -6,6 +6,19 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // 個人版Memolyの残骸URL閉鎖（2026-07-09 TOP10⑦衛生タスク）:
+  //   /memory・/chat は会社スコープ移行前の個人版UI。既存ユーザー0のため
+  //   保護（データ移行・案内）は不要で、直URLは会社ダッシュボードへ301で永久移転する。
+  //   next.config の redirects は middleware より先に評価されるため、
+  //   middleware の PROTECTED_PREFIXES からも外してある（到達しない）。
+  async redirects() {
+    return [
+      { source: "/memory", destination: "/company", statusCode: 301 },
+      { source: "/memory/:path*", destination: "/company", statusCode: 301 },
+      { source: "/chat", destination: "/company", statusCode: 301 },
+      { source: "/chat/:path*", destination: "/company", statusCode: 301 },
+    ];
+  },
   async headers() {
     return [
       {

@@ -2,7 +2,9 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // 認証が必要なパス（未ログインは /login へリダイレクト）
-const PROTECTED_PREFIXES = ['/chat', '/memory', '/company']
+// ※ 旧個人版 /chat・/memory は next.config の redirects で /company へ301済み
+//   （redirects は middleware より先に評価されるため、ここには到達しない）。
+const PROTECTED_PREFIXES = ['/company']
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next({ request: { headers: req.headers } })
