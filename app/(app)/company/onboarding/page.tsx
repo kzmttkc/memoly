@@ -93,7 +93,7 @@ function OnboardingInner() {
     <div className="mx-auto max-w-xl">
       <PageHeader
         title="会社の基本情報を登録"
-        description="5つの質問に答えると、自社の前提に沿った相談・診断の精度が上がります。あとから変更できます。"
+        description="答えるとその場で、自社の労務リスクのセルフ診断（目安）と年間手続きカレンダーが出ます。あとから変更できます。"
       />
 
       <Card className="space-y-6">

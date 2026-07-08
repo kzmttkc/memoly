@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Share2, MessageSquareText, ClipboardList } from 'lucide-react'
+import { Share2, MessageSquareText, ClipboardList, CalendarClock, Plus } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -43,6 +43,25 @@ interface RiskResult {
   disclaimer: string
 }
 
+// 年間手続きカレンダー（S1）: /api/company/deadlines?suggest=1 が返す候補の型
+//   （lib/deadlines.ts DeadlineSuggestion と同形。決定的ルール・LLM非依存）。
+interface DeadlineSuggestion {
+  title: string
+  timingLabel: string
+  hint?: string
+  recurrence: 'none' | 'yearly'
+}
+
+/**
+ * timingLabel の時期順に並べるための序数（表示順のみ・判定ロジックではない）。
+ *   「毎年6〜7月ごろ」→6 のように月が読めるものは月順、
+ *   月が読めないもの（「有効期間の満了前」等）は末尾に元の順序のまま置く（安定ソート）。
+ */
+function timingOrder(label: string): number {
+  const m = label.match(/毎年(\d{1,2})[〜~]?\d{0,2}月/)
+  return m ? Number(m[1]) : 99
+}
+
 const SEVERITY: Record<TopRisk['severity'], { label: string; tone: 'danger' | 'warning' | 'neutral' }> = {
   high: { label: '高', tone: 'danger' },
   medium: { label: '中', tone: 'warning' },
@@ -64,7 +83,78 @@ function RiskInner() {
   //   登録は精度向上のため（任意・スキップ可）。集計の素も同時に貯まる。
   const [needAttrs, setNeedAttrs] = useState(false)
   const [attrsChecked, setAttrsChecked] = useState(false)
+  // 年間手続きカレンダー（S1）: 診断結果の直下に suggest 候補を合体表示する。
+  //   null=未取得（読み込み中表示）。候補は登録済み title を API 側が除外して返す。
+  const [suggestions, setSuggestions] = useState<DeadlineSuggestion[] | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  // 各候補行の期日入力値（title→YYYY-MM-DD）。日付はユーザーが確定する（Phase1: 断定しない）。
+  const [dueInputs, setDueInputs] = useState<Record<string, string>>({})
+  const [registering, setRegistering] = useState<string | null>(null)
   const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
+
+  // 診断結果が出たら、既存 suggest API から年間手続きの候補を取得（新ロジック無し・読取りのみ）。
+  useEffect(() => {
+    if (!result || !companyId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch(`/api/company/deadlines?companyId=${companyId}&suggest=1`)
+        const d = await r.json().catch(() => ({}))
+        if (cancelled) return
+        if (r.ok) {
+          const list = (d.suggestions ?? []) as DeadlineSuggestion[]
+          // timingLabel の時期順（月が読めるもの→月順、読めないもの→末尾・元順）。
+          setSuggestions([...list].sort((a, b) => timingOrder(a.timingLabel) - timingOrder(b.timingLabel)))
+          setIsAdmin(Boolean(d.isAdmin))
+        } else {
+          setSuggestions([])
+        }
+      } catch {
+        if (!cancelled) setSuggestions([])
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [result, companyId])
+
+  // 候補をワンクリックで登録（既存 POST /api/company/deadlines へ）。
+  //   期日は行内の date 入力でユーザーが確定してから押す＝システムは日付を断定しない。
+  async function registerSuggestion(s: DeadlineSuggestion) {
+    const due = dueInputs[s.title] ?? ''
+    if (!due) {
+      showToast('期日を選んでから登録してください')
+      return
+    }
+    if (registering) return
+    setRegistering(s.title)
+    try {
+      const res = await fetch('/api/company/deadlines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyId,
+          title: s.title,
+          due_on: due,
+          recurrence: s.recurrence,
+          source: 'suggested',
+          note: s.hint,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        showToast(data.error ?? '登録に失敗しました')
+        return
+      }
+      showToast(`「${s.title}」を期限に登録しました`)
+      // 登録済みは候補から外す（suggest=1 の再取得でも除外されるが、即時に反映する）。
+      setSuggestions(prev => (prev ? prev.filter(x => x.title !== s.title) : prev))
+    } catch {
+      showToast('登録に失敗しました。通信を確認してください。')
+    } finally {
+      setRegistering(null)
+    }
+  }
 
   // マウント時に正規化属性の充足を確認（業種/規模が空なら差し込みフォームを出す）。
   useEffect(() => {
@@ -98,12 +188,14 @@ function RiskInner() {
     if (!fromOnboarding || !attrsChecked || needAttrs || autoFired.current || !companyId) return
     autoFired.current = true
     track('onboarding_to_risk')
-    run()
+    run('onboarding')
     // run は安定参照不要（autoFired で単発保証）。companyId/attrsChecked/needAttrs 確定後に発火。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromOnboarding, attrsChecked, needAttrs, companyId])
 
-  async function run() {
+  // source: 診断の発火元（計測 prop）。オンボ直後の自動実行= onboarding／ボタン= manual。
+  //   （S3 サンプル会社モード実装時に 'sample' が加わる。sample は KPI 分母に入れない）
+  async function run(source: 'onboarding' | 'manual' = 'manual') {
     if (loading) return
     setLoading(true)
     try {
@@ -114,16 +206,18 @@ function RiskInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '診断に失敗しました')
+        showToast(data.error ?? 'セルフ診断に失敗しました')
         return
       }
       setResult(data as RiskResult)
       // 計測: リスク診断完了。スコアは帯（0-40/40-70/70-100）に丸めて非PII化して送る。
       const score = typeof data.score === 'number' ? data.score : null
       const band = score === null ? 'unknown' : score < 40 ? '0-40' : score < 70 ? '40-70' : '70-100'
-      track('risk_audit_completed', { overall_band: band })
+      // source prop（BANTO_DAY0_SPEC §2）: 北極星KPI「登録→初回診断到達率」の分子は
+      //   risk_audit_completed(source=onboarding) ÷ signup_completed で読む。
+      track('risk_audit_completed', { overall_band: band, source })
     } catch {
-      showToast('診断に失敗しました。通信を確認してください。')
+      showToast('セルフ診断に失敗しました。通信を確認してください。')
     } finally {
       setLoading(false)
     }
@@ -139,7 +233,7 @@ function RiskInner() {
     ]
     if (top) lines.push(`いちばん気になった点：${top}`)
     lines.push('')
-    lines.push('会社を覚える労務AIで無料診断 → banto-roumu.com/business')
+    lines.push('会社を覚える労務AIで無料セルフ診断 → banto-roumu.com/business')
     lines.push('#労務 #労務リスク診断')
     return lines.join('\n')
   }
@@ -157,8 +251,8 @@ function RiskInner() {
   function consultHref(r: RiskResult): string {
     const top = r.topRisks[0]
     const q = top
-      ? `労務リスク診断の結果、「${top.title}」が気になっています。具体的に何をどう見直せばよいか教えてください。`
-      : '労務リスク診断の結果について、優先的に見直すべき点を教えてください。'
+      ? `労務リスクのセルフ診断（目安）の結果、「${top.title}」が気になっています。具体的に何をどう見直せばよいか教えてください。`
+      : '労務リスクのセルフ診断（目安）の結果について、優先的に見直すとよい点を教えてください。'
     return `/company/chat?companyId=${companyId}&q=${encodeURIComponent(q)}`
   }
 
@@ -196,12 +290,12 @@ function RiskInner() {
         </Card>
       )}
 
-      <Button size="lg" onClick={run} disabled={loading} className="mb-8 w-full">
+      <Button size="lg" onClick={() => run('manual')} disabled={loading} className="mb-8 w-full">
         {loading
-          ? '診断中...（30秒ほどかかります）'
+          ? 'セルフ診断中...（30秒ほどかかります）'
           : result
-            ? '最新の状態で再診断する'
-            : '労務リスク診断を実行'}
+            ? '最新の状態でもう一度セルフ診断する'
+            : '労務リスクをセルフ診断する（目安）'}
       </Button>
 
       {result && (
@@ -280,6 +374,89 @@ function RiskInner() {
                 })}
               </div>
             )}
+          </section>
+
+          {/* ============ 年間手続きカレンダー（S1: 診断と同一画面で合体表示） ============
+              既存 suggest API の候補を timingLabel の時期順に並べるだけ（新ロジック無し）。
+              期日は各行の date 入力でユーザーが確定してから登録する（日付を断定しない）。 */}
+          <section>
+            <h2 className="mb-1 text-lg font-semibold text-neutral-900">
+              自社の年間手続きカレンダー（目安）
+            </h2>
+            <p className="mb-4 text-xs leading-relaxed text-neutral-500">
+              登録された基本情報から、1年のうちに巡ってくる代表的な労務手続きの目安を並べています。
+              期日はご自身で確定してください。登録すると、近づいたときにメールでお知らせします。
+            </p>
+            {suggestions === null ? (
+              <p className="text-sm text-neutral-500">カレンダーを読み込み中...</p>
+            ) : suggestions.length === 0 ? (
+              <Card className="bg-neutral-50">
+                <p className="text-sm leading-relaxed text-neutral-600">
+                  いま案内できる候補はすべて期限に登録済みです。登録済みの期限は
+                  「すべての期限を管理」から確認できます。
+                </p>
+              </Card>
+            ) : (
+              <ul className="space-y-2">
+                {suggestions.map(s => (
+                  <li
+                    key={s.title}
+                    className="rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-2 text-sm font-medium text-neutral-900">
+                          <CalendarClock className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                          {s.title}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-neutral-500">
+                          時期の目安：{s.timingLabel}
+                          {s.recurrence === 'yearly' && '・毎年'}
+                        </span>
+                        {s.hint && (
+                          <span className="mt-0.5 block text-xs leading-relaxed text-neutral-500">
+                            {s.hint}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    {isAdmin && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <label className="text-xs text-neutral-500">
+                          期日を確定：
+                          <input
+                            type="date"
+                            value={dueInputs[s.title] ?? ''}
+                            onChange={e =>
+                              setDueInputs(prev => ({ ...prev, [s.title]: e.target.value }))
+                            }
+                            aria-label={`${s.title}の期日`}
+                            className="ml-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+                          />
+                        </label>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => registerSuggestion(s)}
+                          disabled={registering === s.title}
+                        >
+                          <Plus className="h-3.5 w-3.5" aria-hidden />
+                          {registering === s.title ? '登録中...' : 'この期限を登録'}
+                        </Button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-4">
+              <Link
+                href={`/company/deadlines?companyId=${companyId}`}
+                className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline"
+              >
+                すべての期限を管理 →
+              </Link>
+            </div>
           </section>
 
           {result.disclaimer && (
