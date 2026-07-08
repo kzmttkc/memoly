@@ -9,7 +9,8 @@ import type Stripe from 'stripe'
 // ----------------------------------------------------------------------------
 //   購読すべき Stripe イベント（Takeshi が Stripe ダッシュボードで設定）:
 //     - checkout.session.completed         → plan/seats 付与・customer/sub 保存
-//     - customer.subscription.updated      → active/trialing なら維持、それ以外は free 降格
+//     - customer.subscription.updated      → active/trialing/past_due(grace) は plan 維持、
+//                                            それ以外(canceled/unpaid等)は free 降格
 //     - customer.subscription.deleted      → free 降格（席は購入数を1に戻さず保持＝再開容易）
 //     - invoice.payment_failed             → dunning。即 free 降格せず past_due(grace) に。
 //                                            plan は維持し、Stripe の自動リトライ(smart retries)を待つ。
@@ -199,7 +200,12 @@ export async function POST(req: NextRequest) {
     }
 
     // ----------------------------------------------------------------------
-    // customer.subscription.updated — 状態変化。active/trialing は維持、それ以外は降格。
+    // customer.subscription.updated — 状態変化。
+    //   実 Stripe では支払い失敗時、この customer.subscription.updated(status=past_due) が
+    //   invoice.payment_failed より先に届く。past_due を「非active→即free」に含めてしまうと
+    //   dunning の grace 期間(上のコメント参照)が機能せず、1回の失敗で即座に機能停止する
+    //   バグになる(2026-07-09 実Stripeテスト検証で発見・修正)。
+    //   active/trialing/past_due は plan を維持し、真に終了した状態(canceled/unpaid等)のみ降格。
     //   plan の昇格/降格(プラン変更)も items の price から反映する。
     // ----------------------------------------------------------------------
     if (event.type === 'customer.subscription.updated') {
@@ -212,11 +218,18 @@ export async function POST(req: NextRequest) {
       if (!isBanto) return new Response('ignored: not a banto subscription', { status: 200 })
 
       const active = sub.status === 'active' || sub.status === 'trialing'
-      // active のときは現プラン（price 逆引き優先、無ければ metadata.plan）。非activeは free。
-      const plan: PlanId = active
+      // past_due は dunning の grace 期間（invoice.payment_failed と表裏一体）。
+      // 「支払い失敗＝即機能停止」を避けるため、active と同じくplanを維持する。
+      // plan=free への降格は、契約が実際に終了した状態（canceled/unpaid/incomplete_expired 等）
+      // に限る。past_due からの最終降格は Stripe のリトライが尽きて customer.subscription.deleted
+      // が届いたとき（別ハンドラ）に行う＝ここでは早期降格しない。
+      const pastDue = sub.status === 'past_due'
+      const keepsPlan = active || pastDue
+      // 現プラン（price 逆引き優先、無ければ metadata.plan）。keepsPlan でなければ free。
+      const plan: PlanId = keepsPlan
         ? (pricePlan ?? (md.plan as PlanId | undefined) ?? 'standard')
         : 'free'
-      const status = active ? 'active' : sub.status === 'past_due' ? 'past_due' : 'canceled'
+      const status = active ? 'active' : pastDue ? 'past_due' : 'canceled'
 
       const rec = await recordEvent(supabase, {
         event_id: event.id,

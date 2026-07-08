@@ -170,6 +170,13 @@ if (cmd === 'dunning') {
   const pastDue = await waitStatus('past_due', 60_000)
   console.log('past_due確認:', JSON.stringify(pastDue))
   if (!pastDue) { console.error('FAIL: past_due に到達しませんでした'); process.exit(1) }
+  // 回帰防止(2026-07-09発見バグ): 実Stripeでは customer.subscription.updated(past_due) が
+  // invoice.payment_failed より先に届く。過去はこのイベントで即plan=free降格していた。
+  // status=past_due到達後もplanが降格していないことをここで明示的に確認する。
+  if (pastDue.plan === 'free') {
+    console.error(`FAIL回帰: past_due到達時にplanがfreeへ降格しています(plan=${pastDue.plan})。dunning grace が機能していません。`)
+    process.exit(1)
+  }
 
   // 4) 回収成功をシミュレート。一度detachしたPaymentMethodは再attach不可
   //    （Stripe仕様: "previously used without being attached...may not be used again"）のため、

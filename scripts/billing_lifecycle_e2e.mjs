@@ -217,6 +217,14 @@ try {
   row = await getCompany(c1)
   A('冪等: 同一event.id再送は already processed・状態不変', dup.status === 200 && /already|duplicate/.test(dup.body) && row?.plan === 'starter', dup.body.slice(0, 40))
 
+  // dunning: 実Stripeの実際の到達順は
+  //   customer.subscription.updated(status=past_due) → invoice.payment_failed。
+  //   前者を「非active→即free」で処理する回帰バグ(2026-07-09発見)を再発検知するため、
+  //   まず subscription.updated(past_due) 単体で plan 維持を確認してから invoice.payment_failed を送る。
+  const su = await postEv(subEvent('customer.subscription.updated', { id: evId('su_pd'), sub: sub1, companyId: c1, plan: 'starter', status: 'past_due' }))
+  row = await getCompany(c1)
+  A('回帰防止: subscription.updated(past_due)→plan維持・status=past_due', su.status === 200 && row?.status === 'past_due' && row?.plan === 'starter', `plan=${row?.plan} status=${row?.status}`)
+
   // dunning: 支払い失敗 → plan 維持・past_due
   const pf = await postEv(invEvent('invoice.payment_failed', { id: evId('pf'), sub: sub1 }))
   row = await getCompany(c1)
@@ -263,10 +271,10 @@ try {
   A('クロスガード: sharoushi¥2,980→ignored・既存planを汚さない', f2.status === 200 && /ignored/.test(f2.body) && row?.plan === 'shigyo')
 
   // --- 6. 監査ログ（company_billing_events）に処理イベントが過不足なく記録されている ---
-  //   記録されるのは実処理した8件（grant/pf/ps/up/del/gy/gs/gsh）。
+  //   記録されるのは実処理した9件（grant/su_pd/pf/ps/up/del/gy/gs/gsh）。
   //   冪等再送(dup)は既処理スキップ・クロス配信2件は record 前に ignore ＝ 記録されないのが正。
   const { data: evRows } = await admin.from('company_billing_events').select('event_id, event_type').in('company_id', created)
-  A('監査ログ: 処理8件のみ記録（重複・他製品は記録なし）', (evRows ?? []).length === 8, `rows=${(evRows ?? []).length}`)
+  A('監査ログ: 処理9件のみ記録（重複・他製品は記録なし）', (evRows ?? []).length === 9, `rows=${(evRows ?? []).length}`)
 } catch (e) {
   console.error('\nハーネス実行エラー:', e.message)
   fail++
