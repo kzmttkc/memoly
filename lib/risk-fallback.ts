@@ -23,6 +23,13 @@
 import type { CompanyProfileKV } from './prompts'
 import type { EmployeeBand } from './company-attributes'
 
+// 労務リスク診断の免責（Phase1）。全表示経路（API結果・サンプル会社モード）でコード強制付与。
+//   定義場所の理由: サンプル会社モード（S3）はクライアントで本モジュールを直接呼ぶため、
+//   免責もここ（LLM非依存・クライアント安全）に置く。prompts.ts（サーバ専用のプロンプト集）
+//   に置くと、クライアントが免責を import した際にプロンプト全文がバンドルへ漏れる。
+export const RISK_AUDIT_DISCLAIMER =
+  '一般的な参考情報です。正確な診断は専門家にご確認ください。スコアはあくまで目安です。'
+
 // 判定に使う正規化属性（company_attributes の該当列。null=未回答=要確認）。
 export interface RiskFallbackAttributes {
   industry_major: string | null

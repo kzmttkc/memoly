@@ -3,7 +3,14 @@
 import { Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Share2, MessageSquareText, ClipboardList, CalendarClock, Plus } from 'lucide-react'
+import {
+  Share2,
+  MessageSquareText,
+  ClipboardList,
+  CalendarClock,
+  Plus,
+  FlaskConical,
+} from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -13,6 +20,13 @@ import { RiskMeterHero, RiskMeterBar } from '@/components/ui/RiskMeter'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { AttributesForm } from '../_components/AttributesForm'
 import { track } from '@/lib/analytics'
+import {
+  computeFallbackRiskAudit,
+  RISK_AUDIT_DISCLAIMER,
+  type RiskFallbackAttributes,
+} from '@/lib/risk-fallback'
+import { suggestDeadlines } from '@/lib/deadlines'
+import type { CompanyAttributesValues } from '@/lib/company'
 
 // ============================================================================
 // /company/risk — 労務リスク・セルフ監査スコア（集客/バイラル）
@@ -62,6 +76,24 @@ function timingOrder(label: string): number {
   return m ? Number(m[1]) : 99
 }
 
+// ============================================================================
+// S3 サンプル会社モード（BANTO_DAY0_SPEC §S3）
+//   onboarding をスキップした直後の「空アカウントの受け皿」。純関数
+//   computeFallbackRiskAudit() と suggestDeadlines() をクライアントで直接呼び、
+//   S1 の診断＋カレンダー合体画面と同じ見た目で即時描画する。
+//     - API・LLM・DB書込みゼロ（company_risk_scores に書かない＝集合知を汚さない）
+//     - 属性は LP 体験デモ（TryDemo）と同一の固定値。架空であり実在企業ではない
+//     - 「架空のサンプル会社」バナー常時表示・シェア/AI相談は無効化
+// ============================================================================
+const SAMPLE_COMPANY_LABEL = '製造業・8名'
+const SAMPLE_COMPANY_ATTRIBUTES: RiskFallbackAttributes & CompanyAttributesValues = {
+  industry_major: 'E', // 製造業（JSIC 大分類）
+  employee_band: '5-9', // 8名相当のバンド
+  has_36kyotei: false, // 36協定なし（デモの主指摘ポイント）
+  has_work_rules: true, // 就業規則あり
+  has_fixed_ot: false, // 固定残業なし
+}
+
 const SEVERITY: Record<TopRisk['severity'], { label: string; tone: 'danger' | 'warning' | 'neutral' }> = {
   high: { label: '高', tone: 'danger' },
   medium: { label: '中', tone: 'warning' },
@@ -90,11 +122,18 @@ function RiskInner() {
   // 各候補行の期日入力値（title→YYYY-MM-DD）。日付はユーザーが確定する（Phase1: 断定しない）。
   const [dueInputs, setDueInputs] = useState<Record<string, string>>({})
   const [registering, setRegistering] = useState<string | null>(null)
+  // S3: サンプル会社モード中か。true の間は fetch を一切行わず、シェア/AI相談/期限登録を
+  //   無効化し、全表示面に「架空のサンプル会社」を明示する。
+  const [sampleMode, setSampleMode] = useState(false)
+  // sample_company_viewed をセッション1回だけ計測するためのフラグ。
+  const sampleViewedRef = useRef(false)
   const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
 
   // 診断結果が出たら、既存 suggest API から年間手続きの候補を取得（新ロジック無し・読取りのみ）。
+  //   ★サンプル会社モード中は取得しない（候補は runSample が純関数で同期生成済み。
+  //     ネットワーク往復ゼロを保つ）。
   useEffect(() => {
-    if (!result || !companyId) return
+    if (!result || !companyId || sampleMode) return
     let cancelled = false
     ;(async () => {
       try {
@@ -116,7 +155,7 @@ function RiskInner() {
     return () => {
       cancelled = true
     }
-  }, [result, companyId])
+  }, [result, companyId, sampleMode])
 
   // 候補をワンクリックで登録（既存 POST /api/company/deadlines へ）。
   //   期日は行内の date 入力でユーザーが確定してから押す＝システムは日付を断定しない。
@@ -194,7 +233,7 @@ function RiskInner() {
   }, [fromOnboarding, attrsChecked, needAttrs, companyId])
 
   // source: 診断の発火元（計測 prop）。オンボ直後の自動実行= onboarding／ボタン= manual。
-  //   （S3 サンプル会社モード実装時に 'sample' が加わる。sample は KPI 分母に入れない）
+  //   （sample は runSample 側で送る。sample は KPI 分母に入れない）
   async function run(source: 'onboarding' | 'manual' = 'manual') {
     if (loading) return
     setLoading(true)
@@ -209,6 +248,10 @@ function RiskInner() {
         showToast(data.error ?? 'セルフ診断に失敗しました')
         return
       }
+      // 実データの結果に切り替える。サンプル表示中だった場合はサンプルの候補も破棄し、
+      // suggest API から自社の候補を取り直す（下の useEffect が発火する）。
+      setSampleMode(false)
+      setSuggestions(null)
       setResult(data as RiskResult)
       // 計測: リスク診断完了。スコアは帯（0-40/40-70/70-100）に丸めて非PII化して送る。
       const score = typeof data.score === 'number' ? data.score : null
@@ -221,6 +264,30 @@ function RiskInner() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // S3 サンプル会社モード: 純関数を直接呼んで即時描画する。
+  //   fetch を一切しない＝API・LLM・DB書込みゼロ。結果は保存しない
+  //   （company_risk_scores に書かない＝集合知テーブルを汚さない）。
+  //   免責（RISK_AUDIT_DISCLAIMER）はサンプル経路でもコード強制付与を維持する。
+  function runSample() {
+    const fb = computeFallbackRiskAudit(SAMPLE_COMPANY_ATTRIBUTES)
+    setSampleMode(true)
+    setResult({ ...fb, disclaimer: RISK_AUDIT_DISCLAIMER })
+    // カレンダー候補も純関数から同期生成（S1 と同じ timingLabel 時期順で表示）。
+    setSuggestions(
+      [...suggestDeadlines(SAMPLE_COMPANY_ATTRIBUTES)].sort(
+        (a, b) => timingOrder(a.timingLabel) - timingOrder(b.timingLabel),
+      ),
+    )
+    // 計測（BANTO_DAY0_SPEC §2）: sample_company_viewed はセッション1回。
+    // risk_audit_completed は source='sample' で送り、北極星KPIの分母/分子に入れない。
+    if (!sampleViewedRef.current) {
+      sampleViewedRef.current = true
+      track('sample_company_viewed')
+    }
+    const band = fb.score < 40 ? '0-40' : fb.score < 70 ? '40-70' : '70-100'
+    track('risk_audit_completed', { overall_band: band, source: 'sample' })
   }
 
   // シェア用サマリ文。会社名は伏せ、当事者性のある数字でSNS共有を促す。
@@ -290,21 +357,69 @@ function RiskInner() {
         </Card>
       )}
 
-      <Button size="lg" onClick={() => run('manual')} disabled={loading} className="mb-8 w-full">
-        {loading
-          ? 'セルフ診断中...（30秒ほどかかります）'
-          : result
-            ? '最新の状態でもう一度セルフ診断する'
-            : '労務リスクをセルフ診断する（目安）'}
-      </Button>
+      <div className="mb-8 space-y-3">
+        <Button size="lg" onClick={() => run('manual')} disabled={loading} className="w-full">
+          {loading
+            ? 'セルフ診断中...（30秒ほどかかります）'
+            : result
+              ? sampleMode
+                ? '自社の登録内容でセルフ診断する（目安）'
+                : '最新の状態でもう一度セルフ診断する'
+              : '労務リスクをセルフ診断する（目安）'}
+        </Button>
+
+        {/* ============ S3: サンプル会社モードの入口 ============
+            まだ結果がない（onboarding スキップ直後の空アカウント等）ときだけ表示。
+            クリックで純関数の結果を即時描画する（登録・通信なし）。 */}
+        {!result && !loading && (
+          <>
+            <Button variant="secondary" onClick={runSample} className="w-full">
+              <FlaskConical className="h-4 w-4" aria-hidden />
+              サンプル会社で結果を見る
+            </Button>
+            <p className="text-center text-xs leading-relaxed text-neutral-500">
+              まだ情報を入れていなくても、架空のサンプル会社（{SAMPLE_COMPANY_LABEL}
+              ）でどんな結果が出るかをすぐに確認できます。
+            </p>
+          </>
+        )}
+      </div>
 
       {result && (
         <div className="space-y-8">
+          {/* ============ S3: 架空のサンプル会社バナー（常時表示・切替導線つき） ============ */}
+          {sampleMode && (
+            <Card className="border-warning-500/40 bg-warning-50">
+              <div className="flex items-start gap-2">
+                <FlaskConical className="mt-0.5 h-5 w-5 shrink-0 text-warning-600" aria-hidden />
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">
+                    これは架空のサンプル会社（{SAMPLE_COMPANY_LABEL}）の結果です
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+                    実在の会社ではありません。基本情報を登録すると、この同じ画面が自社の結果になります。
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <Link
+                  href={`/company/onboarding?companyId=${companyId}`}
+                  className={buttonClass({ variant: 'primary' })}
+                  onClick={() => track('signup_cta_clicked', { location: 'sample_result' })}
+                >
+                  自社の情報で診断する（1分・5問）
+                </Link>
+              </div>
+            </Card>
+          )}
+
           {/* ============ 結果カード（screenshotしたくなる体裁） ============ */}
           <Card id="risk-result-card">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-xs font-medium text-neutral-500">
-                番頭 ・ 労務セルフ診断
+                {sampleMode
+                  ? '番頭 ・ 労務セルフ診断（架空のサンプル会社）'
+                  : '番頭 ・ 労務セルフ診断'}
               </span>
               <span className="text-[10px] text-neutral-400">目安スコア</span>
             </div>
@@ -324,26 +439,37 @@ function RiskInner() {
             )}
           </Card>
 
-          {/* ============ アクション導線 ============ */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href={consultHref(result)} className={buttonClass({ variant: 'primary' })}>
-              <MessageSquareText className="h-4 w-4" aria-hidden />
-              この内容でAIに相談
-            </Link>
-            <Button variant="secondary" onClick={() => copyShare(result)}>
-              <Share2 className="h-4 w-4" aria-hidden />
-              結果をシェア
-            </Button>
-            <span className="text-xs text-neutral-500">
-              会社名は伏せたシェア文をコピーします。カードはスクリーンショットでどうぞ。
-            </span>
-          </div>
+          {/* ============ アクション導線 ============
+              S3: サンプル会社の結果ではシェア（架空の数字の拡散防止）とAI相談
+              （実データのチャットにサンプル前提を持ち込まない）を無効化する。 */}
+          {sampleMode ? (
+            <p className="text-xs leading-relaxed text-neutral-500">
+              サンプル会社の結果のため、シェアとAIへの相談はお使いいただけません。
+              自社の情報で診断すると、この場所からそのままAIに相談できます。
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <Link href={consultHref(result)} className={buttonClass({ variant: 'primary' })}>
+                <MessageSquareText className="h-4 w-4" aria-hidden />
+                この内容でAIに相談
+              </Link>
+              <Button variant="secondary" onClick={() => copyShare(result)}>
+                <Share2 className="h-4 w-4" aria-hidden />
+                結果をシェア
+              </Button>
+              <span className="text-xs text-neutral-500">
+                会社名は伏せたシェア文をコピーします。カードはスクリーンショットでどうぞ。
+              </span>
+            </div>
+          )}
 
           {/* ============ 上位ポイント ============ */}
           <section>
             <h2 className="mb-1 text-lg font-semibold text-neutral-900">いま気になる上位ポイント</h2>
             <p className="mb-4 text-xs leading-relaxed text-neutral-500">
-              自社の属性から、優先的に確認するとよいと考えられる点です。
+              {sampleMode
+                ? `架空のサンプル会社（${SAMPLE_COMPANY_LABEL}）の属性から、優先的に確認するとよいと考えられる点です。`
+                : '自社の属性から、優先的に確認するとよいと考えられる点です。'}
             </p>
             {result.topRisks.length === 0 ? (
               <p className="text-sm text-neutral-500">
@@ -381,11 +507,14 @@ function RiskInner() {
               期日は各行の date 入力でユーザーが確定してから登録する（日付を断定しない）。 */}
           <section>
             <h2 className="mb-1 text-lg font-semibold text-neutral-900">
-              自社の年間手続きカレンダー（目安）
+              {sampleMode
+                ? 'サンプル会社の年間手続きカレンダー（目安）'
+                : '自社の年間手続きカレンダー（目安）'}
             </h2>
             <p className="mb-4 text-xs leading-relaxed text-neutral-500">
-              登録された基本情報から、1年のうちに巡ってくる代表的な労務手続きの目安を並べています。
-              期日はご自身で確定してください。登録すると、近づいたときにメールでお知らせします。
+              {sampleMode
+                ? `架空のサンプル会社（${SAMPLE_COMPANY_LABEL}）の場合に、1年のうちに巡ってくる代表的な労務手続きの目安です。自社の情報で診断すると、自社に合わせた候補が並び、期限として登録できます。`
+                : '登録された基本情報から、1年のうちに巡ってくる代表的な労務手続きの目安を並べています。期日はご自身で確定してください。登録すると、近づいたときにメールでお知らせします。'}
             </p>
             {suggestions === null ? (
               <p className="text-sm text-neutral-500">カレンダーを読み込み中...</p>
@@ -420,7 +549,9 @@ function RiskInner() {
                         )}
                       </span>
                     </div>
-                    {isAdmin && (
+                    {/* S3: サンプル表示では登録UIを出さない（架空属性由来の候補を
+                        実データの期限に書き込ませない＝DB書込みゼロを保つ）。 */}
+                    {!sampleMode && isAdmin && (
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <label className="text-xs text-neutral-500">
                           期日を確定：
@@ -449,14 +580,18 @@ function RiskInner() {
                 ))}
               </ul>
             )}
-            <div className="mt-4">
-              <Link
-                href={`/company/deadlines?companyId=${companyId}`}
-                className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline"
-              >
-                すべての期限を管理 →
-              </Link>
-            </div>
+            {/* S3: サンプル表示では期限管理への導線を出さない（実データ画面との混同防止。
+                切替はバナーの「自社の情報で診断する」に一本化）。 */}
+            {!sampleMode && (
+              <div className="mt-4">
+                <Link
+                  href={`/company/deadlines?companyId=${companyId}`}
+                  className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline"
+                >
+                  すべての期限を管理 →
+                </Link>
+              </div>
+            )}
           </section>
 
           {result.disclaimer && (

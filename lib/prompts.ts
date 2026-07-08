@@ -515,8 +515,9 @@ ${formatCompanyProfileForPrompt(profiles)}
 // ============================================================================
 
 // 労務リスク診断の免責（Phase1）。API側でコード強制付与。
-export const RISK_AUDIT_DISCLAIMER =
-  '一般的な参考情報です。正確な診断は専門家にご確認ください。スコアはあくまで目安です。'
+//   実体は lib/risk-fallback.ts（クライアント安全モジュール）へ移設（S3 サンプル会社モードが
+//   クライアントから import するため。ここから re-export して既存の import 経路を保つ）。
+export { RISK_AUDIT_DISCLAIMER } from './risk-fallback'
 
 /** 簡易設問の回答（key/value）を「自社の回答」テキストに整形（プロンプト注入用）。 */
 export function formatRiskAnswersForPrompt(
