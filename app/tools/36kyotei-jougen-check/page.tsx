@@ -84,6 +84,28 @@ export default function Kyotei36JougenToolPage() {
     ],
   }
 
+  // SoftwareApplication（無料Webツールの価格シグナル）。
+  //   @id/url をツール固有URLにして global の SaaS エンティティと衝突させない。
+  //   name/description/featureList は可視ページ内容と一致させる（Google構造化=可視一致要件）。
+  //   評価系(aggregateRating/review)は実データ無しのため一切持たせない（Phase1・捏造禁止）。
+  const softwareAppJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    '@id': URL,
+    url: URL,
+    name: '36協定の時間外・休日労働の上限を無料でセルフ点検する',
+    description:
+      '自社の残業の実績を分かる範囲で入れると、36協定の上限（月45時間・年360時間・特別条項の年720時間・単月100時間未満・複数月平均80時間・年6か月）に照らして、確認が要りそうな箇所を画面で整理できます。登録不要・会社データは保存しません。',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    isAccessibleForFree: true,
+    featureList: [
+      '最も多い月の時間外労働を原則の月45時間・年360時間の上限に照らして整理',
+      '特別条項の年720時間・単月100時間未満・2〜6か月平均80時間・年6か月に照らして確認が要りそうな箇所を整理',
+    ],
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' },
+  }
+
   return (
     <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
       <script
@@ -93,6 +115,10 @@ export default function Kyotei36JougenToolPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
       />
 
       {/* ===== ヘッダ ===== */}

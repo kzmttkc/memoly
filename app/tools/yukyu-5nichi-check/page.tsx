@@ -85,6 +85,29 @@ export default function YukyuCheckToolPage() {
     ],
   }
 
+  // SoftwareApplication（無料Webツールの価格シグナル）。
+  //   @id/url をツール固有URLにして global の SaaS エンティティと衝突させない。
+  //   name/description/featureList は可視ページ内容と一致させる（Google構造化=可視一致要件）。
+  //   評価系(aggregateRating/review)は実データ無しのため一切持たせない（Phase1・捏造禁止）。
+  const softwareAppJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    '@id': URL,
+    url: URL,
+    name: '年5日の有給取得義務を無料でセルフ点検する',
+    description:
+      '社員の基準日とこれまでに取得した日数を入れると、年5日の取得義務を満たしているか、あと何日取らせる必要があるか、期限はいつかを画面で確認できます。登録不要・会社データは保存しません。',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    isAccessibleForFree: true,
+    featureList: [
+      '基準日と取得済み日数から年5日の充足状況を確認',
+      '不足している日数の目安を表示',
+      '取得期限（基準日から1年）と次の基準日を表示',
+    ],
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' },
+  }
+
   return (
     <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
       <script
@@ -94,6 +117,10 @@ export default function YukyuCheckToolPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
       />
 
       {/* ===== ヘッダ ===== */}

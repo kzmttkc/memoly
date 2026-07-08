@@ -27,6 +27,10 @@ export type UseCaseExample = {
 
 export type Faq = { q: string; a: string }
 
+/** 記事→無料ツールへの内部リンク（PageRank還流＋読者を計装済みツール経由でsignupへ）。
+ *  内容が対応する記事にだけ手動で張る（doorway量産の相互リンクにしない）。 */
+export type RelatedTool = { href: string; label: string }
+
 export type UseCase = {
   /** URLスラッグ。/roumu/{slug} */
   slug: string
@@ -46,6 +50,8 @@ export type UseCase = {
   examples: UseCaseExample[]
   /** FAQ（2〜3問・FAQPage構造化データ＆本文共用） */
   faqs: Faq[]
+  /** 関連する無料セルフ点検ツール（内容が対応する記事にだけ設定。任意） */
+  relatedTool?: RelatedTool
 }
 
 export const USECASE_LIST: UseCase[] = [
@@ -647,6 +653,10 @@ export const USECASE_LIST: UseCase[] = [
         a: '自社の勤怠ルールや残業の運用を登録すれば、その前提を踏まえて整理に使えます。次回以降は前提を貼り直さずに相談できます。',
       },
     ],
+    relatedTool: {
+      href: '/tools/36kyotei-jougen-check',
+      label: '36協定 上限の残り時間を無料で点検する',
+    },
   },
 
   // 11. 労務の引き継ぎ・属人化の解消
@@ -826,6 +836,10 @@ export const USECASE_LIST: UseCase[] = [
         a: '自社の36協定の内容や残業の運用を登録すれば、その前提を踏まえて整理に使えます。次回以降は前提を貼り直さずに相談できます。',
       },
     ],
+    relatedTool: {
+      href: '/tools/36kyotei-jougen-check',
+      label: '36協定 上限の残り時間を無料で点検する',
+    },
   },
   // 14. 入退社手続き 期限と自社フローの整理
   {
@@ -944,6 +958,10 @@ export const USECASE_LIST: UseCase[] = [
         a: '自社の付与ルールや基準日、取得状況を登録すれば、その前提を踏まえた整理や、管理のための下書きの補助はできます。ただし帳簿の作成代行や個別の法的助言ではありません。最終的な様式や保存の運用は、自社の実態と専門家の確認を踏まえて整えてください。',
       },
     ],
+    relatedTool: {
+      href: '/tools/yukyu-5nichi-check',
+      label: '有給5日 取得状況を無料で点検する',
+    },
   },
   // 16. 最低賃金 改定 中小企業の対応
   {
