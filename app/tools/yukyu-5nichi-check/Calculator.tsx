@@ -272,27 +272,41 @@ export function Calculator() {
             正確な取得状況や個別の判断は、自社の就業規則・年次有給休暇管理簿でご確認いただき、必要に応じて専門家にご相談ください。
           </p>
 
-          {/* ===== 番頭 登録CTA（結果末尾に1本のみ） ===== */}
-          {result.eligible && (
-            <div className="mt-5 rounded-2xl bg-brand-50 p-5">
-              <p className="text-sm font-semibold text-neutral-900">
-                この点検を、会社が覚えて毎年自動でやる
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-                番頭に社員ごとの基準日と付与ルールを覚えさせておくと、次からは基準日を入れ直さずに、期限が近い社員や取得が足りていなさそうな社員を一緒に整理できます。
-              </p>
-              <Link
-                href={SIGNUP_HREF}
-                onClick={() => track('signup_cta_clicked', { location: 'yukyu_tool' })}
-                className={buttonClass({ variant: 'primary', size: 'lg', className: 'mt-4' })}
-              >
-                番頭に無料登録する
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-            </div>
-          )}
+          {/* ===== 番頭 登録CTA（結果末尾に1本のみ・痛点別に出し分け） ===== */}
+          {result.eligible && <SignupCta result={result} />}
         </Card>
       )}
+    </div>
+  )
+}
+
+// 結果末尾の番頭登録CTA。
+//   高痛点(shortfall/overdue = 不足あり)は「今の痛みの解消」トーン、
+//   低痛点(met = 充足)は現行の「未来の便利」トーンを据え置く（1変数のみ変更）。
+//   Phase1/景表法厳守: 「違反判定/解消」「社労士監修」は書かず、実挙動どおり
+//   「洗い出す/一緒に整理する」に留める（番頭=社員ごとの取得状況を覚えて一覧化）。
+function SignupCta({ result }: { result: Result }) {
+  // status は tool_completed と同じ分岐キー（高痛点コホートの登録CTR比較用）。
+  const status = result.remaining === 0 ? 'met' : result.daysToDeadline < 0 ? 'overdue' : 'shortfall'
+  const highPain = result.remaining > 0
+  return (
+    <div className="mt-5 rounded-2xl bg-brand-50 p-5">
+      <p className="text-sm font-semibold text-neutral-900">
+        {highPain ? 'この点検は、今の1人ぶんです' : 'この点検を、会社が覚えて毎年自動でやる'}
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+        {highPain
+          ? '番頭に社員を登録しておくと、この社員だけでなく、あと何日足りない人・期限が近い人を全員ぶん、一覧で洗い出せます。基準日を1人ずつ入れ直す手間なく、次からは足りていなさそうな人から確認できます。'
+          : '番頭に社員ごとの基準日と付与ルールを覚えさせておくと、次からは基準日を入れ直さずに、期限が近い社員や取得が足りていなさそうな社員を一緒に整理できます。'}
+      </p>
+      <Link
+        href={SIGNUP_HREF}
+        onClick={() => track('signup_cta_clicked', { location: 'yukyu_tool', status })}
+        className={buttonClass({ variant: 'primary', size: 'lg', className: 'mt-4' })}
+      >
+        番頭に無料登録する
+        <ArrowRight className="h-4 w-4" aria-hidden />
+      </Link>
     </div>
   )
 }
