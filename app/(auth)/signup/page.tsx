@@ -41,14 +41,19 @@ function SignupForm() {
   //   持ち回りは next の実体が /company の時だけ（onboarding 等 company を読まない先には付けない）。
   //   emailRedirectTo（メール確認の全再読込）にも同じ nextDest を使う＝リンク着地でも店名が残る。
   const companyParam = (searchParams.get('company') ?? '').trim().slice(0, 100)
+  // 無料ツールの「この結果を自社の記録として保存(無料)」も同じ流儀で持ち回る。
+  //   ツール結果の要約(note)を /company に載せ、会社作成時に「会社の記憶」へ保存する
+  //   （app/(app)/company/page.tsx が消費）。約束（保存）と実挙動を一致させる。
+  const noteParam = (searchParams.get('note') ?? '').trim().slice(0, 400)
   const nextDest = useMemo(() => {
-    if (!companyParam) return next
+    if (!companyParam && !noteParam) return next
     const [path, query = ''] = next.split('?')
     if (path !== '/company') return next
     const sp = new URLSearchParams(query)
-    sp.set('company', companyParam)
+    if (companyParam) sp.set('company', companyParam)
+    if (noteParam) sp.set('note', noteParam)
     return `${path}?${sp.toString()}`
-  }, [next, companyParam])
+  }, [next, companyParam, noteParam])
 
   // 帰属(attribution): Kotri→番頭 hire-bridge 等の流入元を計測に載せる。
   //   例: /signup?utm_source=kotri&utm_campaign=hire_bridge

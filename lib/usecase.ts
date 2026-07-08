@@ -654,8 +654,10 @@ export const USECASE_LIST: UseCase[] = [
       },
     ],
     relatedTool: {
-      href: '/tools/36kyotei-jougen-check',
-      label: '36協定 上限の残り時間を無料で点検する',
+      // 内容の対応で張り替え（2026-07-09）: 本記事の主題は労働時間の記録と残業の運用
+      // ＝残業代点検の土台。36協定上限ツールへのリンクは 36kyotei-jougen 記事が持つ。
+      href: '/tools/zangyodai-check',
+      label: '残業代の計算が合っているか無料で点検する',
     },
   },
 

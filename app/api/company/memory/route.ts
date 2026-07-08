@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
   const action = req.nextUrl.searchParams.get('action')
   if (action === 'approve') return approveFact(req)
   if (action === 'decision') return captureDecision(req)
+  if (action === 'note') return saveToolNote(req)
 
   const body = await req.json().catch(() => ({}))
   const { messages, companyId: bodyCompanyId } = body as {
@@ -116,6 +117,52 @@ export async function POST(req: NextRequest) {
     degraded: extraction.degraded ?? depth.degraded ?? null,
     note: 'rule候補はadmin承認制。company_profilesへの昇格は /api/company/memory?action=approve で行う。',
   })
+}
+
+// ----------------------------------------------------------------------------
+// POST ?action=note — 無料ツールの点検結果を「会社の記憶」へ保存（A5 結果保存CTA）
+//   /tools/* → /signup?note=… → /company?note=… の持ち回りの終点。
+//   /company がユーザーの明示アクション（会社作成 or 保存ボタン）で呼ぶ。
+//   LLM抽出は通さない（ユーザーが画面で見たままの要約テキストを保存する）。
+//   ★自動保存しない（誤記憶防止）。ユーザーの明示確定が前提＝decisionと同格の流儀。
+//
+//   body: { companyId?, text }
+// ----------------------------------------------------------------------------
+async function saveToolNote(req: NextRequest): Promise<NextResponse> {
+  const body = await req.json().catch(() => ({}))
+  const { companyId: bodyCompanyId, text } = body as { companyId?: string; text?: string }
+  const trimmed = typeof text === 'string' ? text.trim().slice(0, 1000) : ''
+  if (!trimmed) {
+    return NextResponse.json({ error: 'text required' }, { status: 400 })
+  }
+  if (JSON.stringify(body).length > 10_000) {
+    return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+  }
+
+  // company_id 確定（指定があれば所属検証、無ければデフォルト会社）。POST 本体と同じ流儀。
+  let companyId: string
+  if (bodyCompanyId) {
+    const m = await getMembership(bodyCompanyId)
+    if (!m) return NextResponse.json({ error: 'この会社に所属していません' }, { status: 403 })
+    companyId = m.companyId
+  } else {
+    const def = await resolveDefaultCompany()
+    if (!def) return NextResponse.json({ error: 'NO_COMPANY' }, { status: 409 })
+    companyId = def.companyId
+  }
+
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.from('company_memories').insert({
+    company_id: companyId,
+    summary: trimmed,
+    memory_type: 'summary',
+    topic: '無料ツールの点検結果',
+  })
+  if (error) {
+    console.error('[company:memory] tool note insert failed', error)
+    return NextResponse.json({ error: '保存に失敗しました' }, { status: 500 })
+  }
+  return NextResponse.json({ ok: true })
 }
 
 // ----------------------------------------------------------------------------

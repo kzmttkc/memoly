@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { ArrowRight, CalendarDays, CheckCircle2, AlertCircle } from 'lucide-react'
+import { useState } from 'react'
+import { CalendarDays, CheckCircle2, AlertCircle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { track } from '@/lib/analytics'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta } from '@/components/tools/client'
 
 // ============================================================================
 // 年5日 有給取得義務 セルフ点検ツール（クライアント計算・会社データ非保存）
@@ -70,9 +70,7 @@ export function Calculator() {
   const [error, setError] = useState('')
   const [result, setResult] = useState<Result | null>(null)
 
-  useEffect(() => {
-    track('tool_open', { tool: 'yukyu_5nichi' })
-  }, [])
+  useToolOpen('yukyu_5nichi')
 
   function handleCheck(e: React.FormEvent) {
     e.preventDefault()
@@ -208,9 +206,7 @@ export function Calculator() {
           {error && <p className="text-sm text-danger-600">{error}</p>}
         </form>
 
-        <p className="mt-4 border-t border-neutral-100 pt-4 text-xs leading-relaxed text-neutral-500">
-          入力した内容はこのブラウザの中だけで計算します。会社や社員のデータをサーバーに送ることはありません。
-        </p>
+        <LocalOnlyNote />
       </Card>
 
       {/* ===== 結果 ===== */}
@@ -267,10 +263,7 @@ export function Calculator() {
             </div>
           )}
 
-          <p className="mt-4 border-t border-neutral-100 pt-4 text-xs leading-relaxed text-neutral-500">
-            この点検は、入力内容をもとにした一般的な目安の整理で、合否や適法性を判定するものではありません。
-            正確な取得状況や個別の判断は、自社の就業規則・年次有給休暇管理簿でご確認いただき、必要に応じて専門家にご相談ください。
-          </p>
+          <ResultDisclaimer detail="正確な取得状況や個別の判断は、自社の就業規則・年次有給休暇管理簿でご確認いただき、必要に応じて専門家にご相談ください。" />
 
           {/* ===== 番頭 登録CTA（結果末尾に1本のみ・痛点別に出し分け） ===== */}
           {result.eligible && <SignupCta result={result} />}
@@ -290,24 +283,17 @@ function SignupCta({ result }: { result: Result }) {
   const status = result.remaining === 0 ? 'met' : result.daysToDeadline < 0 ? 'overdue' : 'shortfall'
   const highPain = result.remaining > 0
   return (
-    <div className="mt-5 rounded-2xl bg-brand-50 p-5">
-      <p className="text-sm font-semibold text-neutral-900">
-        {highPain ? 'この点検は、今の1人ぶんです' : 'この点検を、会社が覚えて毎年自動でやる'}
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-        {highPain
+    <ToolSignupCta
+      href={SIGNUP_HREF}
+      location="yukyu_tool"
+      status={status}
+      title={highPain ? 'この点検は、今の1人ぶんです' : 'この点検を、会社が覚えて毎年自動でやる'}
+      body={
+        highPain
           ? '番頭に社員を登録しておくと、この社員だけでなく、あと何日足りない人・期限が近い人を全員ぶん、一覧で洗い出せます。基準日を1人ずつ入れ直す手間なく、次からは足りていなさそうな人から確認できます。'
-          : '番頭に社員ごとの基準日と付与ルールを覚えさせておくと、次からは基準日を入れ直さずに、期限が近い社員や取得が足りていなさそうな社員を一緒に整理できます。'}
-      </p>
-      <Link
-        href={SIGNUP_HREF}
-        onClick={() => track('signup_cta_clicked', { location: 'yukyu_tool', status })}
-        className={buttonClass({ variant: 'primary', size: 'lg', className: 'mt-4' })}
-      >
-        番頭に無料登録する
-        <ArrowRight className="h-4 w-4" aria-hidden />
-      </Link>
-    </div>
+          : '番頭に社員ごとの基準日と付与ルールを覚えさせておくと、次からは基準日を入れ直さずに、期限が近い社員や取得が足りていなさそうな社員を一緒に整理できます。'
+      }
+    />
   )
 }
 

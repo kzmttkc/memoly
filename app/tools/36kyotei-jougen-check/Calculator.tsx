@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react'
+import { useState } from 'react'
+import { CheckCircle2, AlertCircle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { track } from '@/lib/analytics'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta } from '@/components/tools/client'
 
 // ============================================================================
 // 36協定 時間外・休日労働の上限セルフ点検ツール（クライアント計算・会社データ非保存）
@@ -77,9 +77,7 @@ export function Calculator() {
   const [error, setError] = useState('')
   const [result, setResult] = useState<Result | null>(null)
 
-  useEffect(() => {
-    track('tool_open', { tool: '36kyotei' })
-  }, [])
+  useToolOpen('36kyotei')
 
   function handleCheck(e: React.FormEvent) {
     e.preventDefault()
@@ -338,9 +336,7 @@ export function Calculator() {
           {error && <p className="text-sm text-danger-600">{error}</p>}
         </form>
 
-        <p className="mt-4 border-t border-neutral-100 pt-4 text-xs leading-relaxed text-neutral-500">
-          入力した内容はこのブラウザの中だけで計算します。会社や社員のデータをサーバーに送ることはありません。
-        </p>
+        <LocalOnlyNote />
       </Card>
 
       {/* ===== 結果 ===== */}
@@ -389,10 +385,7 @@ export function Calculator() {
             ))}
           </ul>
 
-          <p className="mt-4 border-t border-neutral-100 pt-4 text-xs leading-relaxed text-neutral-500">
-            この点検は、入力内容をもとにした一般的な目安の整理で、合否や適法性を判定するものではありません。
-            時間外・休日労働の集計方法や特別条項の運用は自社の36協定・勤怠記録でご確認いただき、必要に応じて専門家にご相談ください。
-          </p>
+          <ResultDisclaimer detail="時間外・休日労働の集計方法や特別条項の運用は自社の36協定・勤怠記録でご確認いただき、必要に応じて専門家にご相談ください。" />
 
           {/* ===== 番頭 登録CTA（結果末尾に1本のみ・痛点別に出し分け） ===== */}
           <SignupCta result={result} />
@@ -413,23 +406,16 @@ function SignupCta({ result }: { result: Result }) {
     result.flaggedCount === 0 ? 'within' : result.flaggedCount === 1 ? 'one_flag' : 'multi_flag'
   const highPain = result.flaggedCount > 0
   return (
-    <div className="mt-5 rounded-2xl bg-brand-50 p-5">
-      <p className="text-sm font-semibold text-neutral-900">
-        {highPain ? 'この点検は、今入れた数字の分だけです' : 'この点検を、会社が毎月覚えて見張る'}
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-        {highPain
+    <ToolSignupCta
+      href={SIGNUP_HREF}
+      location="36kyotei_tool"
+      status={status}
+      title={highPain ? 'この点検は、今入れた数字の分だけです' : 'この点検を、会社が毎月覚えて見張る'}
+      body={
+        highPain
           ? '確認が要りそうな箇所が見つかったら、来月も再来月も同じ確認が要ります。番頭に自社の36協定の内容や勤務形態を覚えさせておくと、数字を毎回入れ直さずに、月45時間や単月100時間などの上限に近づいている月を毎月一緒に洗い出せます。'
-          : '単発の点検は、その月の数字を入れ直すたびにやり直しになります。番頭に自社の36協定の内容や勤務形態を覚えさせておくと、次からは前提を貼り直さずに、月45時間や単月100時間などの上限に近い箇所を毎月一緒に整理できます。'}
-      </p>
-      <Link
-        href={SIGNUP_HREF}
-        onClick={() => track('signup_cta_clicked', { location: '36kyotei_tool', status })}
-        className={buttonClass({ variant: 'primary', size: 'lg', className: 'mt-4' })}
-      >
-        番頭に無料登録する
-        <ArrowRight className="h-4 w-4" aria-hidden />
-      </Link>
-    </div>
+          : '単発の点検は、その月の数字を入れ直すたびにやり直しになります。番頭に自社の36協定の内容や勤務形態を覚えさせておくと、次からは前提を貼り直さずに、月45時間や単月100時間などの上限に近い箇所を毎月一緒に整理できます。'
+      }
+    />
   )
 }

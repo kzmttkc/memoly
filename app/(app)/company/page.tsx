@@ -49,12 +49,43 @@ function CompanyHome() {
   //   Reactの標準エスケープに委ねる（dangerouslySetInnerHTML は使わない＝XSS安全）。
   const prefillCompany = (searchParams.get('company') ?? '').trim().slice(0, 100)
 
+  // 無料ツールの「この結果を自社の記録として保存(無料)」の持ち回り終点。
+  //   /tools/* → /signup?note=… → /company?note=…（signup の nextDest が持ち回る）。
+  //   会社作成時（または既所属なら保存ボタン）に /api/company/memory?action=note で
+  //   「会社の記憶」へ保存する＝CTAの約束（保存）を実挙動にする。自動保存はしない。
+  const prefillNote = (searchParams.get('note') ?? '').trim().slice(0, 400)
+
   const [companies, setCompanies] = useState<Membership[] | null>(null)
   const [summaries, setSummaries] = useState<Record<string, ProfileSummary>>({})
   const [name, setName] = useState(prefillCompany)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [noteSaved, setNoteSaved] = useState(false)
+  const [noteSaving, setNoteSaving] = useState(false)
   const router = useRouter()
+
+  // ツール結果を「会社の記憶」へ保存（ベストエフォート・失敗しても本流を壊さない）。
+  const saveToolNote = useCallback(
+    async (companyId: string): Promise<boolean> => {
+      if (!prefillNote) return false
+      try {
+        const res = await fetch('/api/company/memory?action=note', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ companyId, text: prefillNote }),
+        })
+        if (res.ok) {
+          // 計測: ツール→signup→保存 の一気通貫が実際に完了した数（A5の成否指標）。PIIなし。
+          track('tool_result_saved')
+          return true
+        }
+      } catch {
+        /* 保存失敗は本流（会社作成・遷移）に影響させない */
+      }
+      return false
+    },
+    [prefillNote],
+  )
 
   // 実フェッチ。setState は await 後の解決時のみ行う（effect 同期setStateを避ける）。
   //   ignore: アンマウント/再フェッチ時の遅延レスポンス取り込みを防ぐ。
@@ -130,6 +161,9 @@ function CompanyHome() {
       //   スキップ可。companyId が取れない場合のみ一覧再読込にフォールバック。
       const newId = data.company?.companyId
       if (newId) {
+        // ツール結果の持ち回りがあれば、作った会社の「記憶」へ保存してから進む
+        // （保存CTAの約束を実挙動に。失敗しても遷移は止めない）。
+        if (prefillNote) await saveToolNote(newId)
         router.push(`/company/onboarding?companyId=${newId}`)
         return
       }
@@ -153,6 +187,13 @@ function CompanyHome() {
           title="会社を作成"
           description="会社を登録すると、自社の労務ルール（所定労働時間・36協定の状況など）をAIに覚えさせて、自社の前提に沿った相談が可能に。人事・労務の作業を圧倒的に効率化できます。"
         />
+        {/* ツール結果の持ち回りがある場合の踏み板: 保存の約束がここで果たされることを明示 */}
+        {prefillNote && (
+          <div className="mb-4 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-sm leading-relaxed text-neutral-700">
+            <p>会社を作成すると、さきほどの無料ツールの点検結果を「会社の記憶」として保存します。</p>
+            <p className="mt-1 text-xs text-neutral-500">{prefillNote}</p>
+          </div>
+        )}
         <Card>
           <form onSubmit={createCompany} className="space-y-4">
             <div>
@@ -190,6 +231,36 @@ function CompanyHome() {
         }
       />
       {error && <p className="mb-4 text-sm text-danger-600">{error}</p>}
+
+      {/* ツール結果の持ち回りがある場合（既に会社所属あり）: 明示ボタンで保存する。
+          自動保存しない（誤記憶防止・decision と同じ human-in-the-loop の流儀）。 */}
+      {prefillNote && (
+        <div className="mb-4 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-sm leading-relaxed text-neutral-700">
+          {noteSaved ? (
+            <p className="text-success-700">点検結果を「{companies[0].name}」の会社の記憶に保存しました。</p>
+          ) : (
+            <>
+              <p>さきほどの無料ツールの点検結果を「会社の記憶」として保存できます。</p>
+              <p className="mt-1 text-xs text-neutral-500">{prefillNote}</p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-3"
+                disabled={noteSaving}
+                onClick={async () => {
+                  setNoteSaving(true)
+                  const ok = await saveToolNote(companies[0].companyId)
+                  setNoteSaving(false)
+                  if (ok) setNoteSaved(true)
+                  else setError('点検結果の保存に失敗しました。時間をおいてお試しください。')
+                }}
+              >
+                {noteSaving ? '保存中...' : `「${companies[0].name}」に保存する`}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="space-y-4">
         {companies.map(c => {
