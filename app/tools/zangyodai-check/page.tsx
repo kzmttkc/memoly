@@ -51,6 +51,10 @@ const FAQS: ToolFaq[] = [
     q: '入力した会社のデータは保存されますか',
     a: '保存しません。入力内容はお使いのブラウザの中だけで計算し、サーバーに送信することはありません。ページを閉じると入力は残りません。結果画面の「記録として保存」は、番頭に無料登録した場合にご自身の操作で保存する機能です。',
   },
+  {
+    q: '未払い分はいつまで遡って請求されうるのですか',
+    a: '一般的には、時間外・休日労働の割増賃金を含む賃金請求権は、2020年4月以降に支払期日が到来した分から、当分の間の経過措置として3年で時効にかかるとされています（本来は5年ですが、当分の間は3年とする経過措置が置かれています）。起算点の考え方や個別の事情によって扱いが変わるため、遡って請求できる期間の具体的な判断は、詳しくは専門家にご確認ください。',
+  },
 ]
 
 export default function ZangyodaiCheckToolPage() {
@@ -100,6 +104,10 @@ export default function ZangyodaiCheckToolPage() {
           {
             label: '東京労働局「しっかりマスター 労働基準法 割増賃金編」',
             href: 'https://jsite.mhlw.go.jp/tokyo-roudoukyoku/content/contents/000501860.pdf',
+          },
+          {
+            label: '厚生労働省「確かめよう労働条件」Q&A「賃金請求権の消滅時効は、どのように変更されたのでしょうか？」',
+            href: 'https://www.check-roudou.mhlw.go.jp/qa/roudousya/chingin/q9.html',
           },
         ],
       }}
