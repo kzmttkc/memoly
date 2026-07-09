@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/tools/36kyotei-jougen-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/tools/zangyodai-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/tools/syaho-kanyu-taisho-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE}/tools/jyunan-hatarakikata-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     ...USECASE_SLUGS.map((slug) => ({
       url: `${BASE}/roumu/${slug}`,
       lastModified: now,
