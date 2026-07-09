@@ -3,6 +3,7 @@ import { Geist, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import { CookieBanner } from "@/components/ui/CookieBanner";
+import { Clarity } from "@/components/analytics/Clarity";
 
 // 欧文/数字は Geist、日本語は Noto Sans JP。両方を CSS 変数で公開し
 // globals.css の --font-sans フォールバックスタックから参照する。
@@ -61,11 +62,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           src="https://plausible.io/js/pa-zK4ObFABW1NCS-rSYTlSn.js"
           strategy="afterInteractive"
         />
-        <Script id="plausible-init" strategy="afterInteractive">{`
-          window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)};
-          plausible.init=plausible.init||function(){};
-          plausible.init();
-        `}</Script>
+        {/* Plausible 手動初期化。CSP強化(script-src脱unsafe-inline)に備え、
+            実行可能インラインを /plausible-init.js へ外部化（'self'で許可）。 */}
+        <Script src="/plausible-init.js" strategy="afterInteractive" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -87,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans bg-gray-950 text-gray-100 min-h-screen">
         {children}
         <CookieBanner />
+        <Clarity />
       </body>
     </html>
   );
