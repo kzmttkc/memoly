@@ -66,6 +66,7 @@ const PAGES = [
 ]
 
 let userId = null
+let companyId = ''
 let browser = null
 let consoleErrors = []
 try {
@@ -123,7 +124,6 @@ try {
   // 会社を1社作成し、サンプルの自社ルールを数件登録（同一オリジンの認証済 fetch＝確実）。
   //   ブラウザ→/api/*（サーバ側でネットワーク可）なので companyId を安定して得られる。
   await page.goto(`${BASE}/company`, { waitUntil: 'networkidle' })
-  let companyId = ''
   try {
     const created = await page.evaluate(async () => {
       const r = await fetch('/api/company', {
@@ -221,6 +221,15 @@ try {
   process.exitCode = 1
 } finally {
   if (browser) await browser.close().catch(() => {})
+  // 会社を先に消す（company_* は ON DELETE CASCADE で連鎖削除）。
+  //   deleteUser は company_members しか cascade しないため、会社本体は明示削除が必要
+  //   （さもないと本番DBに孤児会社が溜まる）。
+  if (companyId) {
+    await admin.from('companies').delete().eq('id', companyId).then(
+      () => console.log('[theme_capture] cleaned temp company'),
+      () => {},
+    )
+  }
   if (userId) {
     await admin.auth.admin.deleteUser(userId).catch(() => {})
     console.log('[theme_capture] cleaned temp user')
