@@ -21,12 +21,21 @@
 -- ----------------------------------------------------------------------------
 -- 1. companies — 会社（テナント）。課金・席数の保有主体。
 -- ----------------------------------------------------------------------------
+-- plan の値・DEFAULT は lib/plans.ts の SSOT（free/starter/standard/shigyo）に一致させる。
+-- 【スキーマドリフト是正 2026-07-09】本テーブルは以前 CHECK を
+--   ('trial','starter','pro','enterprise') / DEFAULT 'trial' で定義していたが、
+--   SSOT・LP・課金結線と齟齬があった。本番DBは supabase/plan_ssot_migration.sql 適用済みで
+--   既に SSOT へ移行済み（新規fail-open probe で free/starter/standard/shigyo=ACCEPTED、
+--   trial/pro/enterprise=REJECTED、DEFAULT='free' を実測確認）。
+--   本ファイルも新規インストールでドリフトを再発させないため SSOT 定義に更新した。
+--   stripe_subscription_id も plan_ssot_migration.sql と同期して基底スキーマに含める。
 CREATE TABLE IF NOT EXISTS public.companies (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
-  plan text NOT NULL DEFAULT 'trial' CHECK (plan IN ('trial', 'starter', 'pro', 'enterprise')),
+  plan text NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'starter', 'standard', 'shigyo')),
   seats_purchased int NOT NULL DEFAULT 1 CHECK (seats_purchased >= 1),
   stripe_customer_id text,                       -- Stripe顧客ID（課金結線後に埋まる）
+  stripe_subscription_id text,                   -- Stripe サブスクID（subscription.updated/deleted の突合キー）
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'past_due', 'canceled')),
   created_at timestamptz DEFAULT now()
 );

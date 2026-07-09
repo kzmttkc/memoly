@@ -20,16 +20,73 @@ import { limitFor, PlanId, PlanFeatureLimits } from '@/lib/plans'
 //       当日カウンタを原子的に +1 して新しい値を取得する。
 //     - 新しいカウントが limit を超えたら false（=呼び出し側で429を返す）。
 //
-//   安全側の設計（fail-open / DBエラー時のみ）:
+//   安全側の設計（fail-open + インメモリ・バックストップ / DBエラー時のみ）:
 //     - テーブル/関数がまだDBに無い・service role未設定・RPC失敗 等の場合は
-//       「カウントできなくてもサービスは止めない」ために true を返す。
+//       「カウントできなくてもサービスは止めない」ために原則 true を返す。
 //       上限が一時的に効かないことより、本機能が課金導線を巻き添えで落とす方が
-//       事業損失が大きいため、安全側＝通す（エラーはログに残す）。
+//       事業損失が大きいため、availability を優先する。
 //       ※ これは「DBが落ちている」例外時の挙動。plan による上限そのものは
 //         DBが健全な限り常に強制される。
+//     - ただし「完全 fail-open」は危険: autoconfirm 登録（誰でも任意メールで
+//       アカウント作成可）と組み合わさると、DB障害中に高コスト sonnet API を
+//       無制限に連打され API 費用が濫用されうる（第三者評価の指摘）。
+//       そこで DBフォールバック時のみ **インメモリのバックストップ**を併用する:
+//         (a) user×kind ごとに、その日の fail-open 通過回数を plan 上限までに制限。
+//         (b) インスタンス全体の fail-open 通過総数に日次ハードキャップを設ける。
+//       いずれも超えたら false（=429）に倒す＝ availability は保ちつつ、
+//       障害中の費用濫用の天井を「無制限」から「有限」に引き下げる。
+//       注意: serverless では各インスタンス独立のメモリのため厳密なグローバル
+//       上限ではない（ウォームインスタンス単位の防御）。それでも「無制限」より桁違いに安全。
 // ============================================================================
 
 export type ApiKind = keyof PlanFeatureLimits
+
+// ----------------------------------------------------------------------------
+// インメモリ・バックストップ（DBフォールバック時のみ作動）。
+//   モジュールスコープの状態は同一プロセス（ウォームインスタンス）で維持される。
+//   day 境界（UTC）でリセット。DBが健全なら一切参照されない。
+// ----------------------------------------------------------------------------
+const FAILOPEN_GLOBAL_DAILY_CAP = 800 // 1インスタンスがDB障害中に通す高コストAPI総数の天井
+let failOpenGlobal = { day: '', count: 0 }
+const failOpenPerUser = new Map<string, { day: string; count: number }>()
+
+function utcDay(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+/**
+ * DBフォールバック（fail-open）経路でのみ呼ぶバックストップ判定。
+ * @returns true=通してよい / false=バックストップ上限超過(429に倒す)
+ */
+function failOpenAllow(userId: string, kind: ApiKind, limit: number): boolean {
+  const day = utcDay()
+
+  // (b) インスタンス全体の日次ハードキャップ
+  if (failOpenGlobal.day !== day) failOpenGlobal = { day, count: 0 }
+  if (failOpenGlobal.count >= FAILOPEN_GLOBAL_DAILY_CAP) {
+    console.error('[rate-limit] fail-open GLOBAL backstop tripped', { kind, cap: FAILOPEN_GLOBAL_DAILY_CAP })
+    return false
+  }
+
+  // (a) user×kind の日次上限（plan 上限に等値。0以下でも最低1は通す＝正当ユーザー救済）
+  const key = `${userId}:${kind}`
+  const cur = failOpenPerUser.get(key)
+  const perCount = cur && cur.day === day ? cur.count : 0
+  const perCap = Math.max(1, limit)
+  if (perCount >= perCap) {
+    console.error('[rate-limit] fail-open per-user backstop tripped', { kind, perCap })
+    return false
+  }
+
+  failOpenPerUser.set(key, { day, count: perCount + 1 })
+  failOpenGlobal.count += 1
+
+  // Map の無制限肥大を防ぐ簡易掃除（日替わりで肥大したら一掃）。
+  if (failOpenPerUser.size > 5000) {
+    for (const [k, v] of failOpenPerUser) if (v.day !== day) failOpenPerUser.delete(k)
+  }
+  return true
+}
 
 // 後方互換: plan 不明時のフォールバック上限（= free プランの上限）。
 // 旧来 DAILY_LIMITS を参照していた箇所が壊れないよう残す（free 連動に変更）。
@@ -67,28 +124,29 @@ export async function checkAndIncrement(
     })
 
     if (error) {
-      // テーブル/関数未適用・権限不足など。サービスは止めない（fail-open）。
-      console.error('[rate-limit] increment RPC failed (fail-open)', {
+      // テーブル/関数未適用・権限不足など。サービスは止めない（fail-open）が、
+      // 費用濫用の天井を作るためインメモリ・バックストップを通す。
+      console.error('[rate-limit] increment RPC failed (fail-open+backstop)', {
         kind,
         err: error.message,
       })
-      return true
+      return failOpenAllow(userId, kind, limit)
     }
 
     const count = typeof data === 'number' ? data : Number(data)
     if (!Number.isFinite(count)) {
-      // 想定外の戻り。カウントできない＝止めない。
-      console.error('[rate-limit] unexpected RPC result (fail-open)', { kind, data })
-      return true
+      // 想定外の戻り。カウントできない＝fail-open だがバックストップは通す。
+      console.error('[rate-limit] unexpected RPC result (fail-open+backstop)', { kind, data })
+      return failOpenAllow(userId, kind, limit)
     }
 
     return count <= limit
   } catch (e) {
-    // service role未設定（createAdminClientの env undefined）等の例外も fail-open。
-    console.error('[rate-limit] guard threw (fail-open)', {
+    // service role未設定（createAdminClientの env undefined）等の例外も fail-open+backstop。
+    console.error('[rate-limit] guard threw (fail-open+backstop)', {
       kind,
       err: (e as Error).message,
     })
-    return true
+    return failOpenAllow(userId, kind, limit)
   }
 }
