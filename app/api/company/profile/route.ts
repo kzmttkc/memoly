@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getCurrentUser, getMembership } from '@/lib/company'
+import { logCompanyAudit } from '@/lib/audit'
 
 // ============================================================================
 // /api/company/profile — 自社プロファイル(company_profiles)のCRUD
@@ -84,6 +85,17 @@ export async function PATCH(req: NextRequest) {
     console.error('[company:profile] update failed', error.message)
     return NextResponse.json({ error: '更新に失敗しました' }, { status: 500 })
   }
+  // 監査ログ（重要操作: 自社ルールの変更）。ベストエフォート＝失敗しても本処理は成功のまま。
+  const actor = await getCurrentUser()
+  if (actor) {
+    await logCompanyAudit({
+      companyId,
+      actorUserId: actor.id,
+      action: 'profile.update',
+      targetType: 'company_profile',
+      targetId: id,
+    })
+  }
   return NextResponse.json({ ok: true })
 }
 
@@ -104,6 +116,17 @@ export async function DELETE(req: NextRequest) {
   if (error) {
     console.error('[company:profile] delete failed', error.message)
     return NextResponse.json({ error: '削除に失敗しました' }, { status: 500 })
+  }
+  // 監査ログ（重要操作: 規程/自社ルールの削除）。ベストエフォート。
+  const actor = await getCurrentUser()
+  if (actor) {
+    await logCompanyAudit({
+      companyId,
+      actorUserId: actor.id,
+      action: 'profile.delete',
+      targetType: 'company_profile',
+      targetId: id,
+    })
   }
   return NextResponse.json({ ok: true })
 }

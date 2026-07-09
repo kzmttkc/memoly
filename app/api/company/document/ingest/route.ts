@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getCurrentUser, getMembership } from '@/lib/company'
+import { logCompanyAudit } from '@/lib/audit'
 
 // ============================================================================
 // /api/company/document/ingest — F1 規程まるごと取込
@@ -171,6 +172,17 @@ export async function DELETE(req: NextRequest) {
   if (error) {
     console.error('[company:document] delete failed', error.message)
     return NextResponse.json({ error: '削除に失敗しました' }, { status: 500 })
+  }
+  // 監査ログ（重要操作: 取込規程の削除）。ベストエフォート。
+  const actor = await getCurrentUser()
+  if (actor) {
+    await logCompanyAudit({
+      companyId,
+      actorUserId: actor.id,
+      action: 'document.delete',
+      targetType: 'company_document',
+      targetId: id,
+    })
   }
   return NextResponse.json({ ok: true })
 }

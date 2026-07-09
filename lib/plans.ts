@@ -25,6 +25,9 @@
 /** DB companies.plan が取りうる値（=正本）。free=無料モニター。 */
 export type PlanId = 'free' | 'starter' | 'standard' | 'shigyo'
 
+/** 課金の請求間隔。月額(month)が既定。年額(year)は提供プランのみ。 */
+export type BillingInterval = 'month' | 'year'
+
 /** 機能種別ごとの日次上限。rate-limit.ts の ApiKind と一致させる。 */
 export interface PlanFeatureLimits {
   /** チャット相談（sonnet）/日 */
@@ -57,8 +60,12 @@ export interface PlanDef {
   featured: boolean
   /** Stripe Checkout の amount_total（JPY最小単位=円）。webhook の amount ガードに使う。free は null。 */
   stripeAmount: number | null
-  /** Stripe Price ID を読む環境変数名。free/未設定は null。 */
+  /** 年額 Checkout の amount_total（円）。年額を提供するプランのみ。webhook の amount ガード用。 */
+  yearlyStripeAmount: number | null
+  /** Stripe Price ID（月額）を読む環境変数名。free/未設定は null。 */
   priceEnvVar: string | null
+  /** Stripe Price ID（年額）を読む環境変数名。年額を提供するプランのみ（例 STRIPE_PRICE_STARTER_YEARLY）。 */
+  priceEnvVarYearly: string | null
   /** このプランで許容する席数の上限（admin が席を増やせる天井）。 */
   seatCap: number
   /** 複数顧問先（multi-company admin）を許すか（士業向け）。 */
@@ -82,7 +89,9 @@ export const PLANS: Record<PlanId, PlanDef> = {
     yearlyJpy: null,
     featured: false,
     stripeAmount: null,
+    yearlyStripeAmount: null,
     priceEnvVar: null,
+    priceEnvVarYearly: null,
     seatCap: 3,
     multiClient: false,
     limits: {
@@ -102,7 +111,10 @@ export const PLANS: Record<PlanId, PlanDef> = {
     yearlyJpy: 39800,
     featured: true,
     stripeAmount: 3980,
+    // 年額 ¥39,800（2ヶ月分お得）。Price は解禁日にrunbookで作成し env 投入。
+    yearlyStripeAmount: 39800,
     priceEnvVar: 'STRIPE_PRICE_STARTER',
+    priceEnvVarYearly: 'STRIPE_PRICE_STARTER_YEARLY',
     seatCap: 5,
     multiClient: false,
     limits: {
@@ -122,7 +134,9 @@ export const PLANS: Record<PlanId, PlanDef> = {
     yearlyJpy: null,
     featured: false,
     stripeAmount: 9800,
+    yearlyStripeAmount: null,
     priceEnvVar: 'STRIPE_PRICE_STANDARD',
+    priceEnvVarYearly: null,
     seatCap: 20,
     multiClient: false,
     limits: {
@@ -142,7 +156,9 @@ export const PLANS: Record<PlanId, PlanDef> = {
     yearlyJpy: null,
     featured: false,
     stripeAmount: 29800,
+    yearlyStripeAmount: null,
     priceEnvVar: 'STRIPE_PRICE_SHIGYO',
+    priceEnvVarYearly: null,
     seatCap: 50,
     multiClient: true,
     limits: {
@@ -158,9 +174,9 @@ export const PLANS: Record<PlanId, PlanDef> = {
 /** 有料プランのみ（課金UI/checkout の選択肢）。表示順 = Entry→Standard→士業。 */
 export const PAID_PLAN_IDS: PlanId[] = ['starter', 'standard', 'shigyo']
 
-/** 既知の有料 amount 群（webhook の amount ガード用。free=0 は含めない）。 */
+/** 既知の有料 amount 群（webhook の amount ガード用。free=0 は含めない）。月額＋年額の両方。 */
 export const PAID_AMOUNTS: number[] = PAID_PLAN_IDS
-  .map(id => PLANS[id].stripeAmount)
+  .flatMap(id => [PLANS[id].stripeAmount, PLANS[id].yearlyStripeAmount])
   .filter((a): a is number => typeof a === 'number')
 
 /** 不明・未設定の plan 値は free に丸める（DBに想定外enumが入っても安全側）。 */
@@ -170,33 +186,46 @@ export function resolvePlan(plan: string | null | undefined): PlanDef {
 }
 
 /**
- * env から各有料プランの Stripe Price ID を引く。
+ * env から各有料プランの Stripe Price ID を引く（間隔別）。
  * 未設定（=まだTakeshiがprice作成前）なら null。checkout 側で「未提供」を返す根拠。
+ * @param interval 'month'(既定) | 'year'。年額を提供しないプランで 'year' を渡すと null。
  */
-export function priceIdForPlan(planId: PlanId): string | null {
+export function priceIdForPlan(
+  planId: PlanId,
+  interval: BillingInterval = 'month',
+): string | null {
   const def = PLANS[planId]
-  if (!def.priceEnvVar) return null
-  const v = process.env[def.priceEnvVar]
+  const envVar = interval === 'year' ? def.priceEnvVarYearly : def.priceEnvVar
+  if (!envVar) return null
+  const v = process.env[envVar]
   return v && v.trim().length > 0 ? v : null
+}
+
+/** そのプランが年額 Price を提供しているか（env に年額 Price ID が入っているか）。 */
+export function hasYearlyPrice(planId: PlanId): boolean {
+  return priceIdForPlan(planId, 'year') !== null
 }
 
 /**
  * Stripe Price ID → PlanId の逆引き。webhook で line item の price から
  * どのプランへ昇格すべきか決めるのに使う（amount だけに頼らず price でも判定）。
+ * 月額・年額のどちらの Price ID でも同じ PlanId に解決する。
  */
 export function planIdForPriceId(priceId: string | null | undefined): PlanId | null {
   if (!priceId) return null
   for (const id of PAID_PLAN_IDS) {
-    if (priceIdForPlan(id) === priceId) return id
+    if (priceIdForPlan(id, 'month') === priceId || priceIdForPlan(id, 'year') === priceId) {
+      return id
+    }
   }
   return null
 }
 
-/** Stripe amount → PlanId の逆引き（price 不一致時のフォールバック判定）。 */
+/** Stripe amount → PlanId の逆引き（price 不一致時のフォールバック判定）。月額・年額の両方を照合。 */
 export function planIdForAmount(amount: number | null | undefined): PlanId | null {
   if (typeof amount !== 'number') return null
   for (const id of PAID_PLAN_IDS) {
-    if (PLANS[id].stripeAmount === amount) return id
+    if (PLANS[id].stripeAmount === amount || PLANS[id].yearlyStripeAmount === amount) return id
   }
   return null
 }

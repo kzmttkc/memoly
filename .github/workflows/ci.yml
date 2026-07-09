@@ -1,0 +1,23 @@
+name: ci
+
+# 型チェックと純関数ユニットテストのゲート（回帰の早期検知）。
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  typecheck-and-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Node 24: TypeScript の型ストリップが既定で有効（node --test で .ts を直接実行）。
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Unit tests (pure functions)
+        run: npm run test:unit

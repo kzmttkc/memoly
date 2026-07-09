@@ -13,6 +13,8 @@ import { maybeAskDifyForQuery } from '@/lib/dify'
 import { checkAndIncrement } from '@/lib/rate-limit'
 import { resolvePlan } from '@/lib/plans'
 import { detectDecisionConflicts } from '@/lib/decision-conflict'
+import { embeddingEnabled } from '@/lib/embedding'
+import { buildRecalledMemory, serializeRecalledMemory } from '@/lib/recall'
 
 // ============================================================================
 // /api/company/chat — 会社スコープのチャット
@@ -120,6 +122,15 @@ export async function POST(req: NextRequest) {
     ruleExcerpts,
   )
 
+  // 記憶想起の可視化（革新性の体感化）: この相談で system に注入した「自社の記憶」を
+  //   非PIIのラベル要約にして、レスポンスヘッダ X-Recalled-Memory で先に返す。
+  //   ヘッダはストリーム本文より前にクライアントへ届くため、回答が流れ始めるのと同時に
+  //   「この相談で参照した自社の記憶」を提示できる（逐次可視化）。セマンティックが
+  //   未有効でも、キーワード＋recency で想起した分をそのまま可視化する。
+  const recalledHeader = serializeRecalledMemory(
+    buildRecalledMemory(ctx, ruleExcerpts, embeddingEnabled() && Boolean(lastUserMessage)),
+  )
+
   const supabase = await createServerSupabaseClient()
 
   // --- 会話レコードを用意（指定が無ければ新規作成）。RLS下のanonで書く。 ---
@@ -213,6 +224,8 @@ export async function POST(req: NextRequest) {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'X-Conversation-Id': conversationIdFinal,
+      // 想起サマリ（非PII・URLエンコード済JSON）。空想起のときはヘッダを付けない。
+      ...(recalledHeader ? { 'X-Recalled-Memory': recalledHeader } : {}),
     },
   })
 }

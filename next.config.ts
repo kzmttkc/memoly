@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // JSバンドル削減: lucide-react はアイコンごとに named import しているが、
+  //   optimizePackageImports でバレル経由の巻き込みを確実に切り、必要アイコンだけを
+  //   個別モジュールとして取り込む（tree-shake の取りこぼしを防ぐ）。
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   // 個人版Memolyの残骸URL閉鎖（2026-07-09 TOP10⑦衛生タスク）:
   //   /memory・/chat は会社スコープ移行前の個人版UI。既存ユーザー0のため
   //   保護（データ移行・案内）は不要で、直URLは会社ダッシュボードへ301で永久移転する。

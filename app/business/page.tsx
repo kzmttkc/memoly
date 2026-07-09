@@ -24,7 +24,7 @@ import {
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import TryDemo from './_components/TryDemo'
+import TryDemoLazy from './_components/TryDemoLazy'
 import { TrackedCTA } from './_components/TrackedCTA'
 import LeadCapture from './_components/LeadCapture'
 import { PLANS } from '@/lib/plans'
@@ -569,7 +569,7 @@ export default function BusinessLandingPage() {
           回答をタイプ表示するクライアントコンポーネント。デモ内の signup 転換CTA
           (location="trydemo")は維持。詳細は _components/TryDemo.tsx を参照。 */}
       <div id="demo" className="scroll-mt-20">
-        <TryDemo />
+        <TryDemoLazy />
       </div>
 
       {/* ===== 核の主張：汎用AI vs 番頭（左右対比・ここで一度だけ強く言う） ===== */}

@@ -4,11 +4,12 @@ import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams, usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText } from 'lucide-react'
+import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText, Brain, ScrollText, History } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { detectDecisionSignal } from '@/lib/decision-detect'
+import type { RecalledMemory } from '@/lib/recall'
 import type { CompanyAttributesRow } from '@/lib/company-attributes'
 import { track } from '@/lib/analytics'
 import { CompanySwitcher } from '../_components/CompanySwitcher'
@@ -26,6 +27,63 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   isTyping?: boolean
+  // 記憶想起の可視化: この回答を作るのに番頭が参照した「自社の記憶」の非PIIサマリ。
+  //   サーバの X-Recalled-Memory ヘッダ由来。assistant メッセージにだけ付く。
+  recalled?: RecalledMemory
+}
+
+// 「この相談で参照した自社の記憶」パネル。番頭の核＝“覚えていて踏まえて答える”を、
+//   回答のたびに可視化する（革新性の体感化）。氏名等は載せず分類ラベルと件数のみ。
+function RecallPanel({ recalled }: { recalled: RecalledMemory }) {
+  const kindMeta = {
+    profile: { icon: BookOpenCheck, label: '自社ルール' },
+    rule: { icon: ScrollText, label: '規程' },
+    decision: { icon: History, label: '過去の判断' },
+  } as const
+  return (
+    <details className="mb-1.5 rounded-xl border border-brand-100 bg-brand-50/60">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+        <Brain className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
+        この相談で参照した自社の記憶
+        <span className="ml-1 rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] tabular-nums text-brand-700">
+          {recalled.profileCount + recalled.decisionCount + recalled.ruleDocCount + recalled.memoryCount}件
+        </span>
+        {recalled.semantic && (
+          <span className="ml-auto rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] text-brand-700">
+            意味検索
+          </span>
+        )}
+      </summary>
+      <div className="space-y-2 px-3 pb-3 pt-1">
+        {recalled.items.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {recalled.items.map((it, idx) => {
+              const meta = kindMeta[it.kind]
+              const Icon = meta.icon
+              const date = it.at ? new Date(it.at).toLocaleDateString('ja-JP') : null
+              return (
+                <span
+                  key={`${it.kind}-${idx}`}
+                  className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-white px-2 py-0.5 text-[11px] text-neutral-700"
+                  title={meta.label}
+                >
+                  <Icon className="h-3 w-3 shrink-0 text-brand-500" aria-hidden />
+                  <span className="max-w-[12rem] truncate">{it.label}</span>
+                  {date && <span className="text-neutral-400 tabular-nums">{date}</span>}
+                </span>
+              )
+            })}
+          </div>
+        )}
+        <p className="text-[11px] leading-relaxed text-brand-700/80">
+          自社ルール{recalled.profileCount}件・過去の相談{recalled.memoryCount}件・過去の判断
+          {recalled.decisionCount}件
+          {recalled.ruleDocCount > 0 ? `・規程${recalled.ruleDocCount}本` : ''}
+          を踏まえて答えています。
+        </p>
+      </div>
+    </details>
+  )
 }
 
 const ONBOARDING_MESSAGE: Message = {
@@ -382,11 +440,23 @@ function CompanyChat() {
         const convId = res.headers.get('X-Conversation-Id')
         if (convId) conversationIdRef.current = convId
 
+        // 記憶想起の可視化: 本文ストリームより先に届くヘッダから、この回答で参照した
+        //   自社の記憶（非PIIサマリ）を取り出し、assistant メッセージに添える。
+        let recalled: RecalledMemory | undefined
+        const recalledRaw = res.headers.get('X-Recalled-Memory')
+        if (recalledRaw) {
+          try {
+            recalled = JSON.parse(decodeURIComponent(recalledRaw)) as RecalledMemory
+          } catch {
+            recalled = undefined
+          }
+        }
+
         const reader = res.body?.getReader()
         const decoder = new TextDecoder()
         let assistantContent = ''
 
-        setMessages(prev => [...prev, { role: 'assistant', content: '', isTyping: true }])
+        setMessages(prev => [...prev, { role: 'assistant', content: '', isTyping: true, recalled }])
 
         if (reader) {
           while (true) {
@@ -395,7 +465,7 @@ function CompanyChat() {
             assistantContent += decoder.decode(value)
             setMessages(prev => [
               ...prev.slice(0, -1),
-              { role: 'assistant', content: assistantContent, isTyping: false },
+              { role: 'assistant', content: assistantContent, isTyping: false, recalled },
             ])
           }
         }
@@ -566,6 +636,12 @@ function CompanyChat() {
           const showFixPremise = isLatestAnswer && msg.content.includes('【根拠】')
           return (
             <div key={i}>
+              {/* 記憶想起の可視化: assistant 回答の直前に「参照した自社の記憶」を提示する。 */}
+              {msg.role === 'assistant' && msg.recalled && (
+                <div className="mb-1 max-w-[85%]">
+                  <RecallPanel recalled={msg.recalled} />
+                </div>
+              )}
               <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed ${

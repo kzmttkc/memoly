@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { PlanId, priceIdForPlan } from '@/lib/plans'
+import { PlanId, BillingInterval, priceIdForPlan } from '@/lib/plans'
 
 // ============================================================================
 // lib/stripe.ts — 番頭(Banto) Stripe クライアント + 席サブスク checkout
@@ -31,6 +31,8 @@ export const BANTO_PRODUCT = 'banto'
 export interface CreateSeatCheckoutArgs {
   /** 購入する有料プラン。 */
   planId: PlanId
+  /** 請求間隔。'month'(既定) | 'year'。年額は年額 Price を持つプランのみ（呼び出し側で検証）。 */
+  interval?: BillingInterval
   /** 席数（quantity）。1以上・プランの seatCap 以内は呼び出し側で検証済み前提。 */
   seats: number
   /** 課金主体の会社ID（webhook で companies を引く鍵・metadata に必ず載せる）。 */
@@ -53,9 +55,11 @@ export interface CreateSeatCheckoutArgs {
 export async function createSeatCheckoutSession(
   args: CreateSeatCheckoutArgs,
 ): Promise<{ url: string | null } | { error: string }> {
-  const priceId = priceIdForPlan(args.planId)
+  const interval: BillingInterval = args.interval ?? 'month'
+  const priceId = priceIdForPlan(args.planId, interval)
   if (!priceId) {
     // Price 未作成（Takeshi が Stripe で price 発行 → env 投入 前）。
+    //   年額要求時に年額 Price 未設定でもここに落ちる（呼び出し側で 503 に写す）。
     return { error: 'PRICE_NOT_CONFIGURED' }
   }
 
@@ -63,6 +67,7 @@ export async function createSeatCheckoutSession(
     product: BANTO_PRODUCT,
     company_id: args.companyId,
     plan: args.planId,
+    interval,
     seats: String(args.seats),
     user_id: args.userId,
   }

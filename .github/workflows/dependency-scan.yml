@@ -1,0 +1,32 @@
+name: dependency-scan
+
+# 依存の既知脆弱性を継続監視する（供給網リスクの早期検知）。
+#   - push / PR で high 以上の脆弱性が入っていないかを検査
+#   - 週次(月曜 JST 昼)でも定点観測（新規CVEの後追い検知）
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # 毎週月曜 03:00 UTC = 12:00 JST
+    - cron: '0 3 * * 1'
+
+jobs:
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # lockfile と厳密一致でインストール（監査対象を再現可能にする）。
+      - run: npm ci
+      # 本番依存の high 以上で失敗させる（開発依存のノイズで赤くしすぎない）。
+      # moderate 以下は継続監視（レポートは下の全体監査で出す）。
+      - name: Audit production deps (fail on high)
+        run: npm audit --omit=dev --audit-level=high
+      # 参考情報として全体（dev含む）の監査結果も出す。ここでは失敗させない。
+      - name: Full audit (report only)
+        if: always()
+        run: npm audit || true

@@ -3,9 +3,11 @@ import { getCurrentUser, getMembership } from '@/lib/company'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import {
   PlanId,
+  BillingInterval,
   PAID_PLAN_IDS,
   PLANS,
   billingEnabled,
+  hasYearlyPrice,
 } from '@/lib/plans'
 import { createSeatCheckoutSession } from '@/lib/stripe'
 
@@ -36,10 +38,11 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { companyId, plan, seats } = await req.json().catch(() => ({})) as {
+  const { companyId, plan, seats, interval } = await req.json().catch(() => ({})) as {
     companyId?: string
     plan?: string
     seats?: number
+    interval?: string
   }
 
   if (!companyId || typeof companyId !== 'string') {
@@ -82,6 +85,16 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  // interval 検証（既定=月額）。年額は「年額を提供するプラン」かつ「年額 Price が env 設定済」
+  //   のときのみ許可。それ以外で 'year' を指定されたら 400（無効な間隔）で弾く。
+  const billingInterval: BillingInterval = interval === 'year' ? 'year' : 'month'
+  if (billingInterval === 'year' && !hasYearlyPrice(plan as PlanId)) {
+    return NextResponse.json(
+      { error: 'このプランには年額の設定がありません', code: 'YEARLY_NOT_AVAILABLE' },
+      { status: 400 },
+    )
+  }
+
   // 既存 Stripe 顧客IDを取得して再利用（重複顧客防止）。RLS下のanonで自社を引く。
   const supabase = await createServerSupabaseClient()
   const { data: companyRow } = await supabase
@@ -97,6 +110,7 @@ export async function POST(req: NextRequest) {
   try {
     const result = await createSeatCheckoutSession({
       planId: plan as PlanId,
+      interval: billingInterval,
       seats: seatCount,
       companyId,
       userId: user.id,

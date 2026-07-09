@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createAdminClient, getCurrentUser, getMembership } from '@/lib/company'
+import { logCompanyAudit } from '@/lib/audit'
 
 // ============================================================================
 // /api/company/members
@@ -95,6 +96,17 @@ export async function POST(req: NextRequest) {
     console.error('[company:invite] insert failed', insErr)
     return NextResponse.json({ error: '招待の処理に失敗しました' }, { status: 500 })
   }
+
+  // 監査ログ（重要操作: メンバー追加）。実際に席を追加できたときだけ記録する。
+  //   応答文言は統一のまま（ログは admin のみ閲覧可＝存在オラクルには影響しない）。
+  await logCompanyAudit({
+    companyId,
+    actorUserId: user.id,
+    action: 'member.invite',
+    targetType: 'company_member',
+    targetId: target.id,
+    metadata: { role: inviteRole },
+  })
 
   // 追加成功も同一文言（userId 等の差分情報を返さない＝応答から存在を推測させない）。
   return NextResponse.json({ ok: true, message: INVITE_ACCEPTED_MESSAGE })

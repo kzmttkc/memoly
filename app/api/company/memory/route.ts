@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getCurrentUser, getMembership, resolveDefaultCompany } from '@/lib/company'
 import { extractCompanyFacts, extractCompanyMemory } from '@/lib/memory'
 import { embedText, toVectorLiteral } from '@/lib/embedding'
+import { logCompanyAudit } from '@/lib/audit'
 
 type ServerSupabase = Awaited<ReturnType<typeof createServerSupabaseClient>>
 
@@ -318,6 +319,17 @@ async function approveFact(req: NextRequest): Promise<NextResponse> {
       .eq('id', memoryId)
       .eq('company_id', companyId)
       .eq('memory_type', 'rule')
+    // 監査ログ（重要操作: 記憶(rule候補)の削除）。ベストエフォート。
+    const actor = await getCurrentUser()
+    if (actor) {
+      await logCompanyAudit({
+        companyId,
+        actorUserId: actor.id,
+        action: 'memory.rule.delete',
+        targetType: 'company_memory',
+        targetId: memoryId,
+      })
+    }
   }
 
   return NextResponse.json({ ok: true, profile })

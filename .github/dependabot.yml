@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # npm 依存の週次アップデート監視（セキュリティ修正の取り込みを自動でPR化）。
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '03:00'
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    # メジャー更新は破壊的になりやすいので、まずは patch/minor を主に受ける。
+    # メジャーは通知だけ受けて手動判断（ignore はせず、レビューで捌く方針）。
+    commit-message:
+      prefix: 'chore(deps)'
+
+  # GitHub Actions 自体の更新も監視（ワークフローの供給網）。
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '03:00'
+      timezone: Asia/Tokyo
+    labels:
+      - dependencies
+    commit-message:
+      prefix: 'chore(ci)'
