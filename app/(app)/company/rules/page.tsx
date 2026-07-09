@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
+import { CopyButton } from '@/components/ui/CopyButton'
 import { CompanyGuard } from '../_components/CompanyGuard'
 
 // ============================================================================
@@ -105,41 +106,46 @@ function RulesEditor() {
     }
   }
 
+  // 楽観更新(Vercel流): 入力の内容をUIへ即時反映し、失敗時のみ直前状態へロールバック。
   async function saveEdit(p: Profile) {
     if (!editValue.trim()) return
+    const next = editValue.trim()
+    const prev = profiles
+    // 即時反映（成功時は再フェッチ不要＝往復を減らす）。
+    setProfiles(list => (list ? list.map(x => (x.id === p.id ? { ...x, value: next } : x)) : list))
+    setEditId(null)
+    setEditValue('')
     try {
       const res = await fetch('/api/company/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyId, id: p.id, value: editValue.trim() }),
+        body: JSON.stringify({ companyId, id: p.id, value: next }),
       })
-      const data = await res.json()
       if (!res.ok) {
-        showToast(data.error ?? '更新に失敗しました')
-        return
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? '更新に失敗しました')
       }
-      setEditId(null)
-      setEditValue('')
       showToast('更新しました')
-      await load()
-    } catch {
-      showToast('更新に失敗しました')
+    } catch (err) {
+      setProfiles(prev) // ロールバック
+      showToast(err instanceof Error ? err.message : '更新に失敗しました')
     }
   }
 
   async function removeRule(p: Profile) {
+    const prev = profiles
+    // 即時にリストから除去（体感を最速に）。失敗時は元に戻す。
+    setProfiles(list => (list ? list.filter(x => x.id !== p.id) : list))
     try {
       const res = await fetch('/api/company/profile', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyId, id: p.id }),
       })
-      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '削除に失敗しました')
-        return
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? '削除に失敗しました')
       }
-      await load()
       // undo: 直前の key/value を再 upsert で復元する。
       showToast(`「${p.key}」を削除しました`, {
         label: '取り消す',
@@ -152,8 +158,9 @@ function RulesEditor() {
           }
         },
       })
-    } catch {
-      showToast('削除に失敗しました')
+    } catch (err) {
+      setProfiles(prev) // ロールバック
+      showToast(err instanceof Error ? err.message : '削除に失敗しました')
     }
   }
 
@@ -304,6 +311,12 @@ function RulesEditor() {
                   </div>
                   {editId !== p.id && (
                     <div className="flex shrink-0 gap-1">
+                      <CopyButton
+                        text={p.value}
+                        iconOnly
+                        label={`${p.key}の内容をコピー`}
+                        copiedLabel="コピーしました"
+                      />
                       <Button
                         size="sm"
                         variant="ghost"

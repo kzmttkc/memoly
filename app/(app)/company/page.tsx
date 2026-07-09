@@ -286,60 +286,39 @@ function CompanyHome() {
                 </div>
               </div>
 
-              {/* 主要アクション(brand塗り)を1つ際立たせ、他は二次アクション(outline)。
+              {/* 情報設計(Vercel流): 主アクション(brand塗り・全幅)を1つ際立たせ、
+                  二次アクションは均等タイルのグリッドで縦横に整列させ視線を直線化する。
                   主要導線は「会社のホーム」＝今週の能動フィード（戻る理由が届く起点）に倒す。 */}
-              <div className="flex flex-wrap items-center gap-2">
-                <Link
-                  href={`/company/home?companyId=${c.companyId}`}
-                  className={buttonClass({ variant: 'primary' })}
-                >
-                  <Home className="h-4 w-4" aria-hidden />
-                  会社のホームを開く
-                </Link>
-                <Link
-                  href={`/company/chat?companyId=${c.companyId}`}
-                  className={buttonClass({ variant: 'secondary' })}
-                >
-                  <MessageSquareText className="h-4 w-4" aria-hidden />
-                  AIに相談する
-                </Link>
-                <Link
-                  href={`/company/memory?companyId=${c.companyId}`}
-                  className={buttonClass({ variant: 'secondary' })}
-                >
-                  <History className="h-4 w-4" aria-hidden />
-                  会社の記憶
-                </Link>
-                <Link
-                  href={`/company/documents?companyId=${c.companyId}`}
-                  className={buttonClass({ variant: 'secondary' })}
-                >
-                  <FileText className="h-4 w-4" aria-hidden />
-                  書類作成・レビュー
-                </Link>
-                <Link
-                  href={`/company/risk?companyId=${c.companyId}`}
-                  className={buttonClass({ variant: 'secondary' })}
-                >
-                  <ShieldCheck className="h-4 w-4" aria-hidden />
-                  労務リスク診断
-                </Link>
-                <Link
-                  href={`/company/insights?companyId=${c.companyId}`}
-                  className={buttonClass({ variant: 'secondary' })}
-                >
-                  <Sparkles className="h-4 w-4" aria-hidden />
-                  助成金・法改正
-                </Link>
-                {c.role === 'admin' && (
+              <Link
+                href={`/company/home?companyId=${c.companyId}`}
+                className={buttonClass({ variant: 'primary', size: 'lg', className: 'w-full' })}
+              >
+                <Home className="h-4 w-4" aria-hidden />
+                会社のホームを開く
+              </Link>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {[
+                  { href: '/company/chat', label: 'AIに相談する', icon: MessageSquareText },
+                  { href: '/company/memory', label: '会社の記憶', icon: History },
+                  { href: '/company/documents', label: '書類作成・レビュー', icon: FileText },
+                  { href: '/company/risk', label: '労務リスク診断', icon: ShieldCheck },
+                  { href: '/company/insights', label: '助成金・法改正', icon: Sparkles },
+                  ...(c.role === 'admin'
+                    ? [{ href: '/company/rules', label: '自社ルールを編集', icon: BookOpenCheck }]
+                    : []),
+                ].map(({ href, label, icon: Icon }) => (
                   <Link
-                    href={`/company/rules?companyId=${c.companyId}`}
-                    className={buttonClass({ variant: 'ghost' })}
+                    key={href}
+                    href={`${href}?companyId=${c.companyId}`}
+                    className={buttonClass({
+                      variant: 'secondary',
+                      className: 'h-auto flex-col items-start gap-2 px-3.5 py-3 text-left',
+                    })}
                   >
-                    <BookOpenCheck className="h-4 w-4" aria-hidden />
-                    自社ルールを編集
+                    <Icon className="h-4.5 w-4.5 text-brand-600" aria-hidden />
+                    <span className="text-sm font-medium leading-tight">{label}</span>
                   </Link>
-                )}
+                ))}
               </div>
 
               {ruleCount === 0 && (

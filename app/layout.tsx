@@ -65,6 +65,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Plausible 手動初期化。CSP強化(script-src脱unsafe-inline)に備え、
             実行可能インラインを /plausible-init.js へ外部化（'self'で許可）。 */}
         <Script src="/plausible-init.js" strategy="afterInteractive" />
+        {/* 会社版ダークモードの FOUC 防止。/company 配下でのみ <html data-theme> を
+            初回ペイント前に確定する（実行可能インラインは置かず外部化＝CSP整合）。 */}
+        <Script src="/banto-theme-init.js" strategy="beforeInteractive" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

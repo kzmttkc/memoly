@@ -63,8 +63,15 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
     >
       <Card interactive className="bg-brand-50/40">
         <div className="flex items-center gap-4">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+          <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
             <Brain className="h-5.5 w-5.5" aria-hidden />
+            {/* 記憶が生きている（積み上がっている）ことを穏当な発光ドットで示す。 */}
+            {!loading && total > 0 && (
+              <span
+                className="banto-live-dot absolute -right-0.5 -top-0.5 ring-2 ring-white"
+                aria-hidden
+              />
+            )}
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-xs text-neutral-500">番頭が自社について覚えていること</p>

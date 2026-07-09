@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import {
@@ -17,10 +17,13 @@ import {
   LogOut,
   Menu,
   X,
+  Search,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
 import { CompanySwitcher } from './CompanySwitcher'
+import { CommandPalette } from './CommandPalette'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 // ============================================================================
 // AppShell — 番頭(Banto) 会社版の共通アプリシェル。
@@ -89,6 +92,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const companyId = searchParams.get('companyId') ?? ''
   const [drawerOpen, setDrawerOpen] = useState(false)
+  // ⌘（macOS）/ Ctrl（その他）を kbd 表示で出し分け。SSR では中立の Ctrl 表記。
+  const [cmdKey, setCmdKey] = useState('Ctrl')
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform)) {
+      setCmdKey('⌘')
+    }
+  }, [])
 
   // companyId を保ったままナビ遷移する。
   const withCompany = (href: string) =>
@@ -124,15 +134,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <CompanySwitcher companyId={companyId} variant="header" />
           </div>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            aria-label="ログアウト"
-          >
-            <LogOut className="h-4 w-4" aria-hidden />
-            <span className="hidden sm:inline">ログアウト</span>
-          </button>
+          <div className="ml-auto flex items-center gap-1.5">
+            {/* コマンドパレット起動（Stripe 流）。デスクトップは入力風、モバイルはアイコン。 */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('banto-open-command-palette'))}
+              aria-label="コマンドパレットを開く"
+              title="コマンドパレット"
+              className="hidden items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-500 transition-colors duration-150 hover:border-neutral-300 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:flex"
+            >
+              <Search className="h-3.5 w-3.5" aria-hidden />
+              <span>検索・操作</span>
+              <span className="banto-kbd">{cmdKey}</span>
+              <span className="banto-kbd">K</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('banto-open-command-palette'))}
+              aria-label="コマンドパレットを開く"
+              className="grid h-9 w-9 place-items-center rounded-lg text-neutral-600 transition-colors duration-150 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:hidden"
+            >
+              <Search className="h-5 w-5" aria-hidden />
+            </button>
+
+            <ThemeToggle />
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-neutral-600 transition-colors duration-150 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              aria-label="ログアウト"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              <span className="hidden sm:inline">ログアウト</span>
+            </button>
+          </div>
         </div>
         {/* sm 未満では会社スイッチャーを2段目に */}
         <div className="border-t border-neutral-100 px-4 py-2 sm:hidden">
@@ -246,6 +282,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+
+      {/* コマンドパレット（Cmd/Ctrl+K・g シーケンス）。/company 全体で常駐。 */}
+      <CommandPalette />
     </div>
   )
 }

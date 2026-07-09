@@ -106,6 +106,7 @@ body {
 .company-light {
   background: #ffffff;
   color: var(--color-neutral-900);
+  color-scheme: light;
 }
 
 /* --- テキスト階層: ダーク前提の薄い文字 → ライトで読める濃さへ --- */
@@ -146,3 +147,151 @@ body {
 
 /* semantic系(red/amber/emerald/rose)はライト白背景でもおおむね可読のため
    P0では触らない。P1で success/warning/danger/info トークンへ寄せる。 */
+
+/* ==========================================================================
+   会社版(番頭) ダークモード — CEO裁定: 既定ライト維持 + トグル/システム追従で追加。
+   ----------------------------------------------------------------------------
+   方式（Tailwind v4）:
+     - v4 は `.text-neutral-900{color:var(--color-neutral-900)}` のように
+       @theme トークンを CSS変数参照でコンパイルする。よって `.company-light` 配下で
+       neutral ランプの変数を「反転」し直せば、solid な neutral 系ユーティリティは
+       ページを一切書き換えずに全面ダーク化する（text↔bg どちらも単調反転で破綻しない）。
+     - brand/semantic は「text と bg が同一トークンを共有」するため変数反転だと衝突する
+       （例 text-brand-700 は明色化したいが hover:bg-brand-700 は暗色維持したい）。
+       これらはユーティリティ単位の外科的オーバーライドで当てる（.text-* と .bg-* は
+       別クラスなので個別に上書きでき、衝突しない）。
+     - `bg-white` や alpha 付き( /60 等 )はリテラル値でコンパイルされ変数反転が効かない。
+       該当ユーティリティだけ明示上書きする。
+   スコープは必ず `[data-theme='dark'] .company-light` に限定し、消費者/LP へ波及させない。
+   data-theme は /public/banto-theme-init.js（beforeInteractive・FOUC防止）と
+   lib/theme.tsx（トグル/localStorage/システム追従）が <html> に付与する。
+   ========================================================================== */
+[data-theme='dark'] .company-light {
+  color-scheme: dark;
+  background: var(--color-neutral-50);
+  color: var(--color-neutral-900);
+
+  /* neutral: ランプ反転（近黒＋クールな青み。Linear ライク）。 */
+  --color-neutral-50: #0c0e12;   /* ページ地 */
+  --color-neutral-100: #14171d;  /* 微細サーフェス / hover */
+  --color-neutral-200: #232830;  /* 標準ボーダー（超極細の分離線） */
+  --color-neutral-300: #333a45;  /* hover 時の一段濃いボーダー */
+  --color-neutral-400: #5c6675;  /* 抑えたアイコン / プレースホルダ */
+  --color-neutral-500: #98a2b3;  /* 補助テキスト（>=4.5:1） */
+  --color-neutral-600: #b4bdca;  /* 二次テキスト */
+  --color-neutral-700: #ccd3de;  /* ラベル */
+  --color-neutral-800: #e3e8ee;  /* 強めテキスト */
+  --color-neutral-900: #f3f6fa;  /* 見出し / 主要テキスト */
+  --color-neutral-950: #ffffff;
+
+  /* brand: リング/ボーダーの視認性のため 400/500 を少し明るく。
+     600/700 は CTA 塗り(bg)で使うのでトークンは維持し、text 側だけ後段で明色化する。 */
+  --color-brand-400: #86a1e0;
+  --color-brand-500: #6b8ad6;
+}
+
+/* --- サーフェス: bg-white(カード/入力/選択) → 一段持ち上げた暗面 --- */
+[data-theme='dark'] .company-light .bg-white { background-color: #16191f; }
+/* 半透明サーフェス（ヘッダ/下部タブ/オーバーレイ）。backdrop-blur と併用前提。 */
+[data-theme='dark'] .company-light .bg-white\/90 { background-color: rgba(18, 20, 26, 0.85); }
+[data-theme='dark'] .company-light .bg-white\/95 { background-color: rgba(18, 20, 26, 0.9); }
+[data-theme='dark'] .company-light .bg-white\/70 { background-color: rgba(18, 20, 26, 0.7); }
+/* Toast（濃色チップ）: neutral-900 は反転で明色化するため、暗い持ち上げ面へ戻す。 */
+[data-theme='dark'] .company-light .bg-neutral-900 { background-color: #262b33; }
+/* Skeleton パルス面（リテラル値のため個別に）。 */
+[data-theme='dark'] .company-light .bg-neutral-200\/70 { background-color: rgba(255, 255, 255, 0.08); }
+
+/* --- brand: 明色化したいテキスト/リンク（.bg-* とは別クラスなので衝突しない） --- */
+[data-theme='dark'] .company-light .text-brand-600 { color: #9db4e8; }
+[data-theme='dark'] .company-light .text-brand-700 { color: #aec2ec; }
+[data-theme='dark'] .company-light .text-brand-800 { color: #c3d2f2; }
+[data-theme='dark'] .company-light .text-brand-700\/80 { color: rgba(174, 194, 236, 0.8); }
+[data-theme='dark'] .company-light .hover\:text-brand-700:hover { color: #aec2ec; }
+/* brand の淡いウォッシュ地（active ナビ/情報パネル）→ 暗いインディゴ地へ。 */
+[data-theme='dark'] .company-light .bg-brand-50 { background-color: rgba(107, 138, 214, 0.13); }
+[data-theme='dark'] .company-light .bg-brand-100 { background-color: rgba(107, 138, 214, 0.2); }
+[data-theme='dark'] .company-light .bg-brand-50\/40 { background-color: rgba(107, 138, 214, 0.08); }
+[data-theme='dark'] .company-light .bg-brand-50\/60 { background-color: rgba(107, 138, 214, 0.11); }
+[data-theme='dark'] .company-light .hover\:bg-brand-100:hover { background-color: rgba(107, 138, 214, 0.2); }
+[data-theme='dark'] .company-light .border-brand-100 { border-color: rgba(107, 138, 214, 0.22); }
+[data-theme='dark'] .company-light .border-brand-200 { border-color: rgba(107, 138, 214, 0.3); }
+
+/* --- semantic: 淡いtint地は暗いtintへ、-600/-700 テキストは明色化して可読に --- */
+[data-theme='dark'] .company-light .bg-success-50 { background-color: rgba(16, 185, 129, 0.12); }
+[data-theme='dark'] .company-light .bg-warning-50 { background-color: rgba(245, 158, 11, 0.12); }
+[data-theme='dark'] .company-light .bg-danger-50 { background-color: rgba(244, 63, 94, 0.12); }
+[data-theme='dark'] .company-light .bg-info-50 { background-color: rgba(59, 130, 246, 0.12); }
+[data-theme='dark'] .company-light .text-success-700 { color: #5eddb0; }
+[data-theme='dark'] .company-light .text-warning-700,
+[data-theme='dark'] .company-light .text-warning-600 { color: #f7c469; }
+[data-theme='dark'] .company-light .text-danger-700,
+[data-theme='dark'] .company-light .text-danger-600 { color: #fb8ba0; }
+[data-theme='dark'] .company-light .text-info-700 { color: #7cb0f8; }
+
+/* ==========================================================================
+   マイクロインタラクション & 状態表現 — Linear/Stripe 品質。
+   すべて motion-safe（prefers-reduced-motion 尊重）で、ちらつかない 100–150ms。
+   ========================================================================== */
+
+/* Toast が参照する（従来未定義で無アニメだった）フェードイン。 */
+@keyframes banto-fade-in {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.animate-fade-in { transform: translateX(-50%); }
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-in { animation: banto-fade-in 150ms ease-out; }
+}
+
+/* コマンドパレットの立ち上がり。 */
+@keyframes banto-pop-in {
+  from { opacity: 0; transform: scale(0.98) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .banto-pop-in { animation: banto-pop-in 120ms ease-out; }
+  .banto-overlay-in { animation: banto-overlay-in 120ms ease-out; }
+}
+@keyframes banto-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* 生きている状態ドット（「記憶あり」等の昇華）。中心の点＋外側の淡い発光リング。 */
+.banto-live-dot {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-success-500);
+}
+.banto-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background-color: var(--color-success-500);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .banto-live-dot::after { animation: banto-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite; }
+}
+@keyframes banto-ping {
+  0%   { transform: scale(1); opacity: 0.55; }
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* キーボードヒント（kbd）— パレット/ツールチップの視覚提示。 */
+.banto-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-neutral-200);
+  background-color: var(--color-neutral-50);
+  color: var(--color-neutral-500);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
