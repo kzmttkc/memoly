@@ -92,6 +92,8 @@ function CompanyChat() {
   const [toast, setToast] = useState({ show: false, message: '' })
   const [isFirstMessage, setIsFirstMessage] = useState(true)
   const [ruleCount, setRuleCount] = useState<number | null>(null)
+  // 本日の残り相談回数（P2・429の事前告知）。null=未取得/取得失敗（バッジ非表示）。
+  const [chatRemaining, setChatRemaining] = useState<{ remaining: number; limit: number } | null>(null)
   // サンプル質問（UX-2）: 既定は固定4問。attributes が取れたら会社に合わせて出し分け。
   const [samplePrompts, setSamplePrompts] = useState<string[]>(SAMPLE_PROMPTS)
   // 判断採取フック（TOP5 #1）: 番頭が「この方針を記録しますか？」と能動提案する状態。
@@ -134,6 +136,42 @@ function CompanyChat() {
         if (!cancelled) setRuleCount((d.profiles ?? []).length)
       } catch {
         if (!cancelled) setRuleCount(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [companyId])
+
+  // 本日の残り相談回数を取得（P2・429の事前告知）。取得失敗時はバッジを出さない。
+  const refreshUsage = useCallback(async () => {
+    if (!companyId) return
+    try {
+      const r = await fetch(`/api/company/usage?companyId=${companyId}&kind=chat`)
+      if (!r.ok) return
+      const d = await r.json()
+      if (typeof d.remaining === 'number' && typeof d.limit === 'number') {
+        setChatRemaining({ remaining: d.remaining, limit: d.limit })
+      }
+    } catch {
+      // 取得失敗はサイレント（残回数は補助情報。出せないだけで相談は妨げない）
+    }
+  }, [companyId])
+
+  // 初回マウント時の残回数取得（ruleCount と同じ inline-IIFE パターン）。
+  useEffect(() => {
+    if (!companyId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch(`/api/company/usage?companyId=${companyId}&kind=chat`)
+        if (!r.ok) return
+        const d = await r.json()
+        if (!cancelled && typeof d.remaining === 'number' && typeof d.limit === 'number') {
+          setChatRemaining({ remaining: d.remaining, limit: d.limit })
+        }
+      } catch {
+        // 取得失敗はサイレント（残回数は補助情報）
       }
     })()
     return () => {
@@ -397,9 +435,11 @@ function CompanyChat() {
         ])
       } finally {
         setLoading(false)
+        // 送信のたびに残回数を更新（次の送信前に最新の残りが出る）。
+        refreshUsage()
       }
     },
-    [input, loading, companyId, messages, router, extractFacts],
+    [input, loading, companyId, messages, router, extractFacts, refreshUsage],
   )
 
   // 判断採取の確定保存（ユーザーが「記録する」を押したときだけ呼ぶ＝human-in-the-loop）。
@@ -480,6 +520,12 @@ function CompanyChat() {
               参照中の自社ルール {ruleCount}件
             </Badge>
           </Link>
+        )}
+        {/* 本日の残り相談回数（P2・429の事前告知）。残りわずかは warning で早めに気づかせる。 */}
+        {chatRemaining !== null && (
+          <Badge tone={chatRemaining.remaining <= 3 ? 'warning' : 'neutral'}>
+            本日の残り相談 {chatRemaining.remaining}/{chatRemaining.limit}回
+          </Badge>
         )}
         {/* 会話が始まっている（復元 or 送信済み）ときだけ「新しい相談」への切替を出す */}
         {messages.length > 1 && !loading && (

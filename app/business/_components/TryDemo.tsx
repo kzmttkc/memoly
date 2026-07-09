@@ -257,6 +257,12 @@ export default function TryDemo() {
             )}
           </div>
 
+          {/* 誠実性ラベル: このデモの回答が「用意されたサンプル応答」であることと、
+              登録後は自社の記憶に基づく個別回答になることを常時明示する（過大表現の回避）。 */}
+          <p className="border-t border-neutral-200 bg-neutral-50/70 px-4 py-2 text-[11px] leading-relaxed text-neutral-500">
+            ※これはサンプル応答です。登録後は貴社の記憶（規程・過去の判断など）に基づき、番頭が自社専用に個別回答します。
+          </p>
+
           {/* 質問チップ */}
           <div className="border-t border-neutral-200 bg-neutral-50 px-4 py-4">
             <p className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">

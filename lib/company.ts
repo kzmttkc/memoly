@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { embeddingEnabled, embedText, toVectorLiteral } from '@/lib/embedding'
 
 // ============================================================================
 // company.ts — 会社スコープ解決層
@@ -119,6 +120,7 @@ export interface CompanyContext {
 
 // 内部: company_memories の行型（縦深列を含む。列未適用環境では undefined/null になる）。
 interface MemoryRow {
+  id: string
   summary: string
   memory_type: string
   topic: string | null
@@ -190,7 +192,7 @@ export async function loadCompanyContext(
       .order('key', { ascending: true }),
     supabase
       .from('company_memories')
-      .select('summary, memory_type, topic, subject, decided_at, created_at')
+      .select('id, summary, memory_type, topic, subject, decided_at, created_at')
       .eq('company_id', companyId)
       .in('memory_type', ['summary', 'decision'])
       .order('created_at', { ascending: false })
@@ -218,16 +220,80 @@ export async function loadCompanyContext(
     }
   }
 
-  const rows = (memResult.data ?? []) as MemoryRow[]
+  const poolRows = (memResult.data ?? []) as MemoryRow[]
+
+  // --- セマンティック想起（P1-1・graceful degrade）---
+  //   userQuery があり embedding が使えるときだけ、クエリ埋め込みでコサイン近傍を引き、
+  //   キーワード＋recency とハイブリッドに合成する。embedding/RPC が使えない環境
+  //   （OPENAI_API_KEY 未設定・migration 未適用・API失敗）では simById が空のまま
+  //   ＝従来のキーワード＋recency 検索へ自動フォールバックする（既存動作を壊さない）。
+  const simById = new Map<string, number>()
+  const extraRows: MemoryRow[] = []
+  if (userQuery && embeddingEnabled()) {
+    try {
+      const vec = await embedText(userQuery)
+      if (vec) {
+        const { data: matches, error: matchErr } = await supabase.rpc('match_company_memories', {
+          p_company_id: companyId,
+          p_query_embedding: toVectorLiteral(vec),
+          p_match_count: 30,
+          p_memory_types: ['summary', 'decision'],
+        })
+        if (matchErr) {
+          console.error('[company:loadCompanyContext] semantic RPC failed; keyword fallback', matchErr.message)
+        } else if (Array.isArray(matches)) {
+          const seen = new Set(poolRows.map(r => r.id))
+          for (const m of matches as (MemoryRow & { similarity: number })[]) {
+            simById.set(m.id, typeof m.similarity === 'number' ? m.similarity : 0)
+            // recency プール(直近200)の外にある意味的関連行は取りこぼさず合流させる。
+            if (!seen.has(m.id)) {
+              extraRows.push({
+                id: m.id,
+                summary: m.summary,
+                memory_type: m.memory_type,
+                topic: m.topic,
+                subject: m.subject,
+                decided_at: m.decided_at,
+                created_at: m.created_at,
+              })
+              seen.add(m.id)
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[company:loadCompanyContext] semantic recall threw; keyword fallback', (e as Error).message)
+    }
+  }
+
+  const rows = [...poolRows, ...extraRows]
   const summaryRows = rows.filter(r => r.memory_type === 'summary')
   const decisionRows = rows.filter(r => r.memory_type === 'decision')
 
-  // --- 関連記憶の選択: userQuery があれば relevance 降順→recency、無ければ recency のみ ---
+  // recency ランク（全候補を新しい順に並べた順位）。ハイブリッドの recency 成分に使う。
+  const recencyRank = new Map<string, number>()
+  ;[...rows]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .forEach((r, i) => recencyRank.set(r.id, i))
+  const N = Math.max(1, rows.length)
+
+  // ハイブリッドスコア = 意味類似(0..1)*0.6 + キーワード正規化(0..1)*0.3 + recency(0..1)*0.1。
+  //   simById が空（＝非セマンティック時）はキーワード＋recency のみで、従来の
+  //   「関連スコア降順→recency」とほぼ同じ振る舞いに縮退する。
+  const hybridScore = (r: MemoryRow): number => {
+    const sim = simById.get(r.id) ?? 0
+    const kw = relevanceScore(r, userQuery)
+    const kwNorm = kw > 0 ? Math.min(1, kw / 6) : 0
+    const recNorm = (N - (recencyRank.get(r.id) ?? N)) / N
+    return sim * 0.6 + kwNorm * 0.3 + recNorm * 0.1
+  }
+
+  // --- 関連記憶の選択: userQuery があれば hybrid 降順→recency、無ければ recency のみ ---
   const pickByRelevance = (src: MemoryRow[], limit: number): MemoryRow[] => {
     if (!userQuery) return src.slice(0, limit)
     return [...src]
-      .map((r, i) => ({ r, i, s: relevanceScore(r, userQuery) }))
-      // 関連スコア降順、同点は元の並び(recency)を保持。スコア0でも recency 順で埋める。
+      .map((r, i) => ({ r, i, s: hybridScore(r) }))
+      // ハイブリッド降順、同点は元の並び(recency)を保持。スコア0でも recency 順で埋める。
       .sort((a, b) => (b.s - a.s) || (a.i - b.i))
       .slice(0, limit)
       .map(x => x.r)
@@ -244,8 +310,10 @@ export async function loadCompanyContext(
   }))
 
   // --- 対象者(subject)ごとの状況: summary+decision を subject で束ね、最大5名×各3件 ---
+  //   意味的に合流させた古い extraRows ではなく、直近プール(recency降順)を使って
+  //   「新しい順に各人3件」を維持する（人ごとの状況は最新の状況を優先したいため）。
   const bySubject = new Map<string, string[]>()
-  for (const r of rows) {
+  for (const r of poolRows) {
     const s = (r.subject ?? '').trim()
     if (!s) continue
     const arr = bySubject.get(s) ?? []

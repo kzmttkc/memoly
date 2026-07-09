@@ -2,6 +2,41 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getCurrentUser, getMembership, resolveDefaultCompany } from '@/lib/company'
 import { extractCompanyFacts, extractCompanyMemory } from '@/lib/memory'
+import { embedText, toVectorLiteral } from '@/lib/embedding'
+
+type ServerSupabase = Awaited<ReturnType<typeof createServerSupabaseClient>>
+
+// ----------------------------------------------------------------------------
+// insertMemoryWithEmbedding — 記憶行(summary/decision)を保存する共通ヘルパ（P1-1）。
+//   セマンティック検索のため、保存する記憶テキストの埋め込みを付けて insert する。
+//   ★graceful degrade（非破壊を最優先）:
+//     - OPENAI_API_KEY 未設定・API失敗時は embedText が null → embedding 無しで保存
+//       （embedding 列は NULL。キーワード検索では従来どおり効く／後でバックフィル可能）。
+//     - embedding 付き insert が失敗（embedding 列が migration 未適用など）した場合は、
+//       embedding を外して再挿入する＝キー投入とmigration適用の順序に依らず記憶を失わない。
+//   ※ rule 候補(memory_type='rule')は想起検索の対象外なので埋め込まない（コスト節約）。
+// ----------------------------------------------------------------------------
+async function insertMemoryWithEmbedding(
+  supabase: ServerSupabase,
+  row: Record<string, unknown>,
+): Promise<{ error: { message?: string } | null }> {
+  let vec: number[] | null = null
+  try {
+    vec = await embedText(String(row.summary ?? ''))
+  } catch {
+    vec = null
+  }
+  if (vec) {
+    const { error } = await supabase
+      .from('company_memories')
+      .insert({ ...row, embedding: toVectorLiteral(vec) })
+    if (!error) return { error: null }
+    // embedding 列未適用などで失敗 → embedding を外して再挿入（記憶を失わない）。
+    console.error('[company:memory] insert with embedding failed; retrying without', error.message)
+  }
+  const { error } = await supabase.from('company_memories').insert(row)
+  return { error }
+}
 
 // ============================================================================
 // /api/company/memory — 会社事実の抽出と admin 承認制の保存
@@ -83,7 +118,7 @@ export async function POST(req: NextRequest) {
   let savedDecision = 0
   if (depth.summary || depth.decisionText) {
     if (depth.isDecision && depth.decisionText) {
-      const { error } = await supabase.from('company_memories').insert({
+      const { error } = await insertMemoryWithEmbedding(supabase, {
         company_id: companyId,
         summary: depth.decisionText,
         memory_type: 'decision',
@@ -96,7 +131,7 @@ export async function POST(req: NextRequest) {
     }
     // 判断の有無に関わらず、相談の流れ自体は summary として残す（subject別の状況追跡に効く）。
     if (depth.summary) {
-      const { error } = await supabase.from('company_memories').insert({
+      const { error } = await insertMemoryWithEmbedding(supabase, {
         company_id: companyId,
         summary: depth.summary,
         memory_type: 'summary',
@@ -152,7 +187,7 @@ async function saveToolNote(req: NextRequest): Promise<NextResponse> {
   }
 
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from('company_memories').insert({
+  const { error } = await insertMemoryWithEmbedding(supabase, {
     company_id: companyId,
     summary: trimmed,
     memory_type: 'summary',
@@ -218,7 +253,7 @@ async function captureDecision(req: NextRequest): Promise<NextResponse> {
   }
 
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from('company_memories').insert({
+  const { error } = await insertMemoryWithEmbedding(supabase, {
     company_id: companyId,
     summary: decisionText,
     memory_type: 'decision',
