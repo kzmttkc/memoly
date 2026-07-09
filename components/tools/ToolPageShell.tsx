@@ -116,7 +116,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
         {sources && (
           <div className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50/60 px-4 py-3.5">
             <p className="text-xs font-medium text-neutral-700">
-              このツールの割増率・計算方法の根拠（{sources.checkedOn} 確認）
+              このツールの計算・判定方法の根拠（{sources.checkedOn} 確認）
             </p>
             <ul className="mt-1.5 space-y-1 text-xs leading-relaxed text-neutral-500">
               {sources.items.map((s) => (
