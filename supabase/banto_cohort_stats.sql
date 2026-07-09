@@ -8,8 +8,9 @@
 --   から算出する。表示やアプリ集計に依存せず、DBの実テーブルで結論づける
 --   （CLAUDE.md §0.5 原則4 証拠主義）。
 --
--- 共有 Supabase（banto/gokaku/memoly 共有・project tdipstzxpboqyxxlogko）への
--- 「追記のみ」。既存テーブル/RLS/関数は一切変更しない。company_* 名前空間に
+-- 番頭の Supabase（= memoly プロジェクト `hsyalzzcemtewmtorwkn`。2026-06-26 に
+-- Gokaku `tdipstzxpboqyxxlogko` とは分離済み。番頭の companies/company_* はこちらに在る）
+-- への「追記のみ」。既存テーブル/RLS/関数は一切変更しない。company_* 名前空間に
 -- 合わせて関数を1つ追加するだけ（他製品に波及させない）。
 --
 -- 設計の流儀（company_schema.sql / billing_subscriptions.sql に合わせる）:
@@ -164,12 +165,15 @@ REVOKE ALL ON FUNCTION public.banto_cohort_stats() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.banto_cohort_stats() TO service_role;
 
 -- ============================================================================
--- 適用手順（Takeshi 手動・Supabase SQL Editor / project tdipstzxpboqyxxlogko）:
---   1) このファイル全体を SQL Editor に貼って Run。
+-- 適用手順（Supabase SQL Editor / project hsyalzzcemtewmtorwkn = 番頭=memoly）:
+--   ※ 2026-07-10 に Management API 経由で本番(hsyalzzcemtewmtorwkn)へ適用済み。
+--     以後の再適用は冪等（CREATE OR REPLACE）。
+--   1) このファイル全体を SQL Editor に貼って Run（または Management API /database/query）。
 --   2) review.py の fetch_banto_cohort() が読む鍵を config/x_keys.json に追加:
---        GOKAKU_SUPABASE_URL        = https://tdipstzxpboqyxxlogko.supabase.co
---        GOKAKU_SUPABASE_SERVICE_KEY = <service_role キー>
---      （banto/gokaku/memoly は同一プロジェクト共有のため GOKAKU_* を流用）
+--        BANTO_SUPABASE_URL         = https://hsyalzzcemtewmtorwkn.supabase.co
+--        BANTO_SUPABASE_SERVICE_KEY = <service_role キー>
+--      （番頭は memoly プロジェクトを器として転用。Gokaku とは別プロジェクト。
+--        GOKAKU_SUPABASE_* を使うと companies が無く空/誤集計になるので使わない）
 --   3) 動作確認: curl -X POST \
 --        "$URL/rest/v1/rpc/banto_cohort_stats" \
 --        -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
