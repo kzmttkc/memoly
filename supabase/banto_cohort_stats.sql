@@ -28,6 +28,15 @@
 --       「直近14日アクティブ社数」を返す。新規取得と定着の推移を見る。
 --   - 収益 = company_billing_events を集計。
 --       直近30日の課金イベント件数 / 課金額合計 / 累計課金額。
+--   - activation(§1b・8/5解禁ゲート) = 「登録7日以内に初回利用があったか」。
+--       分母 activation_7d_eligible = 登録から7日以上経過した会社（右打ち切り除外）。
+--       分子 activation_7d_activated = うち、登録後7日以内(created_at 〜 created_at+7日)に
+--         company_messages（company_conversations 経由で会社へ帰属）または
+--         company_memories（company_id 直結）が1件以上ある会社。
+--       activation_7d_rate = 分子 ÷ 分母（母数0は null・捏造しない）。
+--   - 週次再訪(§1c・8/5解禁ゲート) weekly_return_7d = 登録から7日以上経過し、かつ
+--       直近7日に company_messages 活動(last_activity 更新)がある会社数。
+--       （初回オンボーディングの余熱＝登録7日未満の会社は分子から除外する。）
 --
 -- fail-safe 哲学（review.py に合わせる）:
 --   テーブルが存在しない/空でも例外で落とさず、0 や null を素直に返す。
@@ -56,6 +65,11 @@ DECLARE
   rev_30d_amount bigint;
   rev_total_amount bigint;
   weekly         jsonb;
+  -- activation(§1b) / 週次再訪(§1c) ＝ 8/5 課金解禁ゲート正式指標
+  act_eligible   int;   -- 登録7日以上経過した会社数（分母・右打ち切り除外）
+  act_activated  int;   -- うち登録後7日以内に 会話 or 記憶 が1件以上ある会社数（分子）
+  act_rate       numeric;
+  weekly_return  int;   -- 登録7日以上経過かつ直近7日に活動がある会社数
 BEGIN
   -- ------------------------------------------------------------------
   -- 会社ごとの最終活動を一時的に組み立てる。
@@ -140,6 +154,61 @@ BEGIN
   END;
 
   -- ------------------------------------------------------------------
+  -- activation(§1b・8/5解禁ゲート) と 週次再訪(§1c・8/5解禁ゲート)
+  --   BANTO_BILLING_GATE.md §6.3 で計画された4フィールド。
+  --   分母は「登録7日以上経過の会社」（右打ち切り除外）。分子は「登録後7日以内の初回利用」。
+  --   company_memories が存在しない環境でも落とさない（fail-safe: 会話のみで判定に縮退）。
+  -- ------------------------------------------------------------------
+  SELECT count(*) INTO act_eligible
+    FROM _banto_company_activity
+    WHERE created_at <= now_ts - interval '7 days';
+
+  BEGIN
+    SELECT count(*) INTO act_activated
+      FROM _banto_company_activity a
+      WHERE a.created_at <= now_ts - interval '7 days'
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM public.company_messages m
+            JOIN public.company_conversations conv ON conv.id = m.conversation_id
+            WHERE conv.company_id = a.id
+              AND m.created_at <= a.created_at + interval '7 days'
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM public.company_memories mem
+            WHERE mem.company_id = a.id
+              AND mem.created_at <= a.created_at + interval '7 days'
+          )
+        );
+  EXCEPTION WHEN undefined_table THEN
+    -- company_memories 不在などの環境では会話のみで分子を算出（fail-safe）。
+    SELECT count(*) INTO act_activated
+      FROM _banto_company_activity a
+      WHERE a.created_at <= now_ts - interval '7 days'
+        AND EXISTS (
+          SELECT 1
+          FROM public.company_messages m
+          JOIN public.company_conversations conv ON conv.id = m.conversation_id
+          WHERE conv.company_id = a.id
+            AND m.created_at <= a.created_at + interval '7 days'
+        );
+  END;
+
+  IF act_eligible > 0 THEN
+    act_rate := round(act_activated::numeric / act_eligible, 4);
+  ELSE
+    act_rate := NULL;  -- 母数ゼロは「activation 0%」ではない。捏造しない。
+  END IF;
+
+  -- 週次再訪(§1c): 登録7日以上経過（オンボーディング余熱除外）かつ直近7日に活動。
+  SELECT count(*) INTO weekly_return
+    FROM _banto_company_activity
+    WHERE created_at <= now_ts - interval '7 days'
+      AND last_activity >= now_ts - interval '7 days';
+
+  -- ------------------------------------------------------------------
   -- 返り値
   -- ------------------------------------------------------------------
   result := jsonb_build_object(
@@ -152,7 +221,12 @@ BEGIN
     'weekly_cohorts',     weekly,            -- [{week_start, signups, active_now}, ...]
     'revenue_30d_count',  rev_30d_count,
     'revenue_30d_amount', rev_30d_amount,    -- 円
-    'revenue_total_amount', rev_total_amount -- 円
+    'revenue_total_amount', rev_total_amount, -- 円
+    -- 8/5 課金解禁ゲート（BANTO_BILLING_GATE.md §1(b)(c)・§6.3）
+    'activation_7d_eligible',  act_eligible,   -- 分母: 登録7日以上経過の会社数
+    'activation_7d_activated', act_activated,  -- 分子: うち登録7日以内に会話or記憶1件以上
+    'activation_7d_rate',      act_rate,       -- 分子÷分母（null=母数ゼロ・§1b しきい値≥0.40）
+    'weekly_return_7d',        weekly_return   -- 登録7日以上経過かつ直近7日活動（§1c しきい値≥3）
   );
 
   RETURN result;
