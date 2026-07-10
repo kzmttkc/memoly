@@ -98,7 +98,11 @@ function BillingInner() {
     if (!state || submitting) return
     setSubmitting(planId)
     try {
-      const seats = selectedSeats[planId] ?? Math.max(state.seatsUsed, 1)
+      // 席数を送るのは席課金の士業プランのみ（SSOT: Entry/Standard は会社単位の月額。
+      // API 側でも非 multiClient は quantity=1 に固定されるため、ここは表示との一致のため）。
+      const seats = PLANS[planId].multiClient
+        ? (selectedSeats[planId] ?? Math.max(state.seatsUsed, 1))
+        : 1
       const res = await fetch('/api/company/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -225,18 +229,27 @@ function BillingInner() {
                 {featured && <Badge tone="brand">おすすめ</Badge>}
                 {isCurrent && <Badge tone="success">利用中</Badge>}
               </div>
+              {/* 課金単位の表記（SSOT: docs/BANTO_BILLING_GATE.md §4・§5・LP /business と同一表記）:
+                  Entry/Standard = 1社あたりの月額（seatCap 人数まで追加料金なし）。
+                  士業のみ席（シート）単位 = 事務所の利用メンバー数に応じて課金。 */}
               <p className="mt-4 flex items-baseline gap-1">
                 <span className="text-3xl font-bold tracking-tight text-neutral-900 tabular-nums">
                   &yen;{p.monthlyJpy.toLocaleString()}
                 </span>
-                <span className="text-sm text-neutral-500">/ 席・月</span>
+                <span className="text-sm text-neutral-500">
+                  {p.multiClient ? '/月（1席あたり）' : '/月（1社あたり）'}
+                </span>
               </p>
               {p.yearlyJpy && (
                 <p className="mt-1 text-xs text-neutral-500 tabular-nums">
                   年額 &yen;{p.yearlyJpy.toLocaleString()}（2ヶ月分お得）
                 </p>
               )}
-              <p className="mt-1 text-xs text-neutral-500">最大 {p.seatCap} 席</p>
+              <p className="mt-1 text-xs text-neutral-500">
+                {p.multiClient
+                  ? `席単位の課金・最大 ${p.seatCap} 席`
+                  : `利用メンバー ${p.seatCap}名まで（追加料金なし）`}
+              </p>
 
               <ul className="mt-5 space-y-2">
                 <li className="flex items-start gap-2 text-sm text-neutral-700">
@@ -257,29 +270,35 @@ function BillingInner() {
 
               {isAdmin && (
                 <div className="mt-5 space-y-2">
-                  <label className="flex items-center justify-between gap-2 text-xs text-neutral-600">
-                    席数
-                    <input
-                      type="number"
-                      min={1}
-                      max={p.seatCap}
-                      value={seatVal}
-                      onChange={e =>
-                        setSelectedSeats(s => ({
-                          ...s,
-                          [id]: Math.min(
-                            p.seatCap,
-                            Math.max(1, Number.parseInt(e.target.value, 10) || 1),
-                          ),
-                        }))
-                      }
-                      className="h-9 w-20 rounded-lg border border-neutral-200 bg-white px-2 text-right text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                      aria-label={`${p.displayName} の席数`}
-                    />
-                  </label>
-                  <p className="text-right text-xs text-neutral-500 tabular-nums">
-                    月額 &yen;{(p.monthlyJpy * seatVal).toLocaleString()}（{seatVal}席）
-                  </p>
+                  {/* 席数の選択は席課金の士業プランのみ。Entry/Standard は会社単位の定額
+                      （seatCap 人数分を含む）ため、席の指定と席×単価の掛け算表示を出さない。 */}
+                  {p.multiClient && (
+                    <>
+                      <label className="flex items-center justify-between gap-2 text-xs text-neutral-600">
+                        席数
+                        <input
+                          type="number"
+                          min={1}
+                          max={p.seatCap}
+                          value={seatVal}
+                          onChange={e =>
+                            setSelectedSeats(s => ({
+                              ...s,
+                              [id]: Math.min(
+                                p.seatCap,
+                                Math.max(1, Number.parseInt(e.target.value, 10) || 1),
+                              ),
+                            }))
+                          }
+                          className="h-9 w-20 rounded-lg border border-neutral-200 bg-white px-2 text-right text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                          aria-label={`${p.displayName} の席数`}
+                        />
+                      </label>
+                      <p className="text-right text-xs text-neutral-500 tabular-nums">
+                        月額 &yen;{(p.monthlyJpy * seatVal).toLocaleString()}（{seatVal}席）
+                      </p>
+                    </>
+                  )}
                   <Button
                     variant={featured ? 'primary' : 'secondary'}
                     className="w-full"
@@ -302,7 +321,9 @@ function BillingInner() {
       </div>
 
       <p className="mt-6 text-xs leading-relaxed text-neutral-500">
-        表示価格は1席あたりの月額です。お支払い手続きは決済事業者（Stripe）の安全な画面で行います。
+        EntryとStandardの表示価格は1社あたりの月額で、プランの上限人数までは何人で使っても料金は変わりません。
+        士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です。
+        お支払い手続きは決済事業者（Stripe）の安全な画面で行います。
         番頭は労務に関する一般的な情報提供と下書き支援を行うツールで、社会保険労務士による
         個別の相談・書類作成代行を行うものではありません。
       </p>

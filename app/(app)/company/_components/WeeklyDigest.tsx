@@ -35,7 +35,8 @@ interface DigestCard {
   selfImpact: string
   nextAction: string
   deadline?: string
-  confidence: '参考情報' | '一次回答（要確認）'
+  // 「一次回答（要確認）」は旧ラベル（キャッシュ済みカード互換）。表示時に「AIの答え（要確認）」へ写す。
+  confidence: '参考情報' | 'AIの答え（要確認）' | '一次回答（要確認）'
   actionTo: 'document' | 'chat' | 'insights' | 'risk'
   actionLabel: string
   chatPrompt?: string
@@ -265,7 +266,10 @@ function DigestCardItem({ card, companyId }: { card: DigestCard; companyId: stri
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-        <Badge tone="neutral">{card.confidence}</Badge>
+        {/* 旧ラベル「一次回答（要確認）」は平易な「AIの答え（要確認）」へ写して表示（キャッシュ互換）。 */}
+        <Badge tone="neutral">
+          {card.confidence === '一次回答（要確認）' ? 'AIの答え（要確認）' : card.confidence}
+        </Badge>
         <Link href={href} className={buttonClass({ variant: 'secondary', size: 'sm' })}>
           {card.actionLabel}
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />

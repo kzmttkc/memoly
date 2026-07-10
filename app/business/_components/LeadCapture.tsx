@@ -88,10 +88,10 @@ export default function LeadCapture() {
           ) : (
             <>
               <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
-                就業規則の点検ポイント資料を、完成し次第お届けします
+                就業規則の見落としやすいポイントをまとめた点検資料（無料）
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-                就業規則の点検ポイントをまとめた資料を現在準備しています。メールアドレスをご登録いただくと、完成し次第お届けします。お待ちいただく間も、このページの上のデモで番頭の使い心地を登録なしで試せます。
+                自社の就業規則を見直すとき、どこから確認すればよいかが分かる資料です。メールアドレスのご登録だけで受け取れます。お待ちいただく間も、このページの上のデモで番頭の使い心地を登録なしで試せます。
               </p>
 
               <form onSubmit={onSubmit} className="mt-7 w-full max-w-md">
@@ -155,7 +155,8 @@ export default function LeadCapture() {
                 )}
 
                 <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-                  資料の送付と、番頭に関するお知らせにのみ利用します。配信はいつでも停止できます。
+                  資料は現在準備中です。完成し次第、ご登録のアドレスへお届けします。
+                  メールアドレスは資料の送付と、番頭に関するお知らせにのみ利用します。配信はいつでも停止できます。
                 </p>
               </form>
             </>

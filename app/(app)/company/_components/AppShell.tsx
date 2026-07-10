@@ -54,7 +54,7 @@ const NAV: NavItem[] = [
   { href: '/company/rules', label: '自社ルール', icon: BookOpenCheck },
   { href: '/company/documents', label: '書類', icon: FileText },
   { href: '/company/deadlines', label: '期限', icon: CalendarClock },
-  { href: '/company/reports', label: 'まとめ・社労士メモ', mobileLabel: 'まとめ', icon: FileBarChart },
+  { href: '/company/reports', label: '社労士に渡すメモ', mobileLabel: 'まとめ', icon: FileBarChart },
   { href: '/company/risk', label: 'リスク診断', icon: ShieldCheck },
   { href: '/company/insights', label: '助成金・法改正', mobileLabel: '助成金', icon: Sparkles },
   // 課金/席管理(admin向け)。サイドナビ/ドロワーには出すが、下部タブには出さない。

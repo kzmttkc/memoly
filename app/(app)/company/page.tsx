@@ -301,7 +301,7 @@ function CompanyHome() {
                   { href: '/company/chat', label: 'AIに相談する', icon: MessageSquareText },
                   { href: '/company/memory', label: '会社の記憶', icon: History },
                   { href: '/company/documents', label: '書類作成・レビュー', icon: FileText },
-                  { href: '/company/risk', label: '労務リスク診断', icon: ShieldCheck },
+                  { href: '/company/risk', label: '労務リスク・セルフ診断', icon: ShieldCheck },
                   { href: '/company/insights', label: '助成金・法改正', icon: Sparkles },
                   ...(c.role === 'admin'
                     ? [{ href: '/company/rules', label: '自社ルールを編集', icon: BookOpenCheck }]

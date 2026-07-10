@@ -145,7 +145,7 @@ export function CommandPalette() {
       { id: 'risk', label: 'リスク診断', group: 'ナビゲーション', keywords: 'risk 労務リスク 診断', icon: ShieldCheck, perform: () => go('/company/risk') },
       { id: 'deadlines', label: '期限カレンダー', group: 'ナビゲーション', hint: 'g e', keywords: 'kigen deadlines 期限', icon: CalendarClock, perform: () => go('/company/deadlines') },
       { id: 'insights', label: '助成金・法改正', group: 'ナビゲーション', keywords: 'joseikin insights 助成金 法改正', icon: Sparkles, perform: () => go('/company/insights') },
-      { id: 'reports', label: 'まとめ・社労士メモ', group: 'ナビゲーション', keywords: 'matome reports 報告 社労士', icon: FileBarChart, perform: () => go('/company/reports') },
+      { id: 'reports', label: '社労士に渡すメモ', group: 'ナビゲーション', keywords: 'matome reports 報告 社労士 まとめ メモ', icon: FileBarChart, perform: () => go('/company/reports') },
       { id: 'billing', label: 'プラン・席', group: 'ナビゲーション', keywords: 'billing plan seats 課金 席', icon: CreditCard, perform: () => go('/company/billing') },
     ]
 

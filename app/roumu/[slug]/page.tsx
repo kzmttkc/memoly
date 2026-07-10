@@ -30,6 +30,14 @@ const BASE = 'https://banto-roumu.com'
 //   小リンクを自力で見つける必要があり、北極星（無料登録）直前の蛇口が細くなる。
 const SIGNUP_HREF = '/signup?next=/company'
 
+// 末尾CTAのサブコピー3種。slugの文字コード和で決定的に選ぶ（ビルドごとに揺れない）。
+//   核の主張「覚えているから前提の説明が要らない」を、同一文の反復にならないよう言い換える。
+const CTA_SUBCOPY = [
+  '会社を登録して、最初の相談を投げてみてください。前提を説明し直さない労務相談を、無料で試せます。',
+  '会社を登録して、最初の相談を投げてみてください。二度目からは、話が早い。その体験を無料で試せます。',
+  '会社を登録して、最初の相談を投げてみてください。昨日の相談の続きから話せる労務AIを、無料で試せます。',
+]
+
 export function generateStaticParams() {
   return USECASE_SLUGS.map((slug) => ({ slug }))
 }
@@ -254,14 +262,18 @@ export default async function RoumuUseCasePage({
         </div>
       </section>
 
-      {/* ===== 末尾CTA ===== */}
+      {/* ===== 末尾CTA =====
+          サブコピーは3バリアントをslugから決定的に選ぶ（全LP同一文の反復を避ける。
+          「前提を説明し直さない」の言い換え＝二度目からは話が早い/昨日の続き）。 */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
             自社を覚えるAIを、今日から
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録して、最初の相談を投げてみてください。前提を説明し直さない労務相談を、無料で試せます。
+            {CTA_SUBCOPY[
+              [...u.slug].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % CTA_SUBCOPY.length
+            ]}
           </p>
           <div className="mt-6 flex justify-center">
             <Link

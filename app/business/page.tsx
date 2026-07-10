@@ -94,11 +94,11 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: '料金はいくらですか',
-    a: '予定価格はEntry ¥3,980/月〜です。現在は無料モニター期間のため、すべての機能を無料でご利用いただけます。有料プランの開始後は、本ページの料金セクションに記載の予定価格が適用されます。',
+    a: '予定価格は1社あたり月額¥3,980（Entryプラン）からです。EntryとStandardは会社単位の月額で、プランの上限人数（Entry 5名・Standard 20名）までは何人で使っても料金は変わりません。士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です。現在は無料モニター期間のため、すべての機能を無料でご利用いただけます。',
   },
   {
     q: '無料で使えますか',
-    a: '会社を登録して最初の相談を投げるところまで、無料で試せます。前提を説明し直さない労務相談の体験に費用はかかりません。',
+    a: '会社を登録して最初の相談を投げるところまで、無料で試せます。二度目の相談が前回の続きから始まる体験に、費用はかかりません。',
   },
   {
     q: '自社の労務データは安全に保管されますか',
@@ -124,7 +124,7 @@ const FEATURES = [
     icon: Brain,
     title: '覚える',
     body:
-      '会社のプロファイル（所定労働時間・休日・36協定の状況など）と相談データを蓄積。次からは前提を説明しなくても、自社の状況に合わせた最適解を提供します。',
+      '会社のプロファイル（所定労働時間・休日・36協定の状況など）と相談データを蓄積。二度目からは話が早く、自社の状況に合わせた答えがすぐ返ります。',
   },
   {
     icon: MessageSquareText,
@@ -177,45 +177,54 @@ const EFFICIENCY = [
 // 表示名・価格・主役(featured)・年額は lib/plans.ts（SSOT）から引く。LP固有の訴求コピー
 // （tagline/features/badge）だけをここで持つ。これにより「価格・主役が LP と課金で
 // 食い違う」事故を構造的に防ぐ（2026-06-29 Takeshi承認: Entryが主役・年額¥39,800）。
+// 課金単位の確定表記（SSOT: docs/BANTO_BILLING_GATE.md §4・§5）:
+//   Entry/Standard = 会社単位の月額（プランの上限人数まで追加料金なし）。
+//   士業のみ席（シート）単位 = 事務所の利用メンバー数に応じて課金。
+//   利用回数・上限人数は lib/plans.ts の実装値から直接埋め込む（表示と実装の乖離を構造的に防ぐ）。
 const PLAN_COPY = [
   {
     name: PLANS.starter.displayName,
     price: PLANS.starter.monthlyJpy.toLocaleString(),
+    unit: `/月（1社あたり・${PLANS.starter.seatCap}名まで）`,
     yearly: PLANS.starter.yearlyJpy,
     tagline: 'まず使ってみる',
     badge: 'おすすめ',
     features: [
       '自社の規程・会社プロファイルの記憶',
-      'AIチャット相談・労務リスク診断',
-      '規程ドラフトの下書き・レビュー',
+      `AIチャット相談 1日${PLANS.starter.limits.chat}回まで`,
+      `労務リスク・セルフ診断、規程ドラフトの下書き・レビュー 各1日${PLANS.starter.limits.risk_audit}回まで`,
       '助成金・法改正が自社に関係するかのチェック',
-      '利用人数 5名まで',
+      `利用メンバー ${PLANS.starter.seatCap}名まで（追加料金なし）`,
     ],
     featured: PLANS.starter.featured,
   },
   {
     name: PLANS.standard.displayName,
     price: PLANS.standard.monthlyJpy.toLocaleString(),
+    unit: `/月（1社あたり・${PLANS.standard.seatCap}名まで）`,
     yearly: PLANS.standard.yearlyJpy,
     tagline: 'チームでしっかり使う',
     badge: null,
     features: [
       'Entry のすべての機能',
-      '1日に使える回数が各機能で Entry の3倍',
-      '利用人数 20名まで',
+      `AIチャット相談 1日${PLANS.standard.limits.chat}回まで（Entryの3倍）`,
+      `診断・書類などの各機能も 1日${PLANS.standard.limits.risk_audit}回まで`,
+      `利用メンバー ${PLANS.standard.seatCap}名まで（追加料金なし）`,
     ],
     featured: PLANS.standard.featured,
   },
   {
     name: PLANS.shigyo.displayName,
     price: PLANS.shigyo.monthlyJpy.toLocaleString(),
+    unit: '/月（1席あたり）',
     yearly: PLANS.shigyo.yearlyJpy,
     tagline: '複数の顧問先を管理',
     badge: '士業向け',
     features: [
-      'Standard のすべて',
+      `Standard のすべて（AIチャット相談 1日${PLANS.shigyo.limits.chat}回まで）`,
       '複数企業（顧問先）の切り替え',
       '企業ごとに記憶・データを分離',
+      '席単位の課金。事務所の利用メンバー数に応じて席を追加',
     ],
     featured: PLANS.shigyo.featured,
   },
@@ -422,7 +431,7 @@ function RiskScorePreview() {
         <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
           <ShieldCheck className="h-3 w-3" aria-hidden />
         </span>
-        <span className="text-xs font-semibold text-neutral-700">労務リスク診断</span>
+        <span className="text-xs font-semibold text-neutral-700">労務リスク・セルフ診断</span>
       </div>
 
       <div className="flex items-center gap-4 px-4 py-4">
@@ -675,7 +684,7 @@ export default function BusinessLandingPage() {
             総務の説明・調べ物・下書きを肩代わり
           </h2>
           <p className="mt-3 text-base leading-relaxed text-neutral-600">
-            番頭の価値は"便利"よりも、毎回かかっていた手間そのものを減らすことです。
+            番頭の価値は「便利」よりも、毎回かかっていた手間そのものを減らすことです。
           </p>
         </div>
         {/* 前提説明の往復が消える：概念バーで一目に */}
@@ -757,7 +766,7 @@ export default function BusinessLandingPage() {
             <div>
               <h3 className="font-semibold text-neutral-900">会社ごとに完全分離</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
-                行レベルセキュリティ（RLS）で、自社のデータには自社しかアクセスできません。
+                自社のデータは、他社からは仕組みの上で見えない設計です。アクセスできるのは自社だけです（データベースの行レベルで分離しています）。
               </p>
             </div>
           </Card>
@@ -768,7 +777,7 @@ export default function BusinessLandingPage() {
             <div>
               <h3 className="font-semibold text-neutral-900">通信・保管の暗号化</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
-                通信はHTTPS/TLSで暗号化しています。データは、管理されたクラウド（Supabase）で保管します。
+                やり取りは暗号化された通信（HTTPS/TLS）で守られます。データの保管も、暗号化に対応した管理されたクラウド基盤（Supabase）で行います。
               </p>
             </div>
           </Card>
@@ -826,6 +835,20 @@ export default function BusinessLandingPage() {
                 </p>
               </div>
             </div>
+            {/* 名前の由来（作り手ストーリーの隣・1段落）。押し付けず、名前と製品の一致だけを静かに語る。 */}
+            <div className="flex items-start gap-3 sm:col-span-2">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                <Building2 className="h-5 w-5" aria-hidden />
+              </span>
+              <div>
+                <p className="font-semibold text-neutral-900">名前は、商家の「番頭」から</p>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-600">
+                  かつての商家で、帳場のことをすべて覚えて主人を支えたのが番頭でした。
+                  取引の経緯も、店ごとの決めごとも、聞けばすぐ答えが返ってくる。
+                  会社のことを覚えて労務を支えるこのAIに、その名前を借りています。
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -863,7 +886,7 @@ export default function BusinessLandingPage() {
                   <span className="text-3xl font-bold tracking-tight text-neutral-900 tabular-nums">
                     &yen;{p.price}
                   </span>
-                  <span className="text-sm text-neutral-500">/席・月</span>
+                  <span className="text-sm text-neutral-500">{p.unit}</span>
                 </p>
                 {p.yearly && (
                   <p className="mt-1 text-xs text-neutral-500 tabular-nums">
@@ -890,6 +913,10 @@ export default function BusinessLandingPage() {
               </Card>
             ))}
           </div>
+          <p className="mt-6 text-center text-xs leading-relaxed text-neutral-500">
+            EntryとStandardは1社あたりの月額です。プランの上限人数までは、何人で使っても料金は変わりません。
+            士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です。
+          </p>
         </div>
       </section>
 
@@ -985,7 +1012,7 @@ export default function BusinessLandingPage() {
             自社を覚えるAIを、今日から
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録して、最初の相談を投げてみてください。前提を説明し直さない労務相談を体験できます。
+            会社を登録して、最初の相談を投げてみてください。二度目の相談は、昨日の続きから始まります。
           </p>
           <div className="mt-7 flex justify-center">
             <TrackedCTA

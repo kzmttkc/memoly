@@ -33,8 +33,17 @@ export interface CreateSeatCheckoutArgs {
   planId: PlanId
   /** 請求間隔。'month'(既定) | 'year'。年額は年額 Price を持つプランのみ（呼び出し側で検証）。 */
   interval?: BillingInterval
-  /** 席数（quantity）。1以上・プランの seatCap 以内は呼び出し側で検証済み前提。 */
+  /**
+   * 付与する席数（webhook が companies.seats_purchased に反映＝メンバー参加枠）。
+   * 1以上・プランの seatCap 以内は呼び出し側で検証済み前提。
+   */
   seats: number
+  /**
+   * 請求数量（line_items.quantity）。未指定は seats と同値（士業=席課金の従来挙動）。
+   * SSOT(docs/BANTO_BILLING_GATE.md §4): シート課金は士業のみ。Entry/Standard は
+   * 会社単位の月額のため、呼び出し側が quantity=1・seats=プランの人数枠 を渡す。
+   */
+  quantity?: number
   /** 課金主体の会社ID（webhook で companies を引く鍵・metadata に必ず載せる）。 */
   companyId: string
   /** 操作した admin ユーザーID（監査用・任意）。 */
@@ -74,7 +83,8 @@ export async function createSeatCheckoutSession(
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    line_items: [{ price: priceId, quantity: args.seats }],
+    // 請求数量: 会社単位プラン(Entry/Standard)は 1、席課金(士業)は席数。
+    line_items: [{ price: priceId, quantity: args.quantity ?? args.seats }],
     success_url: `${args.returnUrl}?billing=success`,
     cancel_url: `${args.returnUrl}?billing=canceled`,
     metadata,

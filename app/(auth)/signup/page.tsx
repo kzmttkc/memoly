@@ -16,6 +16,32 @@ export default function SignupPage() {
   )
 }
 
+// Supabase auth の英語エラー原文を日本語へ写す。
+//   主要パターンはメッセージ実文（Supabase GoTrue の代表的な返り値）に対する部分一致で判定し、
+//   どれにも当たらなければ汎用の日本語文へフォールバック（英語原文をそのまま出さない）。
+function jpSignupError(message: string): string {
+  const m = message.toLowerCase()
+  if (m.includes('already registered') || m.includes('already been registered')) {
+    return 'このメールアドレスはすでに登録されています。'
+  }
+  if (m.includes('password') && (m.includes('at least') || m.includes('too short') || m.includes('weak'))) {
+    return 'パスワードは8文字以上で設定してください。'
+  }
+  if (m.includes('invalid') && (m.includes('email') || m.includes('format'))) {
+    return 'メールアドレスの形式をご確認ください。'
+  }
+  if (m.includes('rate limit') || m.includes('for security purposes') || m.includes('too many requests')) {
+    return '短時間に操作が続いたため、少し時間をおいてからもう一度お試しください。'
+  }
+  if (m.includes('signups not allowed') || m.includes('signup is disabled')) {
+    return '現在、新規登録を一時的に受け付けられません。時間をおいてお試しください。'
+  }
+  if (m.includes('network') || m.includes('fetch')) {
+    return '通信に失敗しました。接続をご確認のうえ、もう一度お試しください。'
+  }
+  return '登録に失敗しました。時間をおいてもう一度お試しください。'
+}
+
 function SignupForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -126,7 +152,8 @@ function SignupForm() {
       const already = error.message === 'User already registered'
       // 計測: 登録失敗を可視化（今まで完全に不可視だった）。既登録の再訪＝ログイン迷子は別問題として切り分け。
       track('signup_failed', { reason: already ? 'already_registered' : 'other', ...attribution })
-      setError(already ? 'このメールアドレスはすでに登録されています。' : error.message)
+      // Supabase の英語エラー原文をそのまま出さない（主要パターンは日本語化・他は汎用日本語文）。
+      setError(jpSignupError(error.message))
       setLoading(false)
     } else {
       // 活性化ファネル: 登録完了（email+password の signUp 成功地点＝北極星イベント）。

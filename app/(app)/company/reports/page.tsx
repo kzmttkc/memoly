@@ -83,7 +83,7 @@ function ReportsInner() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader
-        title="まとめ・社労士メモ"
+        title="経営のまとめ・社労士に渡すメモ"
         description="番頭が覚えている会社の情報を、目的に合わせて整理します。数値や期限は登録済みの内容にもとづきます。"
       />
 

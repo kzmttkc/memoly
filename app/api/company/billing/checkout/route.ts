@@ -77,13 +77,21 @@ export async function POST(req: NextRequest) {
   const planDef = PLANS[plan as PlanId]
 
   // seats 検証（1 以上・seatCap 以内）。
-  const seatCount = Number.isInteger(seats) && (seats as number) >= 1 ? (seats as number) : 1
-  if (seatCount > planDef.seatCap) {
+  const requestedSeats = Number.isInteger(seats) && (seats as number) >= 1 ? (seats as number) : 1
+  if (requestedSeats > planDef.seatCap) {
     return NextResponse.json(
       { error: `このプランの席数上限は ${planDef.seatCap} 席です` },
       { status: 400 },
     )
   }
+
+  // 課金単位（SSOT: docs/BANTO_BILLING_GATE.md §4・§5）:
+  //   - Entry/Standard（multiClient=false）= 会社単位の月額。請求数量は常に 1、
+  //     付与席（メンバー参加枠）はプランの seatCap（追加料金なしで人数枠を含む）。
+  //     クライアントが seats>1 を送っても過大請求にならないようサーバ側で固定する。
+  //   - 士業（multiClient=true）= 席（シート）課金。請求数量 = 付与席 = 指定席数。
+  const seatCount = planDef.multiClient ? requestedSeats : planDef.seatCap
+  const billQuantity = planDef.multiClient ? requestedSeats : 1
 
   // interval 検証（既定=月額）。年額は「年額を提供するプラン」かつ「年額 Price が env 設定済」
   //   のときのみ許可。それ以外で 'year' を指定されたら 400（無効な間隔）で弾く。
@@ -112,6 +120,7 @@ export async function POST(req: NextRequest) {
       planId: plan as PlanId,
       interval: billingInterval,
       seats: seatCount,
+      quantity: billQuantity,
       companyId,
       userId: user.id,
       returnUrl,
