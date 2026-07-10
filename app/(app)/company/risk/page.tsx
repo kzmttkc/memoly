@@ -10,6 +10,7 @@ import {
   CalendarClock,
   Plus,
   FlaskConical,
+  Loader2,
 } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button, buttonClass } from '@/components/ui/Button'
@@ -125,6 +126,14 @@ function RiskInner() {
   // S3: サンプル会社モード中か。true の間は fetch を一切行わず、シェア/AI相談/期限登録を
   //   無効化し、全表示面に「架空のサンプル会社」を明示する。
   const [sampleMode, setSampleMode] = useState(false)
+  // オンボ直後の TTV 短縮: 実属性から決定的に算出した「速報（自動計算）」を先に描画し、
+  //   裏で LLM 精査版へ差し替える。provisional=速報を表示中（AI精査待ち）。
+  const [provisional, setProvisional] = useState(false)
+  // 属性フェッチ結果を保持（速報の算出に使う。従来は充足判定だけで値を捨てていた）。
+  const [companyAttrs, setCompanyAttrs] =
+    useState<Parameters<typeof computeFallbackRiskAudit>[0] | null>(null)
+  // onboarding の activation 計測(risk_audit_completed{source:onboarding})を1回に保つ。
+  const onboardingFired = useRef(false)
   // sample_company_viewed をセッション1回だけ計測するためのフラグ。
   const sampleViewedRef = useRef(false)
   const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
@@ -206,6 +215,7 @@ function RiskInner() {
         const a = d.attributes
         const incomplete = !a || !a.industry_major || !a.employee_band
         if (!cancelled) {
+          if (a) setCompanyAttrs(a)
           setNeedAttrs(incomplete)
           setAttrsChecked(true)
         }
@@ -236,6 +246,25 @@ function RiskInner() {
   //   （sample は runSample 側で送る。sample は KPI 分母に入れない）
   async function run(source: 'onboarding' | 'manual' = 'manual') {
     if (loading) return
+
+    // オンボ直後（from=onboarding）は LLM 完了(≈30秒)を待たず、実属性から決定的な
+    //   純関数で「速報（自動計算）」を即描画し、価値提供の瞬間に activation を計測する。
+    //   その後、裏で LLM 精査版に差し替える（＝TTV 30秒→即時）。属性未取得時は従来どおり
+    //   LLM を待つ（graceful）。source='manual' は従来挙動を維持（1変数）。
+    const useProvisional = source === 'onboarding' && !!companyAttrs
+    if (useProvisional && companyAttrs) {
+      const fb = computeFallbackRiskAudit(companyAttrs)
+      setSampleMode(false)
+      setResult({ ...fb, disclaimer: RISK_AUDIT_DISCLAIMER })
+      setProvisional(true)
+      if (!onboardingFired.current) {
+        onboardingFired.current = true
+        const b = fb.score < 40 ? '0-40' : fb.score < 70 ? '40-70' : '70-100'
+        // 価値提供の瞬間＝速報の初回描画で発火（BANTO_DAY0_SPEC §2 の分子）。
+        //   精査版への差し替えでは再発火しない＝session あたり1回のまま。
+        track('risk_audit_completed', { overall_band: b, source: 'onboarding' })
+      }
+    }
     setLoading(true)
     try {
       const res = await fetch('/api/company/risk-audit', {
@@ -245,7 +274,9 @@ function RiskInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? 'セルフ診断に失敗しました')
+        // 速報を出せている場合は致命でない（速報を最終の目安として残す）。
+        if (useProvisional) setProvisional(false)
+        else showToast(data.error ?? 'セルフ診断に失敗しました')
         return
       }
       // 実データの結果に切り替える。サンプル表示中だった場合はサンプルの候補も破棄し、
@@ -253,14 +284,20 @@ function RiskInner() {
       setSampleMode(false)
       setSuggestions(null)
       setResult(data as RiskResult)
+      setProvisional(false)
       // 計測: リスク診断完了。スコアは帯（0-40/40-70/70-100）に丸めて非PII化して送る。
-      const score = typeof data.score === 'number' ? data.score : null
-      const band = score === null ? 'unknown' : score < 40 ? '0-40' : score < 70 ? '40-70' : '70-100'
-      // source prop（BANTO_DAY0_SPEC §2）: 北極星KPI「登録→初回診断到達率」の分子は
-      //   risk_audit_completed(source=onboarding) ÷ signup_completed で読む。
-      track('risk_audit_completed', { overall_band: band, source })
+      //   onboarding は速報描画時に発火済み → 二重計上しない。manual のみここで発火。
+      if (source === 'manual') {
+        const score = typeof data.score === 'number' ? data.score : null
+        const band =
+          score === null ? 'unknown' : score < 40 ? '0-40' : score < 70 ? '40-70' : '70-100'
+        // source prop（BANTO_DAY0_SPEC §2）: 北極星KPI「登録→初回診断到達率」の分子は
+        //   risk_audit_completed(source=onboarding) ÷ signup_completed で読む。
+        track('risk_audit_completed', { overall_band: band, source })
+      }
     } catch {
-      showToast('セルフ診断に失敗しました。通信を確認してください。')
+      if (useProvisional) setProvisional(false)
+      else showToast('セルフ診断に失敗しました。通信を確認してください。')
     } finally {
       setLoading(false)
     }
@@ -387,6 +424,25 @@ function RiskInner() {
 
       {result && (
         <div className="space-y-8">
+          {/* ============ 速報（自動計算）バナー: オンボ直後のTTV短縮。LLM精査待ちの間だけ表示。 ============
+              入力内容から即時に算出した目安を先に見せ、AIが精査したら数値を差し替える。
+              景表法: 「目安・精査中で数値が変わることがある」と正直表示（実挙動どおり）。 */}
+          {provisional && !sampleMode && (
+            <Card className="border-brand-200 bg-brand-50/60">
+              <div className="flex items-start gap-2">
+                <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-brand-600" aria-hidden />
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">
+                    まず自動計算の速報を表示しています
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+                    登録内容から即時に算出した目安です。AIがさらに精査しており、数値が変わることがあります。
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* ============ S3: 架空のサンプル会社バナー（常時表示・切替導線つき） ============ */}
           {sampleMode && (
             <Card className="border-warning-500/40 bg-warning-50">
