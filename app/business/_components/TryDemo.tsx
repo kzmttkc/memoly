@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Brain, Building2, MessageSquareText, ArrowRight } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -66,7 +67,22 @@ function usePrefersReducedMotion(): boolean {
   return reduced
 }
 
+// 着地URL(/business?utm_source=…)の utm 帰属を signup href へ引き継ぐ。
+// TrackedCTA と同思想: 静的生成を壊さないため click 時に window.location から読む。
+function signupHrefWithAttribution(): string {
+  const base = '/signup?next=/company'
+  if (typeof window === 'undefined') return base
+  const landing = new URLSearchParams(window.location.search)
+  const qs = new URLSearchParams('next=/company')
+  for (const key of ['utm_source', 'utm_campaign', 'utm_medium']) {
+    const v = landing.get(key)
+    if (v) qs.set(key, v.slice(0, 60))
+  }
+  return `/signup?${qs.toString()}`
+}
+
 export default function TryDemo() {
+  const router = useRouter()
   const reducedMotion = usePrefersReducedMotion()
 
   // 会話に積み上がった完了済みターン。
@@ -307,12 +323,17 @@ export default function TryDemo() {
             <Link
               href="/signup?next=/company"
               className={buttonClass({ variant: 'primary' })}
-              onClick={() =>
+              onClick={(e) => {
                 track('signup_cta_clicked', {
                   location: 'trydemo',
                   engaged: started,
                 })
-              }
+                const target = signupHrefWithAttribution()
+                if (target !== '/signup?next=/company') {
+                  e.preventDefault()
+                  router.push(target)
+                }
+              }}
             >
               自社の規程を覚えさせて、自社専用で試す
               <ArrowRight className="h-4 w-4" aria-hidden />

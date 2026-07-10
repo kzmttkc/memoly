@@ -10,8 +10,10 @@
 
 ---
 
-## ① 監査ログ基盤（company_audit_logs）
+## ① 監査ログ基盤（company_audit_logs）✅ 適用済み（2026-07-10）
 
+- 適用方法: Supabase Management API（`POST /v1/projects/hsyalzzcemtewmtorwkn/database/query`）で CTO が適用。HTTP 201。
+- 確認済み: `relrowsecurity=t`、ポリシー2本（admin_select / member_insert）、service role REST で SELECT 200。
 - ファイル: `supabase/company_audit_logs.sql`
 - 目的: 規程削除・自社ルール変更・メンバー追加・記憶(rule候補)削除など重要操作の追記専用ログ。
 - 依存: 既存の `is_company_member(uuid)` / `is_company_admin(uuid)`（company_schema.sql で作成済）。
@@ -33,10 +35,28 @@ select policyname from pg_policies where tablename = 'company_audit_logs';
 
 ---
 
+## ② micro-CV リード捕捉（company_leads）✅ 適用済み（2026-07-10）
+
+- ファイル: `supabase/company_leads.sql`（ファイル冒頭コメントは旧共有プロジェクト言及だが、実適用先は専用 `hsyalzzcemtewmtorwkn`）
+- 適用方法: 同上（Management API、HTTP 201）。
+- 確認済み: RLS 有効、ポリシー1本（anon_insert）、service role REST で SELECT 200。
+
+---
+
+## ③ セマンティック記憶（company_memory_semantic / pgvector）✅ SQL適用済み（2026-07-10）
+
+- ファイル: `supabase/company_memory_semantic.sql`
+- 適用方法: 同上（Management API、HTTP 201）。`CREATE EXTENSION vector` はそのまま通過。
+- 確認済み: `pg_extension` に vector、`company_memories.embedding vector(1536)` 列、HNSW索引、
+  RPC `match_company_memories`（prosecdef=false=SECURITY INVOKER）が REST 経由で 200 応答。
+- ★残タスク（Takeshi 手動）: `OPENAI_API_KEY` の Vercel env 投入 → `scripts/backfill_memory_embeddings.mjs` 実行。
+  キー未投入の間は embedding 生成が不活性（graceful degrade）で既存機能に影響なし。
+
+---
+
 ## 既出の手動タスク（参考・本書の管轄外）
 
-- pgvector 本番有効化（OpenAI APIキー + `supabase/company_memory_semantic.sql` + backfill）
-  … 詳細は当該 SQL とセマンティック想起の設計コメントを参照。
+- pgvector 本番有効化 … SQL 側は上記③で適用済み。残りは OpenAI APIキー投入＋backfill のみ。
 - 課金解禁（Stripe キー / Price ID / BILLING_ENABLED）… `docs/BANTO_BILLING_UNLOCK_RUNBOOK.md`。
   - Entry 年額を売る場合は、Stripe で年額 Price（¥39,800）を作成し
     `STRIPE_PRICE_STARTER_YEARLY` を env に投入する（コードは結線済み。下記参照）。
