@@ -269,7 +269,14 @@ function SignupForm() {
         </div>
       )}
 
-      <p className="mb-6 text-center text-sm text-neutral-600">無料で始める</p>
+      <p className="mb-2 text-center text-sm text-neutral-600">無料で始める</p>
+
+      {/* 直接流入（bare /signup）にも安心材料を1行出す。事実（BILLING_ENABLED=false・
+          カード情報は収集しない・アカウント削除と同時に全データ削除）の範囲のみ。 */}
+      <p className="mb-6 text-center text-xs leading-relaxed text-neutral-500">
+        現在は無料モニター期間です。クレジットカードの登録は不要で、
+        データはアカウント削除と同時にすべて削除できます。
+      </p>
 
       <form onSubmit={handleSignup} className="space-y-4">
         <Input

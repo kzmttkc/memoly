@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import Link from 'next/link'
 import {
   BookOpenCheck,
   Gavel,
@@ -210,7 +211,16 @@ export function HandoverView({ companyId }: { companyId: string }) {
             ))}
           </Card>
         ) : (
-          <Card className="text-sm text-neutral-500">まだ登録された自社ルールはありません。</Card>
+          <Card className="text-sm text-neutral-500">
+            まだ登録された自社ルールはありません。
+            <Link
+              href={`/company/rules?companyId=${companyId}`}
+              className="font-medium text-brand-700 underline hover:text-brand-800"
+            >
+              自社ルールのページ
+            </Link>
+            から、所定労働時間などの会社の事実を登録できます。
+          </Card>
         )}
       </section>
 
@@ -244,7 +254,16 @@ export function HandoverView({ companyId }: { companyId: string }) {
             })}
           </ol>
         ) : (
-          <Card className="text-sm text-neutral-500">まだ記録された判断はありません。</Card>
+          <Card className="text-sm text-neutral-500">
+            まだ記録された判断はありません。
+            <Link
+              href={`/company/chat?companyId=${companyId}`}
+              className="font-medium text-brand-700 underline hover:text-brand-800"
+            >
+              相談のページ
+            </Link>
+            で方針が決まると、番頭が「会社の記憶に残しますか」と確認し、ここに積み重なります。
+          </Card>
         )}
       </section>
 

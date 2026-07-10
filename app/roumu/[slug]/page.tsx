@@ -225,7 +225,8 @@ export default async function RoumuUseCasePage({
       <section className="mx-auto max-w-3xl px-6 py-12">
         <h2 className="text-lg font-bold tracking-tight text-neutral-900">番頭はこう答えます</h2>
         <p className="mt-2 text-xs text-neutral-500">
-          自社の規程を覚えた状態での相談のイメージです。答えは一般的な情報の整理であり、個別の法的助言ではありません。
+          サンプルの会社情報を覚えた状態での、回答のイメージです。数値や規程の内容は説明用の例です。
+          番頭の答えは一般的な情報の整理であり、個別の法的助言ではありません。
         </p>
         <ul className="mt-5 space-y-4">
           {u.examples.map((ex) => (
@@ -272,7 +273,10 @@ export default async function RoumuUseCasePage({
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
             {CTA_SUBCOPY[
-              [...u.slug].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % CTA_SUBCOPY.length
+              // 位置重み付きの決定的ハッシュ。単純な文字コード和だと16slug中10本が
+              // 同一バリアントに寄っていた（10/3/3）ため、重み付けで 7/4/5 に均す。
+              [...u.slug].reduce((sum, ch, i) => sum + ch.charCodeAt(0) * (i + 1), 0) %
+                CTA_SUBCOPY.length
             ]}
           </p>
           <div className="mt-6 flex justify-center">

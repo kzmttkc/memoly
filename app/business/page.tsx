@@ -26,7 +26,6 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import TryDemoLazy from './_components/TryDemoLazy'
 import { TrackedCTA } from './_components/TrackedCTA'
-import LeadCapture from './_components/LeadCapture'
 import { PLANS } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
 
@@ -98,7 +97,7 @@ const FAQ = [
   },
   {
     q: '無料で使えますか',
-    a: '会社を登録して最初の相談を投げるところまで、無料で試せます。二度目の相談が前回の続きから始まる体験に、費用はかかりません。',
+    a: '現在は無料モニター期間のため、会社の登録から相談・規程ドラフトの下書きまで、すべての機能を無料でご利用いただけます。二度目の相談が前回の続きから始まる体験も、そのままお試しいただけます。',
   },
   {
     q: '自社の労務データは安全に保管されますか',
@@ -532,15 +531,16 @@ export default function BusinessLandingPage() {
           {/* 左：言葉 */}
           <div className="text-center lg:text-left">
             <Badge tone="brand" className="mb-6">
-              会社を覚える労務AI
+              労務のAI相談役
             </Badge>
-            {/* 意味単位の inline-block で折り返し位置を制御（lg 2カラムでは
-                「自社のことを覚えている、」が1行に収まらず語中で改行されるため） */}
+            {/* 2026-07-11 CMO改稿: アイブロー=役割 / H1=最強フレーズ / 直下の段落=
+                「覚えている」の説明、と役割を分けて同義反復を解消。意味単位の
+                inline-block で語中改行を防ぐ。 */}
             <h1 className="text-4xl font-bold leading-[1.18] tracking-tight text-neutral-900 sm:text-5xl">
-              <span className="inline-block">自社のことを</span>
-              <span className="inline-block">覚えている、</span>
+              <span className="inline-block">二度目の相談は、</span>
               <br className="hidden sm:block" />
-              <span className="inline-block">労務のAI相談役</span>
+              <span className="inline-block">昨日の続きから</span>
+              <span className="inline-block">始まります</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg lg:mx-0">
               所定労働時間も、休日のルールも、過去の相談も番頭が覚えています。
@@ -670,21 +670,20 @@ export default function BusinessLandingPage() {
         </div>
       </section>
 
-      {/* ===== micro-CV（本登録の手前の軽い一歩：メアドだけでチェックリストDL） =====
-          会社作成は重い。その手前に「無料配布フック→メアド」の軽いCVを置き、
-          ファネルの漏れを塞ぐ。薄いclientコンポーネント＝SSR/SEO/metadataは無傷。
-          送信成功で lead_captured(source) を計測。詳細は _components/LeadCapture.tsx。 */}
-      <LeadCapture />
+      {/* ===== micro-CV（LeadCapture）は一時非表示（2026-07-11 CMO判断） =====
+          配布資料（就業規則の点検資料）が未完成のため、「受け取れる」と見せて
+          直後に「準備中」と明かす構造ごと外した。一等地から不確実要素を消し、
+          資料が完成したら _components/LeadCapture.tsx を再掲載する（コンポーネントは温存）。 */}
 
       {/* ===== 業務効率化（企業ニーズ起点：何がどれだけ楽になるか） ===== */}
       <section className="mx-auto max-w-5xl px-6 py-20">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <p className="mb-3 text-sm font-semibold tracking-wide text-brand-600">業務効率化</p>
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-            総務の説明・調べ物・下書きを肩代わり
+            AIへの前提説明・調べ物・下書きを肩代わり
           </h2>
           <p className="mt-3 text-base leading-relaxed text-neutral-600">
-            番頭の価値は「便利」よりも、毎回かかっていた手間そのものを減らすことです。
+            機能を増やすためではなく、総務が毎回費やしていた時間を減らすために設計しています。
           </p>
         </div>
         {/* 前提説明の往復が消える：概念バーで一目に */}
@@ -1012,7 +1011,7 @@ export default function BusinessLandingPage() {
             自社を覚えるAIを、今日から
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録して、最初の相談を投げてみてください。二度目の相談は、昨日の続きから始まります。
+            会社を登録して、最初の相談を投げてみてください。今日話したことを、番頭は明日も覚えています。
           </p>
           <div className="mt-7 flex justify-center">
             <TrackedCTA

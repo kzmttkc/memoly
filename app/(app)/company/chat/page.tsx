@@ -770,7 +770,7 @@ function CompanyChat() {
               sendMessage()
             }
           }}
-          placeholder="自社の労務について相談... (Enterで送信)"
+          placeholder="自社の労務について相談"
           rows={1}
           aria-label="メッセージを入力"
           className="flex-1 resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -785,6 +785,12 @@ function CompanyChat() {
           {loading ? '...' : '送信'}
         </Button>
       </div>
+
+      {/* 操作説明は placeholder から分離（相談内容の誘い文句と混ぜない）。
+          キーボード前提の説明のためモバイルでは出さない。 */}
+      <p className="hidden pt-1 text-right text-[11px] text-neutral-400 sm:block">
+        Enterで送信 / Shift+Enterで改行
+      </p>
 
       <Toast
         show={toast.show}
