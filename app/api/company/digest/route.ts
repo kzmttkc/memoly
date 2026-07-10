@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
   const result = await getOrGenerateDigest(companyId, companyName, user.id, plan)
   if (!result) {
     return NextResponse.json(
-      { error: '本日の生成上限に達しました。時間をおいてお試しください。' },
+      { error: '本日の生成上限に達しました。利用回数は日本時間の午前9時にリセットされます。' },
       { status: 429 },
     )
   }

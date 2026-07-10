@@ -424,7 +424,7 @@ function CompanyChat() {
           const data = await res.json().catch(() => ({}))
           setMessages(prev => [
             ...prev,
-            { role: 'assistant', content: data.error ?? '本日の利用上限に達しました。' },
+            { role: 'assistant', content: data.error ?? '本日の利用上限に達しました。利用回数は日本時間の午前9時にリセットされます。' },
           ])
           setLoading(false)
           return

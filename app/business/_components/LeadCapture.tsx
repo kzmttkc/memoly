@@ -77,7 +77,7 @@ export default function LeadCapture() {
                 ご登録を受け付けました
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-                ご登録ありがとうございます。就業規則の点検ポイントをまとめた資料は、準備が整い次第ご案内します。
+                ご登録ありがとうございます。就業規則の点検ポイント資料は、完成し次第ご登録のメールアドレスへお届けします。
                 お待ちいただく間に、自社の規程を覚える番頭を登録なしでそのままお試しいただけます。
               </p>
               <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-success-50 px-3 py-1 text-sm font-medium text-success-700">
@@ -88,10 +88,10 @@ export default function LeadCapture() {
           ) : (
             <>
               <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
-                自社の規程を覚える番頭を、無料で試せます
+                就業規則の点検ポイント資料を、完成し次第お届けします
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-                会社登録の前に、登録なしで番頭の使い心地を試せます。メールアドレスをご登録いただいた方には、就業規則の点検ポイントをまとめた資料が整い次第ご案内します。
+                就業規則の点検ポイントをまとめた資料を現在準備しています。メールアドレスをご登録いただくと、完成し次第お届けします。お待ちいただく間も、このページの上のデモで番頭の使い心地を登録なしで試せます。
               </p>
 
               <form onSubmit={onSubmit} className="mt-7 w-full max-w-md">
@@ -141,7 +141,7 @@ export default function LeadCapture() {
                       </>
                     ) : (
                       <>
-                        受け取る
+                        完成したら受け取る
                         <ArrowRight className="h-4 w-4" aria-hidden />
                       </>
                     )}
@@ -155,7 +155,7 @@ export default function LeadCapture() {
                 )}
 
                 <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-                  チェックリストの送付と、番頭に関するお知らせにのみ利用します。配信はいつでも停止できます。
+                  資料の送付と、番頭に関するお知らせにのみ利用します。配信はいつでも停止できます。
                 </p>
               </form>
             </>

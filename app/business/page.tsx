@@ -51,8 +51,9 @@ import { USECASE_LIST } from '@/lib/usecase'
 //       「見て分かる」状態を作る。画像・写真・AI生成画像は使わない（全てコード描画）。
 //
 //   Phase1 コンプラ厳守:
-//     - 「社労士監修 / AI社労士 / 法的精度○点」は使わない（資格保有の事実と
-//       当事者性のみ訴求）。断定的な個別助言・数値保証の訴求をしない
+//     - 「社労士監修 / AI社労士 / 法的精度○点」は使わない（「試験合格・未登録」の
+//       事実と当事者性のみ訴求。「資格を持つ」等の名称使用制限に触れる表現は不可）。
+//       断定的な個別助言・数値保証の訴求をしない
 //       （「〜の時間を減らせます」等の表現にとどめる）。
 //     - 強調記号(**)・絵文字アイコンは使わない（機能アイコンは lucide）。
 // ============================================================================
@@ -60,12 +61,12 @@ import { USECASE_LIST } from '@/lib/usecase'
 export const metadata: Metadata = {
   title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
   description:
-    '会社のルール・規程をAIが覚えて、人事・労務の判断即答。汎用AIは毎回説明が必要。番頭は自社の規程を記憶。自社にパーソナライズしたAIを活用できます。',
+    '会社の規程をAIが覚えて、労務の疑問に自社の前提で即答。汎用AIのように毎回前提を説明する必要がありません。中小企業の総務・経営者向けの労務AIです。',
   alternates: { canonical: '/business' },
   openGraph: {
     title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
     description:
-      '会社のルール・規程をAIが覚えて、人事・労務の判断即答。汎用AIは毎回説明が必要。番頭は自社の規程を記憶。自社にパーソナライズしたAIを活用できます。',
+      '会社の規程をAIが覚えて、労務の疑問に自社の前提で即答。汎用AIのように毎回前提を説明する必要がありません。中小企業の総務・経営者向けの労務AIです。',
     url: 'https://banto-roumu.com/business',
     siteName: '番頭(Banto)',
     locale: 'ja_JP',
@@ -83,7 +84,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
     description:
-      '会社のルール・規程をAIが覚えて、人事・労務の判断即答。汎用AIは毎回説明が必要。番頭は自社の規程を記憶。自社にパーソナライズしたAIを活用できます。',
+      '会社の規程をAIが覚えて、労務の疑問に自社の前提で即答。汎用AIのように毎回前提を説明する必要がありません。中小企業の総務・経営者向けの労務AIです。',
     images: ['https://banto-roumu.com/og-image.png'],
   },
 }
@@ -93,7 +94,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: '料金はいくらですか',
-    a: '現在は無料モニター期間のため、すべての機能を無料でご利用いただけます。有料プランの開始後は、本ページの料金セクションに記載の予定価格が適用されます。',
+    a: '予定価格はEntry ¥3,980/月〜です。現在は無料モニター期間のため、すべての機能を無料でご利用いただけます。有料プランの開始後は、本ページの料金セクションに記載の予定価格が適用されます。',
   },
   {
     q: '無料で使えますか',
@@ -183,20 +184,25 @@ const PLAN_COPY = [
     yearly: PLANS.starter.yearlyJpy,
     tagline: 'まず使ってみる',
     badge: 'おすすめ',
-    features: ['企業プロファイルの記憶', 'AIチャット相談', '労務リスク診断'],
+    features: [
+      '自社の規程・会社プロファイルの記憶',
+      'AIチャット相談・労務リスク診断',
+      '規程ドラフトの下書き・レビュー',
+      '助成金・法改正が自社に関係するかのチェック',
+      '利用人数 5名まで',
+    ],
     featured: PLANS.starter.featured,
   },
   {
     name: PLANS.standard.displayName,
     price: PLANS.standard.monthlyJpy.toLocaleString(),
     yearly: PLANS.standard.yearlyJpy,
-    tagline: '記憶フル・チーム利用',
+    tagline: 'チームでしっかり使う',
     badge: null,
     features: [
-      'Entry のすべて',
-      '相談履歴のフル記憶で精度向上',
-      '規程ドラフト作成・レビュー',
-      '助成金・法改正の自分ごと通知',
+      'Entry のすべての機能',
+      '1日に使える回数が各機能で Entry の3倍',
+      '利用人数 20名まで',
     ],
     featured: PLANS.standard.featured,
   },
@@ -600,7 +606,7 @@ export default function BusinessLandingPage() {
                 {[
                   '所定労働時間や休日を毎回入力',
                   '過去の相談は覚えていない',
-                  '答えは一般論で精度が低い',
+                  '答えは一般論止まり',
                 ].map(item => (
                   <li
                     key={item}
@@ -639,7 +645,7 @@ export default function BusinessLandingPage() {
                 {[
                   '会社プロファイルを一度登録すれば再入力不要',
                   '自社の前提に合わせた精度の高い回答',
-                  '自社の前提を覚えた回答が、いつでも低コストで返ってくる',
+                  '自社の前提を覚えた回答が、説明の手間なしで返ってくる',
                 ].map(item => (
                   <li
                     key={item}
@@ -699,10 +705,10 @@ export default function BusinessLandingPage() {
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-              企業がパーソナルAIを持つ時代に
+              覚える・答える・つくる・気づく
             </h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
-              覚える・答える・つくる・気づく。4つの軸で、チームの労務を日常から支えます。
+              企業が自社専用のAIを持つ時代に。4つの軸で、チームの労務を日常から支えます。
             </p>
           </div>
           {/* 「気づく」の出力イメージ：労務リスクのスコアカード */}
@@ -803,7 +809,7 @@ export default function BusinessLandingPage() {
               <div>
                 <p className="font-semibold text-neutral-900">作り手が自分の会社で使うために作った</p>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-600">
-                  社会保険労務士の資格を持つ作り手が、自分の会社運営で実際に使うために開発しています。
+                  社会保険労務士試験に合格した作り手が、自分の会社運営で実際に使うために開発しています。
                   現場で必要だったものを、そのまま形にしました。
                 </p>
               </div>
@@ -813,10 +819,10 @@ export default function BusinessLandingPage() {
                 <KeyRound className="h-5 w-5" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-neutral-900">企業ごとにデータを完全分離</p>
+                <p className="font-semibold text-neutral-900">合わなければ、データを残さずやめられる</p>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-600">
-                  行レベルのアクセス制御（RLS）で会社ごとにデータを隔離しています。
-                  自社の情報が他社と混ざることはありません。
+                  アカウント削除と同時に、お預かりしたデータはすべて削除します。
+                  まず無料で試して、自社に合うかどうかでご判断ください。
                 </p>
               </div>
             </div>

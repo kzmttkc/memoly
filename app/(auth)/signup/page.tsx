@@ -233,8 +233,8 @@ function SignupForm() {
         <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-sm leading-relaxed text-neutral-700">
           <p>
             {fromTool
-              ? 'さきほどの点検結果を、御社の前提でそのまま受け取るための登録です。'
-              : 'さきほどの答え方を、御社の前提でそのまま受け取るための登録です。'}
+              ? 'さきほどの点検結果を、自社の前提でそのまま受け取るための登録です。'
+              : 'さきほどの答え方を、自社の前提でそのまま受け取るための登録です。'}
           </p>
           <p className="mt-1 text-neutral-600">
             会社の登録は次の画面で、まず1社ぶんから無料で始められます。

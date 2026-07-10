@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
   // --- 日次利用上限ガード（書類生成と同バケット・fail-open）---
   if (!(await checkAndIncrement(user.id, 'document_generate', plan))) {
     return NextResponse.json(
-      { error: '本日の利用上限に達しました。時間をおいてお試しください。' },
+      { error: '本日の利用上限に達しました。利用回数は日本時間の午前9時にリセットされます。' },
       { status: 429 },
     )
   }
