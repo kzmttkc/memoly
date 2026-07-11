@@ -150,9 +150,16 @@ function BillingInner() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      {/* 席（シート）課金は士業プランのみ（SSOT: docs/BANTO_BILLING_GATE.md §4・§5）。
+          Entry/Standard は会社単位の月額＝上限人数まで追加費用なし。説明文もプランで
+          出し分け、下部の「上限人数までは料金は変わりません」との自己矛盾を防ぐ。 */}
       <PageHeader
-        title="プラン・席の管理"
-        description="現在のプランと席数を確認できます。複数人で使う場合は席を追加してください。"
+        title={PLANS[state.plan].multiClient ? 'プラン・席の管理' : 'プランの管理'}
+        description={
+          PLANS[state.plan].multiClient
+            ? '現在のプランと席数を確認できます。士業プランは、事務所の利用メンバー数に応じて席を追加できます。'
+            : '現在のプランを確認できます。EntryとStandardは、プランの上限人数まで何人で使っても追加費用はかかりません。席の追加があるのは士業プランのみです。'
+        }
       />
 
       {/* ===== 現在の状態 ===== */}

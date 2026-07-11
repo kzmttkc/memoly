@@ -176,7 +176,7 @@ export default async function RoumuUseCasePage({
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
           <span className="inline-flex items-center gap-1">
-            <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> クレカ不要で試せる
+            <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> クレジットカード不要で試せる
           </span>
           <span className="inline-flex items-center gap-1">
             <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> 企業ごとにデータ分離保管

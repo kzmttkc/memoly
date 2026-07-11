@@ -57,8 +57,10 @@ const NAV: NavItem[] = [
   { href: '/company/reports', label: '社労士に渡すメモ', mobileLabel: 'まとめ', icon: FileBarChart },
   { href: '/company/risk', label: 'リスク診断', icon: ShieldCheck },
   { href: '/company/insights', label: '助成金・法改正', mobileLabel: '助成金', icon: Sparkles },
-  // 課金/席管理(admin向け)。サイドナビ/ドロワーには出すが、下部タブには出さない。
-  { href: '/company/billing', label: 'プラン・席', icon: CreditCard },
+  // 課金管理(admin向け)。サイドナビ/ドロワーには出すが、下部タブには出さない。
+  // ラベルは「プラン」: 席（シート）課金は士業プランのみで、Entry/Standard 利用者に
+  // 「席」を見せると上限人数内無料の訴求と食い違うため（ナビは静的でプラン判定不可）。
+  { href: '/company/billing', label: 'プラン', icon: CreditCard },
 ]
 
 // モバイル下部タブは主要6導線に絞る（memory/deadlines/billing はドロワー/サイドナビから到達）。

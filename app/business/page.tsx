@@ -112,7 +112,7 @@ const FAQ = [
     a: '運営者は社会保険労務士試験に合格していますが、社会保険労務士会への登録は行っておらず、資格者としての個別相談・書類作成代行は提供していません。番頭は、自社の規程を覚えて一般的な情報を即答するツールであり、法的な最終判断が必要な場面では登録済みの専門家にご確認ください。',
   },
   {
-    q: '中小企業の総務・経営者でも使えますか',
+    q: '専任の労務担当がいなくても使えますか',
     a: '中小企業の総務担当や経営者が、社内規程の管理や日々の労務管理の調べ物を減らす用途を想定しています。専任の労務担当がいなくても、自社の前提に合わせた答えを得られます。',
   },
 ]
@@ -149,7 +149,7 @@ const FEATURES = [
 const EFFICIENCY = [
   {
     icon: Clock,
-    title: '前提説明の往復がゼロに',
+    title: '前提説明の往復をなくしていく',
     body:
       '汎用AIは毎回「うちは製造業・8名で」と説明が要ります。番頭は一度覚えれば説明不要。毎回の数分が積み上がりません。',
   },
@@ -167,7 +167,7 @@ const EFFICIENCY = [
   },
   {
     icon: Bell,
-    title: '見逃しを防ぐ',
+    title: '見逃しを減らす',
     body:
       '助成金や法改正を「自社が対象か」で整理。制度を自分で追い、判断する手間と取りこぼしを減らせます。',
   },
@@ -531,7 +531,7 @@ export default function BusinessLandingPage() {
           {/* 左：言葉 */}
           <div className="text-center lg:text-left">
             <Badge tone="brand" className="mb-6">
-              労務のAI相談役
+              会社を覚える労務AI
             </Badge>
             {/* 2026-07-11 CMO改稿: アイブロー=役割 / H1=最強フレーズ / 直下の段落=
                 「覚えている」の説明、と役割を分けて同義反復を解消。意味単位の
@@ -653,8 +653,8 @@ export default function BusinessLandingPage() {
               <ul className="mt-4 space-y-2.5">
                 {[
                   '会社プロファイルを一度登録すれば再入力不要',
-                  '自社の前提に合わせた精度の高い回答',
-                  '自社の前提を覚えた回答が、説明の手間なしで返ってくる',
+                  '過去の相談を覚えていて、続きから話せる',
+                  '自社の前提に沿った回答',
                 ].map(item => (
                   <li
                     key={item}
@@ -754,7 +754,7 @@ export default function BusinessLandingPage() {
         <Card className="mb-8">
           <DataIsolationDiagram />
           <p className="mt-6 text-center text-sm leading-relaxed text-neutral-600">
-            会社ごとに記憶もデータも分離。顧問先が増えても混ざりません。
+            会社ごとに記憶もデータも分離。会社のデータは他社と混ざりません。
           </p>
         </Card>
         <div className="grid gap-5 sm:grid-cols-2">
