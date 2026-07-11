@@ -30,7 +30,7 @@ const BASE = 'https://banto-roumu.com'
 //   小リンクを自力で見つける必要があり、北極星（無料登録）直前の蛇口が細くなる。
 const SIGNUP_HREF = '/signup?next=/company'
 
-// 末尾CTAのサブコピー3種。slugの文字コード和で決定的に選ぶ（ビルドごとに揺れない）。
+// 末尾CTAのサブコピー3種。掲載順の輪番で決定的に選ぶ（ビルドごとに揺れない）。
 //   核の主張「覚えているから前提の説明が要らない」を、同一文の反復にならないよう言い換える。
 const CTA_SUBCOPY = [
   '会社を登録して、最初の相談を投げてみてください。前提を説明し直さない労務相談を、無料で試せます。',
@@ -264,7 +264,7 @@ export default async function RoumuUseCasePage({
       </section>
 
       {/* ===== 末尾CTA =====
-          サブコピーは3バリアントをslugから決定的に選ぶ（全LP同一文の反復を避ける。
+          サブコピーは3バリアントを掲載順の輪番で決定的に選ぶ（全LP同一文の反復を避ける。
           「前提を説明し直さない」の言い換え＝二度目からは話が早い/昨日の続き）。 */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
@@ -273,10 +273,9 @@ export default async function RoumuUseCasePage({
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
             {CTA_SUBCOPY[
-              // 位置重み付きの決定的ハッシュ。単純な文字コード和だと16slug中10本が
-              // 同一バリアントに寄っていた（10/3/3）ため、重み付けで 7/4/5 に均す。
-              [...u.slug].reduce((sum, ch, i) => sum + ch.charCodeAt(0) * (i + 1), 0) %
-                CTA_SUBCOPY.length
+              // 掲載順の輪番（i % 3）。ハッシュ配分だと直近5本中3本が同一締めに
+              // 寄ったため、リスト順の交互割当で連続同一を構造的に防ぐ。
+              Math.max(USECASE_SLUGS.indexOf(u.slug), 0) % CTA_SUBCOPY.length
             ]}
           </p>
           <div className="mt-6 flex justify-center">
