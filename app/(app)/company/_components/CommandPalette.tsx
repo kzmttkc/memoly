@@ -146,7 +146,8 @@ export function CommandPalette() {
       { id: 'deadlines', label: '期限カレンダー', group: 'ナビゲーション', hint: 'g e', keywords: 'kigen deadlines 期限', icon: CalendarClock, perform: () => go('/company/deadlines') },
       { id: 'insights', label: '助成金・法改正', group: 'ナビゲーション', keywords: 'joseikin insights 助成金 法改正', icon: Sparkles, perform: () => go('/company/insights') },
       { id: 'reports', label: '社労士に渡すメモ', group: 'ナビゲーション', keywords: 'matome reports 報告 社労士 まとめ メモ', icon: FileBarChart, perform: () => go('/company/reports') },
-      { id: 'billing', label: 'プラン・席', group: 'ナビゲーション', keywords: 'billing plan seats 課金 席', icon: CreditCard, perform: () => go('/company/billing') },
+      // ラベルは AppShell ナビと同じ「プラン」（席課金は士業のみ。keywords で「席」検索は維持）。
+      { id: 'billing', label: 'プラン', group: 'ナビゲーション', keywords: 'billing plan seats 課金 席', icon: CreditCard, perform: () => go('/company/billing') },
     ]
 
     const view: Command[] = [
