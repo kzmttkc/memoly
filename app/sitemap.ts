@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { USECASE_SLUGS } from '@/lib/usecase'
+import { TOOL_SLUGS } from '@/lib/tools'
 
 // ============================================================================
 // sitemap.xml — クローラに「index対象の公開URL」を明示する。
@@ -13,11 +14,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
   return [
     { url: `${BASE}/business`, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
-    { url: `${BASE}/tools/yukyu-5nichi-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE}/tools/36kyotei-jougen-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE}/tools/zangyodai-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE}/tools/syaho-kanyu-taisho-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE}/tools/jyunan-hatarakikata-check`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    // 無料ツール一覧（ハブ）＋各ツール（SSOT: lib/tools.ts から全列挙）
+    { url: `${BASE}/tools`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
+    ...TOOL_SLUGS.map((slug) => ({
+      url: `${BASE}/tools/${slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
     ...USECASE_SLUGS.map((slug) => ({
       url: `${BASE}/roumu/${slug}`,
       lastModified: now,

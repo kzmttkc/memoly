@@ -306,6 +306,17 @@ export default async function RoumuUseCasePage({
             </Link>
           ))}
         </div>
+        {/* 無料ツール一覧（ハブ）への内部リンク。relatedTool を持たないLPからも
+            /tools クラスタへ経路をつなぎ、クロールと回遊を確立する。 */}
+        <p className="mt-6 text-center">
+          <Link
+            href="/tools"
+            className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-800"
+          >
+            自社の数字で確かめる無料ツール一覧
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        </p>
       </section>
 
       {/* ===== フッタ ===== */}

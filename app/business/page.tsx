@@ -29,6 +29,7 @@ import { TrackedCTA } from './_components/TrackedCTA'
 import { HeroEyebrow, HeroSubcopy } from './_components/HeroCopy'
 import { PLANS } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
+import { TOOL_LIST } from '@/lib/tools'
 
 // ============================================================================
 // /business — 番頭(Banto) 公開ランディングページ（認証不要・公開ルート）
@@ -1047,6 +1048,35 @@ export default function BusinessLandingPage() {
               {u.ogCategory}
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* ===== 無料セルフ点検ツールへの内部リンク（クラスタ・ハブへ接続） =====
+          /tools 一覧（ハブ）と各ツールへ /business から直接リンクし、
+          クロール経路を確立する（未インデックスの /tools/* を拾わせる）。 */}
+      <section className="mx-auto max-w-5xl px-6 pb-16">
+        <p className="mb-1 text-center text-xs font-medium text-neutral-400">
+          自社の数字で確かめる無料ツール
+        </p>
+        <p className="mb-4 text-center text-xs text-neutral-400">
+          登録不要・会社データは保存しません
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {TOOL_LIST.map((t) => (
+            <Link
+              key={t.slug}
+              href={`/tools/${t.slug}`}
+              className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+            >
+              {t.label}
+            </Link>
+          ))}
+          <Link
+            href="/tools"
+            className="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300"
+          >
+            ツール一覧を見る
+          </Link>
         </div>
       </section>
 

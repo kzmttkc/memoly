@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { Brain, Check } from 'lucide-react'
+import { ArrowRight, Brain, Check } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { buildToolJsonLd, type ToolJsonLdDef } from './meta'
+import { TOOL_LIST } from '@/lib/tools'
 
 // ============================================================================
 // 無料セルフ点検ツール 共通シャーシ（ページ骨格部・Server Component）
@@ -46,6 +47,11 @@ type ToolFaqList = { q: string; a: string }[]
 
 export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, sources, children }: ToolPageShellProps) {
   const jsonLdBlocks = buildToolJsonLd(jsonLd)
+
+  // ほかの無料ツールへの相互リンク（クロール経路の確立）。
+  //   現在のツール(jsonLd.slug)を除いた兄弟ツールを SSOT(lib/tools.ts)から引く。
+  //   各ツールが一覧＋兄弟へ双方向にリンクし、クロールの行き止まりをなくす。
+  const siblings = TOOL_LIST.filter((t) => t.slug !== jsonLd.slug)
 
   return (
     <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
@@ -162,6 +168,31 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
             </p>
           </Link>
         </Card>
+      </section>
+
+      {/* ===== ほかの無料ツール（ツール相互リンク＋一覧ハブへの戻り） ===== */}
+      <section className="mx-auto max-w-3xl px-6 pb-16">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium text-neutral-400">ほかの無料ツール</p>
+          <Link
+            href="/tools"
+            className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-800"
+          >
+            ツール一覧を見る
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {siblings.map((t) => (
+            <Link
+              key={t.slug}
+              href={`/tools/${t.slug}`}
+              className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* ===== フッタ ===== */}
