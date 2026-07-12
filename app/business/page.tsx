@@ -26,6 +26,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import TryDemoLazy from './_components/TryDemoLazy'
 import { TrackedCTA } from './_components/TrackedCTA'
+import { HeroEyebrow, HeroSubcopy } from './_components/HeroCopy'
 import { PLANS } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
 
@@ -535,23 +536,21 @@ export default function BusinessLandingPage() {
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-10">
           {/* 左：言葉 */}
           <div className="text-center lg:text-left">
-            <Badge tone="brand" className="mb-6">
-              会社を覚える労務AI
-            </Badge>
+            {/* アイブロー＝A/B第1実験の変種化スロット（HeroEyebrow）。
+                A=役割ラベル / B=note読者の到着文脈(痛み)起点。詳細は _components/HeroCopy.tsx。 */}
+            <HeroEyebrow />
             {/* 2026-07-11 CMO改稿: アイブロー=役割 / H1=最強フレーズ / 直下の段落=
                 「覚えている」の説明、と役割を分けて同義反復を解消。意味単位の
-                inline-block で語中改行を防ぐ。 */}
+                inline-block で語中改行を防ぐ。
+                H1本体・CTA・レイアウトは A/B で不変（差分はアイブロー＋直下サブコピーのみ）。 */}
             <h1 className="text-4xl font-bold leading-[1.18] tracking-tight text-neutral-900 sm:text-5xl">
               <span className="inline-block">二度目の相談は、</span>
               <br className="hidden sm:block" />
               <span className="inline-block">昨日の続きから</span>
               <span className="inline-block">始まります</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg lg:mx-0">
-              所定労働時間も、休日のルールも、過去の相談も番頭が覚えています。
-              前提を説明し直さずに、自社の状況に合わせた答えがすぐ返ります。
-              中小企業の総務・経営者が、社内規程の管理と日々の労務管理の調べ物を減らせます。
-            </p>
+            {/* H1直上サブコピー＝A/B第1実験の変種化スロット（HeroSubcopy）。 */}
+            <HeroSubcopy />
             {/* 主CTA=デモ体験（登録不要）へページ内スクロール。冷たい初見客に
                 会社登録を先に迫らず、まず数秒でアハに届ける。純粋な内部アンカー
                 なので SSR/metadata は無傷。signup は下の従CTAに降格。 */}

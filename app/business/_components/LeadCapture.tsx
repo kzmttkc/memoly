@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Mail, ArrowRight, Check, ClipboardCheck, Loader2 } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { track } from '@/lib/analytics'
+import { trackV as track } from '../_lib/variant'
 
 // ============================================================================
 // LeadCapture — /business 公開LPの micro-CV（'use client'）

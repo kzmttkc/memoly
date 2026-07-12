@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Brain, Building2, MessageSquareText, ArrowRight } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { track } from '@/lib/analytics'
+import { trackV as track } from '../_lib/variant'
 
 // ============================================================================
 // TryDemo — /business 公開LPの「体験デモ」セクション（'use client'）

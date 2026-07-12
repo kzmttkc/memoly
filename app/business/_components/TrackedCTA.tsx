@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { track } from '@/lib/analytics'
+import { trackV as track } from '../_lib/variant'
 
 // ============================================================================
 // TrackedCTA — LP(/business)の signup CTA を計測する薄いクライアントラッパ。
