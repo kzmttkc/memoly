@@ -26,7 +26,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import TryDemoLazy from './_components/TryDemoLazy'
 import { TrackedCTA } from './_components/TrackedCTA'
-import { HeroEyebrow, HeroSubcopy } from './_components/HeroCopy'
+import { HeroEyebrow, HeroHeadline, HeroSubcopy } from './_components/HeroCopy'
 import { PLANS } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
 import { TOOL_LIST } from '@/lib/tools'
@@ -543,13 +543,10 @@ export default function BusinessLandingPage() {
             {/* 2026-07-11 CMO改稿: アイブロー=役割 / H1=最強フレーズ / 直下の段落=
                 「覚えている」の説明、と役割を分けて同義反復を解消。意味単位の
                 inline-block で語中改行を防ぐ。
-                H1本体・CTA・レイアウトは A/B で不変（差分はアイブロー＋直下サブコピーのみ）。 */}
-            <h1 className="text-4xl font-bold leading-[1.18] tracking-tight text-neutral-900 sm:text-5xl">
-              <span className="inline-block">二度目の相談は、</span>
-              <br className="hidden sm:block" />
-              <span className="inline-block">昨日の続きから</span>
-              <span className="inline-block">始まります</span>
-            </h1>
+                2026-07-13 CPO第2実験: H1本体を A/B 変種化スロット(HeroHeadline)へ。
+                A=現行メタファーで完全据え置き / B=初見客向けの具体的価値提案。
+                CTA・レイアウトは A/B 共通のまま。 */}
+            <HeroHeadline />
             {/* H1直上サブコピー＝A/B第1実験の変種化スロット（HeroSubcopy）。 */}
             <HeroSubcopy />
             {/* 主CTA=デモ体験（登録不要）へページ内スクロール。冷たい初見客に

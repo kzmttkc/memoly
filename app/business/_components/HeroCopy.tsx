@@ -22,6 +22,48 @@ import { useVariant } from '../_lib/variant'
 //     マウント後に差し替わる。'A' の来訪は最初から現行UIと同一。
 // ============================================================================
 
+// H1本体の className はページ側と完全一致させる（A の DOM/タイポグラフィを1文字も
+// 変えない＝回帰ゼロの担保）。B のみテキストを差し替える。差分は「文言」だけで、
+// 要素構造(spans+br)・クラス・余白は A/B 共通に保つ。
+const HERO_H1_CLASS =
+  'text-4xl font-bold leading-[1.18] tracking-tight text-neutral-900 sm:text-5xl'
+
+/**
+ * H1見出し。A=現行の記憶メタファー（「二度目の相談は、昨日の続きから始まります」）で
+ *   完全据え置き / B=冷たい初見客が着地直後に製品カテゴリと成果を即解読できる
+ *   具体的な価値提案へ差し替え（「会社のことを覚えて、労務の調べ物を減らすAI」）。
+ *
+ *   なぜH1か: 上部で最も読まれ、離脱/滞在を決める単一レバー。A の抽象メタファーは
+ *   製品既知者向けで、note等からの初見客は解読に前提知識を要する。流入が希少なため、
+ *   来訪者あたりの理解率を上げるH1が最大EVの1点。B のアイブロー(痛み)→H1(具体的成果)→
+ *   サブコピー(記憶の約束)で一貫した1つの仮説になる。
+ *
+ *   Phase1 厳守: 断定的個別助言・数値保証・誇大なし。「減らす」は本文既存の許容表現に
+ *   一致（「調べ物を減らせます」）。禁止語・太字・長ダッシュなし・体言止めの見出し。
+ *   回帰ゼロ: SSR/初回ハイドレーションは 'A'。'B' の来訪のみマウント後に差し替わる。
+ */
+export function HeroHeadline() {
+  const variant = useVariant()
+  if (variant === 'B') {
+    return (
+      <h1 className={HERO_H1_CLASS}>
+        <span className="inline-block">会社のことを覚えて、</span>
+        <br className="hidden sm:block" />
+        <span className="inline-block">労務の調べ物を</span>
+        <span className="inline-block">減らすAI</span>
+      </h1>
+    )
+  }
+  return (
+    <h1 className={HERO_H1_CLASS}>
+      <span className="inline-block">二度目の相談は、</span>
+      <br className="hidden sm:block" />
+      <span className="inline-block">昨日の続きから</span>
+      <span className="inline-block">始まります</span>
+    </h1>
+  )
+}
+
 /** アイブロー。A=役割ラベルのピル / B=当事者の痛みを名指すフック行。 */
 export function HeroEyebrow() {
   const variant = useVariant()
