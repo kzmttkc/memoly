@@ -8,6 +8,10 @@
     {
       "path": "/api/company/deadline-reminder",
       "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/send-day2-reminder",
+      "schedule": "0 1 * * *"
     }
   ]
 }

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://memoly-chat.vercel.app'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://banto-roumu.com'
+// 番頭の対外ドメイン（メール内リンク・配信停止・送信者情報で使用）。
+const BANTO_URL = 'https://banto-roumu.com'
 
 // 送信元アドレス（digest と共通）。独自ドメイン認証後に DIGEST_FROM_EMAIL を設定する。
 // 未設定時はメール送信をスキップ（resend.devサンドボックスへフォールバックしない）。
@@ -111,33 +113,14 @@ export async function GET(req: Request) {
         continue
       }
 
-      // 最初の記憶を1件取得（パーソナライズ用）
-      const { data: memories } = await admin
-        .from('memoly_memories')
-        .select('content')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-        .limit(1)
+      // 本文は番頭ブランドで固定（プライバシー配慮のため、保存された記録の内容は
+      // メールに引用しない。労務データを平文メールに載せない安全側の設計）。
+      const bodyText =
+        `先日、番頭に最初の記録を保存いただきました。\n\n` +
+        `番頭は、会社の労務に関する記録を覚えておく相棒です。` +
+        `気になることができたときは、いつでも番頭にご相談ください。`
 
-      const firstMemory = memories?.[0]?.content ?? null
-
-      // メール本文の組み立て
-      let bodyText: string
-      let bodyHtml: string
-
-      if (firstMemory) {
-        bodyText = `昨日の会話を覚えています。\n\n「${firstMemory}」\n\nまた話しかけてください。あなたのことを覚えています。`
-        bodyHtml = `<p style="color:#374151;line-height:1.8">昨日の会話を覚えています。</p>
-            <blockquote style="border-left:3px solid #7c3aed;margin:16px 0;padding:8px 16px;color:#4b5563">
-              ${escapeHtml(firstMemory)}
-            </blockquote>
-            <p style="color:#374151;line-height:1.8">また話しかけてください。あなたのことを覚えています。</p>`
-      } else {
-        bodyText = `昨日の会話を覚えています。\nまた話しかけてください。`
-        bodyHtml = `<p style="color:#374151;line-height:1.8">昨日の会話を覚えています。<br>また話しかけてください。</p>`
-      }
-
-      // Resendでメール送信
+      // Resendでメール送信（差出人・リンク・送信者情報はすべて番頭に統一）
       const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -147,26 +130,27 @@ export async function GET(req: Request) {
         body: JSON.stringify({
           from: DIGEST_FROM_EMAIL,
           to: email,
-          subject: '昨日の会話、覚えています',
+          subject: '番頭に最初の記録をお預かりしています｜番頭',
           headers: {
-            'List-Unsubscribe': `<${APP_URL}/unsubscribe>`,
+            'List-Unsubscribe': `<${BANTO_URL}/unsubscribe>`,
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           },
-          text: `${bodyText}\n\n→ チャットを続ける: ${APP_URL}/chat\n\n配信停止: ${APP_URL}/unsubscribe\n\n送信者: kzmttkc314@gmail.com`,
+          text: `${bodyText}\n\n→ 番頭を開く: ${BANTO_URL}\n\n配信停止: ${BANTO_URL}/unsubscribe`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
-            <h2 style="color:#7c3aed">昨日の会話、覚えています 🧠</h2>
-            ${bodyHtml}
-            <hr style="border-color:#e5e7eb;margin:24px 0">
-            <a href="${APP_URL}/chat" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block">チャットを続ける</a>
-            <hr style="border-color:#e5e7eb;margin:24px 0">
+            <h2 style="color:#324a8a;font-size:18px;margin:0 0 12px">番頭に最初の記録をお預かりしています</h2>
+            <p style="color:#374151;line-height:1.8;font-size:14px">先日、番頭に最初の記録を保存いただきました。</p>
+            <p style="color:#374151;line-height:1.8;font-size:14px">番頭は、会社の労務に関する記録を覚えておく相棒です。気になることができたときは、いつでも番頭にご相談ください。</p>
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
+            <a href="${BANTO_URL}" style="background:#324a8a;color:#ffffff;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;font-size:14px">番頭を開く</a>
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
             <p style="color:#9ca3af;font-size:11px;line-height:1.8">
               【送信者情報】<br>
-              サービス名：Memoly<br>
+              サービス名：番頭（banto-roumu.com）<br>
               運営者：Kazumoto Takeshi<br>
               所在地：日本<br>
               お問い合わせ：kzmttkc314@gmail.com<br><br>
-              このメールはMemolyのDay2リマインドとして1回のみ送信されます。<br>
-              <a href="${APP_URL}/unsubscribe" style="color:#7c3aed">配信停止はこちら</a>
+              このメールは番頭の初回フォローとして1回のみ送信されます。<br>
+              <a href="${BANTO_URL}/unsubscribe" style="color:#324a8a">配信停止はこちら</a>
             </p>
           </div>`,
         }),
@@ -203,14 +187,4 @@ export async function GET(req: Request) {
     total: targetUsers.length,
     errors: errors.length ? errors : undefined,
   })
-}
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/\n/g, '<br>')
 }
