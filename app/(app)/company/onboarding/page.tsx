@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useCallback } from 'react'
+import { Suspense, useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Building2, Check } from 'lucide-react'
@@ -33,6 +33,27 @@ import { CompanyGuard } from '../_components/CompanyGuard'
 //   ★UIに同業比較/ベンチマークは一切出さない（発動は50社後）。
 // ============================================================================
 
+// オンボA/B変種レール（app/business/_lib/variant.ts と同じ割付流儀を踏襲）:
+//   スキップ導線の視覚格下げ実験。LP実験(banto_lp_variant)とは別キーで独立させ、
+//   一方の割付が他方に相関しないようにする。着地時に1回だけ50/50でバケット固定し、
+//   以降の同一来訪者は常に同じ変種。SSR/初回ハイドレーションは常に 'A'（現状UIと一致）、
+//   マウント後の useEffect で実バケットへ更新する（'A' は回帰ゼロ・'B' のみ差し替え）。
+//   値は 'A' | 'B' の2値のみ・PIIは載せない（既存 track 規約を継承）。
+const ONBOARDING_VARIANT_KEY = 'banto_onboarding_variant'
+
+function getOnboardingVariant(): 'A' | 'B' {
+  if (typeof window === 'undefined') return 'A'
+  try {
+    const stored = window.localStorage.getItem(ONBOARDING_VARIANT_KEY)
+    if (stored === 'A' || stored === 'B') return stored
+    const assigned: 'A' | 'B' = Math.random() < 0.5 ? 'A' : 'B'
+    window.localStorage.setItem(ONBOARDING_VARIANT_KEY, assigned)
+    return assigned
+  } catch {
+    return 'A'
+  }
+}
+
 function OnboardingInner() {
   const params = useSearchParams()
   const router = useRouter()
@@ -46,6 +67,15 @@ function OnboardingInner() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState({ show: false, message: '' })
   const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
+
+  // 変種はSSR/初回は 'A'（現状UI）。マウント後に実バケットへ更新し、その時点で
+  // onboarding_started を1回だけ発火する（活性化ファネルの分母＝到達を点灯）。
+  const [variant, setVariant] = useState<'A' | 'B'>('A')
+  useEffect(() => {
+    const v = getOnboardingVariant()
+    setVariant(v)
+    track('onboarding_started', { variant: v })
+  }, [])
 
   const homeHref = `/company/home?companyId=${companyId}`
   // TTV: 5問の回答を「集めて終わり」にせず、登録直後に自社専用のリスク診断を即提示する。
@@ -80,7 +110,8 @@ function OnboardingInner() {
         return
       }
       // 計測: 会社プロファイルの初回登録成功＝活性化（活性化〜蓄積ファネルの起点）。PIIは送らない。
-      track('company_activated')
+      //   variant を載せ、スキップ導線A/Bが活性化率に効いたかを変種別に読めるようにする。
+      track('company_activated', { variant })
       // 登録直後に診断へ送り、答えた内容を即「自社のリスク結果」として返す（TTV短縮）。
       router.push(riskHref)
     } catch {
@@ -176,7 +207,20 @@ function OnboardingInner() {
             <Check className="h-4 w-4" aria-hidden />
             {saving ? '保存中...' : '登録して始める'}
           </Button>
-          <Link href={homeHref} className={buttonClass({ variant: 'ghost' })}>
+          {variant === 'B' && (
+            <p className="w-full text-sm leading-relaxed text-neutral-600">
+              答えると、自社専用の診断がこの場ですぐ出ます。
+            </p>
+          )}
+          <Link
+            href={homeHref}
+            onClick={() => track('onboarding_skipped', { variant })}
+            className={
+              variant === 'B'
+                ? 'text-sm text-neutral-500 underline underline-offset-2 transition-colors hover:text-neutral-700'
+                : buttonClass({ variant: 'ghost' })
+            }
+          >
             あとで入力する
           </Link>
           {!hasAnyAnswer && (

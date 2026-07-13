@@ -345,6 +345,8 @@ function RiskInner() {
   async function copyShare(r: RiskResult) {
     try {
       await navigator.clipboard.writeText(buildShareText(r))
+      // 計測: 診断結果のシェア用テキストをコピーした（口コミ/拡散の一次シグナル）。PIIは載せない。
+      track('risk_shared', { method: 'copy' })
       showToast('シェア用テキストをコピーしました')
     } catch {
       showToast('コピーできませんでした。手動で選択してください。')
