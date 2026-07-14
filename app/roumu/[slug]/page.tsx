@@ -112,7 +112,7 @@ export default async function RoumuUseCasePage({
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
-      { '@type': 'ListItem', position: 2, name: '労務AIの活用', item: `${BASE}/roumu/${u.slug}` },
+      { '@type': 'ListItem', position: 2, name: '労務AIの使い方', item: `${BASE}/roumu` },
       { '@type': 'ListItem', position: 3, name: u.ogCategory, item: url },
     ],
   }
@@ -148,6 +148,8 @@ export default async function RoumuUseCasePage({
       {/* ===== パンくず（視覚） ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">
         <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <span className="mx-1.5">/</span>
+        <Link href="/roumu" className="hover:text-brand-700">労務AIの使い方</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">{u.ogCategory}</span>
       </nav>

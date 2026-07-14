@@ -1045,6 +1045,12 @@ export default function BusinessLandingPage() {
               {u.ogCategory}
             </Link>
           ))}
+          <Link
+            href="/roumu"
+            className="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300"
+          >
+            使い方の一覧を見る
+          </Link>
         </div>
       </section>
 

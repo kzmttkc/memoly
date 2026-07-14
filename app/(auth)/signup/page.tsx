@@ -273,10 +273,35 @@ function SignupForm() {
 
       {/* 直接流入（bare /signup）にも安心材料を1行出す。事実（BILLING_ENABLED=false・
           カード情報は収集しない・アカウント削除と同時に全データ削除）の範囲のみ。 */}
-      <p className="mb-6 text-center text-xs leading-relaxed text-neutral-500">
+      <p className="mb-4 text-center text-xs leading-relaxed text-neutral-500">
         現在は無料モニター期間です。クレジットカードの登録は不要で、
         データはアカウント削除と同時にすべて削除できます。
       </p>
+
+      {/* 登録前の摩擦（何を入力させられるか・どれくらいかかるか、が見えない不確実性）を消す。
+          着手前にゴールまでの短さを具体で見せると完了率が上がる（goal-gradient / 不確実性除去）。
+          各ステップは実挙動と一致させる（景表法・果たせる約束のみ）:
+            ①メール＋パスワードで登録（この画面）
+            ②会社名を1つ登録（次の /company 画面）
+            ③任意の5問に答えると自社のリスク診断がその場で出る（/company/onboarding→/company/risk）。
+          所要目安は email＋password＋会社名＋5択の実操作量から「1〜2分ほど」。フォームは変えない純追加表示。 */}
+      <div className="mb-6 rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
+        <p className="mb-2.5 text-xs font-medium text-neutral-500">はじめるまでの流れ（1〜2分ほど）</p>
+        <ol className="space-y-2">
+          {[
+            'メールアドレスとパスワードを入力する',
+            '会社名を1つ登録する',
+            '任意の5つの質問に答えると、自社のリスク診断がその場で出る',
+          ].map((step, i) => (
+            <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-neutral-700">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
+                {i + 1}
+              </span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
 
       <form onSubmit={handleSignup} className="space-y-4">
         <Input
