@@ -1,19 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { NextResponse } from 'next/server'
 
-export async function POST(req: NextRequest) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+// ============================================================================
+// 【retired】/api/report — 旧Memoly個人版の通報受付（恒久リタイア）
+//
+// このエンドポイントは旧「Memoly」消費者版の残骸だった。ユーザーからの
+// 通報内容 (memoly_reports) を認証済みユーザーIDに紐付けて保存していた。
+// 現在このリポジトリは「番頭」SaaSであり、会社スコープの通報は
+// /api/company/reports が正規に担っている。この個人版は既存ユーザー0
+// （未使用）で、放置すると認証済みユーザーなら誰でも書き込める任意データ
+// 挿入口として攻撃面が残り続ける。よって保存ロジックを全撤去し、常に
+// 410 Gone を返す空エンドポイントにして構造的に無害化する。
+// ============================================================================
 
-  const { content, reason } = await req.json()
-  if (!content) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+function gone() {
+  return NextResponse.json(
+    {
+      error: 'Gone',
+      detail:
+        '/api/report は廃止されました。番頭の通報機能は /api/company/reports を使用してください。',
+    },
+    { status: 410 }
+  )
+}
 
-  await supabase.from('memoly_reports').insert({
-    user_id: user.id,
-    content: String(content).slice(0, 2000),
-    reason: String(reason ?? '').slice(0, 200),
-  })
-
-  return NextResponse.json({ ok: true })
+export async function POST() {
+  return gone()
 }

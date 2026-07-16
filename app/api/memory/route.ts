@@ -1,93 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { extractMemory } from '@/lib/memory'
+import { NextResponse } from 'next/server'
 
-// 会話終了時に記憶を保存
-export async function POST(req: NextRequest) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+// ============================================================================
+// 【retired】/api/memory — 旧Memoly個人版の記憶保存・一覧・削除（恒久リタイア）
+//
+// このエンドポイントは旧「Memoly」消費者版の残骸だった。会話から抽出した
+// 個人の記憶 (memoly_memories) とプロファイル属性 (memoly_profiles) を保存・
+// 一覧取得・削除していた。現在このリポジトリは「番頭」SaaSであり、会社
+// スコープの記憶は /api/company/memory が正規に担っている。この個人版は
+// 既存ユーザー0（未使用）で、放置すると認証済みユーザーの個人データ
+// CRUD口として攻撃面が残り続ける。よってメモリ抽出/保存/一覧/削除ロジックを
+// 全撤去し、常に 410 Gone を返す空エンドポイントにして構造的に無害化する。
+// ============================================================================
 
-  const body = await req.json()
-  const { messages, conversationId } = body
-  if (!messages?.length) return NextResponse.json({ ok: true })
-
-  // 入力サイズ制限（50KB超は拒否）
-  const bodySize = JSON.stringify(body).length
-  if (bodySize > 50_000) {
-    return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
-  }
-
-  const extraction = await extractMemory(messages)
-
-  // 抽出が劣化した場合は明示的に記録（無言失敗を防ぐ）。
-  // ログ保存はベストエフォート：失敗してもユーザーリクエストは止めない。
-  if (extraction.degraded) {
-    console.error('[memoly:memory] 記憶抽出が劣化', {
-      userId: user.id,
-      reason: extraction.degraded,
-      recoveredSummary: Boolean(extraction.summary),
-    })
-    try {
-      await supabase.from('memoly_extraction_logs').insert({
-        user_id: user.id,
-        reason: extraction.degraded,
-        recovered: Boolean(extraction.summary),
-      })
-    } catch {
-      // テーブル未作成等は無視（console.errorで既に可視化済み）
-    }
-  }
-
-  // サマリーをmemoriesテーブルへ保存
-  if (extraction.summary) {
-    await supabase.from('memoly_memories').insert({
-      user_id: user.id,
-      content: extraction.summary,
-      memory_type: 'summary',
-    })
-  }
-
-  // プロファイル属性をupsert
-  for (const [key, value] of Object.entries(extraction.profile)) {
-    await supabase.from('memoly_profiles').upsert({
-      user_id: user.id,
-      key,
-      value,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,key' })
-  }
-
-  return NextResponse.json({ ok: true, extraction })
+function gone() {
+  return NextResponse.json(
+    {
+      error: 'Gone',
+      detail:
+        '/api/memory は廃止されました。番頭の記憶機能は /api/company/memory を使用してください。',
+    },
+    { status: 410 }
+  )
 }
 
-// 記憶一覧取得
+export async function POST() {
+  return gone()
+}
+
 export async function GET() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const [{ data: memories }, { data: profile }] = await Promise.all([
-    supabase.from('memoly_memories').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-    supabase.from('memoly_profiles').select('*').eq('user_id', user.id),
-  ])
-
-  return NextResponse.json({ memories, profile })
+  return gone()
 }
 
-// 記憶削除
-export async function DELETE(req: NextRequest) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { id, type } = await req.json()
-
-  if (type === 'memory') {
-    await supabase.from('memoly_memories').delete().eq('id', id).eq('user_id', user.id)
-  } else if (type === 'profile') {
-    await supabase.from('memoly_profiles').delete().eq('id', id).eq('user_id', user.id)
-  }
-
-  return NextResponse.json({ ok: true })
+export async function DELETE() {
+  return gone()
 }
