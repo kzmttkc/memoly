@@ -63,21 +63,49 @@ export function ToolSignupCta({
   label?: string
 }) {
   return (
-    <div className="mt-5 rounded-2xl bg-brand-50 p-5">
-      <p className="text-sm font-semibold text-neutral-900">
-        {title}
-      </p>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-        {body}
-      </p>
-      <Link
+    <>
+      <div className="mt-5 rounded-2xl bg-brand-50 p-5">
+        <p className="text-sm font-semibold text-neutral-900">
+          {title}
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+          {body}
+        </p>
+        <Link
+          href={href}
+          onClick={() => track('signup_cta_clicked', { location, status })}
+          className={buttonClass({ variant: 'primary', size: 'lg', className: 'mt-4' })}
+        >
+          {label}
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </div>
+      <VoiceInvite location={location} />
+    </>
+  )
+}
+
+// 感想リンク(KoeWall収集リンク)。
+//   ツール結果＝利用者が実際に点検結果を受け取った直後にだけ、登録CTAの下へ控えめに置く。
+//   iframe埋め込みはしない(next.config.ts の frame-src に koewall.jp が無く default-src 'self' に落ちる)
+//   ＝外部リンク先へ飛ばすプレーンな <a>(next/link)のみ＝CSP適合。
+//   全製品で1つのWall(Kizuna Creation)を共有し、utm で流入元を判別する。
+export function VoiceInvite({ location }: { location: string }) {
+  const href =
+    'https://koewall.jp/submit/u/f2ed973b495255f3827c73858a4dcffe' +
+    '?utm_source=banto&utm_medium=tool_completed&utm_campaign=voice_collect' +
+    `&utm_content=${encodeURIComponent(location)}`
+  return (
+    <p className="mt-4 text-center text-sm text-neutral-500">
+      <a
         href={href}
-        onClick={() => track('signup_cta_clicked', { location, status })}
-        className={buttonClass({ variant: 'primary', size: 'lg', className: 'mt-4' })}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => track('voice_invite_click', { product: 'banto', location })}
+        className="underline underline-offset-4 hover:text-neutral-700"
       >
-        {label}
-        <ArrowRight className="h-4 w-4" aria-hidden />
-      </Link>
-    </div>
+        この点検は役に立ちましたか？ ひとこと感想を送る
+      </a>
+    </p>
   )
 }
