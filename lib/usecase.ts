@@ -10,6 +10,16 @@
 //     しない。免責（一般的な情報提供であり書類作成代行ではない）を答えに織り込む。
 //   - aggregateRating（レビュー星）は実データが無いため一切持たせない（捏造禁止）。
 //   - 連絡先・運営はステルス運用（kzmttkc314 / Kizuna Creation）。
+//
+// 【自社ドメイン一次配信（Own-Domain First）2026-07-17】
+//   日次の労務記事は、まずこの自社ドメイン（/roumu/{slug}）へ一次配信する。
+//   手作業で厳選した USECASE_LIST_CURATED（下）に加え、日次生成分を
+//   usecase-auto.json（機械追記の SSOT）から読み込み、末尾で連結して USECASE_LIST を作る。
+//   これにより roumu_own_domain.py が JSON に1件追記するたびに、ページも sitemap も自動で増える。
+//   note へは全文でなく「抜粋＋この自社記事への被リンク」を二次告知として出す（降格・廃止しない）。
+
+// 機械追記される日次生成LP（SSOT: lib/usecase-auto.json）。空配列でも安全に連結される。
+import autoUseCases from './usecase-auto.json'
 
 export type UseCaseSection = {
   /** 小見出し */
@@ -54,7 +64,7 @@ export type UseCase = {
   relatedTool?: RelatedTool
 }
 
-export const USECASE_LIST: UseCase[] = [
+const USECASE_LIST_CURATED: UseCase[] = [
   // 1. 労務AI 比較（無料ツール vs 縦SaaS）
   {
     slug: 'labor-ai-comparison',
@@ -1110,6 +1120,14 @@ export const USECASE_LIST: UseCase[] = [
       },
     ],
   },
+]
+
+// 手作業で厳選したLP群に、機械追記の日次生成LP（usecase-auto.json）を末尾で連結する。
+// 連結後の USECASE_LIST が page.tsx（generateStaticParams）と sitemap.ts の SSOT になる＝
+// JSON に1件足せば、/roumu/{slug} ページも sitemap も自動で増える（Own-Domain First の配管）。
+export const USECASE_LIST: UseCase[] = [
+  ...USECASE_LIST_CURATED,
+  ...(autoUseCases as UseCase[]),
 ]
 
 export function getUseCase(slug: string): UseCase | undefined {
