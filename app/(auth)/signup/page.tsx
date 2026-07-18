@@ -138,15 +138,23 @@ function SignupForm() {
     setError('')
     setAlreadyRegistered(false)
 
-    // 計測: フォームがネイティブ検証(email/password/年齢のrequired)を通過し送信に到達した母数。
+    // 計測: フォームがネイティブ検証(email/passwordのrequired)を通過し送信に到達した母数。
     //   signup_started(フォーム到達) と signup_completed/failed(API結果) の間の暗箱を割る。
     //   これが signup_started より著しく少なければ、崖はAPIでなく「送信前の入力未完/離脱」。
     //   fire-and-forget の追加イベント（レイアウト・フィールド順・踏み板位置は一切不変＝A/B非汚染）。
     track('signup_submit_attempted', Object.keys(attribution).length ? attribution : undefined)
 
     // 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け）
+    // 2026-07-19 growth修正: このチェックボックスは HTML の required 属性も併用していたため、
+    //   ブラウザのネイティブバリデーション（実測=Chromiumではブラウザの表示言語依存の英語文言
+    //   "Please check this box if you want to proceed." になりうる。ページ本体は日本語UIで
+    //   統一しているため、この一箇所だけ言語・見た目が浮いて離脱を招く恐れがあった）が
+    //   onSubmit より先に発火し、下のjpSignupError相当の丁寧な日本語エラー文が実際には
+    //   一度も表示されない死んだコードになっていた（required により早期リターンで止まる）。
+    //   required属性を外し、この分岐が実際に実行されるようにした（文言・チェック要件自体は不変）。
     if (!ageOk) {
       setError('事業者としてのご利用（18歳以上）に同意のうえチェックをお願いします。')
+      track('signup_blocked_age', Object.keys(attribution).length ? attribution : undefined)
       return
     }
 
@@ -323,8 +331,6 @@ function SignupForm() {
             type="checkbox"
             checked={ageOk}
             onChange={e => setAgeOk(e.target.checked)}
-            onInvalid={() => track('signup_blocked_age', Object.keys(attribution).length ? attribution : undefined)}
-            required
             className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/30"
           />
           <span className="text-xs text-neutral-600">
