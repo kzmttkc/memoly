@@ -95,6 +95,10 @@ export default async function RoumuUseCasePage({
 
   const url = `${BASE}/roumu/${u.slug}`
 
+  // signup CTA の遷移先。LPごとに計測用UTMを持つ場合は ?next=/company に & で連結する
+  // （底面ファネル語の流入をチャネル別にCVR分離計測するため）。既定は無UTMのまま。
+  const signupHref = u.signupUtm ? `${SIGNUP_HREF}&${u.signupUtm}` : SIGNUP_HREF
+
   // FAQPage 構造化データ（リッチリザルト適格・本文と一致）
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -163,7 +167,7 @@ export default async function RoumuUseCasePage({
         <p className="mt-4 text-base leading-relaxed text-neutral-600">{u.lead}</p>
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link
-            href={SIGNUP_HREF}
+            href={signupHref}
             className={buttonClass({ variant: 'primary', size: 'lg' })}
           >
             無料で会社を登録して試す
@@ -282,7 +286,7 @@ export default async function RoumuUseCasePage({
           </p>
           <div className="mt-6 flex justify-center">
             <Link
-              href={SIGNUP_HREF}
+              href={signupHref}
               className={buttonClass({ variant: 'secondary', size: 'lg' })}
             >
               無料で会社を登録して試す

@@ -21,7 +21,7 @@ const BASE = 'https://banto-roumu.com'
 const REVISED = {
   business: '2026-07-13', // ヒーローH1のA/B・LPコピー反復
   tools: '2026-06-29', // 無料ツールクラスタ整備
-  roumu: '2026-07-14', // 検索意図LPクラスタ拡張＋ハブ新設
+  roumu: '2026-07-19', // 底面ファネル語「労務管理システム 費用 比較」LP追加
   legal: '2026-06-28', // privacy / terms
 } as const
 
