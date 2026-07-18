@@ -48,6 +48,12 @@ function SignupForm() {
   const [ageOk, setAgeOk] = useState(false)
   const [digestOptIn, setDigestOptIn] = useState(false)
   const [error, setError] = useState('')
+  // 既登録の再訪（＝ログイン迷子）を、その場で回復できるインライン導線を出すためのフラグ。
+  //   これまで「このメールアドレスはすでに登録されています。」の文言は出ていたが、
+  //   復帰先のログインは画面末尾の汎用リンクのみで、着地(next)も引き継がれず、
+  //   計測上は signup_failed[already_registered] のまま離脱＝行き止まりだった。
+  //   意図した着地(nextDest)を保ったまま1クリックでログインへ回す（純追加・フォーム不変）。
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [resent, setResent] = useState(false)
@@ -130,6 +136,7 @@ function SignupForm() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setAlreadyRegistered(false)
 
     // 計測: フォームがネイティブ検証(email/password/年齢のrequired)を通過し送信に到達した母数。
     //   signup_started(フォーム到達) と signup_completed/failed(API結果) の間の暗箱を割る。
@@ -155,11 +162,18 @@ function SignupForm() {
     })
 
     if (error) {
-      const already = error.message === 'User already registered'
+      // jpSignupError と同じ判定（メッセージ実文の揺れに部分一致で追従）で既登録を検出。
+      const lower = error.message.toLowerCase()
+      const already =
+        error.message === 'User already registered' ||
+        lower.includes('already registered') ||
+        lower.includes('already been registered')
       // 計測: 登録失敗を可視化（今まで完全に不可視だった）。既登録の再訪＝ログイン迷子は別問題として切り分け。
       track('signup_failed', { reason: already ? 'already_registered' : 'other', ...attribution })
       // Supabase の英語エラー原文をそのまま出さない（主要パターンは日本語化・他は汎用日本語文）。
       setError(jpSignupError(error.message))
+      // 既登録なら、意図した着地(nextDest)を保ったままログインへ回すインライン回復導線を出す。
+      setAlreadyRegistered(already)
       setLoading(false)
     } else {
       // 活性化ファネル: 登録完了（email+password の signUp 成功地点＝北極星イベント）。
@@ -332,6 +346,19 @@ function SignupForm() {
         </label>
 
         {error && <p className="text-sm text-danger-600">{error}</p>}
+
+        {/* 既登録の再訪（ログイン迷子）を行き止まりにしない: 意図した着地(nextDest)を
+            保ったまま1クリックでログインへ回す。純追加でフォーム構造・A/Bは不変。
+            計測: signup_failed[already_registered] からの回復クリックを可視化。 */}
+        {alreadyRegistered && (
+          <Link
+            href={`/login?next=${encodeURIComponent(nextDest)}`}
+            onClick={() => track('login_from_already_registered')}
+            className={buttonClass({ variant: 'secondary', size: 'lg', className: 'w-full' })}
+          >
+            このメールアドレスでログインする
+          </Link>
+        )}
 
         <Button type="submit" size="lg" disabled={loading} className="w-full">
           {loading ? '登録中...' : '無料で始める'}
