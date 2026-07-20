@@ -1106,6 +1106,9 @@ export default function BusinessLandingPage() {
               <Link href="/privacy" className="hover:text-brand-700">
                 プライバシー
               </Link>
+              <Link href="/tokushoho" className="hover:text-brand-700">
+                特定商取引法に基づく表記
+              </Link>
             </nav>
           </div>
           <p className="mt-6 text-xs leading-relaxed text-neutral-500">
@@ -1113,7 +1116,7 @@ export default function BusinessLandingPage() {
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
           <p className="mt-2 text-xs text-neutral-400">
-            運営：Kizuna Creation
+            © {new Date().getFullYear()} 番頭(Banto)（Kizuna Creation）
           </p>
         </div>
       </footer>

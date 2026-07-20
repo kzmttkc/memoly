@@ -23,6 +23,7 @@ const REVISED = {
   tools: '2026-06-29', // 無料ツールクラスタ整備
   roumu: '2026-07-19', // 底面ファネル語「労務管理システム 費用 比較」LP追加
   legal: '2026-06-28', // privacy / terms
+  tokushoho: '2026-07-20', // 特定商取引法に基づく表記を新設
 } as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -46,5 +47,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     { url: `${BASE}/privacy`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/terms`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE}/tokushoho`, lastModified: REVISED.tokushoho, changeFrequency: 'yearly', priority: 0.3 },
   ]
 }
