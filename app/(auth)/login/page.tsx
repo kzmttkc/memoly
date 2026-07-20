@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { OAuthButtons } from '@/components/auth/OAuthButtons'
 
 export default function LoginPage() {
   return (
@@ -70,6 +71,14 @@ function LoginForm() {
           {loading ? 'ログイン中...' : 'ログイン'}
         </Button>
       </form>
+
+      <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
+        <div className="h-px flex-1 bg-neutral-200" />
+        または
+        <div className="h-px flex-1 bg-neutral-200" />
+      </div>
+
+      <OAuthButtons next={next} />
 
       <div className="mt-6 space-y-2 text-center text-sm text-neutral-500">
         <p>

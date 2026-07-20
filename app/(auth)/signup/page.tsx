@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase'
 import { track, trackThenNavigate } from '@/lib/analytics'
 import { Input } from '@/components/ui/Input'
 import { Button, buttonClass } from '@/components/ui/Button'
+import { OAuthButtons } from '@/components/auth/OAuthButtons'
 
 export default function SignupPage() {
   return (
@@ -370,6 +371,17 @@ function SignupForm() {
           {loading ? '登録中...' : '無料で始める'}
         </Button>
       </form>
+
+      <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
+        <div className="h-px flex-1 bg-neutral-200" />
+        または
+        <div className="h-px flex-1 bg-neutral-200" />
+      </div>
+
+      <OAuthButtons next={nextDest} />
+      <p className="mt-2 text-center text-xs text-neutral-500">
+        GitHub・Googleでの登録も、事業者としてのご利用（18歳以上）とみなします。
+      </p>
 
       {/* 登録前の摩擦（何を入力させられるか・どれくらいかかるか、が見えない不確実性）を消す。
           着手前にゴールまでの短さを具体で見せると完了率が上がる（goal-gradient / 不確実性除去）。
