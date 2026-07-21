@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { USECASE_SLUGS } from '@/lib/usecase'
 import { TOOL_SLUGS } from '@/lib/tools'
+import { BLOG_SLUGS } from '@/lib/blog'
 
 // ============================================================================
 // sitemap.xml — クローラに「index対象の公開URL」を明示する。
@@ -24,6 +25,8 @@ const REVISED = {
   roumu: '2026-07-19', // 底面ファネル語「労務管理システム 費用 比較」LP追加
   legal: '2026-06-28', // privacy / terms
   tokushoho: '2026-07-20', // 特定商取引法に基づく表記を新設
+  blog: '2026-07-22', // /blog 新設(規程管理・組織の記憶テーマ、初回3記事)
+  faq: '2026-07-22', // /faq 独立FAQページ新設
 } as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -45,6 +48,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     })),
+    // ブログ（規程管理・組織の記憶）ハブ＋各記事（SSOT: lib/blog.ts から全列挙）
+    { url: `${BASE}/blog`, lastModified: REVISED.blog, changeFrequency: 'weekly', priority: 0.8 },
+    ...BLOG_SLUGS.map((slug) => ({
+      url: `${BASE}/blog/${slug}`,
+      lastModified: REVISED.blog,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
+    { url: `${BASE}/faq`, lastModified: REVISED.faq, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE}/privacy`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/terms`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/tokushoho`, lastModified: REVISED.tokushoho, changeFrequency: 'yearly', priority: 0.3 },

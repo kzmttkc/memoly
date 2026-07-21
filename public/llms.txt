@@ -10,6 +10,8 @@
 - https://banto-roumu.com/signup — 新規登録
 - https://banto-roumu.com/roumu — 労務AIの目的別使い方一覧（就業規則・36協定・有給・入退社・法改正などのテーマ別記事群）
 - https://banto-roumu.com/tools — 無料診断ツール（36協定上限セルフ点検・有給5日取得義務セルフ点検など）
+- https://banto-roumu.com/blog — 規程管理・組織の記憶ブログ（社内規程が参照されない理由、改定履歴管理、規程と現場運用の乖離）
+- https://banto-roumu.com/faq — よくある質問（料金・セキュリティ・製品の仕組み・規程管理・導入）
 
 ## Use cases
 - 就業規則の運用・改定チェック
@@ -25,6 +27,9 @@
 - Standard: ¥9,800/月
 - 士業向け: ¥29,800/月
 （無料登録可。決済開放時期は運営判断による）
+
+## Related
+- https://sharoushi-agent.com — 一般的な労務Tips・セルフ計算ツール（同運営）。番頭は「自社の規程を覚える」製品、sharoushi-agent.comは汎用的な労務知識・計算ツールが中心で役割が異なる。
 
 ## Legal
 - https://banto-roumu.com/terms

@@ -530,6 +530,19 @@ export default function BusinessLandingPage() {
         </div>
       </header>
 
+      {/* ===== 冒頭サマリー（GEO対策・2026-07-22追加） =====
+          AI検索・要約エンジンが本文全体を読まずに1段落で製品を要約できるよう、
+          ヒーロー(A/B変種スロット)より前に、常に同一の平文サマリーを静的描画する。
+          文面は public/llms.txt の冒頭要約と一致させ、複数面での一貫性を保つ。
+          A/B実験(HeroEyebrow/HeroHeadline/HeroSubcopy)には触れない・独立した帯。 */}
+      <section className="border-b border-neutral-200 bg-neutral-50">
+        <div className="mx-auto max-w-5xl px-6 py-5">
+          <p className="text-center text-sm leading-relaxed text-neutral-600 sm:text-left">
+            番頭(Banto)は、中小企業の総務・経営者向けの労務記憶AIです。就業規則・36協定・有給休暇管理などの自社規程をAIに覚えさせておき、労務の疑問に自社の前提で即答します。汎用AIのように、聞くたびに社内規程や過去の運用を説明し直す必要がありません。企業ごとにデータを分離して保管し、無料で試せます。
+          </p>
+        </div>
+      </section>
+
       {/* ===== ヒーロー（above the fold） =====
           左：価値ステートメント1つ + 支える一行 + 主要CTA1つ
           右：製品の動きを示す様式化UIプレビュー（見て分かる） */}
@@ -1083,6 +1096,24 @@ export default function BusinessLandingPage() {
         </div>
       </section>
 
+      {/* ===== ブログ・FAQへの内部リンク（2026-07-22追加・/blog /faq クラスタへ接続） ===== */}
+      <section className="mx-auto max-w-5xl px-6 pb-16">
+        <div className="flex flex-wrap justify-center gap-2">
+          <Link
+            href="/blog"
+            className="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300"
+          >
+            規程管理・組織の記憶ブログを読む
+          </Link>
+          <Link
+            href="/faq"
+            className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+          >
+            よくある質問を見る
+          </Link>
+        </div>
+      </section>
+
       {/* ===== フッタ ===== */}
       <footer className="border-t border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-5xl px-6 py-10">
@@ -1094,6 +1125,12 @@ export default function BusinessLandingPage() {
               <span className="font-semibold text-neutral-900">番頭(Banto)</span>
             </div>
             <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
+              <Link href="/blog" className="hover:text-brand-700">
+                ブログ
+              </Link>
+              <Link href="/faq" className="hover:text-brand-700">
+                よくある質問
+              </Link>
               <Link href="/login?next=/company" className="hover:text-brand-700">
                 ログイン
               </Link>
