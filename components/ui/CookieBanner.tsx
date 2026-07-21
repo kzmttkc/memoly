@@ -1,15 +1,54 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
+// ============================================================================
+// Cookie同意バナー（2026-07-22 CTO監査で position:fixed の重なり不具合を修正）
+//   このバナーは fixed で画面最下部に張り付く。従来は body側に余白を確保しておらず、
+//   未同意の初回訪問者には「/company のモバイル下部タブナビ」「/signup のログイン導線・
+//   同意テキスト」「/blog のカード末尾」など、各ページの最下部コンテンツがバナーの
+//   裏に隠れて操作/閲覧できなくなっていた（本番スクリーンショットで実測確認）。
+//   ResizeObserver でバナー自身の実高さを測り、<body> に同じ分だけ padding-bottom を
+//   確保することで、常にバナーの上に本来のコンテンツが見える状態を保証する。
+//   同意後（show=false）は padding を確実に解除する。
+// ============================================================================
 export function CookieBanner() {
   const [show, setShow] = useState(false)
+  const [tabbarOffset, setTabbarOffset] = useState(0)
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const accepted = localStorage.getItem('memoly_cookie_accepted')
     if (!accepted) setShow(true)
   }, [])
+
+  useEffect(() => {
+    if (!show || !ref.current) {
+      document.body.style.paddingBottom = ''
+      return
+    }
+    const el = ref.current
+    // /company のモバイル下部タブバー（id="banto-mobile-tabbar"）が同じ画面にある場合、
+    // タブバーが lg 未満でのみ描画される（lg 以上では display:none で offsetHeight=0）ため、
+    // このオフセットは自動的にブレークポイントへ追従する。無ければ 0（従来通り最下部に張り付く）。
+    const measure = () => {
+      const tabbar = document.getElementById('banto-mobile-tabbar')
+      setTabbarOffset(tabbar?.offsetHeight ?? 0)
+      document.body.style.paddingBottom = `${el.offsetHeight + (tabbar?.offsetHeight ?? 0)}px`
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    const tabbarEl = document.getElementById('banto-mobile-tabbar')
+    if (tabbarEl) ro.observe(tabbarEl)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+      document.body.style.paddingBottom = ''
+    }
+  }, [show])
 
   function accept() {
     localStorage.setItem('memoly_cookie_accepted', '1')
@@ -20,7 +59,9 @@ export function CookieBanner() {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-[0_-1px_3px_rgba(0,0,0,0.04)] px-4 py-3"
+      ref={ref}
+      style={{ bottom: tabbarOffset }}
+      className="fixed left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-[0_-1px_3px_rgba(0,0,0,0.04)] px-4 py-3"
       role="banner"
       aria-label="Cookie使用の通知"
     >

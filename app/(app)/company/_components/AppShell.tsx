@@ -212,7 +212,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* ===== モバイル下部タブ(<lg) ===== */}
+      {/* id="banto-mobile-tabbar": CookieBanner がこの要素の実高さを読み、
+          未同意時にバナーをこのタブバーの上に重ねて配置する（両方とも fixed bottom-0
+          のため、素朴に重ねるとバナー(z-50)がタブバー(z-30)のタップ領域を覆ってしまう）。 */}
       <nav
+        id="banto-mobile-tabbar"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200 bg-white/95 backdrop-blur lg:hidden"
         aria-label="会社版ナビゲーション（モバイル）"
       >
