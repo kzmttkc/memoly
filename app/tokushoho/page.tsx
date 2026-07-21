@@ -18,8 +18,8 @@ export default function TokushohoPage() {
           </p>
           <p>
             それ以前でも運営者情報の開示をご希望の場合は、
-            <a href="mailto:kzmttkc314@gmail.com" className="text-brand-600 underline">
-              kzmttkc314@gmail.com
+            <a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">
+              support@banto-roumu.com
             </a>
             までご請求いただければ遅滞なくお知らせします。
           </p>

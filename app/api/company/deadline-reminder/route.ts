@@ -243,7 +243,7 @@ export async function GET(req: Request) {
                 サービス名：番頭（banto-roumu.com）<br>
                 運営者：Kazumoto Takeshi<br>
                 所在地：日本<br>
-                お問い合わせ：kzmttkc314@gmail.com<br><br>
+                お問い合わせ：support@banto-roumu.com<br><br>
                 このメールは番頭に登録された期限の備忘として送信されています。<br>
                 <a href="${BANTO_URL}/unsubscribe" style="color:#324a8a">配信停止はこちら</a>
               </p>

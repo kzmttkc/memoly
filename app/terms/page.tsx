@@ -48,7 +48,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">6. AIコンテンツの報告</h2>
-            <p>不適切なAIの回答は、お問い合わせ先（<a href="mailto:kzmttkc314@gmail.com" className="text-brand-600 underline">kzmttkc314@gmail.com</a>）へのご連絡で報告できます。報告内容は改善のために使用されます。</p>
+            <p>不適切なAIの回答は、お問い合わせ先（<a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">support@banto-roumu.com</a>）へのご連絡で報告できます。報告内容は改善のために使用されます。</p>
           </section>
 
           <section>
@@ -68,7 +68,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">10. お問い合わせ</h2>
-            <p><a href="mailto:kzmttkc314@gmail.com" className="text-brand-600 underline">kzmttkc314@gmail.com</a></p>
+            <p><a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">support@banto-roumu.com</a></p>
           </section>
         </div>
       </div>
