@@ -187,7 +187,7 @@ function OnboardingInner() {
             <option value="">選択してください</option>
             {INDUSTRY_MAJORS.map(i => (
               <option key={i.code} value={i.code}>
-                {i.label}
+                {'examples' in i && i.examples ? `${i.label}（${i.examples}）` : i.label}
               </option>
             ))}
           </select>

@@ -5,7 +5,7 @@ import { CalendarDays, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { track } from '@/lib/analytics'
-import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton } from '@/components/tools/client'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton, preHydrationValue } from '@/components/tools/client'
 
 // ============================================================================
 // 年5日 有給取得義務 セルフ点検ツール（クライアント計算・会社データ非保存）
@@ -63,9 +63,9 @@ function formatJp(d: Date): string {
 const MS_PER_DAY = 86_400_000
 
 export function Calculator() {
-  const [kijunbi, setKijunbi] = useState('')
-  const [granted, setGranted] = useState('')
-  const [taken, setTaken] = useState('')
+  const [kijunbi, setKijunbi] = useState(() => preHydrationValue('kijunbi'))
+  const [granted, setGranted] = useState(() => preHydrationValue('granted'))
+  const [taken, setTaken] = useState(() => preHydrationValue('taken'))
   const [error, setError] = useState('')
   const [result, setResult] = useState<Result | null>(null)
   // I5: 送信後、結果ブロックへ自動スクロール（結果はフォールド下に描画され「反応した？」と

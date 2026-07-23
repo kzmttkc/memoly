@@ -5,7 +5,7 @@ import { CheckCircle2, AlertCircle } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { track } from '@/lib/analytics'
-import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton } from '@/components/tools/client'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton, preHydrationValue } from '@/components/tools/client'
 
 // ============================================================================
 // 36協定 時間外・休日労働の上限セルフ点検ツール（クライアント計算・会社データ非保存）
@@ -76,11 +76,11 @@ function parseNum(v: string): number | null {
 }
 
 export function Calculator() {
-  const [singleMonthTotal, setSingleMonthTotal] = useState('') // 単月の時間外+休日の合計（最大の月）
-  const [maxMonthOvertime, setMaxMonthOvertime] = useState('') // 最も多い月の時間外のみ（原則45との比較）
-  const [yearOvertime, setYearOvertime] = useState('') // 年間の時間外の累計
-  const [multiMonthAvg, setMultiMonthAvg] = useState('') // 2〜6か月平均の最大値
-  const [specialMonths, setSpecialMonths] = useState('') // 原則45時間を超えた月数（特別条項の適用月数）
+  const [singleMonthTotal, setSingleMonthTotal] = useState(() => preHydrationValue('smTotal')) // 単月の時間外+休日の合計（最大の月）
+  const [maxMonthOvertime, setMaxMonthOvertime] = useState(() => preHydrationValue('mmOt')) // 最も多い月の時間外のみ（原則45との比較）
+  const [yearOvertime, setYearOvertime] = useState(() => preHydrationValue('yrOt')) // 年間の時間外の累計
+  const [multiMonthAvg, setMultiMonthAvg] = useState(() => preHydrationValue('mmAvg')) // 2〜6か月平均の最大値
+  const [specialMonths, setSpecialMonths] = useState(() => preHydrationValue('spMonths')) // 原則45時間を超えた月数（特別条項の適用月数）
   const [error, setError] = useState('')
   const [result, setResult] = useState<Result | null>(null)
   // I5: 送信後、結果ブロックへ自動スクロール（結果はフォールド下・P02/P08）。

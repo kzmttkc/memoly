@@ -7,6 +7,7 @@ import { Toast } from '@/components/ui/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { CopyButton } from '@/components/ui/CopyButton'
@@ -239,7 +240,7 @@ function RulesEditor() {
       {/* 追加フォーム */}
       <Card className="mb-6">
         <form onSubmit={addRule} className="space-y-3">
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
             <Input
               value={newKey}
               onChange={e => setNewKey(e.target.value)}
@@ -248,11 +249,14 @@ function RulesEditor() {
               maxLength={100}
               aria-label="項目名"
             />
-            <Input
+            {/* I-1(P07・2026-07-24): 長い規程要点が1行入力で横スクロールに隠れ、覚えさせる前に
+                見直せなかった。複数行(textarea)にして、登録前に内容全体を確認できるようにする。 */}
+            <Textarea
               value={newValue}
               onChange={e => setNewValue(e.target.value)}
-              placeholder="内容（例：1日8時間 / 週40時間）"
-              className="flex-1"
+              placeholder="内容（例：入社6か月後に11日付与。以降は法定通り加算）"
+              className="flex-1 resize-y"
+              rows={2}
               maxLength={500}
               aria-label="内容"
             />
@@ -284,11 +288,12 @@ function RulesEditor() {
                   <div className="min-w-0 flex-1">
                     <p className="mb-0.5 text-xs font-medium text-brand-700">{p.key}</p>
                     {editId === p.id ? (
-                      <div className="mt-1 flex gap-2">
-                        <Input
+                      <div className="mt-1 flex items-start gap-2">
+                        <Textarea
                           value={editValue}
                           onChange={e => setEditValue(e.target.value)}
-                          className="flex-1"
+                          className="flex-1 resize-y"
+                          rows={2}
                           maxLength={500}
                           aria-label={`${p.key}の内容を編集`}
                         />

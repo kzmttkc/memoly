@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { cn } from '@/lib/cn'
 import { track } from '@/lib/analytics'
-import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton } from '@/components/tools/client'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton, preHydrationValue } from '@/components/tools/client'
 import {
   calcSyahoKanyu,
   validateSyahoKanyu,
@@ -44,10 +44,10 @@ function parseNum(v: string): number {
 }
 
 export function Calculator() {
-  const [assessDate, setAssessDate] = useState('') // 点検したい時点（空欄なら今日として扱う）
-  const [companySize, setCompanySize] = useState('') // 自社の厚生年金保険の被保険者数
-  const [weeklyHours, setWeeklyHours] = useState('') // 週の所定労働時間
-  const [monthlyWage, setMonthlyWage] = useState('') // 所定内賃金（月額）
+  const [assessDate, setAssessDate] = useState(() => preHydrationValue('assessDate')) // 点検したい時点（空欄なら今日として扱う）
+  const [companySize, setCompanySize] = useState(() => preHydrationValue('companySize')) // 自社の厚生年金保険の被保険者数
+  const [weeklyHours, setWeeklyHours] = useState(() => preHydrationValue('weeklyHours')) // 週の所定労働時間
+  const [monthlyWage, setMonthlyWage] = useState(() => preHydrationValue('monthlyWage')) // 所定内賃金（月額）
   const [expectedOver2Months, setExpectedOver2Months] = useState<'yes' | 'no' | ''>('')
   const [isStudent, setIsStudent] = useState<'yes' | 'no' | ''>('')
   const [error, setError] = useState('')

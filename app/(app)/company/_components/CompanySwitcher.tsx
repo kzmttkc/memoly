@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 // ============================================================================
@@ -77,14 +79,24 @@ export function CompanySwitcher({ companyId, variant }: Props) {
   const current = companies.find(c => c.companyId === companyId)
   const wrap = variant === 'header' ? 'flex items-center gap-2 min-w-0' : 'flex items-center gap-2 mb-4'
 
-  // 1社のみ: 切替不要。会社名のみ静的表示。
+  // 1社のみ: 切替不要だが、会社名を会社一覧(/company)へのリンクにする（P06是正・2026-07-24）。
+  //   従来は非クリックの静的ラベルで、複数顧問先を持ちたい士業が「どこで会社を切替/追加するか」
+  //   を見つけられなかった。名前をリンク化し、一覧・切替・追加への発見性を上げる。
   if (companies.length === 1) {
     return (
       <div className={wrap}>
         <span className="shrink-0 text-xs text-neutral-500">対象</span>
-        <span className="truncate text-sm font-medium text-neutral-800">
-          {current?.name ?? companies[0].name}
-        </span>
+        <Link
+          href="/company"
+          aria-label="会社の一覧・切り替えを開く"
+          title="会社の一覧・切り替え"
+          className="group flex min-w-0 items-center gap-0.5 rounded-md px-1 py-0.5 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+        >
+          <span className="truncate underline-offset-2 group-hover:underline">
+            {current?.name ?? companies[0].name}
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+        </Link>
       </div>
     )
   }

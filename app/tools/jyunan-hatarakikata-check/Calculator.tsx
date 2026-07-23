@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { cn } from '@/lib/cn'
 import { track } from '@/lib/analytics'
-import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton } from '@/components/tools/client'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton, preHydrationValue } from '@/components/tools/client'
 import {
   calcMeasureCheck,
   validateMeasureInput,
@@ -57,17 +57,17 @@ export function Calculator() {
   // ---- ブロックA: 自社が講じている措置 ----
   const [startTime, setStartTime] = useState<'yes' | 'no' | ''>('')
   const [telework, setTelework] = useState<'yes' | 'no' | ''>('')
-  const [teleworkDays, setTeleworkDays] = useState('')
+  const [teleworkDays, setTeleworkDays] = useState(() => preHydrationValue('teleworkDays'))
   const [childcareFacility, setChildcareFacility] = useState<'yes' | 'no' | ''>('')
   const [leave, setLeave] = useState<'yes' | 'no' | ''>('')
-  const [leaveDays, setLeaveDays] = useState('')
+  const [leaveDays, setLeaveDays] = useState(() => preHydrationValue('leaveDays'))
   const [shortHours, setShortHours] = useState<'yes' | 'no' | ''>('')
   const [shortHoursIncludes6h, setShortHoursIncludes6h] = useState<'yes' | 'no' | ''>('')
   const [heardUnionOpinion, setHeardUnionOpinion] = useState<'yes' | 'no' | ''>('')
 
   // ---- ブロックB: 子の生年月日 ----
-  const [birthDate, setBirthDate] = useState('')
-  const [assessDate, setAssessDate] = useState('') // 空欄なら今日
+  const [birthDate, setBirthDate] = useState(() => preHydrationValue('birthDate'))
+  const [assessDate, setAssessDate] = useState(() => preHydrationValue('assessDate')) // 空欄なら今日
 
   const [error, setError] = useState('')
   const [measureResult, setMeasureResult] = useState<MeasureCheckResult | null>(null)

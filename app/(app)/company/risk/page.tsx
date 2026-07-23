@@ -792,12 +792,23 @@ function RiskInner() {
                                 })
                                 registerSuggestion(dl)
                               }}
-                              disabled={registering === dl.title}
+                              disabled={
+                                registering === dl.title ||
+                                !(dueInputs[dl.title] ?? '').trim()
+                              }
                             >
                               <Plus className="h-3.5 w-3.5" aria-hidden />
                               {registering === dl.title ? '登録中...' : 'この期限を登録'}
                             </Button>
                           </div>
+                          {/* I-P08(2026-07-24): 空日付での無言no-opを塞ぐ。日付未確定の間は
+                              登録ボタンを disabled にし、その理由を明示する（Phase1: 日付は
+                              システムが断定せずユーザーが確定する設計のためプリフィルはしない）。 */}
+                          {!(dueInputs[dl.title] ?? '').trim() && (
+                            <p className="mt-1.5 text-xs text-neutral-500">
+                              期日を選ぶと、この期限を登録できます。
+                            </p>
+                          )}
                         </div>
                       )}
                     </Card>
@@ -875,11 +886,19 @@ function RiskInner() {
                           size="sm"
                           variant="secondary"
                           onClick={() => registerSuggestion(s)}
-                          disabled={registering === s.title}
+                          disabled={
+                            registering === s.title || !(dueInputs[s.title] ?? '').trim()
+                          }
                         >
                           <Plus className="h-3.5 w-3.5" aria-hidden />
                           {registering === s.title ? '登録中...' : 'この期限を登録'}
                         </Button>
+                        {/* I-P08: 空日付での無言no-opを塞ぐ（日付未確定の間は登録不可＋理由を明示）。 */}
+                        {!(dueInputs[s.title] ?? '').trim() && (
+                          <span className="basis-full text-xs text-neutral-500">
+                            期日を選ぶと登録できます。
+                          </span>
+                        )}
                       </div>
                     )}
                   </li>

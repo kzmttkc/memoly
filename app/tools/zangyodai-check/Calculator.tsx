@@ -5,7 +5,7 @@ import { CheckCircle2, AlertCircle, Calculator as CalcIcon } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { track } from '@/lib/analytics'
-import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton } from '@/components/tools/client'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton, preHydrationValue } from '@/components/tools/client'
 import { calcZangyodai, validateZangyodai, type ZangyodaiInput, type ZangyodaiResult } from './calc'
 
 // ============================================================================
@@ -38,14 +38,14 @@ function parseNum(v: string): number | null {
 }
 
 export function Calculator() {
-  const [wage, setWage] = useState('') // 月給のうち算入対象額（円）
-  const [avgHours, setAvgHours] = useState('') // 1か月平均所定労働時間
-  const [hOt, setHOt] = useState('') // 法定時間外（法定休日を除く）
-  const [hOtNight, setHOtNight] = useState('') // うち深夜
-  const [hHol, setHHol] = useState('') // 法定休日労働
-  const [hHolNight, setHHolNight] = useState('') // うち深夜
-  const [hLegalIn, setHLegalIn] = useState('') // 法定内残業（任意）
-  const [paid, setPaid] = useState('') // 実際に支払った額（任意）
+  const [wage, setWage] = useState(() => preHydrationValue('wage')) // 月給のうち算入対象額（円）
+  const [avgHours, setAvgHours] = useState(() => preHydrationValue('avgHours')) // 1か月平均所定労働時間
+  const [hOt, setHOt] = useState(() => preHydrationValue('hOt')) // 法定時間外（法定休日を除く）
+  const [hOtNight, setHOtNight] = useState(() => preHydrationValue('hOtNight')) // うち深夜
+  const [hHol, setHHol] = useState(() => preHydrationValue('hHol')) // 法定休日労働
+  const [hHolNight, setHHolNight] = useState(() => preHydrationValue('hHolNight')) // うち深夜
+  const [hLegalIn, setHLegalIn] = useState(() => preHydrationValue('hLegalIn')) // 法定内残業（任意）
+  const [paid, setPaid] = useState(() => preHydrationValue('paid')) // 実際に支払った額（任意）
   const [error, setError] = useState('')
   const [result, setResult] = useState<ZangyodaiResult | null>(null)
   const [input, setInput] = useState<ZangyodaiInput | null>(null)

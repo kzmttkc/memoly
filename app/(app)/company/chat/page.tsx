@@ -18,6 +18,7 @@ import { INDUSTRY_MAJORS } from '@/lib/company-attributes'
 import { track } from '@/lib/analytics'
 import { CompanySwitcher } from '../_components/CompanySwitcher'
 import { CompanyGuard } from '../_components/CompanyGuard'
+import { PLANS } from '@/lib/plans'
 
 // ============================================================================
 // /company/chat — 会社スコープのチャット
@@ -206,9 +207,20 @@ const BILLING_INTENT_RE =
 
 // 課金/解約の定型案内（敬体・実挙動どおり）。無料モニター中で事前案内なく課金されない
 //   ことは特商法ページ/billing で実機確認済み（監査 保護リスト#8）。断定はこの範囲に留める。
+//   I-1(P05・2026-07-24): 「料金を教えて」「士業プランとは」に対しカードへ丸投げせず、
+//     本文で3プランの価格と士業プランの中身を inline で即答する（値は lib/plans.ts=SSOT
+//     から生成し、LP/課金UIと構造的に一致。誇張せず「予定価格・現在は無料」を明記）。
+const BILLING_YEN = (n: number) => `${n.toLocaleString('ja-JP')}円`
+const BILLING_PLAN_LINE =
+  '今後の予定価格は次のとおりです（現在はすべて無料モニター中で、課金は行いません）。' +
+  `${PLANS.starter.displayName}＝月額${BILLING_YEN(PLANS.starter.monthlyJpy)}（1社を管理）、` +
+  `${PLANS.standard.displayName}＝月額${BILLING_YEN(PLANS.standard.monthlyJpy)}（1社を管理・記憶フル/書類作成/能動通知）、` +
+  `${PLANS.shigyo.displayName}プラン＝月額${BILLING_YEN(PLANS.shigyo.monthlyJpy)}（複数の会社／顧問先を切り替えて管理でき、会社ごとに記憶が分かれます）。`
 const BILLING_FAQ_TEXT =
   'ご料金や解約についてのご質問ですね。番頭の労務相談とは別のご案内になりますが、こちらでお答えします。\n\n' +
-  '番頭は現在すべて無料モニター中で、事前のご案内なく自動で料金が発生することはありません。料金や特定商取引法に基づく表記、プランの解約・退会のお手続き、お問い合わせ窓口を、下のご案内からご確認いただけます。'
+  '番頭は現在すべて無料モニター中で、事前のご案内なく自動で料金が発生することはありません。\n\n' +
+  BILLING_PLAN_LINE +
+  '\n\n特定商取引法に基づく表記、プランの解約・退会のお手続き、お問い合わせ窓口は、下のご案内からもご確認いただけます。'
 
 // 記憶抽出のトリガ間隔（ユーザー発話n回ごと）。4→2に短縮:
 //   3往復未満で離脱した会話が一度も記憶化されない問題の暫定緩和

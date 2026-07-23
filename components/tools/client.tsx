@@ -35,6 +35,33 @@ export function useHydrated() {
 }
 
 /**
+ * ハイドレーション前にユーザーがネイティブ入力した値を、controlled state の
+ * 初期値として復元する（P08・2026-07-24 恒久対策）。
+ *
+ *   背景: 各ツールの入力は controlled（value={state}）で state 初期値は ''。
+ *   ユーザーが JS ロード前（SSR HTML はネイティブに操作可能）に日付や数値を入れると、
+ *   React がハイドレーションのコミットで「state='' と DOM値の不一致」を検知し、
+ *   DOM 値を '' に巻き戻す＝入力が無言で消える（描画後~300ms 未満の反射タップで再現・
+ *   3/3）。送信ボタンは既に hydration 前 disabled なので、これはネイティブ送信でも
+ *   再読込でもなく、controlled 入力のリコンサイルによる消失。
+ *
+ *   対策: useState の遅延初期化子で、サーバー生成 DOM に残っている実値を読む。
+ *   遅延初期化子はクライアントの初回（ハイドレーション）レンダの「レンダ段階」で走り、
+ *   この時点ではサーバー HTML がまだ DOM 上にありユーザーの入力値を保持している。
+ *   これを state の初期値に採れば、React が描画する value と DOM 値が一致し、巻き戻りが
+ *   起きない。value/checked は React のハイドレーション差分検査の対象外（user-mutable）
+ *   なので mismatch 警告も出ない。SSR では document 不在＝fallback('') を返す。
+ *
+ *   使い方: const [d, setD] = useState(() => preHydrationValue('kijunbi'))
+ */
+export function preHydrationValue(id: string, fallback = ''): string {
+  if (typeof document === 'undefined') return fallback
+  const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null
+  const v = el?.value
+  return typeof v === 'string' && v !== '' ? v : fallback
+}
+
+/**
  * 点検フォームの送信ボタン（全ツール共通シャーシ）。
  *   離脱級バグ対策（P08 C-0）: ハイドレーション前は type="button" で描画する。
  *   送信ハンドラ（form の onSubmit）が装着される前にタップされても、ネイティブ
