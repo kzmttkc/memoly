@@ -14,13 +14,15 @@ import { getCurrentUser, getMembership } from '@/lib/company'
 //   ここを数えないと「登録直後にメーターが 0件＝まだ何も覚えていません」と表示され、
 //   moat（会社を覚える）の可視化がアクティベーションの瞬間に自己否定する。
 //
-//   返却: { total, memories, decisions, rules, profiles, profileFacts }
+//   返却: { total, memories, decisions, rules, profiles, profileFacts, ruleDocs, subjects }
 //     - memories     : memory_type='summary'（相談の記憶）
 //     - decisions    : memory_type='decision'（過去の自社判断＝差別化の核）
 //     - rules        : memory_type='rule'（承認待ち候補も含む抽出事実）
 //     - profiles     : company_profiles（admin承認済みの自社ルール）
 //     - profileFacts : company_attributes の非null充足フィールド数（業種/規模/制度3問・0〜5）
-//     - total        : これらの合計＝「自社について覚えていること」の総量
+//     - ruleDocs     : company_documents（取り込んだ規程原文）の本数（P1-2 内訳表示用）
+//     - subjects     : company_memories.subject（対象者ラベル）のユニーク人数（P1-2）
+//     - total        : これらの合計（subjects は memories/decisions の属性なので二重に足さない）
 //
 //   可視性は RLS 下の anon(=ユーザーJWT) で担保（自社のみ可視）。head:true の
 //   count クエリで件数だけを軽量に取得し、本文（PII）は一切返さない。
@@ -66,13 +68,31 @@ export async function GET(req: NextRequest) {
     .eq('company_id', companyId)
     .gte('created_at', weekAgoIso)
 
-  const [sum, dec, rule, prof, attrs, week] = await Promise.all([
+  // P1-2(2026-07-23): 記憶残高の3内訳「規程n件・過去の判断n件・対象者n人」のための追加2本。
+  //   - 規程: company_documents（F1 規程まるごと取込）の本数。head:count のみ＝本文は読まない。
+  //     テーブル未適用（migration前）は count=null → 0 として扱い、既存表示を巻き添えにしない。
+  //   - 対象者: company_memories.subject のユニーク数。subject はラベル粒度（例「Aさん(育休)」）
+  //     で保存される前提の分類ラベル。ここでは件数化のためだけに読み、本文はレスポンスに返さない。
+  const docsQuery = supabase
+    .from('company_documents')
+    .select('*', { count: 'exact', head: true })
+    .eq('company_id', companyId)
+  const subjectsQuery = supabase
+    .from('company_memories')
+    .select('subject')
+    .eq('company_id', companyId)
+    .not('subject', 'is', null)
+    .limit(1000) // 対象者ラベルの現実的上限。超過時も件数が頭打ちになるだけで壊れない。
+
+  const [sum, dec, rule, prof, attrs, week, docs, subj] = await Promise.all([
     countOf('company_memories', 'summary'),
     countOf('company_memories', 'decision'),
     countOf('company_memories', 'rule'),
     countOf('company_profiles'),
     attrsQuery,
     weekQuery,
+    docsQuery,
+    subjectsQuery,
   ])
 
   const memories = sum.count ?? 0
@@ -87,13 +107,27 @@ export async function GET(req: NextRequest) {
         .filter((k) => a[k] !== null && a[k] !== undefined).length
     : 0
 
+  // 規程の本数（取得失敗/テーブル未適用は 0）。
+  const ruleDocs = docs.count ?? 0
+
+  // 対象者のユニーク人数。空文字・空白だけのラベルは数えない（決定的・LLM非依存）。
+  const subjects = new Set(
+    (subj.data ?? [])
+      .map((r) => (typeof r.subject === 'string' ? r.subject.trim() : ''))
+      .filter((s) => s.length > 0),
+  ).size
+
   return NextResponse.json({
-    total: memories + decisions + rules + profiles + profileFacts,
+    // 規程も「番頭が覚えていること」の実体なので total に含める（P1-2）。
+    // subjects は memories/decisions の属性（同じ記憶の別の切り口）なので二重加算しない。
+    total: memories + decisions + rules + profiles + profileFacts + ruleDocs,
     memories,
     decisions,
     rules,
     profiles,
     profileFacts,
+    ruleDocs,
+    subjects,
     // 直近7日で増えた記憶の件数（D09 成長の可視化）。取得失敗時は 0（表示側で非表示）。
     weekDelta: week.count ?? 0,
   })

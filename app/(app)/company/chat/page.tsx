@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/Badge'
 import { detectDecisionSignal } from '@/lib/decision-detect'
 import type { RecalledMemory } from '@/lib/recall'
 import type { CompanyAttributesRow } from '@/lib/company-attributes'
+import { INDUSTRY_MAJORS } from '@/lib/company-attributes'
 import { track } from '@/lib/analytics'
 import { CompanySwitcher } from '../_components/CompanySwitcher'
 import { CompanyGuard } from '../_components/CompanyGuard'
@@ -148,6 +149,32 @@ function buildSamplePrompts(attrs: CompanyAttributesRow): string[] {
   return prompts.slice(0, 4)
 }
 
+// 自社プロファイル要約ミニバー（G-c）: company_attributes（オンボ5問）を1行の要約にする。
+//   「番頭はこの前提で答えます」の安心感＝混線しない・毎回説明し直さなくてよい、の可視化。
+//   決定的（LLM非依存）・未回答(null)の項目は出さない（「不明」を並べて不安を煽らない）。
+//   注: 締め日は company_attributes に存在しないため、業種・人数・制度3項目で構成する。
+const EMPLOYEE_BAND_LABELS: Record<string, string> = {
+  '1-4': '従業員1〜4人',
+  '5-9': '従業員5〜9人',
+  '10-29': '従業員10〜29人',
+  '30-49': '従業員30〜49人',
+  '50-99': '従業員50〜99人',
+  '100+': '従業員100人以上',
+}
+
+function buildProfileSummary(attrs: CompanyAttributesRow): string[] {
+  const parts: string[] = []
+  const industry = INDUSTRY_MAJORS.find(i => i.code === attrs.industry_major)
+  if (industry) parts.push(industry.label)
+  if (attrs.employee_band && EMPLOYEE_BAND_LABELS[attrs.employee_band]) {
+    parts.push(EMPLOYEE_BAND_LABELS[attrs.employee_band])
+  }
+  if (attrs.has_36kyotei !== null) parts.push(`36協定${attrs.has_36kyotei ? 'あり' : 'なし'}`)
+  if (attrs.has_work_rules !== null) parts.push(`就業規則${attrs.has_work_rules ? 'あり' : 'なし'}`)
+  if (attrs.has_fixed_ot !== null) parts.push(`固定残業代${attrs.has_fixed_ot ? 'あり' : 'なし'}`)
+  return parts
+}
+
 // 文脈アクションチップ（UX-4）: 回答に規程系の語が含まれるときだけ「規程ドラフトの下書き」
 // へ連結する判定。lib/digest.ts toCards の draftable 判定と同じ発想
 // （あちらは非exportのローカル定義のため、こちらも指示された4語でローカル定義）。
@@ -181,6 +208,10 @@ function CompanyChat() {
   const [chatRemaining, setChatRemaining] = useState<{ remaining: number; limit: number } | null>(null)
   // サンプル質問（UX-2）: 既定は固定4問。attributes が取れたら会社に合わせて出し分け。
   const [samplePrompts, setSamplePrompts] = useState<string[]>(SAMPLE_PROMPTS)
+  // 自社プロファイル要約ミニバー（G-c）: attributes の1行要約。空配列=非表示（未登録/取得失敗）。
+  const [profileSummary, setProfileSummary] = useState<string[]>([])
+  // ミニバーの折りたたみ（1行のまま要約部分だけ隠せる）。
+  const [summaryCollapsed, setSummaryCollapsed] = useState(false)
   // 判断採取フック（TOP5 #1）: 番頭が「この方針を記録しますか？」と能動提案する状態。
   //   reason=提案理由ラベル / savingDecision=保存中 / dismissed=この往復では再提示しない。
   const [decisionPrompt, setDecisionPrompt] = useState<{ reason: string } | null>(null)
@@ -276,6 +307,8 @@ function CompanyChat() {
         const d = await r.json()
         if (!cancelled && d.attributes) {
           setSamplePrompts(buildSamplePrompts(d.attributes as CompanyAttributesRow))
+          // G-c: 同じ1回の取得からミニバー要約も組み立てる（追加リクエストなし）。
+          setProfileSummary(buildProfileSummary(d.attributes as CompanyAttributesRow))
         }
       } catch {
         // フォールバック: 固定4問のまま（サンプル質問が出ないより出るほうが良い）
@@ -444,7 +477,15 @@ function CompanyChat() {
           return
         }
         if (res.status === 403) {
-          setMessages(prev => [...prev, { role: 'assistant', content: 'この会社にアクセスする権限がありません。' }])
+          // G-h: 権限エラーも突き放さない。原因の言い換え＋次の一手（会社の選び直し/管理者確認）。
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content:
+                '申し訳ありません。この会社の相談を開く権限が確認できませんでした。会社の切り替えで自社を選び直すか、管理者の方にご確認いただけますか。',
+            },
+          ])
           setLoading(false)
           return
         }
@@ -456,7 +497,12 @@ function CompanyChat() {
           const data = await res.json().catch(() => ({}))
           setMessages(prev => [
             ...prev,
-            { role: 'assistant', content: data.error ?? '本日の利用上限に達しました。利用回数は日本時間の午前9時にリセットされます。' },
+            {
+              role: 'assistant',
+              content:
+                data.error ??
+                '本日の相談枠を使い切りました。日本時間の午前9時に元に戻ります。急ぎの論点は「社労士に渡すメモ」に整理しておくと安心です。',
+            },
           ])
           setLoading(false)
           return
@@ -470,9 +516,14 @@ function CompanyChat() {
         // H08: サーバー側失敗（5xx等）。network(catch)と二重計上しないよう throw せず inline 処理。
         if (!res.ok) {
           track('chat_error', { kind: 'server', status: res.status })
+          // G-h: 「接続に失敗しました」で突き放さない。番頭側の不調と認め、次の一手を添える。
           setMessages(prev => [
             ...prev,
-            { role: 'assistant', content: '接続に失敗しました。もう一度お試しください。' },
+            {
+              role: 'assistant',
+              content:
+                '申し訳ありません。番頭がうまく答えを返せませんでした。少し時間をおいて、同じ内容をもう一度送っていただけますか。ここまでのやり取りは画面に残っています。',
+            },
           ])
           return
         }
@@ -543,7 +594,11 @@ function CompanyChat() {
         track('chat_error', { kind: 'network' })
         setMessages(prev => [
           ...prev,
-          { role: 'assistant', content: '接続に失敗しました。もう一度お試しください。' },
+          {
+            role: 'assistant',
+            content:
+              '通信が途中で切れてしまったようです。電波やネットワークの状態を確かめて、もう一度送っていただけますか。ここまでのやり取りは画面に残っています。',
+          },
         ])
       } finally {
         setLoading(false)
@@ -597,7 +652,7 @@ function CompanyChat() {
         showToast(data.error ?? '記録できませんでした')
       }
     } catch {
-      showToast('記録できませんでした。通信を確認してください。')
+      showToast('記録できませんでした。通信の状態を確かめて、もう一度お試しいただけますか')
     } finally {
       setSavingDecision(false)
       setDecisionPrompt(null)
@@ -663,6 +718,30 @@ function CompanyChat() {
           <CompanySwitcher companyId={companyId} variant="header" />
         </div>
       </div>
+
+      {/* 自社プロファイル要約ミニバー（G-c）: 「番頭はこの前提で答えます」を1行で常時表示。
+          折りたたむと要約部分だけ隠れる（バー自体は残す＝再展開の足がかり）。 */}
+      {profileSummary.length > 0 && (
+        <div className="mb-2 flex min-w-0 items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50/80 px-3 py-1.5">
+          <Building2 className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
+          <span className="shrink-0 text-xs font-medium text-neutral-700">
+            番頭はこの前提で答えます
+          </span>
+          {!summaryCollapsed && (
+            <span className="min-w-0 truncate text-xs text-neutral-600" title={profileSummary.join('・')}>
+              {profileSummary.join('・')}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setSummaryCollapsed(v => !v)}
+            aria-expanded={!summaryCollapsed}
+            className="ml-auto shrink-0 text-[11px] text-neutral-400 transition-colors hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            {summaryCollapsed ? '前提を表示' : '隠す'}
+          </button>
+        </div>
+      )}
 
       {/* 会話の継続性（P1-3）: 直近会話を復元したことを明示（黙って続きにしない） */}
       {resumedTitle && (
@@ -804,7 +883,7 @@ function CompanyChat() {
       {sessionExpired && (
         <div className="mt-3 flex flex-col gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 sm:flex-row sm:items-center">
           <p className="min-w-0 text-sm text-neutral-900">
-            セッションの有効期限が切れました。もう一度ログインしてください。
+            ログインの有効期限が切れました。ログインし直すと、この画面に戻れます。相談の記録は消えていません。
           </p>
           <Link
             href={`/login?next=${encodeURIComponent(

@@ -29,6 +29,10 @@ interface MemoryStats {
   profileFacts: number
   /** 直近7日で増えた記憶の件数（D09）。旧APIレスポンス互換のため optional。 */
   weekDelta?: number
+  /** 取り込んだ規程原文の本数（P1-2 内訳）。旧APIレスポンス互換のため optional。 */
+  ruleDocs?: number
+  /** 記憶に対象者ラベルが付いている人数（P1-2 内訳）。旧APIレスポンス互換のため optional。 */
+  subjects?: number
 }
 
 export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
@@ -57,7 +61,17 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
   const total = stats?.total ?? 0
   const decisions = stats?.decisions ?? 0
   const weekDelta = stats?.weekDelta ?? 0
+  const ruleDocs = stats?.ruleDocs ?? 0
+  const subjects = stats?.subjects ?? 0
   const loading = stats === null
+
+  // P1-2: 記憶残高の内訳「規程n件・過去の判断n件・対象者n人」。0の項目は出さない
+  //   （「規程0件」は不足の宣告になり、積み上げの実感を削ぐため）。
+  const breakdown = [
+    ruleDocs > 0 && `規程 ${ruleDocs}件`,
+    decisions > 0 && `過去の判断 ${decisions}件`,
+    subjects > 0 && `対象者 ${subjects}人`,
+  ].filter(Boolean) as string[]
 
   return (
     <Link
@@ -82,21 +96,24 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
             {loading ? (
               <p className="mt-0.5 text-sm text-neutral-400">読み込み中...</p>
             ) : total > 0 ? (
-              <p className="mt-0.5 flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold tabular-nums text-neutral-900">{total}</span>
-                <span className="text-sm text-neutral-600">件</span>
-                {decisions > 0 && (
-                  <span className="text-xs text-neutral-500">
-                    （うち過去の判断 {decisions}件）
-                  </span>
+              <>
+                <p className="mt-0.5 flex items-baseline gap-1.5">
+                  <span className="text-2xl font-bold tabular-nums text-neutral-900">{total}</span>
+                  <span className="text-sm text-neutral-600">件</span>
+                  {/* D09: 直近7日の増分。増えたときだけ出す（0や取得不可では出さない）。 */}
+                  {weekDelta > 0 && (
+                    <span className="rounded-full bg-success-50 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-success-700">
+                      先週比 +{weekDelta}
+                    </span>
+                  )}
+                </p>
+                {/* P1-2: 3内訳（規程・過去の判断・対象者）。総数の「中身」を見せて実在感を出す。 */}
+                {breakdown.length > 0 && (
+                  <p className="mt-0.5 text-xs tabular-nums text-neutral-500">
+                    {breakdown.join('・')}
+                  </p>
                 )}
-                {/* D09: 直近7日の増分。増えたときだけ出す（0や取得不可では出さない）。 */}
-                {weekDelta > 0 && (
-                  <span className="rounded-full bg-success-50 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-success-700">
-                    先週比 +{weekDelta}
-                  </span>
-                )}
-              </p>
+              </>
             ) : (
               <p className="mt-0.5 text-sm text-neutral-700">
                 相談を重ねるほど、自社のことを覚えていきます。
@@ -107,7 +124,7 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
         </div>
         {!loading && total > 0 && (
           <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-            相談・判断・自社ルールを使うほど積み上がります。これは番頭だけが覚えている自社固有の記憶です。
+            相談・判断・規程を重ねるほど積み上がります。増えるほど、番頭は御社専用に鋭くなります。
           </p>
         )}
       </Card>

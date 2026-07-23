@@ -130,7 +130,7 @@ function DeadlinesInner() {
       setNewRecurrence('yearly')
       await load()
     } catch {
-      showToast('登録に失敗しました。通信を確認してください。')
+      showToast('登録できませんでした。通信の状態を確かめて、もう一度お試しいただけますか')
     } finally {
       setSaving(false)
     }
@@ -163,7 +163,7 @@ function DeadlinesInner() {
       showToast(`「${s.title}」を登録しました。期日を確認して調整してください`)
       await load()
     } catch {
-      showToast('登録に失敗しました。通信を確認してください。')
+      showToast('登録できませんでした。通信の状態を確かめて、もう一度お試しいただけますか')
     }
   }
 
@@ -327,6 +327,10 @@ function DeadlinesInner() {
               <Plus className="h-4 w-4" aria-hidden />
               {saving ? '登録中...' : '期限を登録する'}
             </Button>
+            {/* G-m: 配信予告。登録の見返り（いつ知らせてくれるのか）を登録の瞬間に明示する。 */}
+            <p className="text-center text-xs leading-relaxed text-neutral-500">
+              登録すると、期日の30日前・14日前・7日前・1日前と当日にメールでお知らせします。
+            </p>
           </form>
         </Card>
       )}

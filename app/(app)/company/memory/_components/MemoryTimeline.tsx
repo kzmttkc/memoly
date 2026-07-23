@@ -64,6 +64,8 @@ export function MemoryTimeline() {
   // 表示モード: 'timeline'（時系列＋承認）/ 'handover'（引き継ぎ/承継サマリー1画面）。
   const [mode, setMode] = useState<'timeline' | 'handover'>('timeline')
   const [memories, setMemories] = useState<Memory[] | null>(null)
+  // G-b: 対象者(subject)での絞り込み。null=すべて表示。UIのみの機能（保存値の抽出は既存）。
+  const [subjectFilter, setSubjectFilter] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [approving, setApproving] = useState<string | null>(null)
   const [toast, setToast] = useState<{ show: boolean; message: string }>({
@@ -92,7 +94,8 @@ export function MemoryTimeline() {
       )
       setIsAdmin(me?.role === 'admin')
     } catch {
-      showToast('読み込みに失敗しました')
+      // G-h: 突き放さない障害文言（次の一手つき）。
+      showToast('読み込みに失敗しました。ページを開き直すと直る場合があります')
       setMemories([])
     }
   }, [companyId, showToast])
@@ -150,6 +153,22 @@ export function MemoryTimeline() {
         }),
     }
   }, [memories])
+
+  // G-b: タイムラインに登場する対象者ラベルのユニーク集合（登場順＝新しい記憶の人が先頭）。
+  const subjects = useMemo(() => {
+    const seen = new Set<string>()
+    for (const m of timeline) {
+      const s = m.subject?.trim()
+      if (s) seen.add(s)
+    }
+    return [...seen]
+  }, [timeline])
+
+  // 絞り込み後のタイムライン。選択中の対象者が（記憶の削除等で）居なくなったら全件に戻す。
+  const visibleTimeline = useMemo(() => {
+    if (!subjectFilter || !subjects.includes(subjectFilter)) return timeline
+    return timeline.filter(m => m.subject?.trim() === subjectFilter)
+  }, [timeline, subjects, subjectFilter])
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -251,6 +270,47 @@ export function MemoryTimeline() {
             </Card>
           )}
 
+          {/* ===== 対象者フィルタ（G-b）: 人ごとに記憶を辿れる＝「人ごとに覚えている」の体感化。
+                 対象者ラベル付きの記憶が1人分でもあるときだけ出す（無ければ出さない）。 ===== */}
+          {subjects.length > 0 && (
+            <div
+              className="mb-3 flex flex-wrap items-center gap-1.5"
+              role="group"
+              aria-label="対象者で絞り込み"
+            >
+              <button
+                type="button"
+                onClick={() => setSubjectFilter(null)}
+                aria-pressed={subjectFilter === null}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+                  subjectFilter === null
+                    ? 'border-brand-600 bg-brand-600 text-white'
+                    : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900',
+                )}
+              >
+                すべて
+              </button>
+              {subjects.map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSubjectFilter(prev => (prev === s ? null : s))}
+                  aria-pressed={subjectFilter === s}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+                    subjectFilter === s
+                      ? 'border-brand-600 bg-brand-600 text-white'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900',
+                  )}
+                >
+                  <User className="h-3 w-3" aria-hidden />
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* ===== 記憶のタイムライン ===== */}
           {timeline.length === 0 ? (
             <Card className="border-dashed text-center">
@@ -267,7 +327,7 @@ export function MemoryTimeline() {
             </Card>
           ) : (
             <ol className="space-y-3">
-              {timeline.map(m => {
+              {visibleTimeline.map(m => {
                 const isDecision = m.memory_type === 'decision'
                 const date = fmtDate(isDecision ? m.decided_at : m.created_at)
                 return (
