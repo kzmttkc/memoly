@@ -419,7 +419,7 @@ export function Calculator() {
             <ResultDisclaimer detail="日付の計算は生年月日の入力にもとづく機械的な整理で、労使協定による適用除外（継続雇用1年未満・週所定労働日数2日以下等）は反映していません。個別の対象可否は自社の労務担当・専門家にご確認ください。" />
 
             {/* ===== 番頭 登録CTA（結果末尾に1本・高痛点/低痛点で出し分け） ===== */}
-            <SignupCta actionNeeded={actionNeeded} />
+            <SignupCta actionNeeded={actionNeeded} measure={measureResult} child={childResult} />
           </Card>
         </>
       )}
@@ -472,22 +472,59 @@ function YesNoField({
   )
 }
 
-// 結果末尾の番頭登録CTA。
-//   高痛点(action_needed=対応が必要)は「今の対応の必要性」トーン、
-//   低痛点(on_track=いまのところ対応済み)は「今後の見通し」トーンで出し分ける。
-//   Phase1/景表法厳守: 「義務違反」等は書かず、実挙動どおり「整理する/一緒に確認する」に留める。
-function SignupCta({ actionNeeded }: { actionNeeded: boolean }) {
+// 結果末尾の番頭登録CTA（C08: zangyodai方式の横展開）。
+//   計算結果の要約を note= で signup へ引き渡し → /company が会社作成時に「会社の記憶」へ
+//   保存する（signup側の受け皿は既存・変更不要）。note には点検結果の要約だけを載せる
+//   （氏名は扱わない・ユーザー自身が保存を選んだ会社データ・400字上限はsignup側と同じ）。
+//   文言は「この結果を会社に覚えさせて、同じ点検を続けられる」トーンに統一。
+//   Phase1/景表法厳守: 「義務違反」等は書かず、実挙動どおり「〜可能性」の整理に留める。
+function SignupCta({
+  actionNeeded,
+  measure,
+  child,
+}: {
+  actionNeeded: boolean
+  measure: MeasureCheckResult
+  child: ChildCheckResult
+}) {
+  // 保存する記録の要約（/companyで「会社の記憶」になる本文）。
+  const today = new Date()
+  const dateJp = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`
+  const childPart =
+    child.ageBand === 'schoolAgeOrOlder'
+      ? '子は対象年齢外（小学校就学の始期に到達）'
+      : child.ageBand === 'threeToSchoolAge'
+        ? `子は対象年齢（${formatJp(child.schoolEntryThresholdDate)}まで対象）`
+        : child.notificationWindow.status === 'before'
+          ? `個別周知・意向確認は${formatJp(child.notificationWindow.start)}〜${formatJp(child.notificationWindow.end)}に実施`
+          : child.notificationWindow.status === 'within'
+            ? `いま個別周知・意向確認の時期（${formatJp(child.notificationWindow.start)}〜${formatJp(child.notificationWindow.end)}）`
+            : `個別周知・意向確認の時期（〜${formatJp(child.notificationWindow.end)}）を経過`
+  const parts = [
+    `柔軟な働き方措置セルフ点検（${dateJp}・banto-roumu.com/tools/jyunan-hatarakikata-check）：`,
+    `要件を満たす措置${measure.qualifyingCount}つ（義務は2つ以上${measure.meetsObligation ? '・満たしていそう' : '・届いていない可能性'}）、`,
+    `過半数組合等への意見聴取${measure.heardUnionOpinion ? '実施済み' : '未実施'}`,
+    `。${childPart}。`,
+  ]
+  const note = parts.join('').slice(0, 400)
+  const href = `${SIGNUP_HREF}&note=${encodeURIComponent(note)}`
+
   return (
     <ToolSignupCta
-      href={SIGNUP_HREF}
+      href={href}
       location="jyunan_hatarakikata_tool"
       status={actionNeeded ? 'action_needed' : 'on_track'}
-      title={actionNeeded ? 'この従業員以外にも、確認が必要な人がいるはず' : 'この先、対象になる子・従業員が増えていく'}
+      title={
+        actionNeeded
+          ? '必要な対応の確認を、記録を残すところから始める'
+          : 'この点検結果を、会社の記録として残す'
+      }
       body={
         actionNeeded
-          ? '措置の追加や個別周知・意向確認は、対象になる従業員ごとに時期が異なります。番頭に自社が講じている措置と、対象になりそうな従業員の子の年齢を覚えさせておくと、毎回条件を入れ直さずに一緒に洗い出せます。'
-          : '子の年齢が上がるにつれて、個別周知・意向確認が必要になる時期も従業員ごとに変わります。番頭に自社の措置や対象の従業員を覚えさせておくと、時期が来るたびに前提を説明し直さずに、次に必要な対応を一緒に確認できます。'
+          ? '措置の追加や個別周知・意向確認は、対象になる従業員ごとに時期が異なります。番頭に無料登録して会社を作ると、いま画面に出ている点検結果がそのまま「会社の記憶」に保存されます。自社が講じている措置や対象になりそうな従業員も覚えさせれば、時期が来るたびに条件を入れ直さずに、同じ点検を続けられます。'
+          : '番頭に無料登録して会社を作ると、いま画面に出ている点検結果がそのまま「会社の記憶」に保存されます。番頭は自社の措置や対象の従業員を覚えるので、子の年齢が上がって対応の時期が来ても、前提を説明し直さずに同じ点検を続けられます。'
       }
+      label="この結果を自社の記録として保存（無料）"
     />
   )
 }

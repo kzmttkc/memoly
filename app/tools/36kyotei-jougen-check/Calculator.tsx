@@ -58,6 +58,14 @@ type Result = {
   flaggedCount: number
   /** 特別条項の入力があったか（無ければ原則のみで見る） */
   usedSpecial: boolean
+  /** C08: 入力値の控え（note= で signup へ引き渡す要約の材料。null=未入力の観点） */
+  inputs: {
+    smTotal: number | null
+    mmOt: number | null
+    yrOt: number | null
+    mmAvg: number | null
+    spMonths: number | null
+  }
 }
 
 // 数値パース: 空欄は「未入力＝この観点は点検しない」として null を返す。
@@ -188,7 +196,7 @@ export function Calculator() {
       (mmAvg !== null) ||
       (spMonths !== null)
 
-    setResult({ flags, flaggedCount, usedSpecial })
+    setResult({ flags, flaggedCount, usedSpecial, inputs: { smTotal, mmOt, yrOt, mmAvg, spMonths } })
 
     // 計測: 結果種別のみ（PII・入力値は送らない）。
     const status = flaggedCount === 0 ? 'within' : flaggedCount === 1 ? 'one_flag' : 'multi_flag'
@@ -395,27 +403,51 @@ export function Calculator() {
   )
 }
 
-// 結果末尾の番頭登録CTA。
-//   高痛点(flaggedCount > 0 = 確認が要りそうな箇所あり)は「今の痛みの解消」トーン、
-//   低痛点(flaggedCount === 0 = 上限内)は現行の「未来の便利」トーンを据え置く（1変数のみ変更）。
-//   Phase1/景表法厳守: 「違反判定/解消」「社労士監修」は書かず、実挙動どおり
-//   「洗い出す/一緒に整理する」に留める（番頭=自社の前提を覚えて上限に近い箇所を一覧化）。
+// 結果末尾の番頭登録CTA（C08: zangyodai方式の横展開）。
+//   計算結果の要約を note= で signup へ引き渡し → /company が会社作成時に「会社の記憶」へ
+//   保存する（signup側の受け皿は既存・変更不要）。note には入力済みの数字の要約だけを
+//   載せる（ユーザー自身が保存を選んだ会社データ・400字上限はsignup側と同じ）。
+//   文言は「この結果を会社に覚えさせて、毎月同じ点検を自動化」トーンに統一。
+//   Phase1/景表法厳守: 「違反判定/解消」「社労士監修」は書かず、実挙動どおりの約束に留める
+//   （保存無料 = 無料登録・会社作成・記憶保存はすべて無料、の実挙動と一致）。
 function SignupCta({ result }: { result: Result }) {
   // status は tool_completed と同じ分岐キー（高痛点コホートの登録CTR比較用）。
   const status =
     result.flaggedCount === 0 ? 'within' : result.flaggedCount === 1 ? 'one_flag' : 'multi_flag'
   const highPain = result.flaggedCount > 0
+
+  // 保存する記録の要約（/companyで「会社の記憶」になる本文）。入力済みの観点だけを載せる。
+  const today = new Date()
+  const dateJp = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`
+  const { smTotal, mmOt, yrOt, mmAvg, spMonths } = result.inputs
+  const parts = [
+    `36協定 上限セルフ点検（${dateJp}・banto-roumu.com/tools/36kyotei-jougen-check）：`,
+    mmOt !== null ? `最も多い月の時間外${mmOt}時間、` : '',
+    yrOt !== null ? `年間の時間外累計${yrOt}時間、` : '',
+    smTotal !== null ? `最も多い月の時間外+休日合計${smTotal}時間、` : '',
+    mmAvg !== null ? `複数月平均（時間外+休日）の最大${mmAvg}時間、` : '',
+    spMonths !== null ? `月45時間超は年${spMonths}か月、` : '',
+    `確認が要りそうな項目 ${result.flaggedCount}件。`,
+  ]
+  const note = parts.join('').slice(0, 400)
+  const href = `${SIGNUP_HREF}&note=${encodeURIComponent(note)}`
+
   return (
     <ToolSignupCta
-      href={SIGNUP_HREF}
+      href={href}
       location="36kyotei_tool"
       status={status}
-      title={highPain ? 'この点検は、今入れた数字の分だけです' : 'この点検を、会社が毎月覚えて見張る'}
+      title={
+        highPain
+          ? '上限に近い月の確認を、記録を残すところから始める'
+          : 'この点検結果を、会社の記録として残す'
+      }
       body={
         highPain
-          ? '確認が要りそうな箇所が見つかったら、来月も再来月も同じ確認が要ります。番頭に自社の36協定の内容や勤務形態を覚えさせておくと、数字を毎回入れ直さずに、月45時間や単月100時間などの上限に近づいている月を毎月一緒に洗い出せます。'
-          : '単発の点検は、その月の数字を入れ直すたびにやり直しになります。番頭に自社の36協定の内容や勤務形態を覚えさせておくと、次からは前提を貼り直さずに、月45時間や単月100時間などの上限に近い箇所を毎月一緒に整理できます。'
+          ? '確認が要りそうな箇所が見つかったら、来月も再来月も同じ点検が要ります。番頭に無料登録して会社を作ると、いま画面に出ている点検結果がそのまま「会社の記憶」に保存されます。自社の36協定の内容や勤務形態も覚えさせれば、月45時間や単月100時間などの上限の点検を、次からは数字の前提を入れ直さずに毎月続けられます。'
+          : '番頭に無料登録して会社を作ると、いま画面に出ている点検結果がそのまま「会社の記憶」に保存されます。番頭は自社の36協定の内容や勤務形態を覚えるので、毎月の同じ点検を、前提を入れ直さずに続けられます。'
       }
+      label="この結果を自社の記録として保存（無料）"
     />
   )
 }

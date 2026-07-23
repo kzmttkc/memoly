@@ -273,26 +273,46 @@ export function Calculator() {
   )
 }
 
-// 結果末尾の番頭登録CTA。
-//   高痛点(shortfall/overdue = 不足あり)は「今の痛みの解消」トーン、
-//   低痛点(met = 充足)は現行の「未来の便利」トーンを据え置く（1変数のみ変更）。
-//   Phase1/景表法厳守: 「違反判定/解消」「社労士監修」は書かず、実挙動どおり
-//   「洗い出す/一緒に整理する」に留める（番頭=社員ごとの取得状況を覚えて一覧化）。
+// 結果末尾の番頭登録CTA（C08: zangyodai方式の横展開）。
+//   計算結果の要約を note= で signup へ引き渡し → /company が会社作成時に「会社の記憶」へ
+//   保存する（signup側の受け皿は既存・変更不要）。note には入力済みの数字の要約だけを
+//   載せる（氏名は扱わない・ユーザー自身が保存を選んだ会社データ・400字上限はsignup側と同じ）。
+//   文言は「この結果を会社に覚えさせて、毎年同じ点検を続けられる」トーンに統一。
+//   Phase1/景表法厳守: 「違反判定/解消」「社労士監修」は書かず、実挙動どおりの約束に留める。
 function SignupCta({ result }: { result: Result }) {
   // status は tool_completed と同じ分岐キー（高痛点コホートの登録CTR比較用）。
   const status = result.remaining === 0 ? 'met' : result.daysToDeadline < 0 ? 'overdue' : 'shortfall'
   const highPain = result.remaining > 0
+
+  // 保存する記録の要約（/companyで「会社の記憶」になる本文）。
+  const today = new Date()
+  const dateJp = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`
+  const parts = [
+    `年5日有給取得セルフ点検（${dateJp}・banto-roumu.com/tools/yukyu-5nichi-check）：`,
+    `付与${result.granted}日・取得済み${result.taken}日、年5日まであと${result.remaining}日`,
+    `。取得期限の目安 ${formatJp(result.deadline)}`,
+    result.daysToDeadline < 0 ? '（期限を経過している可能性）' : `（残り約${result.daysToDeadline}日）`,
+    '。',
+  ]
+  const note = parts.join('').slice(0, 400)
+  const href = `${SIGNUP_HREF}&note=${encodeURIComponent(note)}`
+
   return (
     <ToolSignupCta
-      href={SIGNUP_HREF}
+      href={href}
       location="yukyu_tool"
       status={status}
-      title={highPain ? 'この点検は、今の1人ぶんです' : 'この点検を、会社が覚えて毎年自動でやる'}
+      title={
+        highPain
+          ? `あと${result.remaining}日の管理を、記録を残すところから始める`
+          : 'この点検結果を、会社の記録として残す'
+      }
       body={
         highPain
-          ? '番頭に社員を登録しておくと、この社員だけでなく、あと何日足りない人・期限が近い人を全員ぶん、一覧で洗い出せます。基準日を1人ずつ入れ直す手間なく、次からは足りていなさそうな人から確認できます。'
-          : '番頭に社員ごとの基準日と付与ルールを覚えさせておくと、次からは基準日を入れ直さずに、期限が近い社員や取得が足りていなさそうな社員を一緒に整理できます。'
+          ? 'あと何日足りないかは、社員ごとに基準日も期限も違います。番頭に無料登録して会社を作ると、いま画面に出ている点検結果がそのまま「会社の記憶」に保存されます。社員ごとの基準日と取得状況も覚えさせれば、次からは1人ずつ入れ直さずに、足りていなさそうな人から一緒に確認できます。'
+          : '番頭に無料登録して会社を作ると、いま画面に出ている点検結果がそのまま「会社の記憶」に保存されます。番頭は社員ごとの基準日や付与ルールを覚えるので、毎年の同じ点検を、前提を入れ直さずに続けられます。'
       }
+      label="この結果を自社の記録として保存（無料）"
     />
   )
 }

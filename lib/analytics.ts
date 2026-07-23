@@ -13,11 +13,73 @@ type PlausibleProps = Record<string, string | number | boolean>
 export function track(event: string, props?: PlausibleProps) {
   try {
     if (typeof window === 'undefined') return
+    const decorated = withTtvProps(event, props)
     const plausible = (window as unknown as { plausible?: (e: string, opts?: { props: PlausibleProps }) => void }).plausible
-    if (props) plausible?.(event, { props })
+    if (decorated) plausible?.(event, { props: decorated })
     else plausible?.(event)
   } catch {
     /* 計測失敗は無視。機能本体に影響させない */
+  }
+}
+
+// ----------------------------------------------------------------------------
+// TTV計測（W3.5b 2026-07-23）: signup完了→初回価値到達の経過秒。目標90秒。
+//   - signup完了時刻は markSignupCompletedAt()（app/(auth)/signup が signup_completed
+//     発火直前に呼ぶ）で localStorage に記録する。
+//   - 到達点は「初回診断表示(risk_audit_completed)」「初回チャット送信完了
+//     (chat_message_sent)」の2マイルストーン。risk/chat 側のコードには触らず、
+//     既存イベントが track() を通る瞬間にこの計測libの中で props を足す
+//     （W3.5c の risk/chat UI 変更と衝突しないよう読取をここへ集約）。
+//   - 新イベントは作らない（既存イベント名に props を足す原則）。props は
+//     低カーディナリティのバケットのみ: lt60s / 60_90s / 90_180s / 180s_plus。
+//   - 各マイルストーンは初回のみ（localStorage でガード）。signup 時刻が無い
+//     （計測実装前の登録・別ブラウザ・localStorage不可）場合は何も足さない。
+// ----------------------------------------------------------------------------
+
+const TTV_SIGNUP_AT_KEY = 'banto_signup_completed_at'
+const TTV_FIRED_PREFIX = 'banto_ttv_fired_'
+
+/** TTV到達点として扱う既存イベント → マイルストーン識別子（firedキー用） */
+const TTV_MILESTONES: Record<string, string> = {
+  risk_audit_completed: 'first_diagnosis',
+  chat_message_sent: 'first_chat',
+}
+
+/** 経過秒→低カーディナリティのバケット（目標90秒: lt60s/60_90s が合格ゾーン） */
+function ttvBucket(seconds: number): string {
+  if (seconds < 60) return 'lt60s'
+  if (seconds < 90) return '60_90s'
+  if (seconds < 180) return '90_180s'
+  return '180s_plus'
+}
+
+/** signup完了時刻を記録する（signup_completed 発火直前に app/(auth)/signup が呼ぶ）。 */
+export function markSignupCompletedAt() {
+  try {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(TTV_SIGNUP_AT_KEY, String(Date.now()))
+  } catch {
+    /* localStorage 不可は無視 */
+  }
+}
+
+/**
+ * TTV対象イベントなら ttv_bucket / ttv_seconds を props に足して返す。
+ * 対象外・初回済み・signup時刻なしのときは props をそのまま返す（挙動不変）。
+ */
+function withTtvProps(event: string, props?: PlausibleProps): PlausibleProps | undefined {
+  try {
+    const milestone = TTV_MILESTONES[event]
+    if (!milestone) return props
+    const at = Number(localStorage.getItem(TTV_SIGNUP_AT_KEY))
+    if (!Number.isFinite(at) || at <= 0) return props
+    const firedKey = TTV_FIRED_PREFIX + milestone
+    if (localStorage.getItem(firedKey)) return props
+    localStorage.setItem(firedKey, new Date().toISOString())
+    const seconds = Math.max(0, Math.round((Date.now() - at) / 1000))
+    return { ...(props ?? {}), ttv_bucket: ttvBucket(seconds) }
+  } catch {
+    return props
   }
 }
 

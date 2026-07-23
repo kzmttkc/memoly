@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { track, trackThenNavigate } from '@/lib/analytics'
+import { track, trackThenNavigate, markSignupCompletedAt } from '@/lib/analytics'
 import { Input } from '@/components/ui/Input'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
@@ -239,6 +239,7 @@ function SignupForm() {
       // デッドエンドを出さず、活性化の次の一歩(/company もしくは ?next)へ直行させる。
       // 確認必須(session 無し)なら、次の一歩を明示したガイド付き done 画面を出す。
       if (data.session) {
+        markSignupCompletedAt() // TTV計測: signup完了時刻（初回診断/初回チャットまでの経過秒の起点）
         trackThenNavigate('signup_completed', () => void finishSignup(), Object.keys(attribution).length ? attribution : undefined)
         return
       }
@@ -254,6 +255,7 @@ function SignupForm() {
         if (res.ok) {
           const signin = await supabase.auth.signInWithPassword({ email, password })
           if (!signin.error) {
+            markSignupCompletedAt() // TTV計測: signup完了時刻
             trackThenNavigate('signup_completed', () => void finishSignup(), Object.keys(attribution).length ? attribution : undefined)
             return
           }
@@ -262,6 +264,7 @@ function SignupForm() {
         // フォールバックへ
       }
       // 確認メール待ち画面（遷移しない＝ビーコンは通常どおり送出される）。
+      markSignupCompletedAt() // TTV計測: signup完了時刻
       track('signup_completed', Object.keys(attribution).length ? attribution : undefined)
       setDone(true)
       setLoading(false)

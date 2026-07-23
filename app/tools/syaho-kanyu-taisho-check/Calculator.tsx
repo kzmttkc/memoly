@@ -53,6 +53,8 @@ export function Calculator() {
   const [isStudent, setIsStudent] = useState<'yes' | 'no' | ''>('')
   const [error, setError] = useState('')
   const [result, setResult] = useState<SyahoKanyuResult | null>(null)
+  // C08: note= 引き渡し用に、判定に使った入力の控えを結果とセットで保持する。
+  const [lastInput, setLastInput] = useState<SyahoKanyuInput | null>(null)
 
   useToolOpen('syaho_kanyu')
 
@@ -83,6 +85,7 @@ export function Calculator() {
 
     const res = calcSyahoKanyu(inp)
     setResult(res)
+    setLastInput(inp)
 
     // 計測: 結果種別のみ（PII・入力値は送らない）。
     track('tool_completed', { tool: 'syaho_kanyu', status: res.status })
@@ -274,7 +277,7 @@ export function Calculator() {
           <ResultDisclaimer detail="学生の例外的な取り扱いや、正社員の4分の3以上の労働時間・日数で働く場合の加入など、このツールで扱っていない論点もあります。正確な判定は自社の勤怠・賃金台帳と、必要に応じて年金事務所・専門家にご確認ください。" />
 
           {/* ===== 番頭 登録CTA（結果末尾に1本・高痛点/低痛点で出し分け） ===== */}
-          <SignupCta result={result} />
+          <SignupCta result={result} input={lastInput} />
         </Card>
       )}
     </div>
@@ -326,23 +329,45 @@ function YesNoField({
   )
 }
 
-// 結果末尾の番頭登録CTA。
-//   高痛点(taisho=加入対象になりそう=会社の対応が必要)は「今の対応の必要性」トーン、
-//   低痛点(taishogai=対象外)は「今後の見通し」トーンで出し分ける（1変数のみ変更の流儀）。
-//   Phase1/景表法厳守: 「加入確定」等は書かず、実挙動どおり「整理する/一緒に洗い出す」に留める。
-function SignupCta({ result }: { result: SyahoKanyuResult }) {
+// 結果末尾の番頭登録CTA（C08: zangyodai方式の横展開）。
+//   計算結果の要約を note= で signup へ引き渡し → /company が会社作成時に「会社の記憶」へ
+//   保存する（signup側の受け皿は既存・変更不要）。note には入力済みの数字の要約だけを
+//   載せる（氏名は扱わない・ユーザー自身が保存を選んだ会社データ・400字上限はsignup側と同じ）。
+//   文言は「この結果を会社に覚えさせて、同じ点検を続けられる」トーンに統一。
+//   Phase1/景表法厳守: 「加入確定」等は書かず、実挙動どおり「〜になりそう」の整理に留める。
+function SignupCta({ result, input }: { result: SyahoKanyuResult; input: SyahoKanyuInput | null }) {
   const highPain = result.status === 'taisho'
+
+  // 保存する記録の要約（/companyで「会社の記憶」になる本文）。
+  const today = new Date()
+  const dateJp = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`
+  const parts = input
+    ? [
+        `パート社会保険 加入対象セルフ点検（${dateJp}・banto-roumu.com/tools/syaho-kanyu-taisho-check）：`,
+        `被保険者数${input.companySize}人、週の所定労働時間${input.weeklyHours}時間、所定内賃金 月${input.monthlyWage}円、`,
+        `2か月超の雇用見込み${input.expectedOver2Months ? 'あり' : 'なし'}、学生${input.isStudent ? 'に該当' : 'ではない'}`,
+        `。結果：${result.status === 'taisho' ? '5つの要件をすべて満たし、加入対象になりそう' : '満たしていない要件があり、今回の時点では対象外になりそう'}。`,
+      ]
+    : []
+  const note = parts.join('').slice(0, 400)
+  const href = note ? `${SIGNUP_HREF}&note=${encodeURIComponent(note)}` : SIGNUP_HREF
+
   return (
     <ToolSignupCta
-      href={SIGNUP_HREF}
+      href={href}
       location="syaho_kanyu_tool"
       status={result.status}
-      title={highPain ? 'この従業員以外にも、対象になりそうな人がいるはず' : 'この先、対象になる人が出てくることもある'}
+      title={
+        highPain
+          ? '対象になりそうな人の確認を、記録を残すところから始める'
+          : 'この点検結果を、会社の記録として残す'
+      }
       body={
         highPain
-          ? '106万円の壁の賃金要件は2026年10月に撤廃予定で、企業規模要件もこの先段階的に縮小します。番頭に自社の従業員数や勤務形態を覚えさせておくと、対象になりそうな他の従業員も含めて、毎回条件を入れ直さずに一緒に洗い出せます。'
-          : '賃金要件の撤廃や企業規模要件の縮小が進むと、今は対象外の従業員も対象になることがあります。番頭に自社の従業員数や勤務形態を覚えさせておくと、制度が変わるたびに前提を説明し直さずに、対象になりそうな人を一緒に確認できます。'
+          ? '加入対象になりそうな人が1人見つかったら、他のパート従業員にも同じ確認が要ります。番頭に無料登録して会社を作ると、いま画面に出ている点検結果がそのまま「会社の記憶」に保存されます。自社の従業員数や勤務形態も覚えさせれば、賃金要件の撤廃（2026年10月予定）など制度が変わったときも、条件を入れ直さずに同じ点検を続けられます。'
+          : '番頭に無料登録して会社を作ると、いま画面に出ている点検結果がそのまま「会社の記憶」に保存されます。番頭は自社の従業員数や勤務形態を覚えるので、賃金要件の撤廃（2026年10月予定）や企業規模要件の縮小で前提が変わったときも、入れ直さずに同じ点検を続けられます。'
       }
+      label="この結果を自社の記録として保存（無料）"
     />
   )
 }

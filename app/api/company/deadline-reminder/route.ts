@@ -29,7 +29,9 @@ const BANTO_URL = 'https://banto-roumu.com'
 const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL
 
 // 通知するリード日数（残り日数の閾値）。大きい順に定義し、近づくたびに1回ずつ通知する。
-const NOTIFY_OFFSETS = [30, 14, 7, 1]
+//   0 = 当日通知（W3.5b 2026-07-23 追加・第2表#6）。前日(1)通知済みでも last_notified_offset=1 > 0
+//   のため当日にもう1回届く（matchOffset と二重送信ガードの単調減少ロジックはそのまま成立）。
+const NOTIFY_OFFSETS = [30, 14, 7, 1, 0]
 
 // 走査対象の窓（最大リード＝先頭の閾値）。BETWEEN today AND today+MAX_LEAD の行だけ引く。
 const MAX_LEAD_DAYS = NOTIFY_OFFSETS[0]
@@ -73,8 +75,8 @@ function daysUntil(dueOn: string, todayStr: string): number {
 }
 
 /**
- * 「daysUntil 以上で最小」の閾値を返す（例: NOTIFY_OFFSETS=[30,14,7,1]）。
- *   daysUntil=20 → 30（20以上で最小の閾値＝30） / 6 → 7 / 1 → 1 / 0 → 1（当日も1で拾う）。
+ * 「daysUntil 以上で最小」の閾値を返す（例: NOTIFY_OFFSETS=[30,14,7,1,0]）。
+ *   daysUntil=20 → 30（20以上で最小の閾値＝30） / 6 → 7 / 1 → 1 / 0 → 0（当日通知）。
  *   窓（0..30日）で引いているので必ず1つは該当する。該当なしは null。
  */
 function matchOffset(du: number): number | null {
@@ -83,9 +85,14 @@ function matchOffset(du: number): number | null {
   return Math.min(...eligible)
 }
 
+/** 残り日数の表示（当日は「残り0日」でなく「本日」と書く・敬体の自然な文言）。 */
+function remainingLabel(du: number): string {
+  return du === 0 ? '本日' : `残り${du}日`
+}
+
 /** 1件をテキスト版へ（HTMLを読めない環境向け）。 */
 function itemToText(row: DeadlineRow, du: number): string {
-  const lines = [`■ ${row.title}`, `期日の目安: ${row.due_on}（残り${du}日）`]
+  const lines = [`■ ${row.title}`, `期日の目安: ${row.due_on}（${remainingLabel(du)}）`]
   if (row.note) lines.push(row.note)
   return lines.join('\n')
 }
@@ -97,7 +104,7 @@ function itemToHtml(row: DeadlineRow, du: number): string {
     : ''
   return `<div style="border:1px solid #d9e0f4;border-radius:12px;padding:14px 16px;margin:0 0 12px">
     <p style="color:#21305a;font-weight:bold;font-size:14px;margin:0 0 6px">${escapeHtml(row.title)}</p>
-    <p style="color:#b45309;font-size:12px;margin:0">期日の目安: ${escapeHtml(row.due_on)}（残り${du}日）</p>
+    <p style="color:#b45309;font-size:12px;margin:0">期日の目安: ${escapeHtml(row.due_on)}（${remainingLabel(du)}）</p>
     ${note}
   </div>`
 }
