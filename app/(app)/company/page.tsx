@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Home, MessageSquareText, FileText, ShieldCheck, Sparkles, BookOpenCheck, History, Plus, Users } from 'lucide-react'
+import { Home, MessageSquareText, FileText, ShieldCheck, Sparkles, BookOpenCheck, History, Plus, Users, CreditCard } from 'lucide-react'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { StatPill } from '@/components/ui/StatPill'
 import { Badge } from '@/components/ui/Badge'
 import { track } from '@/lib/analytics'
+import { resolvePlan } from '@/lib/plans'
 
 // ============================================================================
 // /company — 会社オンボーディング / ハブ
@@ -330,27 +331,48 @@ function CompanyHome() {
           )
         })}
 
-        {/* 顧問先を追加（社労士が複数クライアントを管理する導線） */}
+        {/* 顧問先を追加（社労士が複数クライアントを管理する導線）。
+            収益ゲート: free/starter/standard は自社1社まで。2社目以降は士業プランが必要
+            （サーバ側 POST /api/company が最終的な enforcement。ここは案内と誤操作抑止）。
+            許容量の判定はサーバの canCreateAnotherCompany と同じ式（所属会社の最大 maxCompanies）。 */}
         <details className="rounded-2xl border border-neutral-200 bg-white p-5">
           <summary className="flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-neutral-700 transition-colors hover:text-brand-700">
             <Plus className="h-4 w-4" aria-hidden />
             別の会社（顧問先）を追加する
           </summary>
-          <p className="mb-3 mt-3 text-xs leading-relaxed text-neutral-500">
-            追加した会社はあなたが管理者になり、独立した自社ルールと記憶を持ちます。
-          </p>
-          <form onSubmit={createCompany} className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="例：株式会社サンプル"
-              maxLength={100}
-              aria-label="追加する会社名"
-            />
-            <Button type="submit" disabled={creating || !name.trim()} className="sm:w-auto">
-              {creating ? '追加中...' : '会社を追加'}
-            </Button>
-          </form>
+          {companies.length <
+          Math.max(1, ...companies.map(c => resolvePlan(c.plan).maxCompanies)) ? (
+            <>
+              <p className="mb-3 mt-3 text-xs leading-relaxed text-neutral-500">
+                追加した会社はあなたが管理者になり、独立した自社ルールと記憶を持ちます。
+              </p>
+              <form onSubmit={createCompany} className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="例：株式会社サンプル"
+                  maxLength={100}
+                  aria-label="追加する会社名"
+                />
+                <Button type="submit" disabled={creating || !name.trim()} className="sm:w-auto">
+                  {creating ? '追加中...' : '会社を追加'}
+                </Button>
+              </form>
+            </>
+          ) : (
+            <div className="mt-3 rounded-lg border border-brand-200 bg-brand-50/60 px-4 py-3 text-xs leading-relaxed text-neutral-700">
+              <p>
+                複数の会社（顧問先）を切り替えて管理するには、士業プランが必要です。士業プランでは顧問先ごとに自社ルールと記憶が分かれ、切り替えても相談内容が混ざりません。
+              </p>
+              <Link
+                href={`/company/billing?companyId=${companies[0].companyId}`}
+                className={buttonClass({ variant: 'secondary', className: 'mt-3' })}
+              >
+                <CreditCard className="h-4 w-4" aria-hidden />
+                プランを確認する
+              </Link>
+            </div>
+          )}
         </details>
       </div>
     </div>

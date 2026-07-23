@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Search,
+  UserCog,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
@@ -243,6 +244,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           <CreditCard className="h-4.5 w-4.5 shrink-0" aria-hidden />
           プラン
+        </Link>
+        {/* F05: 退会・データ削除/エクスポート/監査ログの発見性是正。
+            従来はプラン/請求ページの奥にしか無く /account は 404 だった（persona05/07）。
+            設定領域に常設し、1クリックで /company/account に辿れるようにする。 */}
+        <Link
+          href={withCompany('/company/account')}
+          onClick={onNavigate}
+          aria-current={pathname.startsWith('/company/account') ? 'page' : undefined}
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+            pathname.startsWith('/company/account')
+              ? 'bg-brand-50 text-brand-700'
+              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
+          )}
+        >
+          <UserCog className="h-4.5 w-4.5 shrink-0" aria-hidden />
+          アカウント・データ
         </Link>
       </div>
     </>

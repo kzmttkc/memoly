@@ -72,6 +72,16 @@ export interface PlanDef {
   seatCap: number
   /** 複数顧問先（multi-company admin）を許すか（士業向け）。 */
   multiClient: boolean
+  /**
+   * このユーザーが所有（admin として作成）できる会社数の上限。
+   *   free/starter/standard = 1（自社のみ）、shigyo = 複数顧問先（多数）。
+   *   ★「複数顧問先を切り替え・各社記憶分離」は士業¥29,800の看板訴求そのもの。
+   *   会社作成APIはこの値で構造ゲートし（`canCreateAnotherCompany`）、BILLING_ENABLED の
+   *   有無に関わらず有効にする（無料で複数顧問先を作れる収益リークを塞ぐ）。
+   *   ★新規ユーザーの「最初の1社」作成は、会社作成APIが「所属0社なら常に許可」で
+   *     担保するため、この値とは独立にオンボは絶対に壊れない。
+   */
+  maxCompanies: number
   /** 機能別 日次上限。 */
   limits: PlanFeatureLimits
 }
@@ -96,6 +106,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     priceEnvVarYearly: null,
     seatCap: 3,
     multiClient: false,
+    maxCompanies: 1,
     limits: {
       chat: 20,
       insights: 3,
@@ -120,6 +131,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     priceEnvVarYearly: 'STRIPE_PRICE_STARTER_YEARLY',
     seatCap: 5,
     multiClient: false,
+    maxCompanies: 1,
     limits: {
       chat: 50,
       insights: 10,
@@ -143,6 +155,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     priceEnvVarYearly: null,
     seatCap: 20,
     multiClient: false,
+    maxCompanies: 1,
     limits: {
       chat: 150,
       insights: 30,
@@ -166,6 +179,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     priceEnvVarYearly: null,
     seatCap: 50,
     multiClient: true,
+    maxCompanies: 50,
     limits: {
       chat: 400,
       insights: 80,
@@ -242,6 +256,25 @@ export function planIdForAmount(amount: number | null | undefined): PlanId | nul
  */
 export function limitFor(planId: PlanId, kind: keyof PlanFeatureLimits): number {
   return PLANS[planId].limits[kind]
+}
+
+/**
+ * ユーザーの所属会社群 plan から「今もう1社作成してよいか」を判定する。
+ * 会社作成API(POST /api/company)の**構造ゲート**（BILLING_ENABLED 非依存で常時有効）。
+ *   - 所属0社: 常に true。★新規オンボの「最初の1社」を絶対に妨げない。
+ *   - 所属1社以上: 所属会社の plan で最も大きい maxCompanies を許容量とし、
+ *     現在の所属数がそれ未満なら true。free/starter/standard は maxCompanies=1 のため
+ *     2社目以降は不可。多数の顧問先を持てるのは multiClient(士業/¥29,800) 会社を
+ *     1社でも保有する場合のみ（=複数顧問先切替という看板機能を士業プランへ課金ゲート）。
+ *   - 既存で既に複数会社を持つユーザーは、ここでは剥奪しない（新規作成のみを制限し、
+ *     owned < allowance を満たさなくても既存の会社・記憶・権限は一切触らない）。
+ * @param plans ユーザーが所属する各会社の plan 値（companies.plan）
+ */
+export function canCreateAnotherCompany(plans: (string | null | undefined)[]): boolean {
+  const owned = plans.length
+  if (owned === 0) return true
+  const allowance = Math.max(1, ...plans.map(p => resolvePlan(p).maxCompanies))
+  return owned < allowance
 }
 
 // 「番頭は現在 無料モニター中で、キー投入後に課金を有効化する」ためのフラグ。

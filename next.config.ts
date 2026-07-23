@@ -23,17 +23,34 @@ const nextConfig: NextConfig = {
       { source: "/memory/:path*", destination: "/company", statusCode: 301 },
       { source: "/chat", destination: "/company", statusCode: 301 },
       { source: "/chat/:path*", destination: "/company", statusCode: 301 },
+      // 退会・データ管理の発見性是正（persona05/07）: 素朴に /account を叩く動線を
+      //   AppShell 配下の /company/account へ寄せる。認証状態に依存する薄い利便リダイレクト
+      //   のため 307（一時）にする（将来 URL 構成を変えても取り消せる）。
+      { source: "/account", destination: "/company/account", statusCode: 307 },
     ];
   },
   async headers() {
     // 外部許可ホスト群（enforce と report-only で共有）。
-    //   plausible=解析 / clarity=セッションリプレイ(任意・env未設定なら未ロード) /
-    //   sentry=エラー収集(任意・DSN未設定なら未送信)。ホスト許可だけでは何もロードしないため、
-    //   先に列挙しておけば env 投入時に CSP 変更なしで有効化できる（no-op許可）。
-    const scriptHosts = "https://plausible.io https://www.clarity.ms https://*.clarity.ms";
+    //   plausible=解析（実際に発火・/security /privacy に開示済み）。
+    //
+    // ★clarity.ms / *.sentry.io は CSP から撤去した（2026-07-24 persona04 是正）。
+    //   両者は env 未設定で現状 no-op（実データ送信ゼロ・本番HTMLに痕跡なし）だったが、
+    //   /security・/privacy の委託先一覧に未記載のまま CSP だけ先行許可していた。
+    //   「未使用ホストの先行許可」は攻撃面を無駄に広げるだけなので、有効化まで許可しない。
+    //
+    //   ⚠️再有効化ルール（将来 Clarity/Sentry を使うとき・必ず同時に行うこと）:
+    //     1. scriptHosts / connectHosts に該当ホストを戻す。
+    //        - Clarity: script-src に https://www.clarity.ms https://*.clarity.ms、
+    //          connect-src に https://*.clarity.ms
+    //        - Sentry:  connect-src に https://*.sentry.io https://*.ingest.sentry.io
+    //     2. **同じPRで** app/security（委託先一覧）と app/privacy（第3条 提供先）に
+    //        Microsoft Clarity / Sentry を追記する。開示追記なしに有効化すると開示違反になる。
+    //     （関連コンポーネントは env 未設定なら no-op のまま残置＝components/analytics/Clarity.tsx,
+    //       instrumentation.ts。CSPを戻すだけでは発火せず、env 投入で初めて動く。）
+    const scriptHosts = "https://plausible.io";
     const connectHosts =
       "https://*.supabase.co https://api.anthropic.com https://vitals.vercel-insights.com " +
-      "https://plausible.io https://*.clarity.ms https://*.sentry.io https://*.ingest.sentry.io";
+      "https://plausible.io";
 
     // 現行(enforce): Next.js のフレームワーク製インラインscript/styleが残るため
     //   script-src/style-src の 'unsafe-inline' は当面維持（外すと即クラッシュ）。

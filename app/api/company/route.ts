@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, getCurrentUser, listMyCompanies } from '@/lib/company'
+import { canCreateAnotherCompany } from '@/lib/plans'
 
 // ============================================================================
 // /api/company
@@ -28,6 +29,23 @@ export async function POST(req: NextRequest) {
   }
   const seatsPurchased =
     Number.isInteger(seats) && seats >= 1 ? seats : 1
+
+  // 収益ゲート（構造的・BILLING_ENABLED 非依存で常時有効）:
+  //   「複数の会社（顧問先）を切り替え・各社記憶分離」は士業¥29,800の看板訴求。
+  //   free/starter/standard は自社1社まで。2社目以降は multiClient(士業)会社の保有が必要。
+  //   ★所属0社（=新規ユーザーの最初の1社）は canCreateAnotherCompany が常に true を返すため
+  //     オンボは絶対に壊れない。既存の複数会社ユーザーの権限も剥奪しない（新規作成のみ制限）。
+  const myCompanies = await listMyCompanies()
+  if (!canCreateAnotherCompany(myCompanies.map(c => c.plan))) {
+    return NextResponse.json(
+      {
+        error:
+          '複数の会社（顧問先）を管理するには士業プランが必要です。現在のプランでは会社を1社まで作成できます。',
+        code: 'company_limit',
+      },
+      { status: 403 },
+    )
+  }
 
   const admin = createAdminClient()
 
