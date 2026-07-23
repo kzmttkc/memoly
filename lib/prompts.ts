@@ -1,39 +1,20 @@
 import { selectFactsForQuery, formatFactsBlock } from './legal-facts'
 
 // ============================================================================
-// 出力フォーマット共通ルール（2026-07-22 CTO監査で追加）
-//   画面側（chat/documents/reports/insights/risk 等）は LLM の出力文字列を
-//   <pre className="whitespace-pre-wrap"> でそのまま描画しており、Markdown を
-//   HTML に変換するレンダラーは導入していない（react-markdown 等の新規ライブラリ
-//   導入は architecture 変更＝CTO権限では draft 止まりのため、レンダラー追加でなく
-//   プロンプト側で「Markdown記法を使わない」よう統一する）。
-//   これを付けないと "**太字**"「## 見出し」「| 表 |」がエスケープされずそのまま
-//   利用者に見える（実測: 本番チャットで確認）。書類生成では利用者がそのまま
-//   コピーして実文書に貼るため、記号混入は見た目以上に実害がある。
+// 出力フォーマット共通ルール（2026-07-22 CTO監査で追加・2026-07-23 更新）
+//   chat 画面は react-markdown（remark-gfm/remark-breaks・raw HTML 無効の既定安全構成）
+//   で描画するため、抑制が漏れても **太字**・##見出し・表は正しく整形される（D04対応）。
+//   一方 documents/reports/insights/risk 等は引き続き whitespace-pre-wrap の平文描画で、
+//   書類生成では利用者がそのままコピーして実文書に貼るため、記号混入は見た目以上に
+//   実害がある。よってこの NO_MARKDOWN_RULE は引き続き全プロンプトへ注入する
+//   （chat ではレンダラーが安全網、他画面ではこのルールが第一防衛線）。
 // ============================================================================
 const NO_MARKDOWN_RULE = `- 出力はMarkdown記法を使わない普通の日本語の文章にしてください（**太字**、##見出し、| 表 |、\`コード\`などの記号は使わない）。強調したい語は「」で囲む、見出しが要る場合は【見出し】や■を使う、一覧は「・」または「1. 2. 3.」の番号のみで書くなど、記号なしでそのまま読める書き方にしてください。`
 
-export function buildSystemPrompt(memories: string[], profile: Record<string, string>): string {
-  const profileText = Object.entries(profile)
-    .map(([k, v]) => `- ${k}：${v}`)
-    .join('\n')
-
-  const memoryText = memories.map((m, i) => `${i + 1}. ${m}`).join('\n')
-
-  return `あなたはMemolyというパーソナルAIアシスタントです。
-ユーザーのことを覚えており、毎回の会話をより深く、より的確にサポートします。
-
-【あなたが知っているユーザーのこと】
-${profileText || '（まだ情報がありません）'}
-
-【過去の会話から覚えていること】
-${memoryText || '（まだ記憶がありません）'}
-
-【重要なルール】
-- 会話の冒頭（最初の返答）では、必ず過去の記憶を1文で自然に言及してください。例：「前回○○の話をしていましたね」「○○がお仕事なんですよね」など。
-- 記憶がある場合は、それを活かして具体的・個別的な返答をしてください。
-- 記憶の内容を過度に強調せず、会話の流れの中で自然に反映させてください。`
-}
+// 旧Memoly個人版のシステムプロンプト buildSystemPrompt / buildSystemPromptWithRoumu /
+// ROUMU_KEYWORDS は 2026-07-23 に削除した（旧ブランド残骸の一掃）。
+//   呼び出し元はゼロ（唯一の旧呼出口 /api/chat・/api/memory は恒久リタイア済で
+//   常に 410 Gone を返す空エンドポイント＝プロンプトを参照しない）。
 
 export const MEMORY_EXTRACTION_PROMPT = `以下の会話を分析し、2つの情報をJSON形式で返してください。
 
@@ -604,22 +585,4 @@ ${answerText}
 - 断定的な個別法律判断はしない。「〜のおそれがあります」「〜を検討するとよいでしょう」の条件形で書く。
 - 「社労士監修」「AI社労士」「法的精度」等の表現は使わない。
 - JSON構造は崩さないが、note/why/fix/summary等の文字列の中身にMarkdown記号（**太字**や#見出し等）は使わない。`
-}
-
-// 労務・社会保険系キーワード（sharoushi-agent送客トリガー）
-export const ROUMU_KEYWORDS = [
-  '社会保険', '労働保険', '雇用保険', '健康保険', '厚生年金',
-  '給与', '給料', '残業代', '有給', '育休', '産休',
-  '労働基準', '就業規則', '解雇', '退職', '入社手続き',
-  '社労士', '労務', '年末調整', '確定申告', '扶養',
-  '雇用契約', '業務委託', 'フリーランス 保険'
-]
-
-export function buildSystemPromptWithRoumu(memories: string[], profile: Record<string, string>, lastUserMessage: string): string {
-  const base = buildSystemPrompt(memories, profile)
-  const hasRoumuTopic = ROUMU_KEYWORDS.some(kw => lastUserMessage.includes(kw))
-
-  if (!hasRoumuTopic) return base
-
-  return base + `\n\n---\n労務・社会保険に関する質問には、回答の最後に必ず以下を1行追加してください：\n「より詳しい労務相談は → sharoushi-agent.com（無料）」`
 }

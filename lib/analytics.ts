@@ -60,7 +60,25 @@ export function trackThenNavigate(
   }
 }
 
-const RETURN_KEY = 'memoly_first_visit'
+const RETURN_KEY = 'banto_first_visit'
+const RETURN_FIRED_KEY = 'banto_returning_fired_on'
+
+/**
+ * 2026-07-23 ブランド移行: memoly_* → banto_*。
+ * 旧キーの値が残っていれば新キーへ移し替えてから読む（初回訪問日を失うと
+ * 既存訪問者が「初回」に巻き戻り returning_user 計測が欠落するため）。
+ */
+function migrateLegacyKey(newKey: string, legacyKey: string): string | null {
+  const current = localStorage.getItem(newKey)
+  if (current) return current
+  const legacy = localStorage.getItem(legacyKey)
+  if (legacy) {
+    localStorage.setItem(newKey, legacy)
+    localStorage.removeItem(legacyKey)
+    return legacy
+  }
+  return null
+}
 
 /**
  * リテンション最小代理: 初回訪問日を localStorage に記録し、
@@ -71,15 +89,15 @@ export function trackReturningVisit() {
   try {
     if (typeof window === 'undefined') return
     const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD（ローカル基準で十分な粒度）
-    const first = localStorage.getItem(RETURN_KEY)
+    const first = migrateLegacyKey(RETURN_KEY, 'memoly_first_visit')
     if (!first) {
       localStorage.setItem(RETURN_KEY, today)
       return
     }
     if (first !== today) {
-      const lastFired = localStorage.getItem('memoly_returning_fired_on')
+      const lastFired = migrateLegacyKey(RETURN_FIRED_KEY, 'memoly_returning_fired_on')
       if (lastFired !== today) {
-        localStorage.setItem('memoly_returning_fired_on', today)
+        localStorage.setItem(RETURN_FIRED_KEY, today)
         track('returning_user')
       }
     }

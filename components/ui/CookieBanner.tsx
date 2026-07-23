@@ -19,7 +19,18 @@ export function CookieBanner() {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const accepted = localStorage.getItem('memoly_cookie_accepted')
+    // 2026-07-23 ブランド移行: 旧キー memoly_cookie_accepted → banto_cookie_accepted。
+    // 旧キーで同意済みの既存訪問者にバナーを再表示しないよう、旧キーがあれば
+    // 新キーへ移行してから判定する（移行後は旧キーを削除）。
+    let accepted = localStorage.getItem('banto_cookie_accepted')
+    if (!accepted) {
+      const legacy = localStorage.getItem('memoly_cookie_accepted')
+      if (legacy) {
+        localStorage.setItem('banto_cookie_accepted', legacy)
+        localStorage.removeItem('memoly_cookie_accepted')
+        accepted = legacy
+      }
+    }
     if (!accepted) setShow(true)
   }, [])
 
@@ -51,7 +62,7 @@ export function CookieBanner() {
   }, [show])
 
   function accept() {
-    localStorage.setItem('memoly_cookie_accepted', '1')
+    localStorage.setItem('banto_cookie_accepted', '1')
     setShow(false)
   }
 

@@ -160,16 +160,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
 
             <ThemeToggle />
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-neutral-600 transition-colors duration-150 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              aria-label="ログアウト"
-            >
-              <LogOut className="h-4 w-4" aria-hidden />
-              <span className="hidden sm:inline">ログアウト</span>
-            </button>
+            {/* D20(2026-07-23): ログアウトはヘッダ直置きをやめ、サイドナビ末尾（>=lg）と
+                モバイルドロワー末尾（<lg）へ格納した。ヘッダの検索/テーマ切替の隣に
+                並んでいた頃の誤タップを防ぐ。 */}
           </div>
         </div>
         {/* sm 未満では会社スイッチャーを2段目に */}
@@ -180,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="mx-auto flex max-w-6xl">
         {/* ===== 左サイドナビ(>=lg) ===== */}
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 border-r border-neutral-200 px-3 py-5 lg:block">
+        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 flex-col border-r border-neutral-200 px-3 py-5 lg:flex">
           <nav className="space-y-1" aria-label="会社版ナビゲーション">
             {NAV.map(({ href, label, icon: Icon }) => {
               const active = isActive(href)
@@ -203,6 +196,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               )
             })}
           </nav>
+          {/* D20: ログアウトはナビ末尾（区切り線の下）。主要導線との誤タップを避ける。 */}
+          <div className="mt-auto border-t border-neutral-200 pt-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            >
+              <LogOut className="h-4.5 w-4.5 shrink-0" aria-hidden />
+              ログアウト
+            </button>
+          </div>
         </aside>
 
         {/* ===== メイン ===== */}
@@ -285,6 +289,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )
               })}
             </nav>
+            {/* D20: モバイルはドロワー末尾からログアウト（ヘッダ直置きの誤タップ防止）。 */}
+            <div className="mt-3 border-t border-neutral-200 pt-3">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <LogOut className="h-4.5 w-4.5 shrink-0" aria-hidden />
+                ログアウト
+              </button>
+            </div>
           </div>
         </div>
       )}

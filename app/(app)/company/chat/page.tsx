@@ -6,6 +6,7 @@ import { useSearchParams, usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText, Brain, ScrollText, History } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
+import { MarkdownMessage } from '@/components/ui/MarkdownMessage'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { detectDecisionSignal } from '@/lib/decision-detect'
@@ -644,9 +645,9 @@ function CompanyChat() {
               )}
               <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'rounded-br-sm bg-brand-600 text-white'
+                      ? 'whitespace-pre-wrap rounded-br-sm bg-brand-600 text-white'
                       : 'rounded-bl-sm bg-neutral-100 text-neutral-900'
                   }`}
                 >
@@ -656,6 +657,10 @@ function CompanyChat() {
                       <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 motion-safe:animate-bounce [animation-delay:150ms]" />
                       <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 motion-safe:animate-bounce [animation-delay:300ms]" />
                     </span>
+                  ) : msg.role === 'assistant' ? (
+                    // D04: assistant 回答は Markdown レンダラで描画（プロンプト抑制が
+                    // 漏れた **太字**・##見出し・表も正しく整形。raw HTML は無効＝XSS安全）。
+                    <MarkdownMessage content={msg.content} />
                   ) : (
                     msg.content
                   )}
