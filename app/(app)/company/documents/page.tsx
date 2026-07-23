@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { BookMarked, Check, Copy, FileText, ScanSearch, Trash2 } from 'lucide-react'
+import { BookMarked, Check, Copy, Download, FileText, ScanSearch, Trash2 } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -101,6 +101,22 @@ function DocumentsInner() {
     } catch {
       showToast('コピーに失敗しました')
     }
+  }
+
+  // D13: 生成結果をワンクリックで .txt ダウンロード（プレーンテキストコピーは維持）。
+  //   Word等の形式変換はしない（体裁の崩れた文書を「完成品」に見せない・Phase1）。
+  function downloadDraft() {
+    if (!draft) return
+    const blob = new Blob([draft], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${docType}_ドラフト_${new Date().toISOString().slice(0, 10)}.txt`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    track('document_downloaded', { doc_type: docType })
   }
 
   // --- タブ2: 規程レビュー ---
@@ -289,12 +305,19 @@ function DocumentsInner() {
 
           {draft && (
             <Card className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-neutral-600">生成されたドラフト</span>
-                <Button variant="secondary" size="sm" onClick={copyDraft}>
-                  <Copy className="h-3.5 w-3.5" aria-hidden />
-                  コピー
-                </Button>
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="secondary" size="sm" onClick={copyDraft}>
+                    <Copy className="h-3.5 w-3.5" aria-hidden />
+                    コピー
+                  </Button>
+                  {/* D13: ワンクリック保存（.txt）。 */}
+                  <Button variant="secondary" size="sm" onClick={downloadDraft}>
+                    <Download className="h-3.5 w-3.5" aria-hidden />
+                    ダウンロード
+                  </Button>
+                </div>
               </div>
               <pre className="whitespace-pre-wrap break-words rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-900">
                 {draft}
