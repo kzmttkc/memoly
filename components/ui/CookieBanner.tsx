@@ -68,24 +68,29 @@ export function CookieBanner() {
 
   if (!show) return null
 
+  // 2026-07-23 A11: 初回表示を最小化（1行テキスト + ボタンの単一行）。
+  //   従来はモバイルで2〜3行に折り返し、FV下端の占有が大きかった。文言を短縮し、
+  //   縦paddingを詰め、常に横一列（テキストは truncate せず折返し許容だが短文で
+  //   実質1行）にする。同意キー(banto_cookie_accepted・旧キー移行込み)と
+  //   padding-bottom 確保の仕組みは従来のまま触らない。
   return (
     <div
       ref={ref}
       style={{ bottom: tabbarOffset }}
-      className="fixed left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-[0_-1px_3px_rgba(0,0,0,0.04)] px-4 py-3"
+      className="fixed left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-[0_-1px_3px_rgba(0,0,0,0.04)] px-4 py-2"
       role="banner"
       aria-label="Cookie使用の通知"
     >
-      <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <p className="text-xs text-neutral-600 leading-relaxed">
-          本サービスはログイン状態の維持にCookieを使用します。アクセス解析はPlausible Analytics（Cookie不使用・匿名計測）で行っています。
+      <div className="max-w-3xl mx-auto flex flex-row items-center justify-between gap-3">
+        <p className="text-[11px] text-neutral-600 leading-snug">
+          ログイン維持にCookieを使用します（解析はCookie不使用の匿名計測です）。
           <Link href="/privacy" className="text-brand-600 underline ml-1">詳細</Link>
         </p>
         <button
           onClick={accept}
-          className="shrink-0 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+          className="shrink-0 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
-          同意する
+          OK
         </button>
       </div>
     </div>

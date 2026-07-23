@@ -1,7 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { track } from '@/lib/analytics'
+import {
+  type LpVariant,
+  VARIANT_KEY,
+  VARIANT_COOKIE_MAX_AGE,
+  VARIANT_B_RATIO,
+  isLpVariant,
+} from './variant-shared'
 
 // ============================================================================
 // LP A/B variant レール — /business 公開LPの「変種別 PDCA」を物理的に回すための土台。
@@ -9,58 +15,59 @@ import { track } from '@/lib/analytics'
 //   なぜ必要か: これまで LP には variant/experiment/bucket の分岐機構が無く、
 //   ファネルイベント(signup_cta_clicked / demo_engaged / lead_captured / …)は
 //   揃っていても「どの変種の来訪か」を示すキーが無いため、変種別集計＝A/B の
-//   閉ループ(PDCA)が物理的に回せなかった。ここで着地時に安定バケット(A/B)を
+//   閉ループ(PDCA)が物理的に回せなかった。着地時に安定バケット(A/B)を
 //   1回だけ決めて固定し、このページの全 track() に variant を注入する。
 //
-//   設計原則（回帰リスクゼロ）:
-//     - 変種決定は必ずクライアント側（localStorage +補助cookie に固定）。
-//       サーバーコンポーネント/metadata/ISR は一切触らない＝静的化(/business)を
-//       壊さない。ビルド時に特定の変種へ固定化されることもない。
-//     - SSR と最初のハイドレーションは常に 'A'（現行UIと完全一致）。マウント後の
-//       useEffect で実バケットを読み、'B' の来訪だけがアイブロー＋サブコピーを
-//       差し替える。variant='A' の来訪は最初から最後まで現行UIと同一（回帰なし）。
+//   2026-07-23 A02 SSRバイアス修正:
+//     変種の一次決定は middleware（サーバー側）へ移した。middleware が着地時に
+//     cookie(banto_lp_variant) を確定し、SSR HTML の段階で変種が焼き込まれる。
+//     ここ（クライアント）は cookie を最優先で読み、SSR と必ず同じ変種を返す。
+//     localStorage は旧来訪者のバケット維持と cookie 失効時のフォールバック。
+//     middleware を通らない経路（万一）だけ、クライアントで 70/30 割当を行う。
+//
+//   設計原則:
 //     - low-cardinality 2値のみ（'A' | 'B'）。lib/analytics.ts の track 規約
 //       （PIIなし・低カーディナリティ）を厳守。utm 引き継ぎ(TrackedCTA)は無傷。
+//     - 既存の計測語彙（イベント名・variant プロパティ）は変更しない。
 // ============================================================================
 
-export type LpVariant = 'A' | 'B'
+export type { LpVariant }
 
-const VARIANT_KEY = 'banto_lp_variant'
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 180 // 180日
+function readCookieVariant(): LpVariant | null {
+  const m = document.cookie.match(
+    new RegExp(`(?:^|;\\s*)${VARIANT_KEY}=(A|B)(?:;|$)`),
+  )
+  return m && isLpVariant(m[1]) ? m[1] : null
+}
 
 /**
- * 着地時に安定バケット(A/B)を1回だけ決めて固定し、返す。
- *   - 既に localStorage に決定済みならそれを返す（同一来訪者は常に同じ変種）。
- *   - 未決定なら 50/50 で割り当て、localStorage + 補助 cookie に固定する。
- *   - サーバー / localStorage 不可時は 'A'（現行UI）にフォールバック＝安全側。
+ * 現在の変種を返す。優先順位:
+ *   1. cookie（middleware=SSR が確定した値。SSR HTML と必ず一致させる）
+ *   2. localStorage（旧来訪者のバケット維持）→ cookie にも再固定
+ *   3. どちらも無ければクライアントで 70/30 割当（middleware 未経由の保険）
  * PII は扱わない。値は 'A' | 'B' の 2値のみ。
  */
 export function getVariant(): LpVariant {
   if (typeof window === 'undefined') return 'A'
   try {
+    const fromCookie = readCookieVariant()
+    if (fromCookie) {
+      // SSR の確定値を正としてローカルにも同期（旧値との食い違いを解消）
+      window.localStorage.setItem(VARIANT_KEY, fromCookie)
+      return fromCookie
+    }
     const stored = window.localStorage.getItem(VARIANT_KEY)
-    if (stored === 'A' || stored === 'B') return stored
-    const assigned: LpVariant = Math.random() < 0.5 ? 'A' : 'B'
+    const assigned: LpVariant = isLpVariant(stored)
+      ? stored
+      : Math.random() < VARIANT_B_RATIO
+        ? 'B'
+        : 'A'
     window.localStorage.setItem(VARIANT_KEY, assigned)
-    document.cookie = `${VARIANT_KEY}=${assigned}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`
+    document.cookie = `${VARIANT_KEY}=${assigned}; path=/; max-age=${VARIANT_COOKIE_MAX_AGE}; SameSite=Lax`
     return assigned
   } catch {
     return 'A'
   }
-}
-
-/**
- * 変種を購読する React フック。
- *   SSR と最初のハイドレーションは 'A' を返し（サーバー出力と一致＝ハイドレーション
- *   不整合を起こさない）、マウント後に実バケットへ更新する。'A' は不変・'B' のみ
- *   マウント後に差し替わる（現行UI＝'A' は回帰ゼロ）。
- */
-export function useVariant(): LpVariant {
-  const [variant, setVariant] = useState<LpVariant>('A')
-  useEffect(() => {
-    setVariant(getVariant())
-  }, [])
-  return variant
 }
 
 type TrackProps = Record<string, string | number | boolean>

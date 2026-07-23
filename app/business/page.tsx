@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import Link from 'next/link'
 import {
   Brain,
@@ -27,6 +28,7 @@ import { Badge } from '@/components/ui/Badge'
 import TryDemoLazy from './_components/TryDemoLazy'
 import { TrackedCTA } from './_components/TrackedCTA'
 import { HeroEyebrow, HeroHeadline, HeroSubcopy } from './_components/HeroCopy'
+import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
 import { PLANS } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
 import { TOOL_LIST } from '@/lib/tools'
@@ -498,7 +500,14 @@ function RiskScorePreview() {
   )
 }
 
-export default function BusinessLandingPage() {
+export default async function BusinessLandingPage() {
+  // A/B 変種は middleware が cookie で確定し、内部ヘッダで渡してくる（A02: SSR段階で
+  // 変種を焼き込む。従来の「SSR常にA・Bはhydration後差し替え」の計測バイアスを解消）。
+  // headers() を読むためこのルートは動的レンダリングになる（Vercel上でSSR）。
+  // ヘッダ欠落時（middleware未経由の万一）は A にフォールバック＝安全側。
+  const h = await headers()
+  const hv = h.get(VARIANT_HEADER)
+  const variant: LpVariant = hv === 'B' ? 'B' : 'A'
   return (
     <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
       {/* ===== ヘッダ ===== */}
@@ -530,66 +539,108 @@ export default function BusinessLandingPage() {
         </div>
       </header>
 
-      {/* ===== 冒頭サマリー（GEO対策・2026-07-22追加） =====
+      {/* ===== 冒頭サマリー（GEO対策・2026-07-22追加 / 2026-07-23 A03で折りたたみ化） =====
           AI検索・要約エンジンが本文全体を読まずに1段落で製品を要約できるよう、
-          ヒーロー(A/B変種スロット)より前に、常に同一の平文サマリーを静的描画する。
+          ヒーロー(A/B変種スロット)より前に、常に同一の平文サマリーを保持する。
           文面は public/llms.txt の冒頭要約と一致させ、複数面での一貫性を保つ。
-          A/B実験(HeroEyebrow/HeroHeadline/HeroSubcopy)には触れない・独立した帯。 */}
+          A03: 人間の初見客には帯がFVを圧迫しH1到達を遅らせるため <details> で
+          折りたたむ。本文テキストは閉じていても DOM 上に常に存在するため、
+          クローラ・要約エンジンは従来どおり全文を読める（GEO効果は維持）。 */}
       <section className="border-b border-neutral-200 bg-neutral-50">
-        <div className="mx-auto max-w-5xl px-6 py-5">
-          <p className="text-center text-sm leading-relaxed text-neutral-600 sm:text-left">
-            番頭(Banto)は、中小企業の総務・経営者向けの労務記憶AIです。就業規則・36協定・有給休暇管理などの自社規程をAIに覚えさせておき、労務の疑問に自社の前提で即答します。汎用AIのように、聞くたびに社内規程や過去の運用を説明し直す必要がありません。企業ごとにデータを分離して保管し、無料で試せます。
-          </p>
+        <div className="mx-auto max-w-5xl px-6 py-2.5">
+          <details>
+            <summary className="cursor-pointer select-none text-center text-xs font-medium text-neutral-500 hover:text-neutral-700 sm:text-left">
+              番頭(Banto)とは — 30秒でわかる概要
+            </summary>
+            <p className="mt-2 pb-1 text-center text-sm leading-relaxed text-neutral-600 sm:text-left">
+              番頭(Banto)は、中小企業の総務・経営者向けの労務記憶AIです。就業規則・36協定・有給休暇管理などの自社規程をAIに覚えさせておき、労務の疑問に自社の前提で即答します。汎用AIのように、聞くたびに社内規程や過去の運用を説明し直す必要がありません。企業ごとにデータを分離して保管し、無料で試せます。
+            </p>
+          </details>
         </div>
       </section>
 
       {/* ===== ヒーロー（above the fold） =====
           左：価値ステートメント1つ + 支える一行 + 主要CTA1つ
-          右：製品の動きを示す様式化UIプレビュー（見て分かる） */}
-      <section className="mx-auto max-w-5xl px-6 pb-16 pt-16 sm:pt-24">
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-10">
-          {/* 左：言葉 */}
+          右：製品の動きを示す様式化UIプレビュー（見て分かる）
+          2026-07-23 A01: モバイル縦積みで製品プレビューがCTAより後ろ＝FV外に
+          落ちていた。コピー/プレビュー/CTAを3ブロックに分け、モバイルの自然順を
+          「H1 → プレビュー → CTA」に変更。lg では従来どおり左=言葉・右=プレビュー
+          （プレビューを row-span-2 で右列に固定）。 */}
+      <section className="mx-auto max-w-5xl px-6 pb-16 pt-10 sm:pt-16">
+        <div className="grid items-center gap-y-8 lg:grid-cols-2 lg:gap-x-10">
+          {/* ブロック1：言葉（アイブロー・H1・サブコピー） */}
           <div className="text-center lg:text-left">
-            {/* アイブロー＝A/B第1実験の変種化スロット（HeroEyebrow）。
-                A=役割ラベル / B=note読者の到着文脈(痛み)起点。詳細は _components/HeroCopy.tsx。 */}
-            <HeroEyebrow />
+            {/* アイブロー＝A/B変種スロット。A=役割ラベル / B=痛み起点フック。
+                2026-07-23 A02: variant は middleware→page が SSR で確定して prop 渡し
+                （従来の hydration 後差し替えを廃止）。詳細は _components/HeroCopy.tsx。 */}
+            <HeroEyebrow variant={variant} />
             {/* 2026-07-11 CMO改稿: アイブロー=役割 / H1=最強フレーズ / 直下の段落=
                 「覚えている」の説明、と役割を分けて同義反復を解消。意味単位の
                 inline-block で語中改行を防ぐ。
-                2026-07-13 CPO第2実験: H1本体を A/B 変種化スロット(HeroHeadline)へ。
-                A=現行メタファーで完全据え置き / B=初見客向けの具体的価値提案。
-                CTA・レイアウトは A/B 共通のまま。 */}
-            <HeroHeadline />
-            {/* H1直上サブコピー＝A/B第1実験の変種化スロット（HeroSubcopy）。 */}
-            <HeroSubcopy />
-            {/* 主CTA=デモ体験（登録不要）へページ内スクロール。冷たい初見客に
-                会社登録を先に迫らず、まず数秒でアハに届ける。純粋な内部アンカー
-                なので SSR/metadata は無傷。signup は下の従CTAに降格。 */}
-            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+                A=記憶メタファー / B=カテゴリ即解型（B を勝者候補として70%配信）。 */}
+            <HeroHeadline variant={variant} />
+            {/* H1直下サブコピー＝A/B変種スロット。 */}
+            <HeroSubcopy variant={variant} />
+          </div>
+
+          {/* ブロック2：見て分かる（モバイルではH1直下・lgでは右列に固定） */}
+          <div className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:pl-4">
+            <ProductPreview />
+          </div>
+
+          {/* ブロック3：CTA（モバイルではプレビューの後）
+              主CTA=デモ体験（登録不要）へページ内スクロール。冷たい初見客に
+              会社登録を先に迫らず、まず数秒でアハに届ける。純粋な内部アンカー。
+              2026-07-23 A04/A05: 主CTAを時間約束型・従CTAを成果型の文言へ変更
+              （リンク先・計測イベント(location="hero")・UTM引き継ぎは不変）。 */}
+          <div className="lg:col-start-1 lg:row-start-2">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <a
                 href="#demo"
                 className={buttonClass({ variant: 'primary', size: 'lg' })}
               >
-                サンプルで答え方を見てみる（登録不要）
+                30秒で答え方を見る
                 <ArrowDown className="h-4 w-4" aria-hidden />
               </a>
               <TrackedCTA
                 location="hero"
                 className={buttonClass({ variant: 'ghost', size: 'lg' })}
               >
-                会社を登録して始める
+                1分で自社リスク診断
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </TrackedCTA>
             </div>
+            {/* 2026-07-23 A06: リスクリバーサル1行。クレカ不要・全削除可は
+                本文（料金=無料モニター期間・削除はあなたの権利）と整合する事実。 */}
             <p className="mt-3 text-center text-xs text-neutral-500 lg:text-left">
-              サンプル会社で答え方を体験できます。登録は後からで大丈夫です。
+              登録不要で体験できます。クレジットカードも不要、預けたデータはいつでも全削除できます。
             </p>
           </div>
+        </div>
+      </section>
 
-          {/* 右：見て分かる */}
-          <div className="lg:pl-4">
-            <ProductPreview />
-          </div>
+      {/* ===== 社会的証明バー（2026-07-23 A13） =====
+          導入社数・体験談の捏造は絶対にしない（feedback_no_sockpuppet_authentic_content）。
+          コード上の事実から導ける数字のみで構成する:
+            - 書類ドラフト4種 = app/(app)/company/documents/page.tsx の DOCUMENT_TYPES
+              （36協定・就業規則・賃金規程・労働条件通知書）。種類を増減したら
+              ここの列挙も更新すること（クライアントページのためimport不可・手動同期）。
+            - 無料セルフ点検ツール数 = lib/tools.ts TOOL_LIST から動的に埋め込み。
+            - 「作り手が自分の会社で使う」= 下部・信頼シグナル節と同一の事実。 */}
+      <section className="border-y border-neutral-200 bg-neutral-50">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-6 py-3">
+          <p className="flex items-center gap-1.5 text-xs text-neutral-600">
+            <FileText className="h-3.5 w-3.5 text-brand-600" aria-hidden />
+            就業規則・36協定・賃金規程・労働条件通知書の下書きに対応
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-neutral-600">
+            <ShieldCheck className="h-3.5 w-3.5 text-brand-600" aria-hidden />
+            無料セルフ点検ツール{TOOL_LIST.length}種を公開中（登録不要）
+          </p>
+          <p className="flex items-center gap-1.5 text-xs text-neutral-600">
+            <BadgeCheck className="h-3.5 w-3.5 text-brand-600" aria-hidden />
+            作り手が自分の会社で実際に使いながら開発しています
+          </p>
         </div>
       </section>
 
