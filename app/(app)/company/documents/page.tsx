@@ -134,6 +134,10 @@ function DocumentsInner() {
   const [ingestTitle, setIngestTitle] = useState('就業規則')
   const [ingesting, setIngesting] = useState(false)
   const [ingested, setIngested] = useState<IngestedDoc[]>([])
+  // D22: 同名規程の再取込（改定）時にサーバが生成する「何が変わったか」の差分要約。
+  //   初回取込では null（サーバ側で LLM を呼ばない）。トーストは消えるため、
+  //   要約はカードで残して読める形にする。
+  const [changeSummary, setChangeSummary] = useState<string | null>(null)
 
   const loadIngested = useCallback(async () => {
     if (!companyId) return
@@ -197,6 +201,7 @@ function DocumentsInner() {
       return
     }
     setIngesting(true)
+    setChangeSummary(null)
     try {
       const selected = facts.filter((_, i) => factChecked[i])
       const res = await fetch('/api/company/document/ingest', {
@@ -216,10 +221,16 @@ function DocumentsInner() {
         return
       }
       const savedProfiles: number = data.savedProfiles ?? 0
+      // D22: 改定（同名再取込）ならサーバが差分要約を返す。カードで常設表示する。
+      const summary: string | null =
+        typeof data.changeSummary === 'string' && data.changeSummary ? data.changeSummary : null
+      setChangeSummary(summary)
       showToast(
-        savedProfiles > 0
-          ? `「${data.document?.title ?? ingestTitle}」を覚えました（自社ルール${savedProfiles}件も登録）`
-          : `「${data.document?.title ?? ingestTitle}」を覚えました`,
+        summary
+          ? `「${data.document?.title ?? ingestTitle}」を更新しました（変更点を要約しました）`
+          : savedProfiles > 0
+            ? `「${data.document?.title ?? ingestTitle}」を覚えました（自社ルール${savedProfiles}件も登録）`
+            : `「${data.document?.title ?? ingestTitle}」を覚えました`,
       )
       // 計測: 規程取込（看板「会社を覚える」の実体・非PII: 件数のみ）。
       track('document_ingested', { fact_count: savedProfiles })
@@ -446,6 +457,21 @@ function DocumentsInner() {
                 </div>
               </Card>
             </div>
+          )}
+
+          {/* D22: 規程改定の差分要約（同名再取込時のみサーバが生成・記憶にも保存済み） */}
+          {changeSummary && (
+            <Card className="space-y-1.5 border-brand-200 bg-brand-50/50">
+              <p className="text-sm font-medium text-brand-800">
+                前回の取込からの変更点（自動要約）
+              </p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-700">
+                {changeSummary}
+              </p>
+              <p className="text-xs text-neutral-500">
+                この要約は会社の記憶にも保存しました。以降の相談で参照されます。
+              </p>
+            </Card>
           )}
 
           {/* 取込済み規程の一覧（会社の記憶として保持中） */}

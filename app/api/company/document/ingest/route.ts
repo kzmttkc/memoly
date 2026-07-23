@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getCurrentUser, getMembership } from '@/lib/company'
 import { logCompanyAudit } from '@/lib/audit'
+import { anthropic, MEMORY_MODEL } from '@/lib/claude'
+import { checkAndIncrement } from '@/lib/rate-limit'
+import { resolvePlan } from '@/lib/plans'
 
 // ============================================================================
 // /api/company/document/ingest — F1 規程まるごと取込
@@ -21,7 +24,14 @@ import { logCompanyAudit } from '@/lib/audit'
 //     読取り(GET): メンバー全員 / 書込み(POST)・削除(DELETE): admin のみ。
 //     全操作 anon(=ユーザーJWT) クライアントで実行し、RLS を最終防衛線とする。
 //
-//   LLM 呼び出しなし（抽出は review 呼び出しに相乗り済み）＝ rate-limit 対象外。
+//   LLM 呼び出し（D22・2026-07-23 追加）:
+//     初回取込では呼ばない（抽出は review 呼び出しに相乗り済み・コスト最小）。
+//     **同名規程の再取込（＝改定）時のみ**、旧版との差分を行単位でローカル抽出し、
+//     差分行だけを haiku（MEMORY_MODEL）へ渡して「何が変わったか」の要約を生成する。
+//     要約は (a) レスポンス changeSummary で UI に表示、(b) company_memories
+//     (memory_type='summary', topic='規程の改定') に保存＝以降の相談の記憶に効く。
+//     要約の失敗・rate-limit 超過は取込本体を巻き戻さない（changeSummary=null で続行）。
+//     rate-limit は document_review の枠に相乗り（新kind追加なし・plan連動）。
 //   テーブル未適用（supabase/company_documents.sql 適用前）の環境では
 //   GET は空一覧 / POST は 503 を返し、原因をエラーメッセージで明示する。
 // ============================================================================
@@ -75,7 +85,7 @@ export async function POST(req: NextRequest) {
   }
 
   const guard = await requireAdmin(companyId)
-  if (guard) return guard
+  if (guard.error) return guard.error
 
   const cleanTitle = typeof title === 'string' ? title.trim().slice(0, 100) : ''
   if (!cleanTitle) {
@@ -87,6 +97,17 @@ export async function POST(req: NextRequest) {
 
   const content = documentText.trim().slice(0, MAX_CONTENT)
   const supabase = await createServerSupabaseClient()
+
+  // --- D22: 旧版の取得（差分要約の材料）。upsert が旧本文を上書きする前に読む。---
+  //   初回取込では旧版が無い＝この後の LLM 呼び出しは発火しない（コスト最小）。
+  //   select 失敗はベストエフォート（差分要約なしで取込本体を続行）。
+  const { data: prevDoc } = await supabase
+    .from('company_documents')
+    .select('content')
+    .eq('company_id', companyId as string)
+    .eq('title', cleanTitle)
+    .maybeSingle()
+  const prevContent = typeof prevDoc?.content === 'string' ? prevDoc.content : null
 
   // --- (a) 規程原文を upsert（同じ規程名は差替え＝規程改定時の再取込を自然にする）---
   const now = new Date().toISOString()
@@ -151,14 +172,29 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ document: doc, savedProfiles, failedProfiles })
+  // --- D22: 規程改定の差分要約（旧版が存在し、本文が実際に変わったときのみ）---
+  //   要約の失敗は取込本体の成功を巻き戻さない（changeSummary=null で返す）。
+  let changeSummary: string | null = null
+  if (prevContent !== null && prevContent !== content) {
+    changeSummary = await summarizeRegulationChange({
+      supabase,
+      companyId: companyId as string,
+      userId: guard.user.id,
+      plan: resolvePlan(guard.membership.plan).id,
+      title: cleanTitle,
+      oldText: prevContent,
+      newText: content,
+    })
+  }
+
+  return NextResponse.json({ document: doc, savedProfiles, failedProfiles, changeSummary })
 }
 
 // DELETE { companyId, id } — 取込済み規程の削除。adminのみ。
 export async function DELETE(req: NextRequest) {
   const { companyId, id } = await req.json().catch(() => ({}))
   const guard = await requireAdmin(companyId)
-  if (guard) return guard
+  if (guard.error) return guard.error
   if (!id) return NextResponse.json({ error: 'id が必要です' }, { status: 400 })
 
   const supabase = await createServerSupabaseClient()
@@ -174,29 +210,146 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: '削除に失敗しました' }, { status: 500 })
   }
   // 監査ログ（重要操作: 取込規程の削除）。ベストエフォート。
-  const actor = await getCurrentUser()
-  if (actor) {
-    await logCompanyAudit({
-      companyId,
-      actorUserId: actor.id,
-      action: 'document.delete',
-      targetType: 'company_document',
-      targetId: id,
-    })
-  }
+  // requireAdmin が検証済みの user を返すため再取得しない。
+  await logCompanyAudit({
+    companyId,
+    actorUserId: guard.user.id,
+    action: 'document.delete',
+    targetType: 'company_document',
+    targetId: id,
+  })
   return NextResponse.json({ ok: true })
 }
 
+// ----------------------------------------------------------------------------
+// D22: 規程改定の差分要約
+//   旧版・新版の本文から行単位の差分（追加行/削除行）をローカルで抽出し、
+//   **差分行だけ**を MEMORY_MODEL(haiku) に渡して敬体・プレーンテキストの要約を作る。
+//   全文2本を LLM に投げない＝規程は最大10万字あるためコストを差分量に比例させる。
+//   生成した要約は company_memories(memory_type='summary', topic='規程の改定') に
+//   保存し、以降のチャットの記憶注入（loadCompanyContext）で参照可能にする。
+//   失敗時（rate-limit超過・API失敗・差分ゼロ）は null を返し、取込本体は成功のまま。
+// ----------------------------------------------------------------------------
+
+// LLM に渡す差分の上限（片側）。就業規則の通常改定は数条文＝十分収まる。
+const MAX_DIFF_CHARS = 6000
+
+function diffLines(oldText: string, newText: string): { added: string[]; removed: string[] } {
+  const toLines = (t: string) =>
+    t.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+  const oldLines = toLines(oldText)
+  const newLines = toLines(newText)
+  const oldSet = new Set(oldLines)
+  const newSet = new Set(newLines)
+  // 集合差分（順序保持）。条文の移動は追加+削除の両方に出るが、要約用途では
+  // 「その条文に触れた変更がある」ことが伝われば十分＝LCSまでは持ち込まない。
+  return {
+    added: newLines.filter(l => !oldSet.has(l)),
+    removed: oldLines.filter(l => !newSet.has(l)),
+  }
+}
+
+function capJoin(lines: string[], cap: number): string {
+  let out = ''
+  for (const l of lines) {
+    if (out.length + l.length + 1 > cap) {
+      out += '\n（以下省略）'
+      break
+    }
+    out += (out ? '\n' : '') + l
+  }
+  return out
+}
+
+async function summarizeRegulationChange(args: {
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>
+  companyId: string
+  userId: string
+  plan: ReturnType<typeof resolvePlan>['id']
+  title: string
+  oldText: string
+  newText: string
+}): Promise<string | null> {
+  const { supabase, companyId, userId, plan, title, oldText, newText } = args
+
+  const { added, removed } = diffLines(oldText, newText)
+  // 実質差分なし（空白・改行の整形のみ）は LLM を呼ばない。
+  if (added.length === 0 && removed.length === 0) return null
+
+  // rate-limit: document_review の枠に相乗り（規程処理系として同じ費目・plan連動）。
+  // 超過しても取込本体は成功済み＝要約だけ静かに省略する（429で取込を壊さない）。
+  if (!(await checkAndIncrement(userId, 'document_review', plan))) {
+    console.warn('[company:document:ingest] change summary skipped (rate limited)')
+    return null
+  }
+
+  const prompt = `会社の規程「${title}」が改定されました。以下は改定前後の本文を行単位で比較した差分です。
+
+【削除された行（旧版にのみあった記述）】
+${capJoin(removed, MAX_DIFF_CHARS) || '（なし）'}
+
+【追加された行（新版で加わった記述）】
+${capJoin(added, MAX_DIFF_CHARS) || '（なし）'}
+
+この差分から「何が変わったか」を、従業員に伝わる敬体の日本語で2〜5文に要約してください。
+守ること:
+- 差分から読み取れる変更のみを述べる。推測・評価・助言は書かない。
+- Markdown記法（見出し・箇条書き記号・強調記号）は使わず、プレーンテキストの文章のみで書く。
+- 数値（時間・日数・金額など）の変更は旧値と新値を明記する。
+要約本文のみを出力してください。`
+
+  try {
+    const res = await anthropic.messages.create({
+      model: MEMORY_MODEL,
+      max_tokens: 512,
+      messages: [{ role: 'user', content: prompt }],
+    })
+    // text ブロック抽出は lib/memory.ts callExtraction と同じ流儀。
+    const raw = res.content[0]?.type === 'text' ? res.content[0].text : ''
+    const text = raw
+      // 指示違反の保険: 強調・見出し・箇条書き記号を軽く除去（公開面のMarkdown禁止と同じ流儀）。
+      .replace(/\*\*|__/g, '')
+      .replace(/^#+\s*/gm, '')
+      .replace(/^[-*・]\s+/gm, '')
+      .trim()
+    if (!text) return null
+
+    const summary = text.slice(0, 1000)
+
+    // 会社の記憶へ保存（ベストエフォート・失敗しても要約表示は生かす）。
+    // anon(=ユーザーJWT)クライアント＝RLSが最終防衛線（member insert 可・adminは当然可）。
+    const { error } = await supabase.from('company_memories').insert({
+      company_id: companyId,
+      summary: `規程「${title}」の改定：${summary}`.slice(0, 1000),
+      memory_type: 'summary',
+      topic: '規程の改定',
+    })
+    if (error) {
+      console.error('[company:document:ingest] change summary memory insert failed', error.message)
+    }
+    return summary
+  } catch (e) {
+    console.error('[company:document:ingest] change summary generation failed', (e as Error).message)
+    return null
+  }
+}
+
 // 共通: ログイン + admin 所属を要求（profile route と同じ流儀）。
-async function requireAdmin(companyId: unknown): Promise<NextResponse | null> {
+//   D22: 差分要約の rate-limit（user.id）と plan 解決（membership.plan）に使うため、
+//   検証済みの user / membership も返す（呼び出し側の再取得を不要にする）。
+type AdminGuard =
+  | { error: NextResponse; user?: undefined; membership?: undefined }
+  | { error: null; user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>; membership: NonNullable<Awaited<ReturnType<typeof getMembership>>> }
+
+async function requireAdmin(companyId: unknown): Promise<AdminGuard> {
   const user = await getCurrentUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!user) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   if (!companyId || typeof companyId !== 'string') {
-    return NextResponse.json({ error: 'companyId required' }, { status: 400 })
+    return { error: NextResponse.json({ error: 'companyId required' }, { status: 400 }) }
   }
   const membership = await getMembership(companyId)
   if (!membership || membership.role !== 'admin') {
-    return NextResponse.json({ error: '管理者のみ取込できます' }, { status: 403 })
+    return { error: NextResponse.json({ error: '管理者のみ取込できます' }, { status: 403 }) }
   }
-  return null
+  return { error: null, user, membership }
 }

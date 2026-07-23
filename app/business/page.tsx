@@ -224,6 +224,9 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
 //   Entry/Standard = 会社単位の月額（プランの上限人数まで追加料金なし）。
 //   士業のみ席（シート）単位 = 事務所の利用メンバー数に応じて課金。
 //   利用回数・上限人数は lib/plans.ts の実装値から直接埋め込む（表示と実装の乖離を構造的に防ぐ）。
+//   anchor（E12・2026-07-23）: 価格アンカーは「自社事実のみ」型（output/0723/banto_pricing_anchor_copy.md 案A）。
+//     外部価格（社労士相談の相場等）は出典を示せず有利誤認リスク＋社労士法27条配慮に反するため
+//     主語にしない。1日あたりの金額は monthlyJpy÷31 の割り算のみ（検証可能・誇張ゼロ）。
 const PLAN_COPY = [
   {
     name: PLANS.starter.displayName,
@@ -232,6 +235,7 @@ const PLAN_COPY = [
     yearly: PLANS.starter.yearlyJpy,
     tagline: 'まず使ってみる',
     badge: 'おすすめ',
+    anchor: `1日あたり約${Math.round(PLANS.starter.monthlyJpy / 31)}円で、労務の調べ物と記録をいつでも任せられます。`,
     // 2026-07-23 B17: CTA文言をプラン別に分化（リンク先・計測locationは不変）。
     cta: 'Entryで始める（今は無料）',
     features: [
@@ -250,6 +254,7 @@ const PLAN_COPY = [
     yearly: PLANS.standard.yearlyJpy,
     tagline: 'チームでしっかり使う',
     badge: null,
+    anchor: '総務担当を1人増やす前に、まず番頭に任せられる範囲を確かめられます。',
     cta: 'Standardで始める（今は無料）',
     features: [
       'Entry のすべての機能',
@@ -266,6 +271,8 @@ const PLAN_COPY = [
     yearly: PLANS.shigyo.yearlyJpy,
     tagline: '複数の顧問先を管理',
     badge: '士業向け',
+    // 士業プランは設計案にアンカー無し（席単位課金で「1日あたり」換算が誤解を生むため付けない）。
+    anchor: null,
     cta: '士業として顧問先を登録',
     features: [
       `Standard のすべて（AIチャット相談 1日${PLANS.shigyo.limits.chat}回まで）`,
@@ -985,6 +992,11 @@ export default async function BusinessLandingPage({
                   <p className="mt-1 text-xs text-neutral-500 tabular-nums">
                     年額 &yen;{p.yearly.toLocaleString()}（月払いより2ヶ月分お得）
                   </p>
+                )}
+                {/* 2026-07-23 E12: 価格アンカー（自社事実のみ・外部相場は主語にしない）。
+                    設計: output/0723/banto_pricing_anchor_copy.md 案A（誇張禁止・Phase1コンプラ）。 */}
+                {p.anchor && (
+                  <p className="mt-2 text-xs leading-relaxed text-neutral-600">{p.anchor}</p>
                 )}
                 <ul className="mt-5 space-y-2.5">
                   {p.features.map(feat => (
