@@ -10,6 +10,7 @@ import TryDemoLazy from './_components/TryDemoLazy'
 import { TrackedCTA } from './_components/TrackedCTA'
 import { HeroEyebrow, HeroHeadline, HeroSubcopy } from './_components/HeroCopy'
 import { HeaderCta } from './_components/HeaderCta'
+import { MobileNav } from './_components/MobileNav'
 import IndustryHeroPreview from './_components/IndustryHeroPreview'
 import CompareToggle from './_components/CompareToggle'
 import ScenarioSection from './_components/ScenarioSection'
@@ -403,10 +404,15 @@ export default async function BusinessLandingPage({
             </span>
           </Link>
           <nav className="flex items-center gap-2">
+            {/* 2026-07-24 P02(発見性): モバイル(sm未満)はデスクトップの
+                無料ツール/労務記事リンクが hidden sm:inline-flex で畳まれ、ヘッダから
+                主要導線へ届かなかった。ハンバーガーでその2導線だけを補う（sm以上では
+                自身が hidden＝デスクトップ導線を壊さない）。 */}
+            <MobileNav />
             {/* 2026-07-24 L1(発見性): 無料ツール・労務記事への上部導線。従来はページ
                 最下部にしか無く、モバイル客・記事目的の来訪者が辿れなかった。
-                ヘッダは狭いモバイルでは畳み、FV圏内の別導線（下記ヒーロー内リンク行）で
-                モバイルを担保する。内部Linkのみ（既存の下部ツールリンクと同じ素の遷移）。 */}
+                ヘッダは狭いモバイルでは畳み、モバイルは上記ハンバーガーとFV圏内の
+                別導線（下記ヒーロー内リンク行）で担保する。内部Linkのみ。 */}
             <Link
               href="/tools"
               className={buttonClass({ variant: 'ghost', size: 'sm', className: 'hidden sm:inline-flex' })}
@@ -484,6 +490,17 @@ export default async function BusinessLandingPage({
             <HeroHeadline variant={variant} />
             {/* H1直下サブコピー＝A/B変種スロット。 */}
             <HeroSubcopy variant={variant} />
+            {/* 2026-07-24 P03(比較検討者): 既存システムとの共存をFV圏内で1行示す。
+                比較来訪者の第一の疑問（また全部入れ直すのか）は従来スクロール後の
+                比較表でしか解けなかった。A/B変種スロット(HeroCopy)の外＝A/B共通で
+                固定。文面は比較表・FAQ「SmartHR…」と同一の事実で、置き換え示唆や
+                誇張はしない（Phase1コンプラ・敬体・強調記号なし）。 */}
+            <p className="mx-auto mt-4 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
+              <Database className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden />
+              <span>
+                SmartHRなどの既存システムはそのまま。番頭は「自社ルールの相談窓口」を1つ足す使い方です。
+              </span>
+            </p>
           </div>
 
           {/* ブロック2：見て分かる（モバイルではH1直下・lgでは右列に固定）
