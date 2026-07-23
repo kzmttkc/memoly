@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { CheckCircle2, AlertCircle } from 'lucide-react'
-import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { cn } from '@/lib/cn'
 import { track } from '@/lib/analytics'
-import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta } from '@/components/tools/client'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton } from '@/components/tools/client'
 import {
   calcSyahoKanyu,
   validateSyahoKanyu,
@@ -219,9 +218,7 @@ export function Calculator() {
             />
           </div>
 
-          <button type="submit" className={buttonClass({ variant: 'primary', size: 'lg', className: 'w-full' })}>
-            点検する
-          </button>
+          <ToolSubmitButton>点検する</ToolSubmitButton>
 
           {error && <p className="text-sm text-danger-600">{error}</p>}
         </form>

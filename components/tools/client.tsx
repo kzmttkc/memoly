@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
@@ -22,6 +22,38 @@ export function useToolOpen(tool: string) {
   useEffect(() => {
     track('tool_open', { tool })
   }, [tool])
+}
+
+/**
+ * ハイドレーション完了までは false、マウント後の effect で true になる。
+ *   SSR と初回クライアントレンダはともに false を返すため hydration mismatch を起こさない。
+ */
+export function useHydrated() {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => setHydrated(true), [])
+  return hydrated
+}
+
+/**
+ * 点検フォームの送信ボタン（全ツール共通シャーシ）。
+ *   離脱級バグ対策（P08 C-0）: ハイドレーション前は type="button" で描画する。
+ *   送信ハンドラ（form の onSubmit）が装着される前にタップされても、ネイティブ
+ *   form 送信（action 無し＝GET でページ再読込）が走らず、入力が全消えしない。
+ *   ハイドレーション後に type="submit" へ切り替わり、各ツールの handleCheck
+ *   （冒頭で e.preventDefault()）が正しく発火する。SSR と初回クライアントレンダは
+ *   ともに type="button" で一致するため mismatch は出ない。
+ *   低速回線 × 超速タップ（283ms のハンドラ装着を待たずに押す経路）を恒久的に殺す。
+ */
+export function ToolSubmitButton({ children }: { children: React.ReactNode }) {
+  const hydrated = useHydrated()
+  return (
+    <button
+      type={hydrated ? 'submit' : 'button'}
+      className={buttonClass({ variant: 'primary', size: 'lg', className: 'w-full' })}
+    >
+      {children}
+    </button>
+  )
 }
 
 /** 入力フォーム末尾の共通注記（ブラウザ内計算・非送信）。 */

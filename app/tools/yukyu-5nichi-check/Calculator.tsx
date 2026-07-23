@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { CalendarDays, CheckCircle2, AlertCircle } from 'lucide-react'
-import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { track } from '@/lib/analytics'
-import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta } from '@/components/tools/client'
+import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton } from '@/components/tools/client'
 
 // ============================================================================
 // 年5日 有給取得義務 セルフ点検ツール（クライアント計算・会社データ非保存）
@@ -207,9 +206,7 @@ export function Calculator() {
             </p>
           </div>
 
-          <button type="submit" className={buttonClass({ variant: 'primary', size: 'lg', className: 'w-full' })}>
-            点検する
-          </button>
+          <ToolSubmitButton>点検する</ToolSubmitButton>
 
           {error && <p className="text-sm text-danger-600">{error}</p>}
         </form>
