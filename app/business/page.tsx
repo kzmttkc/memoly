@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import { MessageSquareText, FileText, ShieldCheck, Lock, BadgeCheck, ArrowRight, ArrowDown, Check, X, Building2, Sparkles, Database, KeyRound, Trash2, ChevronDown, UserCog, Copy, ClipboardList } from 'lucide-react'
+import { MessageSquareText, FileText, ShieldCheck, Lock, BadgeCheck, ArrowRight, ArrowDown, Check, X, Building2, Sparkles, Database, KeyRound, Trash2, ChevronDown, UserCog, Copy, ClipboardList, Globe } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -508,6 +508,14 @@ export default async function BusinessLandingPage({
               <span>
                 SmartHR・freeeなどの既存システムはそのまま。番頭は「自社ルールの相談窓口」を1つ足す使い方です。
               </span>
+            </p>
+            {/* 2026-07-24 P10(英語選好の外資HR): 番頭のチャットは英語質問に英語で
+                答える（実装済み・実証済み）が、入口が日本語のみでその価値が発見されず
+                離脱する。UIシェルの全訳はせず、「英語で聞けば英語で答える」への控えめな
+                誘導一行のみ。虚偽能力主張なし＝UI全体が英語対応と誤認させない範囲。 */}
+            <p className="mx-auto mt-2 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-400 lg:mx-0 lg:justify-start">
+              <Globe className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+              <span lang="en">Ask in English — Banto answers your labor questions in English.</span>
             </p>
           </div>
 
@@ -1023,6 +1031,14 @@ export default async function BusinessLandingPage({
               番頭は既存の手続きシステムを置き換えません。従業員情報や規程を、番頭にすべて入れ直す必要はありません。
               相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。
               手続き・給与関連はこれまでのツールのまま、番頭は「自社ルールの相談窓口」を1つ足す位置づけです。
+            </p>
+            {/* 2026-07-24 P03(勤怠ツール併用の比較検討者): 打刻データの二重入力不安を
+                登録前に解消する。チャットが固有名込みで即答している事実（勤怠はMF等に
+                入れるだけ・番頭に打刻を転記する必要はない）をLPへ焼き戻す。誇張・虚偽
+                能力なし・実挙動と一致。 */}
+            <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+              勤怠（マネーフォワード勤怠・ジョブカン・KING OF TIMEなど）とお使いの方も、打刻データを番頭に入れ直す必要はありません。
+              打刻はこれまでの勤怠ツールのまま、番頭はそのルール照合・記憶・期限・書類のたたき台を足す役割です。
             </p>
           </div>
         </div>
