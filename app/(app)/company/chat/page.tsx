@@ -4,8 +4,9 @@ import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams, usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText, Brain, ScrollText, History } from 'lucide-react'
+import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText, Brain, ScrollText, History, CalendarClock, FileBarChart } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { MarkdownMessage } from '@/components/ui/MarkdownMessage'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -35,14 +36,19 @@ interface Message {
 
 // 「この相談で参照した自社の記憶」パネル。番頭の核＝“覚えていて踏まえて答える”を、
 //   回答のたびに可視化する（革新性の体感化）。氏名等は載せず分類ラベルと件数のみ。
-function RecallPanel({ recalled }: { recalled: RecalledMemory }) {
+//   D06(2026-07-23): 既定で開いた状態にする（「覚えている」実感を毎回目に入れる。
+//   ユーザーは従来どおり折りたためる）。
+function RecallPanel({ recalled, companyId }: { recalled: RecalledMemory; companyId: string }) {
   const kindMeta = {
     profile: { icon: BookOpenCheck, label: '自社ルール' },
     rule: { icon: ScrollText, label: '規程' },
     decision: { icon: History, label: '過去の判断' },
   } as const
+  // D25: 同一トピックの再相談で過去の判断（decision）を参照したときは、
+  //   「前回の結論」を冒頭に固定表示する（記憶検索の既存機構＝recalled をそのまま使う）。
+  const decisionItems = recalled.items.filter(it => it.kind === 'decision')
   return (
-    <details className="mb-1.5 rounded-xl border border-brand-100 bg-brand-50/60">
+    <details open className="mb-1.5 rounded-xl border border-brand-100 bg-brand-50/60">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
         <Brain className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
         この相談で参照した自社の記憶
@@ -56,6 +62,19 @@ function RecallPanel({ recalled }: { recalled: RecalledMemory }) {
         )}
       </summary>
       <div className="space-y-2 px-3 pb-3 pt-1">
+        {/* D25: 前回の結論の冒頭固定表示（過去の判断を参照した回答のときだけ）。 */}
+        {decisionItems.length > 0 && (
+          <p className="rounded-lg border border-brand-200 bg-white px-2.5 py-1.5 text-[11px] leading-relaxed text-neutral-800">
+            <span className="font-semibold text-brand-700">前回の結論があります：</span>
+            {decisionItems.map(it => it.label).join('／')}
+            <Link
+              href={`/company/memory?companyId=${companyId}`}
+              className="ml-1.5 text-brand-600 underline-offset-2 hover:underline"
+            >
+              会社の記憶で確認
+            </Link>
+          </p>
+        )}
         {recalled.items.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {recalled.items.map((it, idx) => {
@@ -132,6 +151,12 @@ function buildSamplePrompts(attrs: CompanyAttributesRow): string[] {
 // へ連結する判定。lib/digest.ts toCards の draftable 判定と同じ発想
 // （あちらは非exportのローカル定義のため、こちらも指示された4語でローカル定義）。
 const DRAFTABLE_RE = /就業規則|規程|36協定|労使協定/
+
+// I08(2026-07-23): 回答が断定を避けている（AIだけでは判断しきれない）ときの検出。
+//   このときは「社労士に相談する下準備メモ」への導線を強調して、次の一歩を標準化する。
+//   Phase1コンプラ: 番頭が専門家を仲介する表現は使わない（メモを作って自分で相談に行く導線）。
+const UNCERTAIN_RE =
+  /断定できません|判断が分かれ|個別の事情|個別の判断|専門家|社労士[にへ]|労働基準監督署に確認|確認をおすすめ/
 
 // 記憶抽出のトリガ間隔（ユーザー発話n回ごと）。4→2に短縮:
 //   3往復未満で離脱した会話が一度も記憶化されない問題の暫定緩和
@@ -563,6 +588,16 @@ function CompanyChat() {
     }
   }, [savingDecision, companyId, showToast])
 
+  // D05: 「記憶に保存」アクションチップ。直近の確定済み会話を既存の判断採取フロー
+  //   （/api/company/memory?action=decision・human-in-the-loop）でそのまま保存する。
+  //   新規機構は作らない＝decisionMessagesRef に現在の会話を控えて saveDecision を呼ぶ。
+  const saveLatestAsDecision = useCallback(() => {
+    if (savingDecision) return
+    decisionMessagesRef.current = messagesRef.current
+    track('chat_action_chip', { chip: 'save_memory' })
+    void saveDecision()
+  }, [savingDecision, saveDecision])
+
   // ?q= の初回自動送信（リスク診断などからの誘導）。1回だけ。
   useEffect(() => {
     if (initialQ && !autoSentRef.current && companyId) {
@@ -635,12 +670,14 @@ function CompanyChat() {
           const showDraftChip = isLatestAnswer && DRAFTABLE_RE.test(msg.content)
           // F3: 【根拠】で自社ルールを引いた回答には「前提の修正」導線（誤前提の自己修復路）。
           const showFixPremise = isLatestAnswer && msg.content.includes('【根拠】')
+          // I08: 断定を避けた回答には「社労士に相談する下準備」への次アクションを標準提示。
+          const showUncertainNext = isLatestAnswer && UNCERTAIN_RE.test(msg.content)
           return (
             <div key={i}>
               {/* 記憶想起の可視化: assistant 回答の直前に「参照した自社の記憶」を提示する。 */}
               {msg.role === 'assistant' && msg.recalled && (
                 <div className="mb-1 max-w-[85%]">
-                  <RecallPanel recalled={msg.recalled} />
+                  <RecallPanel recalled={msg.recalled} companyId={companyId} />
                 </div>
               )}
               <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -666,25 +703,63 @@ function CompanyChat() {
                   )}
                 </div>
               </div>
-              {(showDraftChip || showFixPremise) && (
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 pl-1">
-                  {showDraftChip && (
-                    <Link
-                      href={`/company/documents?companyId=${companyId}`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                    >
-                      <FileText className="h-3.5 w-3.5" aria-hidden />
-                      この内容で規程ドラフトの下書きを作る
-                    </Link>
+              {isLatestAnswer && (
+                <div className="mt-1.5 space-y-1.5 pl-1">
+                  {/* I08: 断定を避けた回答の次アクション標準化（社労士相談の下準備）。 */}
+                  {showUncertainNext && (
+                    <p className="text-[11px] leading-relaxed text-neutral-500">
+                      AIだけでは判断しきれない内容です。番頭が覚えている自社情報を、社労士に相談するときの下準備メモに整理できます。
+                    </p>
                   )}
-                  {showFixPremise && (
-                    <Link
-                      href={`/company/rules?companyId=${companyId}`}
-                      className="text-xs text-neutral-500 underline-offset-2 transition-colors hover:text-neutral-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  {/* D05: 回答末尾のアクションチップ（すべて既存機能への導線）。 */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                    <button
+                      type="button"
+                      onClick={saveLatestAsDecision}
+                      disabled={savingDecision}
+                      className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 disabled:opacity-60"
                     >
-                      前提が違う場合は修正する
+                      <BookmarkPlus className="h-3.5 w-3.5" aria-hidden />
+                      {savingDecision ? '記憶に保存中...' : '記憶に保存'}
+                    </button>
+                    <Link
+                      href={`/company/deadlines?companyId=${companyId}`}
+                      onClick={() => track('chat_action_chip', { chip: 'deadline' })}
+                      className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    >
+                      <CalendarClock className="h-3.5 w-3.5" aria-hidden />
+                      期限を作る
                     </Link>
-                  )}
+                    <Link
+                      href={`/company/reports?companyId=${companyId}&mode=sharoushi`}
+                      onClick={() => track('chat_action_chip', { chip: 'sharoushi_memo' })}
+                      className={
+                        showUncertainNext
+                          ? 'inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
+                          : 'inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
+                      }
+                    >
+                      <FileBarChart className="h-3.5 w-3.5" aria-hidden />
+                      社労士に渡すメモを作る
+                    </Link>
+                    {showDraftChip && (
+                      <Link
+                        href={`/company/documents?companyId=${companyId}`}
+                        className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      >
+                        <FileText className="h-3.5 w-3.5" aria-hidden />
+                        この内容で規程ドラフトの下書きを作る
+                      </Link>
+                    )}
+                    {showFixPremise && (
+                      <Link
+                        href={`/company/rules?companyId=${companyId}`}
+                        className="text-xs text-neutral-500 underline-offset-2 transition-colors hover:text-neutral-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      >
+                        前提が違う場合は修正する
+                      </Link>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -808,7 +883,37 @@ function CompanyChat() {
 
 export default function CompanyChatPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-neutral-500">読み込み中...</p>}>
+    // I07: フォールバックは文字列でなく画面の骨格（チャット欄+入力欄）を出す。
+    <Suspense
+      fallback={
+        <div
+          className="mx-auto flex max-w-3xl flex-col"
+          style={{ minHeight: 'calc(100dvh - 8rem)' }}
+          aria-busy="true"
+          aria-label="読み込み中"
+        >
+          <div className="mb-3 flex gap-2">
+            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-6 w-40 rounded-full" />
+          </div>
+          <div className="flex-1 space-y-5 rounded-2xl border border-neutral-200 bg-white p-4">
+            <div className="flex justify-start">
+              <Skeleton className="h-16 w-3/4 max-w-md rounded-2xl rounded-bl-sm" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-10 w-1/2 max-w-xs rounded-2xl rounded-br-sm" />
+            </div>
+            <div className="flex justify-start">
+              <Skeleton className="h-24 w-4/5 max-w-lg rounded-2xl rounded-bl-sm" />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-3">
+            <Skeleton className="h-12 flex-1 rounded-xl" />
+            <Skeleton className="h-12 w-20 rounded-xl" />
+          </div>
+        </div>
+      }
+    >
       <CompanyGuard>
         <CompanyChat />
       </CompanyGuard>

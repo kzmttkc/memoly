@@ -30,7 +30,11 @@ function ReportsInner() {
   const [toast, setToast] = useState({ show: false, message: '' })
   const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
 
-  const [mode, setMode] = useState<ReportMode>('owner')
+  // D05/I08: チャットのアクションチップ「社労士に渡すメモを作る」から ?mode=sharoushi で
+  //   遷移してきたときは、最初から社労士メモのタブを開く（URL 指定が初期値・以降は手動切替）。
+  const [mode, setMode] = useState<ReportMode>(
+    params.get('mode') === 'sharoushi' ? 'sharoushi' : 'owner',
+  )
   const [generating, setGenerating] = useState(false)
   const [report, setReport] = useState('')
   const [copied, setCopied] = useState(false)
