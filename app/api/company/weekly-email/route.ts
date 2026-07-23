@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { DigestPayload, DigestCard } from '@/lib/digest'
 import { getSeasonalReminders, type SeasonalReminder } from '@/lib/email-seasonal'
+import { sendSlackMessage } from '@/lib/slack'
 
 // ============================================================================
 // /api/company/weekly-email — 番頭版 週次リテンションメール（Vercel Cron）
@@ -144,6 +145,7 @@ export async function GET(req: Request) {
 
   let sent = 0
   let companiesSent = 0
+  let slackSent = 0
 
   for (const companyId of companyIds) {
     try {
@@ -192,6 +194,23 @@ export async function GET(req: Request) {
         '対象になりうるものを自社プロファイルから自動で抽出した参考情報です。実際の適用可否・手続き・期日は一次情報と専門家でご確認ください。'
 
       let companyDelivered = false
+
+      // --- Slack 連携（E08・2026-07-23）: Webhook 登録済みの会社にはメールと同時に届ける ---
+      //   未設定/テーブル未適用なら従来どおりメールのみ。URL はログに出さない（lib/slack.ts）。
+      const { data: integ } = await admin
+        .from('company_integrations')
+        .select('slack_webhook_url')
+        .eq('company_id', companyId)
+        .maybeSingle()
+      if (integ?.slack_webhook_url) {
+        const ok = await sendSlackMessage(
+          integ.slack_webhook_url,
+          `:newspaper: *今週の労務ダイジェスト*（${companyName}）\n\n${cardsText}\n\n※${disclaimer}\n<${homeUrl}|番頭で詳しく確認する>`,
+          companyId,
+        )
+        if (ok) slackSent++
+      }
+
       for (const member of members) {
         // ユーザーのメールと配信可否（signup「お知らせを受け取る」= user_metadata）を確認
         const { data: authUser } = await admin.auth.admin.getUserById(member.user_id)
@@ -250,5 +269,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ sent, companies: companiesSent, candidates: companyIds.length })
+  return NextResponse.json({ sent, slackSent, companies: companiesSent, candidates: companyIds.length })
 }

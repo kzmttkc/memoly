@@ -24,6 +24,10 @@ const ACTION_LABELS: Record<string, string> = {
   'member.invite': 'メンバーの招待',
   'memory.rule.delete': '記憶（ルール候補）の削除',
   'data.export': 'データの一括エクスポート',
+  'integration.slack.update': 'Slack連携の設定・変更',
+  'integration.slack.delete': 'Slack連携の解除',
+  'apikey.create': 'APIキーの発行',
+  'apikey.revoke': 'APIキーの失効',
 }
 
 interface AuditLog {

@@ -96,6 +96,7 @@ export const DAILY_LIMITS: Record<ApiKind, number> = {
   document_review: limitFor('free', 'document_review'),
   insights: limitFor('free', 'insights'),
   risk_audit: limitFor('free', 'risk_audit'),
+  api_v1: limitFor('free', 'api_v1'),
 }
 
 /**

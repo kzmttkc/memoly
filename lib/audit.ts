@@ -20,6 +20,10 @@ export type AuditAction =
   | 'member.invite' // 席の招待/追加（メンバー変更）
   | 'memory.rule.delete' // 記憶(rule候補)の削除（承認時の片付け含む）
   | 'data.export' // 会社データの一括エクスポート(JSON・admin操作)
+  | 'integration.slack.update' // Slack Webhook の登録/変更（URLはmetadataに入れない）
+  | 'integration.slack.delete' // Slack Webhook の解除
+  | 'apikey.create' // 公開API v1 キーの発行（metadataはprefixのみ）
+  | 'apikey.revoke' // 公開API v1 キーの失効
 
 export interface AuditParams {
   companyId: string

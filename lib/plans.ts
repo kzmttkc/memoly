@@ -40,6 +40,8 @@ export interface PlanFeatureLimits {
   document_generate: number
   /** 既存規程レビュー（document_review）/日 */
   document_review: number
+  /** 公開API v1（read系・APIキー認証）リクエスト/日。LLM非経由のため他より高め。 */
+  api_v1: number
 }
 
 export interface PlanDef {
@@ -100,6 +102,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
       risk_audit: 3,
       document_generate: 3,
       document_review: 3,
+      api_v1: 500,
     },
   },
 
@@ -123,6 +126,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
       risk_audit: 10,
       document_generate: 10,
       document_review: 10,
+      api_v1: 2000,
     },
   },
 
@@ -145,6 +149,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
       risk_audit: 30,
       document_generate: 30,
       document_review: 30,
+      api_v1: 5000,
     },
   },
 
@@ -167,6 +172,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
       risk_audit: 80,
       document_generate: 80,
       document_review: 80,
+      api_v1: 20000,
     },
   },
 }

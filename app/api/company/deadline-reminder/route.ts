@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendSlackMessage } from '@/lib/slack'
 
 // ============================================================================
 // /api/company/deadline-reminder — F4 期限リマインド（Vercel Cron）
@@ -191,6 +192,7 @@ export async function GET(req: Request) {
 
   let sent = 0
   let companiesSent = 0
+  let slackSent = 0
 
   for (const companyId of companyIds) {
     try {
@@ -217,6 +219,27 @@ export async function GET(req: Request) {
       const itemsText = items.map(({ row, du }) => itemToText(row, du)).join('\n\n')
 
       let companyDelivered = false
+
+      // --- Slack 連携（E08・2026-07-23）: Webhook 登録済みの会社にはメールと同時に届ける ---
+      //   未設定/テーブル未適用なら従来どおりメールのみ（変数は null のまま＝完全に無風）。
+      //   URL はログに出さない（lib/slack.ts が担保）。Slack 到達も「通知済み」に数え、
+      //   下の last_notified_offset 更新で同一閾値の二重送信を防ぐ。
+      const { data: integ } = await admin
+        .from('company_integrations')
+        .select('slack_webhook_url')
+        .eq('company_id', companyId)
+        .maybeSingle()
+      if (integ?.slack_webhook_url) {
+        const ok = await sendSlackMessage(
+          integ.slack_webhook_url,
+          `:alarm_clock: *労務の期限が近づいています*（${companyName}）\n\n${itemsText}\n\n※${DISCLAIMER}\n<${homeUrl}|番頭で確認する>`,
+          companyId,
+        )
+        if (ok) {
+          slackSent++
+          companyDelivered = true
+        }
+      }
       for (const member of members) {
         const { data: authUser } = await admin.auth.admin.getUserById(member.user_id)
         const email = authUser?.user?.email
@@ -296,5 +319,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ sent, companies: companiesSent, candidates: companyIds.length })
+  return NextResponse.json({ sent, slackSent, companies: companiesSent, candidates: companyIds.length })
 }

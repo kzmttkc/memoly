@@ -54,6 +54,17 @@ select policyname from pg_policies where tablename = 'company_audit_logs';
 
 ---
 
+## ④ 外部連携基盤（company_integrations / company_api_keys）✅ 適用済み（2026-07-23）
+
+- ファイル: `supabase/company_integrations.sql`
+- 適用方法: Supabase Management API（`scripts/supabase_sql.py banto --file ...`）で CTO が適用。HTTP 200。
+- 確認済み: 両テーブル `relrowsecurity=t`、ポリシー各1本（admin_all）。
+- 目的: E08 Slack連携（Incoming Webhook URL・秘匿）と公開API v1 のAPIキー（SHA-256ハッシュ保存）。
+- 特性: どちらも admin のみ読み書き可。cron / v1 認証は service role で読む。
+  Webhook URL とキーのハッシュは /api/company/export のエクスポート対象外（export側は列挙制）。
+
+---
+
 ## 既出の手動タスク（参考・本書の管轄外）
 
 - pgvector 本番有効化 … SQL 側は上記③で適用済み。残りは OpenAI APIキー投入＋backfill のみ。

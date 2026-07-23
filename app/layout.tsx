@@ -81,6 +81,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* 会社版ダークモードの FOUC 防止。/company 配下でのみ <html data-theme> を
             初回ペイント前に確定する（実行可能インラインは置かず外部化＝CSP整合）。 */}
         <Script src="/banto-theme-init.js" strategy="beforeInteractive" />
+        {/* I10 PWA化: Service Worker 登録（インライン禁止のCSPに合わせ外部化）。 */}
+        <Script src="/sw-register.js" strategy="afterInteractive" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
