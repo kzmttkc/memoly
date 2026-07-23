@@ -23,55 +23,93 @@ import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
 import { CompanySwitcher } from './CompanySwitcher'
 import { CommandPalette } from './CommandPalette'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 // ============================================================================
 // AppShell — 番頭(Banto) 会社版の共通アプリシェル。
-//   上部ヘッダ: Banto ワードマーク + CompanySwitcher 常設 + アカウント(ログアウト)
-//   左サイドナビ(>=lg): 相談 / 自社ルール / 書類 / リスク診断 / 助成金・法改正 を
-//     lucide アイコン + テキスト併記。現在地をアクティブ表示(brand)。
-//   モバイル(<lg): 下部タブバー + ヘッダのドロワーは使わずタブで主要5導線。
-//   各ページは <AppShell><PageHeader/>...</AppShell> で中身だけを書く
-//   （手書きヘッダの重複を解消）。companyId は URL クエリから引き継ぐ。
+//   上部ヘッダ: Banto ワードマーク + CompanySwitcher 常設（モバイルも同一行=1段・D21）
+//   左サイドナビ(>=lg): D01 情報設計を「相談する / 気づく / つくる / 覚える」の
+//     4柱グループで再編（URLは全て既存のまま・表示だけ再構成）。
+//   モバイル(<lg): 下部タブは「ホーム/相談/気づく/つくる/記憶」の5枠（D02: 記憶を復帰）。
+//     気づく=insights起点(リスク/期限も同柱)・つくる=documents起点(メモも同柱)。
+//   各ページは <AppShell><PageHeader/>...</AppShell> で中身だけを書く。
+//   companyId は URL クエリ優先。URL に無ければ最後に選択した会社
+//   (localStorage 'banto-last-company') でリンクを補完する（D03）。
+//   D11: テーマ切替はヘッダから撤去（コマンドパレット内の「テーマを切り替え」に格納）。
 // ============================================================================
 
 interface NavItem {
   href: string
   label: string
-  /** モバイル下部タブ用の短縮ラベル（未指定なら label）。375px幅6枠でのはみ出し防止。 */
-  mobileLabel?: string
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
+  /** この項目/タブをアクティブ表示する追加パス（同じ柱の配下ページ）。 */
+  activePaths?: string[]
 }
 
-// rules は admin 限定だが、シェルは可視性を一律にし、API 側 403 を rules ページが扱う。
-// home は会社選択後のトップ（能動フィード）。先頭に置き「戻る理由」への最短導線にする。
-// memory（会社の記憶）は番頭の差別化の核。サイドナビ/ドロワーには出すが、
-// モバイル下部タブは主要5+ホームの6枠を維持し（7枠は窮屈）、memory は下部タブからは外す。
-const NAV: NavItem[] = [
-  { href: '/company/home', label: 'ホーム', icon: Home },
-  { href: '/company/chat', label: '相談', icon: MessageSquareText },
-  { href: '/company/memory', label: '会社の記憶', icon: History },
-  { href: '/company/rules', label: '自社ルール', icon: BookOpenCheck },
-  { href: '/company/documents', label: '書類', icon: FileText },
-  { href: '/company/deadlines', label: '期限', icon: CalendarClock },
-  { href: '/company/reports', label: '社労士に渡すメモ', mobileLabel: 'まとめ', icon: FileBarChart },
-  { href: '/company/risk', label: 'リスク診断', icon: ShieldCheck },
-  { href: '/company/insights', label: '助成金・法改正', mobileLabel: '助成金', icon: Sparkles },
-  // 課金管理(admin向け)。サイドナビ/ドロワーには出すが、下部タブには出さない。
-  // ラベルは「プラン」: 席（シート）課金は士業プランのみで、Entry/Standard 利用者に
-  // 「席」を見せると上限人数内無料の訴求と食い違うため（ナビは静的でプラン判定不可）。
-  { href: '/company/billing', label: 'プラン', icon: CreditCard },
+interface NavGroup {
+  /** 柱の見出し（null はグループ見出しなし＝ホーム）。 */
+  label: string | null
+  items: NavItem[]
+}
+
+// D01: 10項目の平置きをやめ、4柱（相談する/気づく/つくる/覚える）に再編する。
+//   既存URLは一切変えない（リダイレクト不要）。billing はナビ末尾の「設定」領域へ。
+const NAV_GROUPS: NavGroup[] = [
+  { label: null, items: [{ href: '/company/home', label: 'ホーム', icon: Home }] },
+  {
+    label: '相談する',
+    items: [{ href: '/company/chat', label: '相談', icon: MessageSquareText }],
+  },
+  {
+    label: '気づく',
+    items: [
+      { href: '/company/risk', label: 'リスク診断', icon: ShieldCheck },
+      { href: '/company/insights', label: '助成金・法改正', icon: Sparkles },
+      { href: '/company/deadlines', label: '期限', icon: CalendarClock },
+    ],
+  },
+  {
+    label: 'つくる',
+    items: [
+      { href: '/company/documents', label: '書類', icon: FileText },
+      { href: '/company/reports', label: '社労士に渡すメモ', icon: FileBarChart },
+    ],
+  },
+  {
+    label: '覚える',
+    items: [
+      { href: '/company/memory', label: '会社の記憶', icon: History },
+      { href: '/company/rules', label: '自社ルール', icon: BookOpenCheck },
+    ],
+  },
 ]
 
-// モバイル下部タブは主要6導線に絞る（memory/deadlines/billing はドロワー/サイドナビから到達）。
-// deadlines は下部タブの6枠を維持するため除外し、サイドナビ/ドロワーからのみ到達させる。
-const MOBILE_TAB_NAV: NavItem[] = NAV.filter(
-  n =>
-    n.href !== '/company/memory' &&
-    n.href !== '/company/deadlines' &&
-    n.href !== '/company/reports' &&
-    n.href !== '/company/billing',
-)
+// モバイル下部タブ（5枠・D02: 記憶を復帰）。柱の起点ページに遷移し、
+// 同柱の配下ページでもタブがアクティブになる（activePaths）。
+const MOBILE_TAB_NAV: NavItem[] = [
+  { href: '/company/home', label: 'ホーム', icon: Home },
+  { href: '/company/chat', label: '相談', icon: MessageSquareText },
+  {
+    href: '/company/insights',
+    label: '気づく',
+    icon: Sparkles,
+    activePaths: ['/company/risk', '/company/deadlines'],
+  },
+  {
+    href: '/company/documents',
+    label: 'つくる',
+    icon: FileText,
+    activePaths: ['/company/reports'],
+  },
+  {
+    href: '/company/memory',
+    label: '記憶',
+    icon: History,
+    activePaths: ['/company/rules'],
+  },
+]
+
+// D03: 最後に選択した会社の保持キー（値は companyId のみ・PIIなし）。
+const LAST_COMPANY_KEY = 'banto-last-company'
 
 function Wordmark() {
   return (
@@ -92,8 +130,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const companyId = searchParams.get('companyId') ?? ''
+  const urlCompanyId = searchParams.get('companyId') ?? ''
   const [drawerOpen, setDrawerOpen] = useState(false)
+  // D03: URL に companyId が無いときのフォールバック（最後に選択した会社）。
+  //   SSR とのハイドレーション不一致を避けるため、マウント後にだけ読む。
+  const [storedCompanyId, setStoredCompanyId] = useState('')
   // ⌘（macOS）/ Ctrl（その他）を kbd 表示で出し分け。SSR では中立の Ctrl 表記。
   const [cmdKey, setCmdKey] = useState('Ctrl')
   useEffect(() => {
@@ -102,22 +143,109 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // D03: URL の companyId を「最後に選択した会社」として保持する（URL指定が常に優先）。
+  useEffect(() => {
+    if (!urlCompanyId) {
+      try {
+        const v = localStorage.getItem(LAST_COMPANY_KEY)
+        if (v) setStoredCompanyId(v)
+      } catch {
+        /* localStorage 不可はフォールバックなし（従来挙動） */
+      }
+      return
+    }
+    setStoredCompanyId(urlCompanyId)
+    try {
+      localStorage.setItem(LAST_COMPANY_KEY, urlCompanyId)
+    } catch {
+      /* 保存失敗は無視 */
+    }
+  }, [urlCompanyId])
+
+  const companyId = urlCompanyId || storedCompanyId
+
   // companyId を保ったままナビ遷移する。
   const withCompany = (href: string) =>
     companyId ? `${href}?companyId=${companyId}` : href
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`)
+  const isActive = (item: NavItem) =>
+    pathname === item.href ||
+    pathname.startsWith(`${item.href}/`) ||
+    (item.activePaths ?? []).some(p => pathname === p || pathname.startsWith(`${p}/`))
 
   async function handleLogout() {
+    // D03: ログアウト時は会社の既定選択も破棄する（共有端末での持ち越し防止）。
+    try {
+      localStorage.removeItem(LAST_COMPANY_KEY)
+    } catch {
+      /* 無視 */
+    }
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/')
   }
 
+  // サイドナビ/ドロワー共通のグループ描画。
+  const renderGroups = (onNavigate?: () => void, dense?: boolean) => (
+    <>
+      {NAV_GROUPS.map((group, gi) => (
+        <div key={group.label ?? `g${gi}`} className={gi > 0 ? 'mt-4' : undefined}>
+          {group.label && (
+            <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+              {group.label}
+            </p>
+          )}
+          <div className="space-y-1">
+            {group.items.map(item => {
+              const { href, label, icon: Icon } = item
+              const active = isActive(item)
+              return (
+                <Link
+                  key={href}
+                  href={withCompany(href)}
+                  onClick={onNavigate}
+                  aria-current={active ? 'page' : undefined}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
+                    dense ? 'py-2' : 'py-2.5',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+                    active
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
+                  )}
+                >
+                  <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden />
+                  {label}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+      {/* 設定領域: プラン（admin向け課金管理）。4柱の外に置く。 */}
+      <div className="mt-4 border-t border-neutral-200 pt-3">
+        <Link
+          href={withCompany('/company/billing')}
+          onClick={onNavigate}
+          aria-current={pathname.startsWith('/company/billing') ? 'page' : undefined}
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+            pathname.startsWith('/company/billing')
+              ? 'bg-brand-50 text-brand-700'
+              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
+          )}
+        >
+          <CreditCard className="h-4.5 w-4.5 shrink-0" aria-hidden />
+          プラン
+        </Link>
+      </div>
+    </>
+  )
+
   return (
     <div className="min-h-[100dvh] bg-neutral-50 text-neutral-900">
-      {/* ===== 上部ヘッダ ===== */}
+      {/* ===== 上部ヘッダ（D21: モバイルも1段） ===== */}
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           {/* モバイル: ドロワートグル */}
@@ -132,7 +260,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <Wordmark />
 
-          <div className="ml-2 hidden min-w-0 flex-1 sm:block">
+          {/* D21: 会社スイッチャーは全幅で同一行に置く（2段目を廃止・truncateで収める）。 */}
+          <div className="ml-2 min-w-0 flex-1">
             <CompanySwitcher companyId={companyId} variant="header" />
           </div>
 
@@ -158,44 +287,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Search className="h-5 w-5" aria-hidden />
             </button>
-
-            <ThemeToggle />
-            {/* D20(2026-07-23): ログアウトはヘッダ直置きをやめ、サイドナビ末尾（>=lg）と
-                モバイルドロワー末尾（<lg）へ格納した。ヘッダの検索/テーマ切替の隣に
-                並んでいた頃の誤タップを防ぐ。 */}
+            {/* D11: テーマ切替はヘッダから撤去（既定はライト固定・切替はコマンド
+                パレットの「テーマを切り替え」から＝設定の奥へ格納）。
+                D20: ログアウトはサイドナビ末尾（>=lg）とドロワー末尾（<lg）へ格納済み。 */}
           </div>
-        </div>
-        {/* sm 未満では会社スイッチャーを2段目に */}
-        <div className="border-t border-neutral-100 px-4 py-2 sm:hidden">
-          <CompanySwitcher companyId={companyId} variant="header" />
         </div>
       </header>
 
       <div className="mx-auto flex max-w-6xl">
-        {/* ===== 左サイドナビ(>=lg) ===== */}
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 flex-col border-r border-neutral-200 px-3 py-5 lg:flex">
-          <nav className="space-y-1" aria-label="会社版ナビゲーション">
-            {NAV.map(({ href, label, icon: Icon }) => {
-              const active = isActive(href)
-              return (
-                <Link
-                  key={href}
-                  href={withCompany(href)}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
-                    active
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
-                  )}
-                >
-                  <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden />
-                  {label}
-                </Link>
-              )
-            })}
-          </nav>
+        {/* ===== 左サイドナビ(>=lg)・D01 4柱 ===== */}
+        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 flex-col overflow-y-auto border-r border-neutral-200 px-3 py-5 lg:flex">
+          <nav aria-label="会社版ナビゲーション">{renderGroups(undefined, true)}</nav>
           {/* D20: ログアウトはナビ末尾（区切り線の下）。主要導線との誤タップを避ける。 */}
           <div className="mt-auto border-t border-neutral-200 pt-3">
             <button
@@ -215,7 +317,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* ===== モバイル下部タブ(<lg) ===== */}
+      {/* ===== モバイル下部タブ(<lg)・D02 記憶を復帰した5枠 ===== */}
       {/* id="banto-mobile-tabbar": CookieBanner がこの要素の実高さを読み、
           未同意時にバナーをこのタブバーの上に重ねて配置する（両方とも fixed bottom-0
           のため、素朴に重ねるとバナー(z-50)がタブバー(z-30)のタップ領域を覆ってしまう）。 */}
@@ -224,9 +326,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200 bg-white/95 backdrop-blur lg:hidden"
         aria-label="会社版ナビゲーション（モバイル）"
       >
-        <div className="mx-auto grid max-w-md grid-cols-6">
-          {MOBILE_TAB_NAV.map(({ href, label, mobileLabel, icon: Icon }) => {
-            const active = isActive(href)
+        <div className="mx-auto grid max-w-md grid-cols-5">
+          {MOBILE_TAB_NAV.map(item => {
+            const { href, label, icon: Icon } = item
+            const active = isActive(item)
             return (
               <Link
                 key={href}
@@ -239,14 +342,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden />
-                {mobileLabel ?? label}
+                {label}
               </Link>
             )
           })}
         </div>
       </nav>
 
-      {/* ===== モバイルドロワー(ヘッダのMenuから) ===== */}
+      {/* ===== モバイルドロワー(ヘッダのMenuから)・D01 4柱の全項目 ===== */}
       {drawerOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
@@ -255,7 +358,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             aria-label="メニューを閉じる"
             onClick={() => setDrawerOpen(false)}
           />
-          <div className="absolute left-0 top-0 h-full w-72 bg-white p-4 shadow-xl">
+          <div className="absolute left-0 top-0 h-full w-72 overflow-y-auto bg-white p-4 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <Wordmark />
               <button
@@ -267,27 +370,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </div>
-            <nav className="space-y-1" aria-label="会社版ナビゲーション（ドロワー）">
-              {NAV.map(({ href, label, icon: Icon }) => {
-                const active = isActive(href)
-                return (
-                  <Link
-                    key={href}
-                    href={withCompany(href)}
-                    onClick={() => setDrawerOpen(false)}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
-                      active
-                        ? 'bg-brand-50 text-brand-700'
-                        : 'text-neutral-700 hover:bg-neutral-100',
-                    )}
-                  >
-                    <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden />
-                    {label}
-                  </Link>
-                )
-              })}
+            <nav aria-label="会社版ナビゲーション（ドロワー）">
+              {renderGroups(() => setDrawerOpen(false))}
             </nav>
             {/* D20: モバイルはドロワー末尾からログアウト（ヘッダ直置きの誤タップ防止）。 */}
             <div className="mt-3 border-t border-neutral-200 pt-3">

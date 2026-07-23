@@ -59,13 +59,15 @@ function apply(resolved: Resolved) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // 初期値は SSR では 'system'（DOM を触らない）。マウント後に保存値へ同期する。
-  const [pref, setPrefState] = useState<ThemePref>('system')
+  // 初期値は SSR では 'light'（DOM を触らない）。マウント後に保存値へ同期する。
+  //   D11(2026-07-23): 既定はブランド固定ライト。OS がダークでも、ユーザーが明示的に
+  //   切り替えるまではライトで出す（保存値が無いときの既定を 'system'→'light' に変更）。
+  const [pref, setPrefState] = useState<ThemePref>('light')
   const [resolved, setResolved] = useState<Resolved>('light')
 
   // マウント時: 保存値を読み、実効テーマを DOM と state に反映。
   useEffect(() => {
-    let stored: ThemePref = 'system'
+    let stored: ThemePref = 'light'
     try {
       const v = localStorage.getItem(STORAGE_KEY)
       if (v === 'light' || v === 'dark' || v === 'system') stored = v

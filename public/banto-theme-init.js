@@ -20,7 +20,9 @@
     } catch (e) {
       /* localStorage 不可（プライベート等）は system 扱い */
     }
-    if (pref !== 'light' && pref !== 'dark') pref = 'system'
+    /* D11(2026-07-23): 既定はライト固定。保存値が無ければ 'light'（OSダークに追従しない）。
+       ユーザーが過去に 'system' を明示保存していた場合のみ従来どおり追従する。 */
+    if (pref !== 'light' && pref !== 'dark' && pref !== 'system') pref = 'light'
     var dark =
       pref === 'dark' ||
       (pref === 'system' &&
