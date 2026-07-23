@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useCallback, useEffect } from 'react'
+import { Suspense, useState, useCallback, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Building2, Check } from 'lucide-react'
@@ -16,6 +16,7 @@ import {
   triToBool,
   type TriState,
 } from '@/lib/company-attributes'
+import { computeFallbackRiskAudit } from '@/lib/risk-fallback'
 import { CompanyGuard } from '../_components/CompanyGuard'
 
 // ============================================================================
@@ -87,6 +88,30 @@ function OnboardingInner() {
   const hasAnyAnswer =
     industry !== '' || band !== '' || BOOL_QUESTIONS.some(q => tri[q.key] !== 'unknown')
 
+  // C07 進捗の可視化: 回答済みの数（5問中）。「わからない」を選ぶのも回答として数える
+  //   （三値の unknown は初期値と区別できないため、tri は初期 'unknown' 以外を回答扱い。
+  //   実測の所要は1問あたり数秒〜10秒程度のため、残り時間は1問8秒の目安で出す）。
+  const answeredCount =
+    (industry !== '' ? 1 : 0) +
+    (band !== '' ? 1 : 0) +
+    BOOL_QUESTIONS.filter(q => tri[q.key] !== 'unknown').length
+  const remainingSeconds = Math.max(0, 5 - answeredCount) * 8
+
+  // C09 ライブプレビュー: 答えるたびに、決定的な純関数（LLM・API・DB書込みゼロ）で
+  //   速報スコアを再計算して見せる＝「答えるほど診断が具体化する」体験。
+  //   risk_audit_completed は発火しない（北極星KPIの分子を汚さない。正式な計測は
+  //   /company/risk 側の既存経路のみ）。表記は「速報（目安）」に固定（誠実関所）。
+  const preview = useMemo(() => {
+    if (!hasAnyAnswer) return null
+    return computeFallbackRiskAudit({
+      industry_major: industry || null,
+      employee_band: band || null,
+      has_36kyotei: triToBool(tri.has_36kyotei),
+      has_work_rules: triToBool(tri.has_work_rules),
+      has_fixed_ot: triToBool(tri.has_fixed_ot),
+    })
+  }, [hasAnyAnswer, industry, band, tri])
+
   async function save() {
     if (saving || !companyId) return
     setSaving(true)
@@ -124,8 +149,22 @@ function OnboardingInner() {
     <div className="mx-auto max-w-xl">
       <PageHeader
         title="会社の基本情報を登録"
-        description="答えるとその場で、自社の労務リスクのセルフ診断（目安）と年間手続きカレンダーが出ます。あとから変更できます。"
+        description="答えるとその場で、自社の労務リスクのセルフ診断（目安）と年間手続きカレンダーが出ます。総務をお一人で担当している方でも1分ほどで終わります。わからない項目は「わからない」のままで大丈夫です。あとから変更できます。"
       />
+
+      {/* C07: 進捗と残り時間の目安。ゴールまでの短さを常時見せて途中離脱を防ぐ。 */}
+      <div className="mb-4" aria-live="polite">
+        <div className="mb-1.5 flex items-baseline justify-between text-xs text-neutral-500">
+          <span className="font-medium text-neutral-700">回答 {answeredCount}/5</span>
+          <span>{answeredCount >= 5 ? 'すべて回答済みです' : `残り約${remainingSeconds}秒`}</span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-neutral-200" role="presentation">
+          <div
+            className="h-full rounded-full bg-brand-500 transition-all duration-300"
+            style={{ width: `${(answeredCount / 5) * 100}%` }}
+          />
+        </div>
+      </div>
 
       <Card className="space-y-6">
         {/* 1. 業種 */}
@@ -201,6 +240,28 @@ function OnboardingInner() {
             </div>
           </div>
         ))}
+
+        {/* C09: 答えるたびに更新される速報プレビュー（決定的な純関数・通信ゼロ）。
+            「答えるほど診断が具体化する」を入力中に体感させる。正式な結果は登録後の
+            /company/risk（LLM精査つき）で出す＝ここは目安表記に固定。 */}
+        {preview && (
+          <div className="rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3">
+            <p className="text-xs font-medium text-neutral-500">
+              ここまでの回答での速報（目安）・答えるほど具体化します
+            </p>
+            <p className="mt-1 text-sm font-semibold text-neutral-900">
+              労務健全度 {preview.score}/100（{preview.level}）
+            </p>
+            {preview.topRisks[0] && (
+              <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+                いま気になる点：{preview.topRisks[0].title}
+              </p>
+            )}
+            <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-500">
+              登録すると、この続きが自社の診断結果と年間手続きカレンダーになります。スコアはあくまで目安です。
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-5">
           <Button size="lg" onClick={save} disabled={saving || !hasAnyAnswer}>
