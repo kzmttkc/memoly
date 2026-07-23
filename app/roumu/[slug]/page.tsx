@@ -191,7 +191,7 @@ export default async function RoumuUseCasePage({
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl">
           {u.h1}
         </h1>
-        <p className="mt-4 text-base leading-relaxed text-neutral-600">{u.lead}</p>
+        <p className="mt-4 text-base leading-relaxed text-neutral-700">{u.lead}</p>
         {u.updatedAt && (
           <p className="mt-3 text-xs text-neutral-400">更新日：{u.updatedAt}</p>
         )}
@@ -220,15 +220,17 @@ export default async function RoumuUseCasePage({
         </div>
       </section>
 
-      {/* ===== 本文セクション群（クローラブル・静的描画） ===== */}
+      {/* ===== 本文セクション群（クローラブル・静的描画） =====
+          2026-07-24 P09: 本文の可読性底上げは .article-prose（globals.css）で一括。
+          本文 <p> は16px・行間広め・neutral-700（AAA）へ。個別上書きは付けない。 */}
       <section className="mx-auto max-w-3xl px-6 pb-4">
-        <div className="space-y-10">
+        <div className="article-prose space-y-10">
           {u.sections.map((sec) => (
             <div key={sec.heading}>
               <h2 className="text-lg font-bold tracking-tight text-neutral-900">{sec.heading}</h2>
               <div className="mt-3 space-y-3">
                 {sec.body.map((p, i) => (
-                  <p key={i} className="text-sm leading-relaxed text-neutral-600">{p}</p>
+                  <p key={i} className="leading-relaxed">{p}</p>
                 ))}
               </div>
             </div>
@@ -278,7 +280,7 @@ export default async function RoumuUseCasePage({
                   <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-md bg-brand-600 text-white">
                     <BantoMark className="h-3.5 w-3.5" aria-hidden />
                   </span>
-                  <p className="text-sm leading-relaxed text-neutral-600">{ex.answer}</p>
+                  <p className="text-base leading-relaxed text-neutral-700">{ex.answer}</p>
                 </div>
               </Card>
             </li>
@@ -292,8 +294,8 @@ export default async function RoumuUseCasePage({
         <div className="mt-5 space-y-4">
           {u.faqs.map((f) => (
             <Card key={f.q} padded>
-              <h3 className="text-sm font-semibold text-neutral-900">{f.q}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{f.a}</p>
+              <h3 className="text-base font-semibold text-neutral-900">{f.q}</h3>
+              <p className="mt-2 text-base leading-relaxed text-neutral-700">{f.a}</p>
             </Card>
           ))}
         </div>

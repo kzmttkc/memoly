@@ -105,8 +105,8 @@ const FAQ = [
     a: '現在、PDFやWordなどのファイルを取り込む機能はありません。就業規則や36協定などの規程は、対話や入力で要点を番頭に伝えていくと、その内容を覚えて以降の回答に反映します。一度覚えた内容は繰り返し説明する必要がなく、二度目からは前提を省いて相談できます。',
   },
   {
-    q: 'SmartHRなど既存のツールを使っています。乗り換えや全項目の入れ直しが必要ですか',
-    a: '番頭は既存の手続きシステムを置き換えるものではなく、併用を前提にしています。SmartHRやオフィスステーションは手続き・データ管理を、番頭は自社ルールの相談を担う役割分担です。従業員情報や規程のすべてを入れ直す必要はありません。相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。',
+    q: 'SmartHRやfreeeなど既存のツールを使っています。乗り換えや全項目の入れ直しが必要ですか',
+    a: '番頭は既存の手続きシステムを置き換えるものではなく、併用を前提にしています。SmartHR・freee・オフィスステーションなどは手続き・データ管理を、番頭は自社ルールの相談を担う役割分担です。従業員情報や規程のすべてを入れ直す必要はありません。相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。',
   },
   {
     q: '社労士資格との関係はどうなっていますか',
@@ -172,13 +172,17 @@ const AFTER_SCENES = [
 //   - 各社の記載は2026年7月時点の公開情報にもとづく一般的な整理に留め、
 //     優劣の断定・誹謗・優良誤認になりうる表現（「〜はできない」等の断定）を避ける。
 //   - 出所と「併用できる」事実は表の直下に注記する。
-const COMPARISON_HEADERS = ['番頭', 'SmartHR', 'オフィスステーション', '汎用AIチャット']
+// 2026-07-24 P03(freee併用の比較検討者): 併用例示が SmartHR 固定で freee が名指し
+//   されず、比較モードの確信が一拍遅れていた。freee人事労務（国内2大労務SaaSの一角）を
+//   独立列として追加し、各社の得意分野も正直に認める（優劣の断定・誹謗・優良誤認は避ける）。
+const COMPARISON_HEADERS = ['番頭', 'SmartHR', 'freee人事労務', 'オフィスステーション', '汎用AIチャット']
 const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean }[] }[] = [
   {
     label: '主な役割',
     cells: [
       { text: '会社の規程・前提を覚えて、労務の相談に自社前提で答える', strong: true },
       { text: '人事・労務手続きの電子化と従業員データベース' },
+      { text: '給与計算・勤怠・人事労務手続きと従業員データの管理' },
       { text: '労務手続き書類の作成・電子申請' },
       { text: '分野を問わない汎用のAIチャット' },
     ],
@@ -187,6 +191,7 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
     label: '自社の規程・前提を覚えた回答',
     cells: [
       { text: '中心機能。規程と相談の経緯を記憶して回答', strong: true },
+      { text: '主目的ではありません' },
       { text: '主目的ではありません' },
       { text: '主目的ではありません' },
       { text: '汎用の記憶機能はあるものの、規程や期限に特化した管理ではありません' },
@@ -202,6 +207,7 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
     cells: [
       { text: '登録からそのまま相談を始められ、初回の回答まで数分が目安です', strong: true },
       { text: '初期設定・従業員情報の登録を経て利用を開始する流れです（会社の規模により異なります）' },
+      { text: '初期設定・従業員情報の登録を経て利用を開始する流れです（会社の規模により異なります）' },
       { text: '初期設定を経て利用を開始する流れです（会社の規模により異なります）' },
       { text: 'すぐに使い始められます（自社の前提の説明は毎回必要です）', strong: true },
     ],
@@ -212,6 +218,7 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
       { text: '対応していません（書類の下書き支援まで）' },
       { text: '得意分野です', strong: true },
       { text: '得意分野です', strong: true },
+      { text: '得意分野です', strong: true },
       { text: '対応していません' },
     ],
   },
@@ -220,6 +227,7 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
     cells: [
       { text: '自社の前提に沿って即答', strong: true },
       { text: '手続き・データ管理が中心です' },
+      { text: '手続き・給与計算が中心です' },
       { text: '手続き・帳票が中心です' },
       { text: '一般論として回答（会社の前提説明が毎回必要）' },
     ],
@@ -498,7 +506,7 @@ export default async function BusinessLandingPage({
             <p className="mx-auto mt-4 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
               <Database className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden />
               <span>
-                SmartHRなどの既存システムはそのまま。番頭は「自社ルールの相談窓口」を1つ足す使い方です。
+                SmartHR・freeeなどの既存システムはそのまま。番頭は「自社ルールの相談窓口」を1つ足す使い方です。
               </span>
             </p>
           </div>
@@ -944,7 +952,7 @@ export default async function BusinessLandingPage({
             </p>
           </div>
           <div className="overflow-x-auto rounded-2xl border border-neutral-200">
-            <table className="w-full min-w-[720px] border-collapse bg-white text-left text-sm">
+            <table className="w-full min-w-[860px] border-collapse bg-white text-left text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50">
                   <th scope="col" className="p-4 text-xs font-semibold text-neutral-500">
@@ -999,7 +1007,7 @@ export default async function BusinessLandingPage({
           </div>
           <p className="mt-4 text-center text-xs leading-relaxed text-neutral-400">
             2026年7月時点の各社公開情報にもとづく一般的な整理です。正確な機能・料金は各サービスの公式サイトをご確認ください。
-            番頭は手続きシステムの代替ではないため、SmartHRやオフィスステーションと併用できます。
+            番頭は手続きシステムの代替ではないため、SmartHR・freee・オフィスステーションなどと併用できます。
           </p>
 
           {/* 2026-07-24 I4(比較検討者の不安): 「併用できます」だけでは『また全部
@@ -1009,7 +1017,7 @@ export default async function BusinessLandingPage({
           <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
             <p className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
               <Database className="h-4 w-4 text-brand-600" aria-hidden />
-              すでにSmartHRなどをお使いの方へ
+              すでにSmartHR・freeeなどをお使いの方へ
             </p>
             <p className="mt-2 text-sm leading-relaxed text-neutral-600">
               番頭は既存の手続きシステムを置き換えません。従業員情報や規程を、番頭にすべて入れ直す必要はありません。
