@@ -6,9 +6,12 @@ import { useSearchParams } from 'next/navigation'
 import { MessageSquareText, FileText, ShieldCheck, Sparkles } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { buttonClass } from '@/components/ui/Button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { WeeklyDigest } from '../_components/WeeklyDigest'
 import { MemoryBalanceMeter } from '../_components/MemoryBalanceMeter'
+import { HomeEngagement } from '../_components/HomeEngagement'
+import { DailyRoumuCard } from '../_components/DailyRoumuCard'
 
 // ============================================================================
 // /company/home — 会社を選択した先のトップ（ダッシュボード）。
@@ -27,6 +30,12 @@ function HomeInner() {
         title="自社のホーム"
         description="今週の法改正・手続き期限など、自社に関係する動きから表示します。気になったカードから、その場で相談・書類作成・診断に進めます。"
       />
+
+      {/* D17+C13/D10/D14/D16: 初回チェックリスト（今日やること1つを最上部）・
+          ストリーク・リスク前回比・近づく期限の集約。未取得/該当なしは何も出ない。 */}
+      <div className="mb-6">
+        <HomeEngagement companyId={companyId} />
+      </div>
 
       {/* 記憶残高メーター（解約防止の主装置・沈没コストの可視化）。フィードの直前に常設。 */}
       <div className="mb-6">
@@ -66,13 +75,34 @@ function HomeInner() {
           助成金・法改正
         </Link>
       </div>
+
+      {/* D23: 今日の1分労務（既存 /roumu 記事の日替わり抜粋・最下部の読み物枠）。 */}
+      <div className="mt-10">
+        <DailyRoumuCard />
+      </div>
     </div>
   )
 }
 
 export default function CompanyHomeDashboardPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-neutral-500">読み込み中...</p>}>
+    // I07: フォールバックは文字列でなくホームの骨格（見出し+メーター+フィード枠）。
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-2xl" aria-busy="true" aria-label="読み込み中">
+          <div className="mb-6 space-y-2">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-3.5 w-full max-w-md" />
+          </div>
+          <Skeleton className="mb-6 h-24 w-full rounded-2xl" />
+          <Skeleton className="mb-3 h-5 w-56" />
+          <div className="space-y-3">
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+          </div>
+        </div>
+      }
+    >
       <CompanyGuard>
         <HomeInner />
       </CompanyGuard>
