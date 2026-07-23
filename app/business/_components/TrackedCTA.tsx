@@ -28,7 +28,9 @@ import { trackV as track } from '../_lib/variant'
 
 const FORWARD_KEYS = ['utm_source', 'utm_campaign', 'utm_medium'] as const
 
-function hrefWithForwardedAttribution(href: string): string {
+// HeaderCta（A12）等の兄弟クライアントコンポーネントでも同じ utm 引き継ぎ規則を
+// 使うため export する（挙動は従来と不変）。
+export function hrefWithForwardedAttribution(href: string): string {
   if (typeof window === 'undefined') return href
   const landing = new URLSearchParams(window.location.search)
   const [path, existingQs = ''] = href.split('?')

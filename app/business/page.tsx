@@ -14,13 +14,12 @@ import {
   X,
   Building2,
   Sparkles,
-  Clock,
-  Search,
-  FileSignature,
-  Bell,
   Database,
   KeyRound,
   Trash2,
+  ChevronDown,
+  UserCog,
+  Copy,
 } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -28,6 +27,12 @@ import { Badge } from '@/components/ui/Badge'
 import TryDemoLazy from './_components/TryDemoLazy'
 import { TrackedCTA } from './_components/TrackedCTA'
 import { HeroEyebrow, HeroHeadline, HeroSubcopy } from './_components/HeroCopy'
+import { HeaderCta } from './_components/HeaderCta'
+import IndustryHeroPreview from './_components/IndustryHeroPreview'
+import CompareToggle from './_components/CompareToggle'
+import ScenarioSection from './_components/ScenarioSection'
+import ScrollProgress from './_components/ScrollProgress'
+import ForcePaidVariant from './_components/ForcePaidVariant'
 import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
 import { PLANS } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
@@ -125,59 +130,93 @@ const FAQ = [
   },
 ]
 
-// 機能4軸。「自社に合わせて」を繰り返さず、各軸がもたらす"成果"で差別化する。
+// 機能4軸（2026-07-23 B01+I01: 旧「業務効率化」4カードと旧「機能」4カードを
+// 1セクション4カードへ統合し、中盤を約50%短縮。各カードは「機能名＝何をするか」と
+// 「肩代わりする手間＝何が減るか」を1枚で言い切る）。
 const FEATURES = [
   {
     icon: Brain,
     title: '覚える',
     body:
-      '会社のプロファイル（所定労働時間・休日・36協定の状況など）と相談データを蓄積。二度目からは話が早く、自社の状況に合わせた答えがすぐ返ります。',
+      '会社のプロファイル（所定労働時間・休日・36協定の状況など）と相談の経緯を蓄積。毎回の前提説明がなくなり、二度目からは話が早くなります。',
   },
   {
     icon: MessageSquareText,
     title: '答える',
     body:
-      'チャットで労務の疑問をそのまま投げるだけ。覚えたルールに沿って、一般論ではなく自社の前提条件に合わせた回答を返します。',
+      '労務の疑問をそのまま投げるだけで、法令と自社の規程に当てて即答。総務が条文やサイトを探し回る調べ物の時間を減らせます。',
   },
   {
     icon: FileText,
     title: 'つくる',
     body:
-      '就業規則や36協定の自社仕様ドラフトを下書き。既存の規程をレビューして、抜けや修正点を洗い出す使い方もできます。',
+      '就業規則や36協定のドラフトを、自社の数値が入った状態で下書き。ゼロから書く時間も、専門家へ依頼する前の準備時間も圧縮できます。',
   },
   {
     icon: ShieldCheck,
     title: '気づく',
     body:
-      '労務リスクをスコアで可視化。助成金や法改正の情報を、自社の状況に当てはめて「何を対応すべきか」を瞬時に確認できます。',
+      '労務リスクをスコアで可視化し、助成金や法改正を「自社が対象か」で整理。制度を自分で追いかける手間と見逃しを減らせます。',
   },
 ]
 
-// 業務効率化の4つの成果。番頭が"肩代わり"する手間を具体に落とす。
-const EFFICIENCY = [
+// Before/After の具体シーン（2026-07-23 B04）。「貼り付け回数」「調べ物の分数」を
+// 場面で見せる。数字はあくまで作業イメージの例示であり、効果の保証値ではない
+// （直下のキャプションで明示する）。
+const BEFORE_SCENES = [
+  '同じ就業規則を、今週も3回チャットに貼り付けて前提を説明',
+  '残業上限の調べ物で、条文と解説サイトを行き来して25分',
+  '前回どう判断したか、過去のチャット履歴を10分さかのぼる',
+]
+const AFTER_SCENES = [
+  '貼り付けは0回。規程も前提も、番頭が覚えている',
+  '「来週、残業できる？」と聞くだけで、自社前提の答え',
+  '前回の判断は、続きからそのまま話せる',
+]
+
+// 比較表（2026-07-23 B18）。「正直な土俵」原則:
+//   - 相手の強み（手続きの電子化・帳票・汎用性）は強みとして明記する。
+//   - 番頭の弱み（電子申請・給与計算は非対応）も同じ表の中で明記する。
+//   - 各社の記載は2026年7月時点の公開情報にもとづく一般的な整理に留め、
+//     優劣の断定・誹謗・優良誤認になりうる表現（「〜はできない」等の断定）を避ける。
+//   - 出所と「併用できる」事実は表の直下に注記する。
+const COMPARISON_HEADERS = ['番頭', 'SmartHR', 'オフィスステーション', '汎用AIチャット']
+const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean }[] }[] = [
   {
-    icon: Clock,
-    title: '前提説明の往復をなくす',
-    body:
-      '汎用AIは毎回「うちは製造業・8名で」と説明が要ります。番頭は一度覚えれば説明不要。毎回の数分が積み上がりません。',
+    label: '主な役割',
+    cells: [
+      { text: '会社の規程・前提を覚えて、労務の相談に自社前提で答える', strong: true },
+      { text: '人事・労務手続きの電子化と従業員データベース' },
+      { text: '労務手続き書類の作成・電子申請' },
+      { text: '分野を問わない汎用のAIチャット' },
+    ],
   },
   {
-    icon: Search,
-    title: '調べ物の時間を圧縮',
-    body:
-      '「この場合の残業上限は」を法令と自社規程に当てて即答。総務が条文を探し回る時間を減らせます。',
+    label: '自社の規程・前提を覚えた回答',
+    cells: [
+      { text: '中心機能。規程と相談の経緯を記憶して回答', strong: true },
+      { text: '主目的ではありません' },
+      { text: '主目的ではありません' },
+      { text: '汎用の記憶機能はあるものの、規程や期限に特化した管理ではありません' },
+    ],
   },
   {
-    icon: FileSignature,
-    title: '書類のたたき台が数分',
-    body:
-      '就業規則や36協定のドラフトを、自社の数値を入れた状態で下書き。ゼロから書く時間や、依頼前の準備時間を圧縮できます。',
+    label: '手続きの電子申請・給与関連',
+    cells: [
+      { text: '対応していません（書類の下書き支援まで）' },
+      { text: '得意分野です', strong: true },
+      { text: '得意分野です', strong: true },
+      { text: '対応していません' },
+    ],
   },
   {
-    icon: Bell,
-    title: '見逃しを減らす',
-    body:
-      '助成金や法改正を「自社が対象か」で整理。制度を自分で追い、判断する手間と取りこぼしを減らせます。',
+    label: '日々の労務の調べ物',
+    cells: [
+      { text: '自社の前提に沿って即答', strong: true },
+      { text: '手続き・データ管理が中心です' },
+      { text: '手続き・帳票が中心です' },
+      { text: '一般論として回答（会社の前提説明が毎回必要）' },
+    ],
   },
 ]
 
@@ -196,6 +235,8 @@ const PLAN_COPY = [
     yearly: PLANS.starter.yearlyJpy,
     tagline: 'まず使ってみる',
     badge: 'おすすめ',
+    // 2026-07-23 B17: CTA文言をプラン別に分化（リンク先・計測locationは不変）。
+    cta: 'Entryで始める（今は無料）',
     features: [
       '自社の規程・会社プロファイルの記憶',
       `AIチャット相談 1日${PLANS.starter.limits.chat}回まで`,
@@ -212,6 +253,7 @@ const PLAN_COPY = [
     yearly: PLANS.standard.yearlyJpy,
     tagline: 'チームでしっかり使う',
     badge: null,
+    cta: 'Standardで始める（今は無料）',
     features: [
       'Entry のすべての機能',
       `AIチャット相談 1日${PLANS.standard.limits.chat}回まで（Entryの3倍）`,
@@ -227,6 +269,7 @@ const PLAN_COPY = [
     yearly: PLANS.shigyo.yearlyJpy,
     tagline: '複数の顧問先を管理',
     badge: '士業向け',
+    cta: '士業として顧問先を登録',
     features: [
       `Standard のすべて（AIチャット相談 1日${PLANS.shigyo.limits.chat}回まで）`,
       '複数企業（顧問先）の切り替え',
@@ -237,77 +280,6 @@ const PLAN_COPY = [
     featured: PLANS.shigyo.featured,
   },
 ]
-
-// ---------------------------------------------------------------------------
-// 様式化UIプレビュー — 製品の動きをコードだけで再現する小コンポーネント。
-//   「会社プロファイルを覚えている → 自社前提で質問 → 番頭が自社前提で即答」
-//   実スクショ・画像は使わず、面と吹き出しで動きを表現する。
-// ---------------------------------------------------------------------------
-function ProductPreview() {
-  return (
-    <div className="relative mx-auto w-full max-w-md">
-      {/* 装飾の淡いグロー（背面） */}
-      <div
-        aria-hidden
-        className="absolute -inset-4 -z-10 rounded-[2rem] bg-brand-100/50 blur-2xl"
-      />
-      <Card className="overflow-hidden p-0 shadow-md ring-1 ring-neutral-200/60">
-        {/* ウィンドウバー */}
-        <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
-            <Brain className="h-3 w-3" aria-hidden />
-          </span>
-          <span className="text-xs font-semibold text-neutral-700">番頭</span>
-          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-medium text-success-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden />
-            記憶あり
-          </span>
-        </div>
-
-        <div className="space-y-3 px-4 py-4">
-          {/* 覚えている会社プロファイル */}
-          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-              <Building2 className="h-3.5 w-3.5" aria-hidden />
-              覚えている自社プロファイル
-            </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {['製造業', '従業員 8名', '所定 8h / 週40h', '36協定 未締結'].map(
-                tag => (
-                  <span
-                    key={tag}
-                    className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[11px] text-neutral-700 tabular-nums"
-                  >
-                    {tag}
-                  </span>
-                ),
-              )}
-            </div>
-          </div>
-
-          {/* ユーザーの質問（右寄せ吹き出し） */}
-          <div className="flex justify-end">
-            <p className="max-w-[80%] rounded-2xl rounded-tr-sm bg-brand-600 px-3 py-2 text-[13px] leading-relaxed text-white">
-              来週、残業させても大丈夫?
-            </p>
-          </div>
-
-          {/* 番頭の回答（左寄せ・会社前提を踏まえる） */}
-          <div className="flex items-start gap-2">
-            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-              <Brain className="h-3.5 w-3.5" aria-hidden />
-            </span>
-            <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 text-[13px] leading-relaxed text-neutral-700">
-              自社は
-              <span className="font-semibold text-neutral-900">36協定が未締結</span>
-              なので、まず時間外労働の上限と締結手続きの確認から。前提を説明し直す必要はありません。
-            </div>
-          </div>
-        </div>
-      </Card>
-    </div>
-  )
-}
 
 // ---------------------------------------------------------------------------
 // DataIsolationDiagram — 「会社ごとにデータが分離される」をコードだけで図解。
@@ -370,146 +342,36 @@ function DataIsolationDiagram() {
   )
 }
 
-// ---------------------------------------------------------------------------
-// TimeComparisonBars — 「前提説明の往復が消える」を概念バーで視覚化。
-//   汎用AI＝毎回の前提説明（長い薄色帯）＋回答 / 番頭＝回答だけ（短い帯）。
-//   断定的な時間数値は書かない。ラベルは「説明」「回答」のみ。
-//   バーの長短は概念図であり、色だけに意味を載せないようテキストラベルを併記する。
-// ---------------------------------------------------------------------------
-function TimeComparisonBars() {
-  return (
-    <div className="space-y-5">
-      {/* 汎用AI */}
-      <div>
-        <p className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-500">
-          <MessageSquareText className="h-4 w-4" aria-hidden />
-          汎用AI
-        </p>
-        <div
-          className="flex h-9 w-full overflow-hidden rounded-lg"
-          role="img"
-          aria-label="汎用AIは毎回の前提説明に時間がかかり、その後に回答が返る"
-        >
-          <span className="flex flex-[7] items-center justify-center bg-brand-100 text-xs font-medium text-brand-700">
-            前提説明
-          </span>
-          <span className="flex flex-[3] items-center justify-center bg-brand-600 text-xs font-medium text-white">
-            回答
-          </span>
-        </div>
-      </div>
+// 広告経由と判定する utm_medium の値（I11）。低カーディナリティな既知値のみ。
+const PAID_MEDIA = ['paid', 'cpc', 'ppc', 'paid_social', 'paidsocial', 'display', 'ads', 'sem']
 
-      {/* 番頭 */}
-      <div>
-        <p className="mb-2 flex items-center gap-2 text-sm font-medium text-neutral-800">
-          <Brain className="h-4 w-4" aria-hidden />
-          番頭
-        </p>
-        <div
-          className="flex h-9 w-full overflow-hidden rounded-lg"
-          role="img"
-          aria-label="番頭は前提を覚えているため、説明なしで回答だけが返る"
-        >
-          <span className="flex flex-[3] items-center justify-center rounded-l-lg bg-brand-600 text-xs font-medium text-white">
-            回答
-          </span>
-          <span className="flex-[7] bg-neutral-100" aria-hidden />
-        </div>
-      </div>
-
-      <p className="text-xs leading-relaxed text-neutral-500">
-        覚えているぶん、説明に使う時間が増えていきません。
-      </p>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// RiskScorePreview — 「気づく」を表す様式化UI。労務リスクのスコアカード。
-//   SVGの円ゲージ＋帯＋上位リスク。実スコアを断定せず製品の出力イメージを再現。
-//   ゲージはaria-hidden、意味はテキスト（要注意・各リスク行）で担保する。
-// ---------------------------------------------------------------------------
-function RiskScorePreview() {
-  const R = 30
-  const C = 2 * Math.PI * R
-  const ratio = 0.62 // 概念図の充填率（断定値ではない）
-  return (
-    <Card className="overflow-hidden p-0 shadow-md ring-1 ring-neutral-200/60">
-      <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
-        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
-          <ShieldCheck className="h-3 w-3" aria-hidden />
-        </span>
-        <span className="text-xs font-semibold text-neutral-700">労務リスク・セルフ診断</span>
-      </div>
-
-      <div className="flex items-center gap-4 px-4 py-4">
-        {/* SVG 円ゲージ */}
-        <svg viewBox="0 0 80 80" className="h-20 w-20 shrink-0" aria-hidden>
-          <circle
-            cx="40"
-            cy="40"
-            r={R}
-            fill="none"
-            stroke="var(--color-neutral-200)"
-            strokeWidth="8"
-          />
-          <circle
-            cx="40"
-            cy="40"
-            r={R}
-            fill="none"
-            stroke="var(--color-warning-500)"
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={C}
-            strokeDashoffset={C * (1 - ratio)}
-            transform="rotate(-90 40 40)"
-          />
-          <text
-            x="40"
-            y="44"
-            textAnchor="middle"
-            className="fill-neutral-900 text-[14px] font-bold"
-          >
-            要注意
-          </text>
-        </svg>
-
-        <div className="min-w-0 flex-1">
-          <span className="inline-flex items-center gap-1 rounded-full bg-warning-50 px-2 py-0.5 text-[11px] font-medium text-warning-700">
-            <Bell className="h-3 w-3" aria-hidden />
-            対応をおすすめする項目
-          </span>
-          <ul className="mt-2.5 space-y-1.5">
-            {['36協定が未締結のまま', '就業規則の改定が未反映'].map(item => (
-              <li
-                key={item}
-                className="flex items-start gap-1.5 text-[13px] leading-snug text-neutral-700"
-              >
-                <span
-                  className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-warning-500"
-                  aria-hidden
-                />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </Card>
-  )
-}
-
-export default async function BusinessLandingPage() {
+export default async function BusinessLandingPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   // A/B 変種は middleware が cookie で確定し、内部ヘッダで渡してくる（A02: SSR段階で
   // 変種を焼き込む。従来の「SSR常にA・Bはhydration後差し替え」の計測バイアスを解消）。
   // headers() を読むためこのルートは動的レンダリングになる（Vercel上でSSR）。
   // ヘッダ欠落時（middleware未経由の万一）は A にフォールバック＝安全側。
-  const h = await headers()
+  //
+  // 2026-07-23 I11: 広告着地（utm_medium=paid/cpc等・広告クリックIDあり）は
+  // H1変種を勝者候補の B に固定する。middleware には触れない（作業境界）ため、
+  // ここで searchParams から判定して SSR 描画を上書きし、cookie/計測の同期は
+  // ForcePaidVariant（クライアント）が行う。オーガニック来訪の70/30配信は不変。
+  const [h, sp] = await Promise.all([headers(), searchParams])
   const hv = h.get(VARIANT_HEADER)
-  const variant: LpVariant = hv === 'B' ? 'B' : 'A'
+  const mediumRaw = sp.utm_medium
+  const medium = (typeof mediumRaw === 'string' ? mediumRaw : '').toLowerCase()
+  const isPaidLanding =
+    PAID_MEDIA.includes(medium) || 'gclid' in sp || 'msclkid' in sp || 'yclid' in sp
+  const variant: LpVariant = isPaidLanding ? 'B' : hv === 'B' ? 'B' : 'A'
   return (
     <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
+      {/* B19: 読了位置プログレスバー（装飾・compositor安全） */}
+      <ScrollProgress />
+      {/* I11: 広告着地時のみ、cookie/計測の変種を SSR 表示（B固定）と同期 */}
+      {isPaidLanding && <ForcePaidVariant />}
       {/* ===== ヘッダ ===== */}
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
@@ -529,12 +391,9 @@ export default async function BusinessLandingPage() {
             >
               ログイン
             </Link>
-            <TrackedCTA
-              location="header"
-              className={buttonClass({ variant: 'primary', size: 'sm' })}
-            >
-              無料で始める
-            </TrackedCTA>
+            {/* A12: スクロール深度で「無料で始める」→「診断を始める」へ動的変化。
+                リンク先・location='header' 計測・utm引き継ぎは従来と同一。 */}
+            <HeaderCta className={buttonClass({ variant: 'primary', size: 'sm' })} />
           </nav>
         </div>
       </header>
@@ -568,8 +427,18 @@ export default async function BusinessLandingPage() {
           （プレビューを row-span-2 で右列に固定）。 */}
       <section className="mx-auto max-w-5xl px-6 pb-16 pt-10 sm:pt-16">
         <div className="grid items-center gap-y-8 lg:grid-cols-2 lg:gap-x-10">
-          {/* ブロック1：言葉（アイブロー・H1・サブコピー） */}
+          {/* ブロック1：言葉（ブランド行・アイブロー・H1・サブコピー） */}
           <div className="text-center lg:text-left">
+            {/* 2026-07-23 A10: ブランド名 BANTO をH1付近でヒーロー級に（テキストのみ。
+                新ロゴ画像は承認待ちのため入れない。A/B共通・変種スロットの外）。 */}
+            <p className="mb-4 flex items-baseline justify-center gap-2.5 lg:justify-start">
+              <span className="text-xl font-extrabold tracking-[0.18em] text-brand-700">
+                BANTO
+              </span>
+              <span className="text-sm font-semibold tracking-wide text-neutral-500">
+                番頭
+              </span>
+            </p>
             {/* アイブロー＝A/B変種スロット。A=役割ラベル / B=痛み起点フック。
                 2026-07-23 A02: variant は middleware→page が SSR で確定して prop 渡し
                 （従来の hydration 後差し替えを廃止）。詳細は _components/HeroCopy.tsx。 */}
@@ -583,9 +452,11 @@ export default async function BusinessLandingPage() {
             <HeroSubcopy variant={variant} />
           </div>
 
-          {/* ブロック2：見て分かる（モバイルではH1直下・lgでは右列に固定） */}
+          {/* ブロック2：見て分かる（モバイルではH1直下・lgでは右列に固定）
+              2026-07-23 A14+B13+I01: 業種タブ付きプレビューへ置換（初期表示は
+              従来と同じ製造業＝A/BのFV体験は不変。グロー装飾は撤去しフラット化）。 */}
           <div className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:pl-4">
-            <ProductPreview />
+            <IndustryHeroPreview />
           </div>
 
           {/* ブロック3：CTA（モバイルではプレビューの後）
@@ -653,86 +524,25 @@ export default async function BusinessLandingPage() {
         <TryDemoLazy />
       </div>
 
-      {/* ===== 核の主張：汎用AI vs 番頭（左右対比・ここで一度だけ強く言う） ===== */}
+      {/* ===== 導入シナリオ（B02/B03の器・2026-07-23 Takeshi裁定で骨組み先行実装） =====
+          データ(_lib/scenarios.ts)が空の間は何も描画しない。実在顧客の声と誤認される
+          表記は使わない（詳細は _components/ScenarioSection.tsx）。 */}
+      <ScenarioSection />
+
+      {/* ===== 核の主張：汎用AI vs 番頭（ここで一度だけ強く言う） =====
+          2026-07-23 B05: 静的な箇条書き2カードを、同じ質問への回答差をトグルで
+          見せるインタラクティブ比較（CompareToggle）へ置換。主張でなく挙動で示す。 */}
       <section className="border-y border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          <div className="mx-auto mb-12 max-w-2xl text-center">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
               汎用AIとの違いは「覚えているか」
             </h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
-              同じ質問でも、前提を毎回説明するか、自社の前提から答えるかで体験が変わります。
+              同じ質問を、切り替えて比べてみてください。前提を聞き返されるか、前提から答えが始まるかが違いです。
             </p>
           </div>
-
-          <div className="grid items-stretch gap-4 sm:grid-cols-[1fr_auto_1fr]">
-            {/* 汎用AI 側 */}
-            <Card className="flex flex-col border-neutral-200">
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
-                  <MessageSquareText className="h-5 w-5" aria-hidden />
-                </span>
-                <h3 className="font-semibold text-neutral-700">汎用AI</h3>
-              </div>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-500">
-                毎回ゼロから会社の前提を説明する必要があります。
-              </p>
-              <ul className="mt-4 space-y-2.5">
-                {[
-                  '所定労働時間や休日を毎回入力',
-                  '過去の相談は覚えていない',
-                  '答えは一般論止まり',
-                ].map(item => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-2 text-sm text-neutral-600"
-                  >
-                    <X className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
-                    <span className="leading-relaxed">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            {/* 中央の矢印（縦/横で切替） */}
-            <div className="flex items-center justify-center">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-200 bg-white text-brand-600 shadow-sm">
-                <ArrowRight className="hidden h-5 w-5 sm:block" aria-hidden />
-                <ArrowDown className="h-5 w-5 sm:hidden" aria-hidden />
-              </span>
-            </div>
-
-            {/* 番頭 側 */}
-            <Card className="flex flex-col border-brand-300 ring-1 ring-brand-200">
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white">
-                  <Brain className="h-5 w-5" aria-hidden />
-                </span>
-                <h3 className="font-semibold text-neutral-900">番頭</h3>
-                <Badge tone="brand" className="ml-auto">
-                  覚えている
-                </Badge>
-              </div>
-              <p className="mt-3 text-sm leading-relaxed text-neutral-700">
-                自社の規程と相談履歴を覚えているので、前提から答えます。
-              </p>
-              <ul className="mt-4 space-y-2.5">
-                {[
-                  '会社プロファイルを一度登録すれば再入力不要',
-                  '過去の相談を覚えていて、続きから話せる',
-                  '自社の前提に沿った回答',
-                ].map(item => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-2 text-sm text-neutral-800"
-                  >
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
-                    <span className="leading-relaxed">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </div>
+          <CompareToggle />
         </div>
       </section>
 
@@ -741,32 +551,66 @@ export default async function BusinessLandingPage() {
           直後に「準備中」と明かす構造ごと外した。一等地から不確実要素を消し、
           資料が完成したら _components/LeadCapture.tsx を再掲載する（コンポーネントは温存）。 */}
 
-      {/* ===== 業務効率化（企業ニーズ起点：何がどれだけ楽になるか） ===== */}
+      {/* ===== 機能と効率化（統合・2026-07-23 B01+I01+B04） =====
+          旧「業務効率化」(4カード+概念バー)と旧「機能4軸」(4カード+スコアカード)の
+          2セクションを1つに統合し、中盤を約50%短縮。冒頭に Before/After の具体
+          シーン（貼り付け回数・調べ物の分数）を置き、抽象論の前に場面で見せる。 */}
       <section className="mx-auto max-w-5xl px-6 py-20">
         <div className="mx-auto mb-12 max-w-2xl text-center">
-          <p className="mb-3 text-sm font-semibold tracking-wide text-brand-600">業務効率化</p>
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-            AIへの前提説明・調べ物・下書きを肩代わり
+            覚える・答える・つくる・気づく
           </h2>
           <p className="mt-3 text-base leading-relaxed text-neutral-600">
-            機能を増やすためではなく、総務が毎回費やしていた時間を減らすために設計しています。
+            番頭の仕事はこの4つ。総務が毎回費やしていた説明・調べ物・下書きの時間を肩代わりします。
           </p>
         </div>
-        {/* 前提説明の往復が消える：概念バーで一目に */}
-        <Card className="mb-8">
-          <TimeComparisonBars />
-        </Card>
+
+        {/* B04: Before/After を具体シーンで対比 */}
+        <div className="mb-4 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5 sm:p-6">
+            <p className="flex items-center gap-2 text-sm font-semibold text-neutral-500">
+              <MessageSquareText className="h-4 w-4" aria-hidden />
+              いままで（汎用AIと自力の調べ物）
+            </p>
+            <ul className="mt-4 space-y-3">
+              {BEFORE_SCENES.map(item => (
+                <li key={item} className="flex items-start gap-2 text-sm text-neutral-600">
+                  <X className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+                  <span className="leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-brand-200 bg-white p-5 ring-1 ring-brand-100 sm:p-6">
+            <p className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+              <Brain className="h-4 w-4 text-brand-600" aria-hidden />
+              番頭にしてから
+            </p>
+            <ul className="mt-4 space-y-3">
+              {AFTER_SCENES.map(item => (
+                <li key={item} className="flex items-start gap-2 text-sm text-neutral-800">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+                  <span className="leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <p className="mb-10 text-center text-xs text-neutral-400">
+          シーンは作業のイメージ例です。時間・回数は実測値や効果の保証ではありません。
+        </p>
+
         <div className="grid gap-5 sm:grid-cols-2">
-          {EFFICIENCY.map(e => {
-            const Icon = e.icon
+          {FEATURES.map(f => {
+            const Icon = f.icon
             return (
-              <Card key={e.title} interactive className="flex items-start gap-4">
+              <Card key={f.title} interactive className="flex items-start gap-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
                 <div>
-                  <h3 className="font-semibold text-neutral-900">{e.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{e.body}</p>
+                  <h3 className="text-lg font-semibold text-neutral-900">{f.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{f.body}</p>
                 </div>
               </Card>
             )
@@ -774,34 +618,67 @@ export default async function BusinessLandingPage() {
         </div>
       </section>
 
-      {/* ===== 機能（覚える・答える・つくる・気づく：成果で差別化） ===== */}
+      {/* ===== 社労士に渡すメモ（B20・2026-07-23） =====
+          実機能: /company/reports の mode='sharoushi'（F5）。番頭が覚えている
+          基本情報・整備済みの規程・近い期限・会社で決めた運用に相談論点を添えて
+          1枚のメモへ整理し、コピーして渡せる（app/(app)/company/reports/page.tsx・
+          lib/report.ts で実装確認済み。実装されていない能力は書かない）。 */}
       <section className="border-y border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          <div className="mx-auto mb-12 max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-              覚える・答える・つくる・気づく
-            </h2>
-            <p className="mt-3 text-base leading-relaxed text-neutral-600">
-              自社の前提を覚えた番頭が、4つの軸でチームの労務を日常から支えます。
-            </p>
-          </div>
-          {/* 「気づく」の出力イメージ：労務リスクのスコアカード */}
-          <div className="mx-auto mb-8 w-full max-w-md">
-            <RiskScorePreview />
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2">
-            {FEATURES.map(f => {
-              const Icon = f.icon
-              return (
-                <Card key={f.title} interactive>
-                  <span className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-                    <Icon className="h-5 w-5" aria-hidden />
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <div className="text-center lg:text-left">
+              <p className="mb-3 text-sm font-semibold tracking-wide text-brand-600">
+                専門家との連携
+              </p>
+              <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+                相談の続きは、「社労士に渡すメモ」で
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-neutral-600">
+                番頭は専門家の代わりではなく、専門家への橋渡しまでを仕事にしています。
+                覚えている会社の基本情報・整備済みの規程・近づいている期限・会社で決めた運用に、
+                相談したい論点を添えて1枚のメモに整理。コピーして、そのまま顧問社労士に渡せます。
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+                専門家には論点から話を始められるので、相談の往復を減らせます。
+                メモに載る数値や期限は、登録済みの内容だけにもとづきます。
+              </p>
+            </div>
+
+            {/* 様式化プレビュー（コード描画のみ・画像なし） */}
+            <div className="mx-auto w-full max-w-md">
+              <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
+                    <UserCog className="h-3 w-3" aria-hidden />
                   </span>
-                  <h3 className="text-lg font-semibold text-neutral-900">{f.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-600">{f.body}</p>
-                </Card>
-              )
-            })}
+                  <span className="text-xs font-semibold text-neutral-700">
+                    社労士に渡すメモ
+                  </span>
+                </div>
+                <ul className="space-y-2.5 px-4 py-4">
+                  {[
+                    '会社の基本情報',
+                    '整備済みの規程',
+                    '近づいている期限',
+                    '会社で決めた運用',
+                    '相談したい論点',
+                  ].map(row => (
+                    <li key={row} className="flex items-center gap-2.5">
+                      <Check className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
+                      <span className="text-[13px] text-neutral-700">{row}</span>
+                      <span
+                        className="ml-auto block h-1.5 w-16 rounded-full bg-neutral-100"
+                        aria-hidden
+                      />
+                    </li>
+                  ))}
+                </ul>
+                <p className="flex items-center gap-1.5 border-t border-neutral-200 bg-neutral-50/70 px-4 py-2.5 text-[11px] text-neutral-500">
+                  <Copy className="h-3 w-3" aria-hidden />
+                  ワンクリックでコピーして、そのまま渡せます
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -872,8 +749,10 @@ export default async function BusinessLandingPage() {
         </div>
       </section>
 
-      {/* ===== 信頼シグナル（作り手の当事者性） ===== */}
-      <section className="border-t border-neutral-200 bg-neutral-50">
+      {/* ===== 信頼シグナル（作り手の当事者性） =====
+          2026-07-23 B16: 商家の帳場格子を思わせる縦縞をCSSだけで極薄に敷く
+          （画像なし・藍系#243B6Eトーン・「名前は番頭から」の物語と響き合う場所に限定）。 */}
+      <section className="border-t border-neutral-200 bg-neutral-50 bg-[repeating-linear-gradient(90deg,rgba(36,59,110,0.03)_0,rgba(36,59,110,0.03)_1px,transparent_1px,transparent_32px)]">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-start gap-3">
@@ -918,9 +797,95 @@ export default async function BusinessLandingPage() {
         </div>
       </section>
 
+      {/* ===== 比較表（B18・2026-07-23） =====
+          「正直な土俵」: 相手の強みも番頭の非対応も同じ表で明記する（データは
+          COMPARISON_ROWS を参照。断定・誹謗・優良誤認を避ける方針もそこに記載）。 */}
+      <section className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+              手続きシステムとも、汎用AIとも役割が違います
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-neutral-600">
+              それぞれに得意分野があります。番頭が担うのは「会社を覚えて、相談に自社前提で答える」の部分です。
+            </p>
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-neutral-200">
+            <table className="w-full min-w-[720px] border-collapse bg-white text-left text-sm">
+              <thead>
+                <tr className="border-b border-neutral-200 bg-neutral-50">
+                  <th scope="col" className="p-4 text-xs font-semibold text-neutral-500">
+                    観点
+                  </th>
+                  {COMPARISON_HEADERS.map((name, i) => (
+                    <th
+                      scope="col"
+                      key={name}
+                      className={
+                        i === 0
+                          ? 'p-4 text-sm font-bold text-brand-700'
+                          : 'p-4 text-sm font-semibold text-neutral-700'
+                      }
+                    >
+                      {name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map(row => (
+                  <tr key={row.label} className="border-b border-neutral-100 last:border-b-0">
+                    <th
+                      scope="row"
+                      className="p-4 align-top text-xs font-semibold text-neutral-500"
+                    >
+                      {row.label}
+                    </th>
+                    {row.cells.map((cell, i) => (
+                      <td
+                        key={`${row.label}-${i}`}
+                        className={
+                          (i === 0 ? 'bg-brand-50/40 ' : '') +
+                          'p-4 align-top text-[13px] leading-relaxed ' +
+                          (cell.strong ? 'font-medium text-neutral-900' : 'text-neutral-600')
+                        }
+                      >
+                        {cell.strong && (
+                          <Check
+                            className="mb-0.5 mr-1 inline h-3.5 w-3.5 text-brand-600"
+                            aria-hidden
+                          />
+                        )}
+                        {cell.text}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-4 text-center text-xs leading-relaxed text-neutral-400">
+            2026年7月時点の各社公開情報にもとづく一般的な整理です。正確な機能・料金は各サービスの公式サイトをご確認ください。
+            番頭は手続きシステムの代替ではないため、SmartHRやオフィスステーションと併用できます。
+          </p>
+        </div>
+      </section>
+
       {/* ===== 料金 ===== */}
       <section className="border-t border-neutral-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-20">
+          {/* 2026-07-23 B08: 料金の直前に「無料の理由と、育つ価値」の誠実な説明を1ブロック。
+              誇張なし: 無料モニター期間・記憶の蓄積・全削除可はいずれも本文と整合する事実。 */}
+          <div className="mx-auto mb-12 max-w-2xl rounded-2xl border border-brand-200 bg-brand-50/50 p-6 text-center sm:p-8">
+            <p className="text-lg font-semibold text-neutral-900">
+              今は無料です。そして番頭は、使うほど御社専用に育ちます。
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+              規程や相談の記憶が貯まるほど、答えは自社の実態に近づいていきます。
+              だからこそ先にお伝えします。合わないと感じたら、預けたデータごと全削除してやめられます。
+              無料のいまが、記憶を貯め始めるいちばん良いタイミングです。
+            </p>
+          </div>
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">料金</h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
@@ -953,9 +918,11 @@ export default async function BusinessLandingPage() {
                   </span>
                   <span className="text-sm text-neutral-500">{p.unit}</span>
                 </p>
+                {/* 2026-07-23 I02: 「2ヶ月分お得」の根拠（月払い比）を明記し、
+                    年払いの提供範囲は下部の注記でプラン間の表記を統一する。 */}
                 {p.yearly && (
                   <p className="mt-1 text-xs text-neutral-500 tabular-nums">
-                    年額 &yen;{p.yearly.toLocaleString()}（2ヶ月分お得）
+                    年額 &yen;{p.yearly.toLocaleString()}（月払いより2ヶ月分お得）
                   </p>
                 )}
                 <ul className="mt-5 space-y-2.5">
@@ -966,6 +933,7 @@ export default async function BusinessLandingPage() {
                     </li>
                   ))}
                 </ul>
+                {/* 2026-07-23 B17: CTA文言をプラン別に分化（リンク先・計測は不変） */}
                 <TrackedCTA
                   location={`pricing_${p.name}`}
                   className={buttonClass({
@@ -973,7 +941,7 @@ export default async function BusinessLandingPage() {
                     className: 'mt-6 w-full',
                   })}
                 >
-                  無料で試す
+                  {p.cta}
                 </TrackedCTA>
               </Card>
             ))}
@@ -981,6 +949,7 @@ export default async function BusinessLandingPage() {
           <p className="mt-6 text-center text-xs leading-relaxed text-neutral-500">
             EntryとStandardは1社あたりの月額です。プランの上限人数までは、何人で使っても料金は変わりません。
             士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です。
+            年払い（月払いより2ヶ月分お得）は現在Entryプランのみのご用意で、Standardと士業プランは月払いのみです。
           </p>
         </div>
       </section>
@@ -996,21 +965,57 @@ export default async function BusinessLandingPage() {
               中小企業の総務・経営者からよく寄せられる質問をまとめました。
             </p>
           </div>
-          <dl className="space-y-4">
-            {FAQ.map(item => (
-              <div
+          {/* 2026-07-23 B10: アコーディオン化（native <details>・JS不要）。初期表示は
+              先頭3問のみで、残りは「すべての質問を見る」で展開。全問のテキストは
+              閉じていても常にDOM上に存在し、FAQPage構造化データも全問を維持する。 */}
+          <div className="space-y-3">
+            {FAQ.slice(0, 3).map(item => (
+              <details
                 key={item.q}
-                className="rounded-2xl border border-neutral-200 bg-white p-5"
+                className="group rounded-2xl border border-neutral-200 bg-white"
               >
-                <dt className="text-base font-semibold text-neutral-900">
+                <summary className="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-base font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden">
                   {item.q}
-                </dt>
-                <dd className="mt-2 text-sm leading-relaxed text-neutral-600">
+                  <ChevronDown
+                    className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+                <p className="px-5 pb-5 text-sm leading-relaxed text-neutral-600">
                   {item.a}
-                </dd>
-              </div>
+                </p>
+              </details>
             ))}
-          </dl>
+
+            <details className="group">
+              <summary className="flex cursor-pointer select-none items-center justify-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 [&::-webkit-details-marker]:hidden">
+                すべての質問を見る（あと{FAQ.length - 3}問）
+                <ChevronDown
+                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                  aria-hidden
+                />
+              </summary>
+              <div className="mt-3 space-y-3">
+                {FAQ.slice(3).map(item => (
+                  <details
+                    key={item.q}
+                    className="group/item rounded-2xl border border-neutral-200 bg-white"
+                  >
+                    <summary className="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-base font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden">
+                      {item.q}
+                      <ChevronDown
+                        className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open/item:rotate-180"
+                        aria-hidden
+                      />
+                    </summary>
+                    <p className="px-5 pb-5 text-sm leading-relaxed text-neutral-600">
+                      {item.a}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </details>
+          </div>
         </div>
       </section>
 
@@ -1067,9 +1072,36 @@ export default async function BusinessLandingPage() {
         }}
       />
 
-      {/* ===== 末尾CTA ===== */}
+      {/* ===== 今日やることチェックリスト（B11・2026-07-23） =====
+          最終CTAの直前で「登録→5問→1相談」の最初の一歩を具体化し、
+          登録後に何をすればよいか分からない不安を先に解消する。 */}
+      <section className="mx-auto max-w-3xl px-6 pt-20">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-neutral-900">
+            今日やることは、3つだけ
+          </h2>
+          <ol className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[
+              { step: '1', title: '無料で会社を登録', body: 'メールアドレスだけで始められます。クレジットカードは不要です。' },
+              { step: '2', title: '気になる質問を5つ', body: '残業・有給・規程など、いつも調べていたことをそのまま聞いてみてください。' },
+              { step: '3', title: '重い悩みを1件相談', body: 'いちばん気がかりな1件を相談。明日の番頭は、今日の続きを覚えています。' },
+            ].map(item => (
+              <li key={item.step} className="flex flex-col items-center text-center">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white tabular-nums">
+                  {item.step}
+                </span>
+                <p className="mt-3 text-sm font-semibold text-neutral-900">{item.title}</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-neutral-500">{item.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ===== 末尾CTA =====
+          2026-07-23 B16: 帳場格子調の縦縞をCSSだけで極薄に重ねる（画像なし）。 */}
       <section className="mx-auto max-w-5xl px-6 py-20">
-        <Card className="bg-brand-600 text-center">
+        <Card className="bg-brand-600 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.04)_0,rgba(255,255,255,0.04)_1px,transparent_1px,transparent_28px)] text-center">
           <span className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-white">
             <Sparkles className="h-5 w-5" aria-hidden />
           </span>
@@ -1094,13 +1126,16 @@ export default async function BusinessLandingPage() {
         </Card>
       </section>
 
-      {/* ===== 検索意図別の使い方（関連LPへの内部リンク・クラスタ） ===== */}
+      {/* ===== 検索意図別の使い方（関連LPへの内部リンク・クラスタ） =====
+          2026-07-23 B12: 全件列挙（自動生成で増え続ける）をやめ、代表的な5件に絞る。
+          全一覧へは既存の /roumu ハブページで到達できる（クロール経路は sitemap と
+          /roumu 側で維持されるため、SEO上の deindex は起きない）。 */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <p className="mb-4 text-center text-xs font-medium text-neutral-400">
-          目的別の使い方を見る
+          代表的な使い方から見る
         </p>
         <div className="flex flex-wrap justify-center gap-2">
-          {USECASE_LIST.map((u) => (
+          {USECASE_LIST.slice(0, 5).map((u) => (
             <Link
               key={u.slug}
               href={`/roumu/${u.slug}`}
@@ -1113,7 +1148,7 @@ export default async function BusinessLandingPage() {
             href="/roumu"
             className="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300"
           >
-            使い方の一覧を見る
+            使い方の一覧をすべて見る
           </Link>
         </div>
       </section>

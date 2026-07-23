@@ -3,10 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Brain, Building2, MessageSquareText, ArrowRight } from 'lucide-react'
+import { Brain, Building2, MessageSquareText, ArrowRight, RefreshCw } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { trackV as track } from '../_lib/variant'
+import {
+  INDUSTRIES,
+  DEFAULT_INDUSTRY,
+  getIndustry,
+  type IndustryKey,
+  type DemoQA,
+} from '../_lib/industries'
 
 // ============================================================================
 // TryDemo — /business 公開LPの「体験デモ」セクション（'use client'）
@@ -17,39 +24,25 @@ import { trackV as track } from '../_lib/variant'
 //         回答がタイプアニメーションで表示される＝体感はインタラクティブ、実体は
 //         完全制御。最後に「自社で使うには無料登録」へ誘導（制限を転換フックに）。
 //
-//   制約: バックエンド/API呼び出しなし（回答は下記定数 QA）。画像・写真・AI生成
-//         画像なし（CSS/SVG/lucideのみ）。既存デザインシステム（Card/buttonClass/
-//         @themeトークン）で。emoji機能アイコン禁止・markdown強調記号禁止。
-//         Phase1: 「社労士監修/AI社労士/法的精度」不使用。回答末尾の一般情報注記は
-//         指定文言のまま改変しない。
+//   2026-07-23 B13+A14: 業種タブ（製造/飲食/IT/介護）を追加。サンプル会社の
+//         プロファイルと質問セットが業種で切り替わる（データSSOT=_lib/industries.ts。
+//         製造の3問は従来のQA_LISTを一字一句そのまま移設）。業種を切り替えると
+//         会話はリセット（前提の違う回答が混ざらないように）。
+//   2026-07-23 B14: 回答が1件でも確定したら、会話直下に「この回答を自社条件で
+//         再計算」CTAを出す（signup転換の第2フック。イベントは既存語彙
+//         signup_cta_clicked / location='trydemo' に cta prop で分離）。
 //
-//   a11y: 質問チップは <button>。会話のタイプ領域は aria-live="polite"。装飾は
-//         aria-hidden。prefers-reduced-motion 時は即時表示（タイプを行わない）。
+//   制約: バックエンド/API呼び出しなし。画像・写真・AI生成画像なし（CSS/SVG/
+//         lucideのみ）。既存デザインシステムで。emoji機能アイコン禁止・markdown
+//         強調記号禁止。Phase1: 「社労士監修/AI社労士/法的精度」不使用。
+//         回答末尾の一般情報注記は industries.ts の指定文言のまま改変しない。
+//
+//   計測: 既存イベント語彙（demo_engaged / demo_question_clicked / demo_autoplayed /
+//         signup_cta_clicked）は名前を変えない。業種は industry prop（4値）で分離。
+//
+//   a11y: 質問チップ・業種タブは <button>。会話のタイプ領域は aria-live="polite"。
+//         装飾は aria-hidden。prefers-reduced-motion 時は即時表示。
 // ============================================================================
-
-type QA = { q: string; a: string }
-
-// 用意する質問と回答（このまま使う＝品質/Phase1担保済み・改変しない）。
-const QA_LIST: QA[] = [
-  {
-    q: '来週、残業させても大丈夫？',
-    a:
-      '自社は36協定が未締結のため、現状のままだと時間外労働をさせること自体が労働基準法に違反するおそれがあります。まずは労働者の過半数代表を選び、36協定を締結して労働基準監督署へ届け出るのが先決です。製造業は上限規制の対象で、原則は月45時間・年360時間。繁忙期の残業が見込まれるなら特別条項付きで設計します。（一般的な情報です。実際の運用は専門家にご確認ください）',
-  },
-  {
-    q: '有給の付与日数を確認したい',
-    a:
-      '通常の労働者（週5日・フルタイム）は、入社6か月＋出勤率8割以上で10日付与。その後は勤続年数に応じて増え、6年6か月で上限20日です。自社は従業員8名なので、年5日の取得義務（10日以上付与される人が対象）の管理も忘れずに。週の所定日数が少ないパートは比例付与になります。（一般的な情報です）',
-  },
-  {
-    q: '36協定が未締結だと何が問題？',
-    a:
-      '36協定なしで法定労働時間（1日8時間・週40時間）を超える残業や休日労働をさせると、労働基準法32条・36条に違反するおそれがあり、罰則の対象になりえます。自社は製造業・8名で繁忙期の残業が見込まれるなら、過半数代表の選出→協定締結→労基署への届出を急ぐのが安全です。届出が完了するまでは法定内に収める意識を。（一般的な情報です。最終的な判断は専門家にご確認ください）',
-  },
-]
-
-// 上部に表示するサンプル会社プロファイル（ProductPreview と同一様式）。
-const COMPANY_TAGS = ['製造業', '従業員 8名', '所定 8h / 週40h', '36協定 未締結']
 
 type Turn = { id: number; q: string; a: string }
 
@@ -84,6 +77,10 @@ function signupHrefWithAttribution(): string {
 export default function TryDemo() {
   const router = useRouter()
   const reducedMotion = usePrefersReducedMotion()
+
+  // 業種プリセット（B13+A14）。切替で会話をリセットする。
+  const [industryKey, setIndustryKey] = useState<IndustryKey>(DEFAULT_INDUSTRY)
+  const industry = getIndustry(industryKey)
 
   // 会話に積み上がった完了済みターン。
   const [turns, setTurns] = useState<Turn[]>([])
@@ -148,7 +145,7 @@ export default function TryDemo() {
   }, [turns, typedLen, typing, reducedMotion])
 
   // 回答の再生（タイプ開始）だけを行う共通ロジック。計測は呼び出し側で分ける。
-  const play = useCallback((qa: QA) => {
+  const play = useCallback((qa: DemoQA) => {
     setStarted(true)
     const id = nextId.current++
     setTypedLen(0)
@@ -156,7 +153,7 @@ export default function TryDemo() {
   }, [])
 
   const ask = useCallback(
-    (qa: QA, qIndex: number) => {
+    (qa: DemoQA, qIndex: number) => {
       if (isBusy) return // タイプ中は次の質問を受け付けない（順に積み上げる）。
       // 手動クリック=能動的アハ。初回タッチを demo_engaged で1回だけ計測。
       // （自動再生はここを通らない＝engagedRef/demo_engaged を汚さない）
@@ -164,10 +161,29 @@ export default function TryDemo() {
         engagedRef.current = true
         track('demo_engaged')
       }
-      track('demo_question_clicked', { q_index: qIndex })
+      track('demo_question_clicked', {
+        q_index: qIndex,
+        source: 'demo',
+        industry: industryKey,
+      })
       play(qa)
     },
-    [isBusy, play],
+    [isBusy, play, industryKey],
+  )
+
+  // 業種タブの切替（B13）。前提の違う回答が混ざらないよう会話をリセットする。
+  //   計測は既存語彙 demo_question_clicked に source='demo_tab' を載せて分離。
+  const switchIndustry = useCallback(
+    (next: IndustryKey) => {
+      if (next === industryKey) return
+      if (timerRef.current) clearTimeout(timerRef.current)
+      setIndustryKey(next)
+      setTurns([])
+      setTyping(null)
+      setTypedLen(0)
+      track('demo_question_clicked', { source: 'demo_tab', industry: next })
+    },
+    [industryKey],
   )
 
   // ビューポート進入で1問目を「受動再生」する（アハ体験の分母を作る）。
@@ -187,13 +203,16 @@ export default function TryDemo() {
         autoplayedRef.current = true
         observer.disconnect()
         track('demo_autoplayed')
-        play(QA_LIST[0])
+        play(INDUSTRIES[0].qa[0])
       },
       { threshold: 0.4 },
     )
     observer.observe(el)
     return () => observer.disconnect()
   }, [play])
+
+  // 回答が1件でも確定していれば再計算CTA（B14）を出す。
+  const showRecalc = turns.length > 0
 
   return (
     <section ref={sectionRef} className="mx-auto max-w-5xl px-6 py-20">
@@ -205,20 +224,45 @@ export default function TryDemo() {
           サンプル会社で、答え方の違いを試す
         </h2>
         <p className="mt-3 text-base leading-relaxed text-neutral-600">
-          下のサンプル会社の前提を踏まえて、番頭がどう答えるかをそのまま体験できます。質問をクリックしてください。
+          業種を選ぶと、その業種のサンプル会社の前提を踏まえて番頭がどう答えるかを体験できます。質問をクリックしてください。
         </p>
       </div>
 
       <div className="mx-auto w-full max-w-2xl">
+        {/* 業種タブ（B13+A14） */}
+        <div
+          role="tablist"
+          aria-label="サンプル会社の業種を選ぶ"
+          className="mb-3 flex flex-wrap items-center gap-1.5"
+        >
+          <span className="mr-1 text-xs font-medium text-neutral-400">業種</span>
+          {INDUSTRIES.map(i => (
+            <button
+              key={i.key}
+              type="button"
+              role="tab"
+              aria-selected={i.key === industryKey}
+              onClick={() => switchIndustry(i.key)}
+              className={
+                i.key === industryKey
+                  ? 'rounded-full bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white'
+                  : 'rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs text-neutral-600 transition-colors hover:border-brand-300 hover:text-brand-700'
+              }
+            >
+              {i.label}
+            </button>
+          ))}
+        </div>
+
         <Card className="overflow-hidden p-0 shadow-md ring-1 ring-neutral-200/60">
-          {/* ウィンドウバー（ProductPreview と同様式・「記憶あり」インジケータ） */}
+          {/* ウィンドウバー（「記憶あり」インジケータ） */}
           <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
               <Brain className="h-3 w-3" aria-hidden />
             </span>
             <span className="text-xs font-semibold text-neutral-700">番頭</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500">
-              サンプル会社
+              サンプル会社（{industry.label}）
             </span>
             <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-medium text-success-700">
               <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden />
@@ -234,7 +278,7 @@ export default function TryDemo() {
                 覚えているサンプル会社プロファイル
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {COMPANY_TAGS.map(tag => (
+                {industry.tags.map(tag => (
                   <span
                     key={tag}
                     className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-[11px] text-neutral-700 tabular-nums"
@@ -271,6 +315,31 @@ export default function TryDemo() {
                 typing
               />
             )}
+
+            {/* B14: 回答確定後に出す「自社条件で再計算」CTA（会話の流れの中に置く） */}
+            {showRecalc && !typing && (
+              <div className="flex justify-center pt-1">
+                <Link
+                  href="/signup?next=/company"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-[13px] font-medium text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100"
+                  onClick={e => {
+                    track('signup_cta_clicked', {
+                      location: 'trydemo',
+                      cta: 'recalc',
+                      industry: industryKey,
+                    })
+                    const target = signupHrefWithAttribution()
+                    if (target !== '/signup?next=/company') {
+                      e.preventDefault()
+                      router.push(target)
+                    }
+                  }}
+                >
+                  <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+                  この回答を自社条件で再計算する（無料）
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* 誠実性ラベル: このデモの回答が「用意されたサンプル応答」であることと、
@@ -286,7 +355,7 @@ export default function TryDemo() {
               質問を選んで試す
             </p>
             <div className="flex flex-wrap gap-2">
-              {QA_LIST.map((qa, i) => (
+              {industry.qa.map((qa, i) => (
                 <button
                   key={qa.q}
                   type="button"
