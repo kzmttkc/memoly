@@ -44,8 +44,17 @@ function jpSignupError(message: string): string {
 }
 
 function SignupForm() {
+  // searchParams 由来のプリフィルを state 初期値に使うため、フックの先頭で読む
+  //   （effect での setState を避ける＝react-hooks/set-state-in-effect 非違反）。
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  // C03: 会社名をsignupに統合し、/company（会社作成画面）の1段を削減する。
+  //   任意入力（空なら従来フローのまま＝後方互換）。初期値は Kotri hire-bridge 等の
+  //   ?company= プリフィルを引き継ぐ（従来は次画面でプリフィルしていた値を前倒し）。
+  const [companyName, setCompanyName] = useState(
+    () => (searchParams.get('company') ?? '').trim().slice(0, 100),
+  )
   const [ageOk, setAgeOk] = useState(false)
   const [digestOptIn, setDigestOptIn] = useState(false)
   const [error, setError] = useState('')
@@ -60,7 +69,6 @@ function SignupForm() {
   const [resent, setResent] = useState(false)
   const [resending, setResending] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
   // 番頭(Banto) の動線では確認後に /company へ。?next を尊重しつつ既定は /company。
   const nextRaw = searchParams.get('next') || '/company'
   // 相対パスのみ許可（'//evil.com' はプロトコル相対URL＝open redirect になるため除外）。login側と同一ガード。
@@ -78,15 +86,52 @@ function SignupForm() {
   //   ツール結果の要約(note)を /company に載せ、会社作成時に「会社の記憶」へ保存する
   //   （app/(app)/company/page.tsx が消費）。約束（保存）と実挙動を一致させる。
   const noteParam = (searchParams.get('note') ?? '').trim().slice(0, 400)
+  // C03: フォームで入力された会社名（あれば）を優先して /company へ持ち回る。
+  //   未入力なら従来どおり ?company= プリフィル値。どちらも無ければ素の next。
+  const companyForNext = useMemo(() => {
+    const typed = companyName.trim().slice(0, 100)
+    return typed || companyParam
+  }, [companyName, companyParam])
   const nextDest = useMemo(() => {
-    if (!companyParam && !noteParam) return next
+    if (!companyForNext && !noteParam) return next
     const [path, query = ''] = next.split('?')
     if (path !== '/company') return next
     const sp = new URLSearchParams(query)
-    if (companyParam) sp.set('company', companyParam)
+    if (companyForNext) sp.set('company', companyForNext)
     if (noteParam) sp.set('note', noteParam)
     return `${path}?${sp.toString()}`
-  }, [next, companyParam, noteParam])
+  }, [next, companyForNext, noteParam])
+
+  // C03: 会社名が入力済みなら、signup成立直後にその場で会社を作成して onboarding へ直行する
+  //   （/company の会社作成画面を1段削減）。発動条件は「着地が /company（ハブ）そのもの」かつ
+  //   「無料ツール結果の持ち回り(note)が無い」とき。note がある場合は /company 側の
+  //   「点検結果を保存します」の約束表示・保存実装に委ねる（既存の約束を壊さない）。
+  //   作成失敗時は従来どおり nextDest へ（会社名はプリフィルされるので入力は無駄にならない）。
+  //   既存ユーザーの複数会社フロー（/company の「別の会社を追加」）は不変＝新規signup時のみ。
+  async function finishSignup() {
+    const nm = companyName.trim()
+    const isCompanyHub = next.split('?')[0] === '/company'
+    if (nm && isCompanyHub && !noteParam) {
+      try {
+        const res = await fetch('/api/company', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: nm }),
+        })
+        const data = await res.json().catch(() => ({}))
+        const newId = data?.company?.companyId
+        if (res.ok && newId) {
+          // /company 画面と同じ活性化ファネルイベント（POST成功後のみ・PIIなし）。
+          track('company_created')
+          router.push(`/company/onboarding?companyId=${newId}`)
+          return
+        }
+      } catch {
+        /* 作成失敗は本流を壊さない（下の従来遷移へ） */
+      }
+    }
+    router.push(nextDest)
+  }
 
   // 帰属(attribution): Kotri→番頭 hire-bridge 等の流入元を計測に載せる。
   //   例: /signup?utm_source=kotri&utm_campaign=hire_bridge
@@ -194,7 +239,7 @@ function SignupForm() {
       // デッドエンドを出さず、活性化の次の一歩(/company もしくは ?next)へ直行させる。
       // 確認必須(session 無し)なら、次の一歩を明示したガイド付き done 画面を出す。
       if (data.session) {
-        trackThenNavigate('signup_completed', () => router.push(nextDest), Object.keys(attribution).length ? attribution : undefined)
+        trackThenNavigate('signup_completed', () => void finishSignup(), Object.keys(attribution).length ? attribution : undefined)
         return
       }
       // メール確認必須だが既定SMTPは届かない（無料モニター期の暫定）。
@@ -209,7 +254,7 @@ function SignupForm() {
         if (res.ok) {
           const signin = await supabase.auth.signInWithPassword({ email, password })
           if (!signin.error) {
-            trackThenNavigate('signup_completed', () => router.push(nextDest), Object.keys(attribution).length ? attribution : undefined)
+            trackThenNavigate('signup_completed', () => void finishSignup(), Object.keys(attribution).length ? attribution : undefined)
             return
           }
         }
@@ -252,6 +297,25 @@ function SignupForm() {
         <p className="mt-3 text-xs leading-relaxed text-neutral-500">
           数分待ってもメールが届かない場合は、迷惑メールフォルダもご確認ください。
         </p>
+
+        {/* C01: 確認待ちを空白時間にしない。登録が終わった先で番頭が何を覚えるかを先出しし、
+            デモ/ツール由来の文脈（fromBanto/fromTool）はここでも引き継ぎを約束する。
+            記載は実挙動の範囲のみ（覚える対象は既存機能: 自社ルール・相談履歴・期限）。 */}
+        <div className="mt-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-left">
+          <p className="text-xs font-medium text-neutral-500">確認を待つあいだに ─ 番頭が覚えること</p>
+          <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-neutral-700">
+            <li>・就業規則や36協定など、自社ルールの前提</li>
+            <li>・有給や残業の運用と、過去に相談した内容</li>
+            <li>・年間の労務手続きと、自社で確定した期限</li>
+          </ul>
+          <p className="mt-2.5 text-xs leading-relaxed text-neutral-600">
+            {fromBanto
+              ? fromTool
+                ? 'さきほどの点検結果も、登録後にそのまま引き継げます。二度目の相談は、昨日の続きから始まります。'
+                : 'さきほどの答え方も、登録後は自社の前提で続けられます。二度目の相談は、昨日の続きから始まります。'
+              : '一度覚えた前提は説明し直す必要がありません。二度目の相談は、昨日の続きから始まります。'}
+          </p>
+        </div>
 
         <div className="mt-6 space-y-3">
           {resent ? (
@@ -307,6 +371,19 @@ function SignupForm() {
         データはアカウント削除と同時にすべて削除できます。
       </p>
 
+      {/* C02: OAuth（Google/GitHub）を主導線として先頭へ（メール登録より摩擦が少ない）。
+          Supabase側のプロバイダ設定は有効を実測確認済み（/auth/v1/authorize が302）。 */}
+      <OAuthButtons next={nextDest} />
+      <p className="mt-2 text-center text-xs text-neutral-500">
+        GitHub・Googleでの登録も、事業者としてのご利用（18歳以上）とみなします。
+      </p>
+
+      <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
+        <div className="h-px flex-1 bg-neutral-200" />
+        またはメールアドレスで登録
+        <div className="h-px flex-1 bg-neutral-200" />
+      </div>
+
       <form onSubmit={handleSignup} className="space-y-4">
         <Input
           type="email"
@@ -325,6 +402,23 @@ function SignupForm() {
           minLength={8}
           autoComplete="new-password"
         />
+
+        {/* C03: 会社名の統合入力（任意）。入力があれば登録直後に会社を作成して
+            5問オンボーディングへ直行し、会社作成画面の1段を削減する。
+            空のままでも従来フロー（/company で入力）で進める＝後方互換。 */}
+        <div>
+          <Input
+            value={companyName}
+            onChange={e => setCompanyName(e.target.value)}
+            placeholder="会社名（任意・あとでも入力できます）"
+            maxLength={100}
+            autoComplete="organization"
+            aria-label="会社名（任意）"
+          />
+          <p className="mt-1 text-xs text-neutral-500">
+            入力しておくと、登録後すぐに自社の診断に進めます。
+          </p>
+        </div>
 
         {/* 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け） */}
         <label className="flex cursor-pointer items-start gap-3">
@@ -358,30 +452,29 @@ function SignupForm() {
             保ったまま1クリックでログインへ回す。純追加でフォーム構造・A/Bは不変。
             計測: signup_failed[already_registered] からの回復クリックを可視化。 */}
         {alreadyRegistered && (
-          <Link
-            href={`/login?next=${encodeURIComponent(nextDest)}`}
-            onClick={() => track('login_from_already_registered')}
-            className={buttonClass({ variant: 'secondary', size: 'lg', className: 'w-full' })}
-          >
-            このメールアドレスでログインする
-          </Link>
+          <>
+            <Link
+              href={`/login?next=${encodeURIComponent(nextDest)}`}
+              onClick={() => track('login_from_already_registered')}
+              className={buttonClass({ variant: 'secondary', size: 'lg', className: 'w-full' })}
+            >
+              このメールアドレスでログインする
+            </Link>
+            {/* C11延長: パスワード忘れも行き止まりにしない（既登録→ログイン導線の補完）。 */}
+            <p className="text-center text-xs text-neutral-500">
+              パスワードを忘れた場合は{' '}
+              <Link href="/forgot-password" className="underline hover:text-neutral-700">
+                こちらから再設定
+              </Link>
+              できます。
+            </p>
+          </>
         )}
 
         <Button type="submit" size="lg" disabled={loading} className="w-full">
           {loading ? '登録中...' : '無料で始める'}
         </Button>
       </form>
-
-      <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
-        <div className="h-px flex-1 bg-neutral-200" />
-        または
-        <div className="h-px flex-1 bg-neutral-200" />
-      </div>
-
-      <OAuthButtons next={nextDest} />
-      <p className="mt-2 text-center text-xs text-neutral-500">
-        GitHub・Googleでの登録も、事業者としてのご利用（18歳以上）とみなします。
-      </p>
 
       {/* 登録前の摩擦（何を入力させられるか・どれくらいかかるか、が見えない不確実性）を消す。
           着手前にゴールまでの短さを具体で見せると完了率が上がる（goal-gradient / 不確実性除去）。
@@ -398,8 +491,8 @@ function SignupForm() {
         <ol className="space-y-2">
           {[
             'メールアドレスとパスワードを入力する',
-            '会社名を1つ登録する',
-            '任意の5つの質問に答えると、自社のリスク診断がその場で出る',
+            '会社名を1つ登録する（この画面でまとめて入力できます）',
+            '任意の5つの質問に答えると、自社のリスク診断と年間手続きカレンダーがその場で出る',
           ].map((step, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-neutral-700">
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
