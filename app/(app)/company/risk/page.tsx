@@ -507,7 +507,11 @@ function RiskInner() {
             </p>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
-              <Link href={consultHref(result)} className={buttonClass({ variant: 'primary' })}>
+              <Link
+                href={consultHref(result)}
+                onClick={() => track('risk_consult_clicked', { location: 'primary' })}
+                className={buttonClass({ variant: 'primary' })}
+              >
                 <MessageSquareText className="h-4 w-4" aria-hidden />
                 この内容でAIに相談
               </Link>
@@ -552,6 +556,23 @@ function RiskInner() {
                         <p className="text-sm leading-relaxed text-brand-700">
                           見直しの方向性：{r.fix}
                         </p>
+                      )}
+                      {/* C06: 指摘ごとのワンクリック相談。チャット側は ?q= を自動送信する
+                          （chat/page.tsx の initialQ 自動送信）ため、押した瞬間に相談が始まる。
+                          サンプル会社では出さない（架空の前提を実データのチャットに持ち込まない）。 */}
+                      {!sampleMode && (
+                        <Link
+                          href={`/company/chat?companyId=${companyId}&q=${encodeURIComponent(
+                            `労務リスクのセルフ診断（目安）で「${r.title}」と出ました。自社の場合、まず何から確認すればよいか教えてください。`,
+                          )}`}
+                          onClick={() =>
+                            track('risk_consult_clicked', { location: 'top_risk', rank: i + 1 })
+                          }
+                          className={buttonClass({ variant: 'secondary', size: 'sm' })}
+                        >
+                          <MessageSquareText className="h-3.5 w-3.5" aria-hidden />
+                          この1問を相談する
+                        </Link>
                       )}
                     </Card>
                   )
