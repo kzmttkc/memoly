@@ -13,6 +13,7 @@ import { CompanyGuard } from '../_components/CompanyGuard'
 import { PLANS, PAID_PLAN_IDS, type PlanId } from '@/lib/plans'
 import { trackSubscriptionStarted, trackBillingStatus } from '@/lib/analytics'
 import { MemoryLossWarning } from '../_components/MemoryLossWarning'
+import { DataSecuritySection } from '../_components/DataSecuritySection'
 
 // ============================================================================
 // /company/billing — プラン / 席 / アップグレード（admin向け）
@@ -334,6 +335,9 @@ function BillingInner() {
         番頭は労務に関する一般的な情報提供と下書き支援を行うツールで、社会保険労務士による
         個別の相談・書類作成代行を行うものではありません。
       </p>
+
+      {/* ===== データとセキュリティ（F10 エクスポート / F09 監査ログ / F05 導線 / 削除自己サーブ）===== */}
+      <DataSecuritySection companyId={companyId} isAdmin={isAdmin} />
 
       <Toast
         show={toast.show}

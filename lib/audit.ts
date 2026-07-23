@@ -19,6 +19,7 @@ export type AuditAction =
   | 'document.delete' // 取込規程(company_documents)の削除
   | 'member.invite' // 席の招待/追加（メンバー変更）
   | 'memory.rule.delete' // 記憶(rule候補)の削除（承認時の片付け含む）
+  | 'data.export' // 会社データの一括エクスポート(JSON・admin操作)
 
 export interface AuditParams {
   companyId: string

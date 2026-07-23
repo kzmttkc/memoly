@@ -9,7 +9,7 @@ export default function PrivacyPage() {
             トップに戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">プライバシーポリシー</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年6月21日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年7月23日</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
@@ -54,6 +54,9 @@ export default function PrivacyPage() {
               <li><strong className="text-neutral-800">Vercel</strong>：ホスティング（米国）</li>
               <li><strong className="text-neutral-800">Plausible Analytics</strong>：匿名アクセス解析（EU）。Cookieを使用せず、個人を特定しない形でページビュー等の統計のみを収集します。<a href="https://plausible.io/data-policy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Plausibleのデータポリシー</a></li>
               <li><strong className="text-neutral-800">Resend</strong>：お知らせメールの送信（米国）</li>
+              <li><strong className="text-neutral-800">Dify</strong>：法令ナレッジベースへの照会（米国）。相談内容のうち法令に関する質問テキストを送信する場合があります。</li>
+              <li><strong className="text-neutral-800">OpenAI</strong>：記憶の意味検索用のベクトル化（米国）。記憶の要約テキストを送信します。APIで送信されたデータは既定でAIモデルの学習に使用されません。<a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">OpenAIのAPIデータ利用ポリシー</a></li>
+              <li><strong className="text-neutral-800">Stripe</strong>：有料プランの決済処理（米国）。カード情報はStripeが直接取り扱い、番頭のサーバーには保存されません。<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripeのプライバシーポリシー</a></li>
             </ul>
             <p className="mt-2 text-neutral-500">これらの第三者への情報提供は本サービス提供に必要な範囲に限定されます。EU/EEA在住の方：上記の第三国移転はGDPR第46条に基づく標準契約条項（SCC）に準拠します。</p>
           </section>
@@ -85,7 +88,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">8. セキュリティ</h2>
-            <p>行レベルセキュリティ（RLS）により、会社・ユーザーは自分のデータにのみアクセスできます。通信はHTTPS/TLSで暗号化されています。</p>
+            <p>行レベルセキュリティ（RLS）により、会社・ユーザーは自分のデータにのみアクセスできます。通信はHTTPS/TLSで暗号化されています。対策の詳細は<Link href="/security" className="text-brand-600 underline">セキュリティとデータ保護</Link>のページをご覧ください。</p>
           </section>
 
           <section>

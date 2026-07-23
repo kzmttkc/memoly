@@ -23,7 +23,8 @@ const REVISED = {
   business: '2026-07-13', // ヒーローH1のA/B・LPコピー反復
   tools: '2026-06-29', // 無料ツールクラスタ整備
   roumu: '2026-07-19', // 底面ファネル語「労務管理システム 費用 比較」LP追加
-  legal: '2026-06-28', // privacy / terms
+  legal: '2026-07-23', // privacy(委託先一覧を実態一致: Dify/OpenAI/Stripe追加) / terms
+  security: '2026-07-23', // /security セキュリティとデータ保護ページ新設(F05)
   tokushoho: '2026-07-20', // 特定商取引法に基づく表記を新設
   blog: '2026-07-22', // /blog 新設(規程管理・組織の記憶テーマ、初回3記事)
   faq: '2026-07-22', // /faq 独立FAQページ新設
@@ -57,6 +58,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     })),
     { url: `${BASE}/faq`, lastModified: REVISED.faq, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE}/security`, lastModified: REVISED.security, changeFrequency: 'yearly', priority: 0.4 },
     { url: `${BASE}/privacy`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/terms`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/tokushoho`, lastModified: REVISED.tokushoho, changeFrequency: 'yearly', priority: 0.3 },
