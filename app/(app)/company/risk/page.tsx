@@ -293,7 +293,13 @@ function RiskInner() {
           score === null ? 'unknown' : score < 40 ? '0-40' : score < 70 ? '40-70' : '70-100'
         // source prop（BANTO_DAY0_SPEC §2）: 北極星KPI「登録→初回診断到達率」の分子は
         //   risk_audit_completed(source=onboarding) ÷ signup_completed で読む。
-        track('risk_audit_completed', { overall_band: band, source })
+        //   fallback prop（H08）: LLM失敗→決定的フォールバックで返った診断かどうか。
+        //   週次で fallback=true の比率＝診断フォールバック率として監視する。
+        track('risk_audit_completed', {
+          overall_band: band,
+          source,
+          fallback: Boolean((data as { fallback?: boolean }).fallback),
+        })
       }
     } catch {
       if (useProvisional) setProvisional(false)

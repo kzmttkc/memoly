@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     Date.now() - CONSULT_WINDOW_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString()
 
-  const [riskRes, ruleDocsRes, msgCountRes, msgDatesRes, deadlinesRes] = await Promise.all([
+  const [riskRes, ruleDocsRes, msgCountRes, msgDatesRes, deadlinesRes, memoriesRes] = await Promise.all([
     // D14: 直近2回の診断（overall と実施日だけ・カテゴリは出さない＝軽量）。
     supabase
       .from('company_risk_scores')
@@ -86,6 +86,12 @@ export async function GET(req: NextRequest) {
       )
       .order('due_on', { ascending: true })
       .limit(5),
+    // C10(活性化定義v2): 「記憶1件+相談1回」判定の分子となる自社の長期記憶の件数。
+    //   memory/stats と同じ head:count（本文は読まない・軽量・PII非露出）。
+    supabase
+      .from('company_memories')
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', companyId),
   ])
 
   // --- risk（失敗時は空＝「未診断」扱い） ---
@@ -120,6 +126,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     risk: { count: riskRows.length, latest, previous },
     ruleDocs: ruleDocsRes.error ? 0 : (ruleDocsRes.count ?? 0),
+    // C10: company_memories の総件数（summary/decision/rule 合算）。失敗時は 0（安全側=未活性扱い）。
+    memories: memoriesRes.error ? 0 : (memoriesRes.count ?? 0),
     consult: {
       userMessageCount,
       consultDays: daySet.size,

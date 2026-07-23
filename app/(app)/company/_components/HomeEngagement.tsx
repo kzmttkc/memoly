@@ -16,6 +16,7 @@ import {
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { buttonClass } from '@/components/ui/Button'
+import { fetchHomeStatus, type HomeStatus } from './home-status'
 
 // ============================================================================
 // HomeEngagement — ホームの継続利用装置（外部評価 D10/D14/D16/D17+C13）。
@@ -28,17 +29,6 @@ import { buttonClass } from '@/components/ui/Button'
 //     4. D16(最小形) 通知: 近づいている期限の集約表示（あるときだけ）。
 //   すべてベストエフォート: 取得失敗時は何も出さない（ホームの他要素を妨げない）。
 // ============================================================================
-
-interface HomeStatus {
-  risk: {
-    count: number
-    latest: { overall: number; at: string } | null
-    previous: { overall: number; at: string } | null
-  }
-  ruleDocs: number
-  consult: { userMessageCount: number; consultDays: number; streak: number }
-  deadlines: { id: string; title: string; dueOn: string }[]
-}
 
 /** 残り日数（当日=0）。deadlines ページの daysUntil と同じ計算。 */
 function daysUntil(dueOn: string): number {
@@ -53,8 +43,8 @@ export function HomeEngagement({ companyId }: { companyId: string }) {
   useEffect(() => {
     if (!companyId) return
     let alive = true
-    fetch(`/api/company/home-status?companyId=${companyId}`)
-      .then(res => (res.ok ? res.json() : Promise.reject()))
+    // TimeSavedEstimate と同一APIを読むため、共有フェッチで1画面1リクエストに保つ。
+    fetchHomeStatus(companyId)
       .then((data: HomeStatus) => {
         if (alive) setStatus(data)
       })

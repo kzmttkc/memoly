@@ -11,6 +11,7 @@ import { CompanyGuard } from '../_components/CompanyGuard'
 import { WeeklyDigest } from '../_components/WeeklyDigest'
 import { MemoryBalanceMeter } from '../_components/MemoryBalanceMeter'
 import { HomeEngagement } from '../_components/HomeEngagement'
+import { TimeSavedEstimate } from '../_components/TimeSavedEstimate'
 import { DailyRoumuCard } from '../_components/DailyRoumuCard'
 
 // ============================================================================
@@ -40,6 +41,12 @@ function HomeInner() {
       {/* 記憶残高メーター（解約防止の主装置・沈没コストの可視化）。フィードの直前に常設。 */}
       <div className="mb-6">
         <MemoryBalanceMeter companyId={companyId} />
+      </div>
+
+      {/* E02: 番頭が肩代わりした時間（推定）。記憶メーターの直下＝価値の翻訳。
+          相談2回未満・取得失敗時は何も出ない。C10 活性化v2 の計測もこの中で行う。 */}
+      <div className="mb-6">
+        <TimeSavedEstimate companyId={companyId} />
       </div>
 
       <WeeklyDigest companyId={companyId} />

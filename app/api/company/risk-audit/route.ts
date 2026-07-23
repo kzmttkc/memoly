@@ -137,6 +137,8 @@ export async function POST(req: NextRequest) {
       topRisks,
       summary,
       disclaimer: RISK_AUDIT_DISCLAIMER,
+      // H08(エラーバジェット): LLM成功経路。フォールバック率の分母側を明示する。
+      fallback: false,
     })
   } catch (e) {
     // ★ LLM(Anthropic) 失敗のデッドエンドを埋める決定的フォールバック。
@@ -158,6 +160,9 @@ export async function POST(req: NextRequest) {
       topRisks: fb.topRisks,
       summary: fb.summary,
       disclaimer: RISK_AUDIT_DISCLAIMER,
+      // H08: LLM失敗→決定的フォールバック提供。クライアントが risk_audit_completed の
+      //   props(fallback)としてPlausibleへ載せ、フォールバック率を週次で読めるようにする。
+      fallback: true,
     })
   }
 }

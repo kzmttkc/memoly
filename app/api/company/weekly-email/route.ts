@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { DigestPayload, DigestCard } from '@/lib/digest'
+import { getSeasonalReminders, type SeasonalReminder } from '@/lib/email-seasonal'
 
 // ============================================================================
 // /api/company/weekly-email — 番頭版 週次リテンションメール（Vercel Cron）
@@ -70,6 +71,23 @@ function cardToText(card: DigestCard): string {
   const lines = [`■ ${card.title}`, card.selfImpact, `次の一歩: ${card.nextAction}`]
   if (card.deadline) lines.push(`期日の目安: ${card.deadline}`)
   return lines.join('\n')
+}
+
+/** E05: 時期性リマインド1件をメール用HTMLへ（琥珀系で「今の時期の話」と分かる枠）。 */
+function seasonalToHtml(r: SeasonalReminder, companyId: string): string {
+  const cta = `${BANTO_URL}${r.ctaPath}?companyId=${encodeURIComponent(companyId)}`
+  return `<div style="border:1px solid #fde68a;background:#fffbeb;border-radius:12px;padding:14px 16px;margin:0 0 12px">
+    <p style="color:#92400e;font-size:11px;font-weight:bold;margin:0 0 4px">いまの時期のリマインド</p>
+    <p style="color:#21305a;font-weight:bold;font-size:14px;margin:0 0 6px">${escapeHtml(r.title)}</p>
+    <p style="color:#374151;font-size:13px;line-height:1.8;margin:0 0 8px">${escapeHtml(r.body)}</p>
+    <a href="${cta}" style="color:#324a8a;font-size:12px">${escapeHtml(r.ctaLabel)} →</a>
+  </div>`
+}
+
+/** E05: 時期性リマインド1件をテキスト版へ。 */
+function seasonalToText(r: SeasonalReminder, companyId: string): string {
+  const cta = `${BANTO_URL}${r.ctaPath}?companyId=${encodeURIComponent(companyId)}`
+  return [`■【いまの時期のリマインド】${r.title}`, r.body, `→ ${r.ctaLabel}: ${cta}`].join('\n')
 }
 
 // Vercel Cron から呼ばれる（vercel.json: 毎週月曜 0:00 UTC = 9:00 JST）。
@@ -160,8 +178,15 @@ export async function GET(req: Request) {
       if (!members?.length) continue
 
       const homeUrl = `${BANTO_URL}/company/home?companyId=${companyId}`
-      const cardsHtml = cards.map(cardToHtml).join('')
-      const cardsText = cards.map(cardToText).join('\n\n')
+      // E05: 時期性リマインド（36協定更新・年5日有給・カスハラ義務化）。該当時期のみ0〜2件。
+      //   ダイジェストカードの後ろに追記する（週次の主役はあくまで自社ダイジェスト）。
+      const seasonal = getSeasonalReminders()
+      const cardsHtml =
+        cards.map(cardToHtml).join('') + seasonal.map(r => seasonalToHtml(r, companyId)).join('')
+      const cardsText = [
+        ...cards.map(cardToText),
+        ...seasonal.map(r => seasonalToText(r, companyId)),
+      ].join('\n\n')
       const disclaimer =
         payload?.disclaimer ??
         '対象になりうるものを自社プロファイルから自動で抽出した参考情報です。実際の適用可否・手続き・期日は一次情報と専門家でご確認ください。'

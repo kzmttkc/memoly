@@ -423,6 +423,9 @@ function CompanyChat() {
       setInput('')
       setLoading(true)
 
+      // H08(エラーバジェット): 失敗「率」の分母。送信試行を1回ずつ数える（PIIなし・本文は送らない）。
+      track('chat_message_sent')
+
       try {
         const res = await fetch('/api/company/chat', {
           method: 'POST',
@@ -447,6 +450,8 @@ function CompanyChat() {
         // 429: 本日の利用上限。API が返す上限メッセージをそのまま出し、再試行を促さない
         //   （「接続に失敗しました。もう一度」に潰すと、何度送っても失敗する袋小路になる）。
         if (res.status === 429) {
+          // H08: 上限到達は「製品の故障」ではないが、体験としては失敗＝kind別に数える。
+          track('chat_error', { kind: 'rate_limited' })
           const data = await res.json().catch(() => ({}))
           setMessages(prev => [
             ...prev,
@@ -461,7 +466,15 @@ function CompanyChat() {
           setLoading(false)
           return
         }
-        if (!res.ok) throw new Error('Chat failed')
+        // H08: サーバー側失敗（5xx等）。network(catch)と二重計上しないよう throw せず inline 処理。
+        if (!res.ok) {
+          track('chat_error', { kind: 'server', status: res.status })
+          setMessages(prev => [
+            ...prev,
+            { role: 'assistant', content: '接続に失敗しました。もう一度お試しください。' },
+          ])
+          return
+        }
 
         const convId = res.headers.get('X-Conversation-Id')
         if (convId) conversationIdRef.current = convId
@@ -525,6 +538,8 @@ function CompanyChat() {
           setDecisionPrompt({ reason: signal.reason })
         }
       } catch {
+        // H08: 通信断・ストリーム中断など（サーバーに届かなかった/途中で切れた失敗）。
+        track('chat_error', { kind: 'network' })
         setMessages(prev => [
           ...prev,
           { role: 'assistant', content: '接続に失敗しました。もう一度お試しください。' },
