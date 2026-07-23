@@ -28,9 +28,37 @@ import remarkBreaks from 'remark-breaks'
 //   平文コピーのまま別画面で維持されており、本コンポーネントは関与しない。
 // ============================================================================
 
+// 【要点】(TL;DR) の抽出（P09・2026-07-24）。
+//   システムプロンプトは長い回答の冒頭に「【要点】結論を1〜2行」を出させる（prompts.ts）が、
+//   本文中の平文だと老眼・非IT層には他の段落と区別がつかず「実効化」しない。ここで先頭付近の
+//   【要点】ブロックを取り出し、目立つ callout として最上部に描画し、残りを本文として続ける。
+//   - マッチ範囲: 【要点】〜（空行 or 次の【見出し】 or 末尾）。1〜2行の想定に収まる。
+//   - ストリーミング中に marker が未完（「【要」等）ならマッチせず通常描画のまま＝安全に劣化。
+//   - 本文からは抽出分を除去し二重表示しない。
+const KEYPOINT_RE = /【要点】\s*([\s\S]*?)(?=\n\s*\n|\n【|$)/
+
+function extractKeypoint(content: string): { keypoint: string | null; body: string } {
+  const m = content.match(KEYPOINT_RE)
+  if (!m) return { keypoint: null, body: content }
+  const keypoint = m[1].trim()
+  if (!keypoint) return { keypoint: null, body: content }
+  // マッチ全体（【要点】...）を本文から除去。前後に残る余分な空行は畳む。
+  const body = content.replace(m[0], '').replace(/\n{3,}/g, '\n\n').trim()
+  return { keypoint, body }
+}
+
 export function MarkdownMessage({ content }: { content: string }) {
+  const { keypoint, body } = extractKeypoint(content)
   return (
     <div className="banto-md min-w-0 [overflow-wrap:anywhere]">
+      {keypoint && (
+        <div className="mb-2.5 rounded-xl border border-brand-200 bg-brand-50/70 px-3 py-2.5">
+          <p className="mb-1 text-[11px] font-semibold tracking-wide text-brand-700">要点</p>
+          <p className="text-sm font-medium leading-relaxed text-neutral-900 [overflow-wrap:anywhere]">
+            {keypoint}
+          </p>
+        </div>
+      )}
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
@@ -104,7 +132,7 @@ export function MarkdownMessage({ content }: { content: string }) {
           hr: () => <hr className="my-2 border-neutral-300" />,
         }}
       >
-        {content}
+        {body}
       </ReactMarkdown>
     </div>
   )

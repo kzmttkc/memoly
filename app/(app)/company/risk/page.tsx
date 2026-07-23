@@ -154,10 +154,21 @@ function riskDrivenDeadlines(
   return out
 }
 
+// 無期転換の期限候補（I2・2026-07-24）: 通算5年を超えた有期契約社員は無期転換を申し込めるため、
+//   契約更新のたびに通算期間を確認する予定を登録できるようにする。決定的属性（オンボ5問）には
+//   「有期契約社員の有無」が無く suggestDeadlines では出せないため、診断が名指ししたときにだけ橋渡しする。
+//   timingLabel は具体日を断定せず「契約更新のたび」（Phase1: 日付はユーザーが確定）。
+const MUKI_TENKAN_DEADLINE: DeadlineSuggestion = {
+  title: '有期契約の通算期間の確認（無期転換）',
+  timingLabel: '契約更新のたび',
+  hint: '有期労働契約が通算5年を超えると、労働者は無期転換を申し込めます（労働契約法18条）。契約更新のタイミングで通算期間を確認する予定を登録できます。',
+  recurrence: 'yearly',
+}
+
 // I-P08/P01(2026-07-24): 診断の上位リスクカードから、その場で対応期限を登録するための
 //   「リスク→期限」対応表。年間カレンダータブへ遷移させず、リスクを読んだ画面のまま
 //   期日を選んで1タップ登録できるようにする（既存の DeadlineSuggestion / registerSuggestion を流用）。
-//   現状は 36協定 未締結（診断が高リスクで名指しする代表ケース）のみ対応。
+//   現状は 36協定 未締結 と 無期転換（診断が名指しする代表ケース）に対応。
 //   マッチしないリスクは null（＝カード内に期限登録UIを出さない）。
 function deadlineForRisk(risk: TopRisk): DeadlineSuggestion | null {
   const is36 =
@@ -168,7 +179,72 @@ function deadlineForRisk(risk: TopRisk): DeadlineSuggestion | null {
   if (is36) {
     return riskDrivenDeadlines({ has_36kyotei: false })[0] ?? null
   }
+  // I2(2026-07-24): 無期転換は「通算5年で自動発生する期日リスク」だが従来は診断本文で触れるのみ
+  //   （期限候補に載らず prose 止まり）。診断が high/medium で名指ししたときに期限化する。
+  const text = `${risk.title}${risk.why}`
+  const isMukiTenkan =
+    (risk.severity === 'high' || risk.severity === 'medium') &&
+    (text.includes('無期転換') || (text.includes('有期') && text.includes('通算')))
+  if (isMukiTenkan) {
+    return MUKI_TENKAN_DEADLINE
+  }
   return null
+}
+
+// 診断待ちの段階メッセージ（P01・2026-07-24）。LLM精査の約30秒を無反応の空白にしないため、
+//   経過に応じて「今どこを見ているか」を穏当に進める（実処理の分割ではなく体感の可視化）。
+//   断定しない中立文・Phase1準拠。数値は目安であることを崩さない。
+const DIAGNOSIS_STEPS = [
+  '登録された自社ルールを読み込んでいます',
+  '労働時間・休日・36協定の状況を確認しています',
+  '有給・社会保険・就業規則の観点を照らしています',
+  '最新の法令に照らして結果をまとめています',
+] as const
+
+// 段階の進みは実処理と同期しない（LLM精査は不可分な単一呼び出しのため）。約30秒を4段階で
+//   均すが、最終段だけは早く進めて「まとめ中で止まって見える」を避け、完了まで居座らせる。
+function DiagnosisProgress() {
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    // 7秒ごとに次段へ。最終段に達したらそこで止める（完了＝result描画で本コンポは消える）。
+    const id = setInterval(() => {
+      setStep(s => (s < DIAGNOSIS_STEPS.length - 1 ? s + 1 : s))
+    }, 7000)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <Card className="border-brand-200 bg-brand-50/50" aria-busy="true" aria-live="polite">
+      <div className="flex items-start gap-3">
+        <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-brand-600" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-neutral-900">セルフ診断を実行しています</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+            {DIAGNOSIS_STEPS[step]}
+          </p>
+          {/* 段階インジケータ（4分割バー）。現在段までを塗り、残りは薄く。数値割合は出さない
+              （実処理と同期しないため％を出すと誤認になる）。 */}
+          <div className="mt-3 flex gap-1" aria-hidden>
+            {DIAGNOSIS_STEPS.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                  i <= step ? 'bg-brand-500' : 'bg-brand-200/60'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* 結果カードの骨組みスケルトン（到着イメージを先に見せて「固まった」印象を防ぐ）。 */}
+      <div className="mt-4 space-y-2.5">
+        <div className="h-8 w-2/3 animate-pulse rounded bg-neutral-200/70" />
+        <div className="h-3 w-full animate-pulse rounded bg-neutral-100" />
+        <div className="h-3 w-5/6 animate-pulse rounded bg-neutral-100" />
+        <div className="h-3 w-3/4 animate-pulse rounded bg-neutral-100" />
+      </div>
+    </Card>
+  )
 }
 
 function RiskInner() {
@@ -531,14 +607,24 @@ function RiskInner() {
 
       <div className="mb-8 space-y-3">
         <Button size="lg" onClick={() => run('manual')} disabled={loading} className="w-full">
-          {loading
-            ? 'セルフ診断中...（30秒ほどかかります）'
-            : result
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              セルフ診断中...（30秒ほどかかります）
+            </>
+          ) : result
               ? sampleMode
                 ? '自社の登録内容でセルフ診断する'
                 : '最新の状態でもう一度セルフ診断する'
               : '労務リスクをセルフ診断する'}
         </Button>
+
+        {/* ============ 診断待ちの進捗スケルトン（P01・2026-07-24） ============
+            初回の手動診断は速報（provisional）が無く、LLM精査の約30秒が無反応の空白になり
+            「固まった？」という離脱の芽になっていた。結果がまだ無い診断中だけ、段階メッセージ＋
+            スケルトンを出して「今どこまで進んでいるか」を体感させる（実処理は変えない＝体感改善）。
+            provisional 経路（オンボ直後）は result が即入るためここは出ない＝二重表示しない。 */}
+        {loading && !result && <DiagnosisProgress />}
 
         {/* ============ S3: サンプル会社モードの入口 ============
             まだ結果がない（onboarding スキップ直後の空アカウント等）ときだけ表示。
