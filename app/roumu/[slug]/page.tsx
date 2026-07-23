@@ -121,6 +121,26 @@ export default async function RoumuUseCasePage({
     ],
   }
 
+  // Article 構造化データ（GEO/AEO：更新日明示）。updatedAt を持つ一次情報LPにだけ出す。
+  const articleJsonLd = u.updatedAt
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: u.h1,
+        description: u.description,
+        inLanguage: 'ja-JP',
+        mainEntityOfPage: url,
+        datePublished: u.publishedAt || u.updatedAt,
+        dateModified: u.updatedAt,
+        author: { '@type': 'Organization', name: 'Kizuna Creation' },
+        publisher: {
+          '@type': 'Organization',
+          name: '番頭(Banto)',
+          logo: { '@type': 'ImageObject', url: `${BASE}/og-image.png` },
+        },
+      }
+    : null
+
   const others = USECASE_LIST.filter((x) => x.slug !== u.slug)
 
   return (
@@ -133,6 +153,12 @@ export default async function RoumuUseCasePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      {articleJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        />
+      )}
 
       {/* ===== ヘッダ ===== */}
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
@@ -165,6 +191,9 @@ export default async function RoumuUseCasePage({
           {u.h1}
         </h1>
         <p className="mt-4 text-base leading-relaxed text-neutral-600">{u.lead}</p>
+        {u.updatedAt && (
+          <p className="mt-3 text-xs text-neutral-400">更新日：{u.updatedAt}</p>
+        )}
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link
             href={signupHref}
