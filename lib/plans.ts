@@ -283,3 +283,37 @@ export function canCreateAnotherCompany(plans: (string | null | undefined)[]): b
 export function billingEnabled(): boolean {
   return process.env.BILLING_ENABLED === 'true'
 }
+
+/**
+ * 日次上限(429)に達したとき、「アップグレードで上限を増やす」導線を出してよいか。
+ *   条件: 課金が解禁されている(billingEnabled) かつ 最上位プラン(shigyo)未満。
+ *   2026-07-24 成長施策: 上限到達は最も購入意欲が高い瞬間（＝製品を能動的に使っている
+ *   証拠）。この判定を rate-limit 応答の全kind（chat/insights/risk_audit/
+ *   document_generate/document_review）から共通で呼び、フロントの CTA 表示を揃える。
+ */
+export function upgradeAvailable(planId: PlanId): boolean {
+  return billingEnabled() && planId !== 'shigyo'
+}
+
+/**
+ * 日次上限(429)応答の本文を作る共通ヘルパー。5つのAPI route（chat/insights/
+ * risk_audit/document_generate/document_review）で同一の形にする（フロントの
+ * 分岐を1パターンに保つ）。upgradeAvailable=true のときだけ文面にアップグレード
+ * 誘導を足す（課金未解禁/最上位プランでは出さない＝誇大でない）。
+ */
+export function rateLimitBody(planId: PlanId): {
+  error: string
+  code: 'RATE_LIMITED'
+  plan: PlanId
+  upgradeAvailable: boolean
+} {
+  const upgradable = upgradeAvailable(planId)
+  return {
+    error: upgradable
+      ? '本日の利用上限に達しました。日本時間の午前9時にリセットされます。すぐに使いたい場合は、プランのアップグレードで上限を増やせます。'
+      : '本日の利用上限に達しました。利用回数は日本時間の午前9時にリセットされます。',
+    code: 'RATE_LIMITED',
+    plan: planId,
+    upgradeAvailable: upgradable,
+  }
+}

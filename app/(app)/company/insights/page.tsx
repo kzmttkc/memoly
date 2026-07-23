@@ -1,13 +1,14 @@
 'use client'
 
 import { Suspense, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Sparkles, Banknote, Scale } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { CompanyGuard } from '../_components/CompanyGuard'
+import { track } from '@/lib/analytics'
 
 // ============================================================================
 // /company/insights — 能動インサイト（助成金 / 法改正）
@@ -29,6 +30,7 @@ interface LawChange {
 
 function InsightsInner() {
   const params = useSearchParams()
+  const router = useRouter()
   const companyId = params.get('companyId') ?? ''
 
   const [loading, setLoading] = useState(false)
@@ -36,8 +38,16 @@ function InsightsInner() {
   const [subsidies, setSubsidies] = useState<Subsidy[]>([])
   const [lawChanges, setLawChanges] = useState<LawChange[]>([])
   const [disclaimer, setDisclaimer] = useState('')
-  const [toast, setToast] = useState({ show: false, message: '' })
-  const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
+  const [toast, setToast] = useState<{
+    show: boolean
+    message: string
+    action?: { label: string; onClick: () => void }
+  }>({ show: false, message: '' })
+  const showToast = useCallback(
+    (message: string, action?: { label: string; onClick: () => void }) =>
+      setToast({ show: true, message, action }),
+    [],
+  )
 
   async function run() {
     if (loading) return
@@ -50,7 +60,19 @@ function InsightsInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '取得に失敗しました')
+        // 2026-07-24 成長施策: 日次上限(429・upgradeAvailable=true)は
+        //   「プランを見る」トーストアクションにする。
+        if (res.status === 429 && data.upgradeAvailable) {
+          showToast(data.error ?? '取得に失敗しました', {
+            label: 'プランを見る',
+            onClick: () => {
+              track('insights_upgrade_prompt_click')
+              router.push(`/company/billing?companyId=${companyId}`)
+            },
+          })
+        } else {
+          showToast(data.error ?? '取得に失敗しました')
+        }
         return
       }
       setSubsidies(data.subsidies ?? [])
@@ -154,6 +176,7 @@ function InsightsInner() {
       <Toast
         show={toast.show}
         message={toast.message}
+        action={toast.action}
         onHide={() => setToast(prev => ({ ...prev, show: false }))}
       />
     </div>

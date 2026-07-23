@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { BookMarked, Check, Copy, Download, FileText, ScanSearch, Trash2 } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button } from '@/components/ui/Button'
@@ -58,11 +58,38 @@ const SEVERITY: Record<ReviewItem['severity'], { label: string; tone: 'danger' |
 
 function DocumentsInner() {
   const params = useSearchParams()
+  const router = useRouter()
   const companyId = params.get('companyId') ?? ''
 
   const [tab, setTab] = useState<'generate' | 'review'>('generate')
-  const [toast, setToast] = useState({ show: false, message: '' })
-  const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
+  const [toast, setToast] = useState<{
+    show: boolean
+    message: string
+    action?: { label: string; onClick: () => void }
+  }>({ show: false, message: '' })
+  const showToast = useCallback(
+    (message: string, action?: { label: string; onClick: () => void }) =>
+      setToast({ show: true, message, action }),
+    [],
+  )
+  // 2026-07-24 成長施策: 日次上限(429・upgradeAvailable=true)を「プランを見る」トースト
+  //   アクションに変換する（書類作成/規程レビューの両429で共通利用）。
+  const showRateLimitToast = useCallback(
+    (data: { error?: string; upgradeAvailable?: boolean }, fallback: string) => {
+      if (data.upgradeAvailable) {
+        showToast(data.error ?? fallback, {
+          label: 'プランを見る',
+          onClick: () => {
+            track('documents_upgrade_prompt_click')
+            router.push(`/company/billing?companyId=${companyId}`)
+          },
+        })
+      } else {
+        showToast(data.error ?? fallback)
+      }
+    },
+    [showToast, router, companyId],
+  )
 
   // --- タブ1: 書類作成 ---
   const [docType, setDocType] = useState(DOCUMENT_TYPES[0])
@@ -81,7 +108,8 @@ function DocumentsInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '生成に失敗しました')
+        if (res.status === 429) showRateLimitToast(data, '生成に失敗しました')
+        else showToast(data.error ?? '生成に失敗しました')
         return
       }
       setDraft(data.text ?? '')
@@ -172,7 +200,8 @@ function DocumentsInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? 'レビューに失敗しました')
+        if (res.status === 429) showRateLimitToast(data, 'レビューに失敗しました')
+        else showToast(data.error ?? 'レビューに失敗しました')
         return
       }
       setItems(data.items ?? [])
@@ -511,6 +540,7 @@ function DocumentsInner() {
       <Toast
         show={toast.show}
         message={toast.message}
+        action={toast.action}
         onHide={() => setToast(prev => ({ ...prev, show: false }))}
       />
     </div>

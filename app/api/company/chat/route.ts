@@ -11,7 +11,7 @@ import {
 } from '@/lib/company'
 import { maybeAskDifyForQuery } from '@/lib/dify'
 import { checkAndIncrement } from '@/lib/rate-limit'
-import { resolvePlan } from '@/lib/plans'
+import { resolvePlan, rateLimitBody } from '@/lib/plans'
 import { detectDecisionConflicts } from '@/lib/decision-conflict'
 import { embeddingEnabled } from '@/lib/embedding'
 import { buildRecalledMemory, serializeRecalledMemory } from '@/lib/recall'
@@ -75,10 +75,7 @@ export async function POST(req: NextRequest) {
 
   // --- 日次利用上限ガード（plan連動・高コストsonnet呼び出し前）。超過は429。DB未適用時はfail-open ---
   if (!(await checkAndIncrement(user.id, 'chat', plan))) {
-    return NextResponse.json(
-      { error: '本日の利用上限に達しました。利用回数は日本時間の午前9時にリセットされます。' },
-      { status: 429 },
-    )
+    return NextResponse.json(rateLimitBody(plan), { status: 429 })
   }
 
   // 入力のサニタイズ（長さ制限）

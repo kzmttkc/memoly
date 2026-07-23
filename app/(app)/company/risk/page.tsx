@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Share2,
   MessageSquareText,
@@ -249,6 +249,7 @@ function DiagnosisProgress() {
 
 function RiskInner() {
   const params = useSearchParams()
+  const router = useRouter()
   const companyId = params.get('companyId') ?? ''
   // オンボ直後の遷移なら、ボタンを押させず即診断を走らせる（TTV短縮の本体）。
   const fromOnboarding = params.get('from') === 'onboarding'
@@ -256,7 +257,11 @@ function RiskInner() {
 
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<RiskResult | null>(null)
-  const [toast, setToast] = useState({ show: false, message: '' })
+  const [toast, setToast] = useState<{
+    show: boolean
+    message: string
+    action?: { label: string; onClick: () => void }
+  }>({ show: false, message: '' })
   // 診断前の「未回答属性の差し込み」（#5集合知の正規化属性 company_attributes）。
   //   業種 or 規模 が未回答なら、診断ボタンの前にミニフォームを出して登録を促す。
   //   登録は精度向上のため（任意・スキップ可）。集計の素も同時に貯まる。
@@ -287,7 +292,30 @@ function RiskInner() {
   const onboardingFired = useRef(false)
   // sample_company_viewed をセッション1回だけ計測するためのフラグ。
   const sampleViewedRef = useRef(false)
-  const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
+  const showToast = useCallback(
+    (message: string, action?: { label: string; onClick: () => void }) =>
+      setToast({ show: true, message, action }),
+    [],
+  )
+  // 2026-07-24 成長施策: 日次上限(429・upgradeAvailable=true)を「プランを見る」トースト
+  //   アクションに変換する共通ヘルパー（risk-audit専用route1本のみだが、documents/insights
+  //   と挙動を揃えるため同名で用意）。
+  const showRateLimitToast = useCallback(
+    (data: { error?: string; upgradeAvailable?: boolean }) => {
+      if (data.upgradeAvailable) {
+        showToast(data.error ?? 'セルフ診断に失敗しました', {
+          label: 'プランを見る',
+          onClick: () => {
+            track('risk_upgrade_prompt_click')
+            router.push(`/company/billing?companyId=${companyId}`)
+          },
+        })
+      } else {
+        showToast(data.error ?? 'セルフ診断に失敗しました')
+      }
+    },
+    [showToast, router, companyId],
+  )
 
   // 診断結果が出たら、既存 suggest API から年間手続きの候補を取得（新ロジック無し・読取りのみ）。
   //   ★サンプル会社モード中は取得しない（候補は runSample が純関数で同期生成済み。
@@ -453,6 +481,7 @@ function RiskInner() {
       if (!res.ok) {
         // 速報を出せている場合は致命でない（速報を最終の目安として残す）。
         if (useProvisional) setProvisional(false)
+        else if (res.status === 429) showRateLimitToast(data)
         else showToast(data.error ?? 'セルフ診断に失敗しました')
         return
       }
@@ -1016,6 +1045,7 @@ function RiskInner() {
       <Toast
         show={toast.show}
         message={toast.message}
+        action={toast.action}
         onHide={() => setToast(prev => ({ ...prev, show: false }))}
       />
     </div>

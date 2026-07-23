@@ -241,7 +241,13 @@ function CompanyChat() {
   const [isFirstMessage, setIsFirstMessage] = useState(true)
   const [ruleCount, setRuleCount] = useState<number | null>(null)
   // 本日の残り相談回数（P2・429の事前告知）。null=未取得/取得失敗（バッジ非表示）。
-  const [chatRemaining, setChatRemaining] = useState<{ remaining: number; limit: number } | null>(null)
+  //   plan: 2026-07-24 成長施策で追加。残りわずかバッジを課金導線にするかの判定に使う
+  //   （士業プラン=最上位はアップグレード先が無いためリンクしない）。
+  const [chatRemaining, setChatRemaining] = useState<{
+    remaining: number
+    limit: number
+    plan?: string
+  } | null>(null)
   // サンプル質問（UX-2）: 既定は固定4問。attributes が取れたら会社に合わせて出し分け。
   const [samplePrompts, setSamplePrompts] = useState<string[]>(SAMPLE_PROMPTS)
   // 自社プロファイル要約ミニバー（G-c）: attributes の1行要約。空配列=非表示（未登録/取得失敗）。
@@ -254,6 +260,9 @@ function CompanyChat() {
   const [savingDecision, setSavingDecision] = useState(false)
   // 401（セッション失効）の袋小路防止: 汎用エラーに潰さず、再ログイン導線を明示する。
   const [sessionExpired, setSessionExpired] = useState(false)
+  // 2026-07-24 成長施策: 日次上限(429)で billingEnabled かつ最上位未満のときだけ、
+  //   アップグレード導線カードを出す（無料/有料境界に来た最も購入意欲が高い瞬間）。
+  const [rateLimitUpgrade, setRateLimitUpgrade] = useState(false)
   // I2: 課金/解約の質問を検知したときだけ、料金/特商法/サポートへの導線カードを出す。
   const [billingHelp, setBillingHelp] = useState(false)
   // 会話の継続性（P1-3）: マウント時に直近会話を復元中か / 復元した会話のタイトル。
@@ -305,7 +314,7 @@ function CompanyChat() {
       if (!r.ok) return
       const d = await r.json()
       if (typeof d.remaining === 'number' && typeof d.limit === 'number') {
-        setChatRemaining({ remaining: d.remaining, limit: d.limit })
+        setChatRemaining({ remaining: d.remaining, limit: d.limit, plan: d.plan })
       }
     } catch {
       // 取得失敗はサイレント（残回数は補助情報。出せないだけで相談は妨げない）
@@ -322,7 +331,7 @@ function CompanyChat() {
         if (!r.ok) return
         const d = await r.json()
         if (!cancelled && typeof d.remaining === 'number' && typeof d.limit === 'number') {
-          setChatRemaining({ remaining: d.remaining, limit: d.limit })
+          setChatRemaining({ remaining: d.remaining, limit: d.limit, plan: d.plan })
         }
       } catch {
         // 取得失敗はサイレント（残回数は補助情報）
@@ -412,6 +421,7 @@ function CompanyChat() {
     setDecisionPrompt(null)
     setSessionExpired(false)
     setBillingHelp(false)
+    setRateLimitUpgrade(false)
     setResumedTitle(null)
     conversationIdRef.current = null
     lastExtractedAtRef.current = 0
@@ -457,6 +467,7 @@ function CompanyChat() {
     setIsFirstMessage(true)
     setDecisionPrompt(null)
     setBillingHelp(false)
+    setRateLimitUpgrade(false)
     setResumedTitle(null)
     conversationIdRef.current = null
     lastExtractedAtRef.current = 0
@@ -505,6 +516,7 @@ function CompanyChat() {
         return
       }
       setBillingHelp(false)
+      setRateLimitUpgrade(false)
 
       setLoading(true)
 
@@ -555,6 +567,12 @@ function CompanyChat() {
                 '本日の相談枠を使い切りました。日本時間の午前9時に元に戻ります。急ぎの論点は「社労士に渡すメモ」に整理しておくと安心です。',
             },
           ])
+          // 2026-07-24 成長施策: サーバが upgradeAvailable=true を返したときだけ
+          //   アップグレード導線カードを出す（billing無効/最上位プランでは出さない）。
+          if (data.upgradeAvailable) {
+            track('chat_upgrade_prompt_shown')
+            setRateLimitUpgrade(true)
+          }
           setLoading(false)
           return
         }
@@ -749,11 +767,28 @@ function CompanyChat() {
             </Badge>
           </Link>
         )}
-        {/* 本日の残り相談回数（P2・429の事前告知）。残りわずかは warning で早めに気づかせる。 */}
+        {/* 本日の残り相談回数（P2・429の事前告知）。残りわずかは warning で早めに気づかせる。
+            2026-07-24: 残りわずか(<=3)かつ最上位プラン未満のときは、429で止まる前に
+            バッジ自体をプラン確認への導線にする（低弾数警告→ショップの定石）。 */}
         {chatRemaining !== null && (
-          <Badge tone={chatRemaining.remaining <= 3 ? 'warning' : 'neutral'}>
-            本日の残り相談 {chatRemaining.remaining}/{chatRemaining.limit}回
-          </Badge>
+          <>
+            {chatRemaining.remaining <= 3 && chatRemaining.plan && chatRemaining.plan !== 'shigyo' ? (
+              <Link
+                href={`/company/billing?companyId=${companyId}`}
+                onClick={() => track('chat_low_remaining_badge_click')}
+                aria-label={`本日の残り相談${chatRemaining.remaining}回。プランを見る`}
+                className="rounded-full transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <Badge tone="warning">
+                  本日の残り相談 {chatRemaining.remaining}/{chatRemaining.limit}回・プランを見る
+                </Badge>
+              </Link>
+            ) : (
+              <Badge tone={chatRemaining.remaining <= 3 ? 'warning' : 'neutral'}>
+                本日の残り相談 {chatRemaining.remaining}/{chatRemaining.limit}回
+              </Badge>
+            )}
+          </>
         )}
         {/* 会話が始まっている（復元 or 送信済み）ときだけ「新しい相談」への切替を出す */}
         {messages.length > 1 && !loading && (
@@ -992,6 +1027,29 @@ function CompanyChat() {
           <p className="text-xs leading-relaxed text-neutral-500">
             労務のご相談でしたら、もう一度具体的にご質問ください。この会社の前提を踏まえてお答えします。
           </p>
+        </div>
+      )}
+
+      {/* 2026-07-24 成長施策: 日次上限(429)到達時のアップグレード導線。
+          最も購入意欲が高い瞬間（能動的に使い切った）に「明日まで待つ」以外の一歩を出す。 */}
+      {rateLimitUpgrade && (
+        <div className="mt-3 flex flex-col gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 sm:flex-row sm:items-center">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-neutral-900">
+              もっと相談したい方へ
+            </p>
+            <p className="text-xs text-neutral-600">
+              上位プランに切り替えると、1日あたりの相談回数がすぐに増えます。
+            </p>
+          </div>
+          <Link
+            href={`/company/billing?companyId=${companyId}`}
+            onClick={() => track('chat_upgrade_prompt_click')}
+            className={buttonClass({ variant: 'primary', size: 'sm', className: 'sm:ml-auto sm:shrink-0' })}
+          >
+            <CreditCard className="h-4 w-4" aria-hidden />
+            プランを見る
+          </Link>
         </div>
       )}
 
