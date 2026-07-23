@@ -18,6 +18,12 @@ import { Card } from '@/components/ui/Card'
 //   ?companyId= を付けて置換遷移する。URL 指定は常に優先（既存互換）。
 //   保存値の会社に所属が無い場合は各 API が 403 を返し、既存のエラーハンドリングに
 //   乗る（ここでは所属検証をしない＝最小実装）。
+//
+//   I7(2026-07-24): 上記に加え、localStorage も無い「初回導線」の袋小路を塞ぐ。
+//   ボトムナビ「相談」等が companyId 無しで /company/chat を指すと、まだ一度も
+//   会社を選んでいない単一会社ユーザーは「会社が指定されていません」で詰まる
+//   （P02 実測）。localStorage が空なら /api/company で所属会社を引き、1社以上
+//   あれば直近（配列先頭）の会社へフォールバックする。0社のときだけ未指定カードを出す。
 // ============================================================================
 
 const LAST_COMPANY_KEY = 'banto-last-company'
@@ -41,10 +47,34 @@ export function CompanyGuard({ children }: { children: React.ReactNode }) {
       router.replace(`${pathname}?companyId=${stored}`)
       return
     }
-    // localStorage（外部システム）確認後の一度きりの確定。マウント後にしか読めない
-    // （SSRでは localStorage が無い）ため effect 内で確定させる。
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFallback('none')
+    // localStorage が空: 初回導線。所属会社を引いて1社以上あれば自動選択する。
+    //   （URL 指定も保存値も無いユーザーだけがここに来る＝所属確認のコストは初回のみ）
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/company')
+        if (cancelled) return
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}))
+          const list = (data.companies ?? []) as { companyId?: string }[]
+          const first = list.find(c => c.companyId)?.companyId
+          if (first) {
+            router.replace(`${pathname}?companyId=${first}`)
+            return
+          }
+        }
+      } catch {
+        /* 取得失敗時は未指定カードにフォールバック（相談開始を妨げない） */
+      }
+      if (!cancelled) {
+        // localStorage/所属確認（外部システム）後の一度きりの確定。
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setFallback('none')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [companyId, pathname, router])
 
   if (!companyId) {

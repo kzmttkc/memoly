@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CheckCircle2, AlertCircle, Calculator as CalcIcon } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -50,8 +50,14 @@ export function Calculator() {
   const [error, setError] = useState('')
   const [result, setResult] = useState<ZangyodaiResult | null>(null)
   const [input, setInput] = useState<ZangyodaiInput | null>(null)
+  // I5: 送信後、結果ブロックへ自動スクロール（結果はフォールド下・P02/P08）。
+  const resultRef = useRef<HTMLDivElement>(null)
 
   useToolOpen('zangyodai')
+
+  useEffect(() => {
+    if (result) resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [result])
 
   function handleCheck(e: React.FormEvent) {
     e.preventDefault()
@@ -286,7 +292,7 @@ export function Calculator() {
 
       {/* ===== 結果 ===== */}
       {result && input && (
-        <Card>
+        <Card ref={resultRef} className="scroll-mt-4">
           {result.status === 'shortfall_risk' ? (
             <div className="flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-5 w-5 flex-none text-warning-700" aria-hidden />

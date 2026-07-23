@@ -4,7 +4,7 @@ import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams, usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText, ScrollText, History, CalendarClock, FileBarChart } from 'lucide-react'
+import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText, ScrollText, History, CalendarClock, FileBarChart, CreditCard, Receipt, Mail } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
 import { Toast } from '@/components/ui/Toast'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -186,6 +186,22 @@ const DRAFTABLE_RE = /就業規則|規程|36協定|労使協定/
 const UNCERTAIN_RE =
   /断定できません|判断が分かれ|個別の事情|個別の判断|専門家|社労士[にへ]|労働基準監督署に確認|確認をおすすめ/
 
+// I2(2026-07-24): 課金/解約/退会など「番頭の労務スコープ外」の質問を検知する。
+//   従来はチャットAIが「専用の労務AIなので案内できません」と導線ゼロで門前払いしていた
+//   （答えは /tokushoho・/company/billing・サポート窓口に実在するのに製品外へ放り出す＝P05/P09）。
+//   検知したらAPIを呼ばず、定型の敬体案内＋各ページ/窓口への導線カードを返す。
+//   ★労務相談語（賃金の支払い・退職・保険の解約 等）と衝突しない語だけを対象にする。
+//     「支払い方法」「月給」「退職」等は労務側なので入れない。誤検知時もカードに
+//     「労務のご相談でしたら、もう一度具体的にご質問ください」を添えて回復可能にする。
+const BILLING_INTENT_RE =
+  /課金|解約|退会|無料期間|無料モニター|サブスク|サブスクリプション|トライアル|有料プラン|料金プラン|プラン変更|クレジットカード|請求書|いくらかかり|料金はいくら|月額料金|自動更新/
+
+// 課金/解約の定型案内（敬体・実挙動どおり）。無料モニター中で事前案内なく課金されない
+//   ことは特商法ページ/billing で実機確認済み（監査 保護リスト#8）。断定はこの範囲に留める。
+const BILLING_FAQ_TEXT =
+  'ご料金や解約についてのご質問ですね。番頭の労務相談とは別のご案内になりますが、こちらでお答えします。\n\n' +
+  '番頭は現在すべて無料モニター中で、事前のご案内なく自動で料金が発生することはありません。料金や特定商取引法に基づく表記、プランの解約・退会のお手続き、お問い合わせ窓口を、下のご案内からご確認いただけます。'
+
 // 記憶抽出のトリガ間隔（ユーザー発話n回ごと）。4→2に短縮:
 //   3往復未満で離脱した会話が一度も記憶化されない問題の暫定緩和
 //   （サーバ側抽出への移行は別タスク。ここではクライアント起点のまま間隔だけ詰める）。
@@ -218,6 +234,8 @@ function CompanyChat() {
   const [savingDecision, setSavingDecision] = useState(false)
   // 401（セッション失効）の袋小路防止: 汎用エラーに潰さず、再ログイン導線を明示する。
   const [sessionExpired, setSessionExpired] = useState(false)
+  // I2: 課金/解約の質問を検知したときだけ、料金/特商法/サポートへの導線カードを出す。
+  const [billingHelp, setBillingHelp] = useState(false)
   // 会話の継続性（P1-3）: マウント時に直近会話を復元中か / 復元した会話のタイトル。
   //   restoring 中はサンプル質問を出さない（復元結果で上書きされるチラつき防止）。
   const [restoring, setRestoring] = useState(false)
@@ -373,6 +391,7 @@ function CompanyChat() {
     setIsFirstMessage(true)
     setDecisionPrompt(null)
     setSessionExpired(false)
+    setBillingHelp(false)
     setResumedTitle(null)
     conversationIdRef.current = null
     lastExtractedAtRef.current = 0
@@ -417,6 +436,7 @@ function CompanyChat() {
     setInput('')
     setIsFirstMessage(true)
     setDecisionPrompt(null)
+    setBillingHelp(false)
     setResumedTitle(null)
     conversationIdRef.current = null
     lastExtractedAtRef.current = 0
@@ -455,6 +475,17 @@ function CompanyChat() {
       const newMessages = [...messages, userMessage]
       setMessages(newMessages)
       setInput('')
+
+      // I2: 課金/解約の質問は API を呼ばず、その場で定型案内＋導線カードを返す
+      //   （労務スコープ外の門前払いをやめる）。労務の質問なら従来どおり API へ流す。
+      if (BILLING_INTENT_RE.test(content)) {
+        track('chat_billing_faq_shown')
+        setMessages(prev => [...prev, { role: 'assistant', content: BILLING_FAQ_TEXT }])
+        setBillingHelp(true)
+        return
+      }
+      setBillingHelp(false)
+
       setLoading(true)
 
       // H08(エラーバジェット): 失敗「率」の分母。送信試行を1回ずつ数える（PIIなし・本文は送らない）。
@@ -894,6 +925,41 @@ function CompanyChat() {
             <LogIn className="h-4 w-4" aria-hidden />
             ログインし直す
           </Link>
+        </div>
+      )}
+
+      {/* I2: 課金/解約の質問に対する導線カード（門前払いをやめる）。料金・特商法/プラン/窓口へ。 */}
+      {billingHelp && (
+        <div className="mt-3 space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/tokushoho"
+              onClick={() => track('chat_billing_link', { target: 'tokushoho' })}
+              className={buttonClass({ variant: 'secondary', size: 'sm' })}
+            >
+              <Receipt className="h-4 w-4" aria-hidden />
+              料金・特定商取引法の表記
+            </Link>
+            <Link
+              href={`/company/billing?companyId=${companyId}`}
+              onClick={() => track('chat_billing_link', { target: 'billing' })}
+              className={buttonClass({ variant: 'secondary', size: 'sm' })}
+            >
+              <CreditCard className="h-4 w-4" aria-hidden />
+              プラン・解約のお手続き
+            </Link>
+            <a
+              href="mailto:support@banto-roumu.com"
+              onClick={() => track('chat_billing_link', { target: 'support' })}
+              className={buttonClass({ variant: 'ghost', size: 'sm' })}
+            >
+              <Mail className="h-4 w-4" aria-hidden />
+              お問い合わせ窓口
+            </a>
+          </div>
+          <p className="text-xs leading-relaxed text-neutral-500">
+            労務のご相談でしたら、もう一度具体的にご質問ください。この会社の前提を踏まえてお答えします。
+          </p>
         </div>
       )}
 

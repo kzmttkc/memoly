@@ -12,6 +12,7 @@ import { StatPill } from '@/components/ui/StatPill'
 import { Badge } from '@/components/ui/Badge'
 import { track } from '@/lib/analytics'
 import { resolvePlan } from '@/lib/plans'
+import { localizeError } from './_components/errors'
 
 // ============================================================================
 // /company — 会社オンボーディング / ハブ
@@ -149,9 +150,14 @@ function CompanyHome() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim() }),
       })
-      const data = await res.json()
+      // セッション切れ（401）は再ログインへ誘導（生英語エラーを画面に出さない）。
+      if (res.status === 401) {
+        router.push('/login?next=/company')
+        return
+      }
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data.error ?? '会社の作成に失敗しました')
+        setError(localizeError(data.error, '会社の作成に失敗しました'))
         return
       }
       // 活性化ファネル: 会社作成の確定（登録→会社作成の到達を可視化）。

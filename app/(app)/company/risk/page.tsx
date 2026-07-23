@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/Badge'
 import { RiskMeterHero, RiskMeterBar } from '@/components/ui/RiskMeter'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { AttributesForm } from '../_components/AttributesForm'
+import { localizeError } from '../_components/errors'
 import { track } from '@/lib/analytics'
 import {
   computeFallbackRiskAudit,
@@ -101,6 +102,28 @@ const SEVERITY: Record<TopRisk['severity'], { label: string; tone: 'danger' | 'w
   low: { label: '低', tone: 'neutral' },
 }
 
+// I1(2026-07-24): 診断が「リスク高」と名指しするのに期限の登録候補に無い項目を橋渡しする。
+//   既存 suggestDeadlines は has_36kyotei===true のとき「36協定の更新」だけを出す。
+//   一方、診断が36協定をリスク高にするのは未締結（has_36kyotei===false）のとき。
+//   そのため未締結時は「診断は名指しするのに登録候補ゼロ」だった（監査 I1・P01）。
+//   ここで未締結時に「36協定の締結・届出」を候補として補い、既存の年間カレンダーへ
+//   合流させて、そのままワンクリックで期限登録できるようにする（新API・新機構は作らない）。
+function riskDrivenDeadlines(
+  attrs: { has_36kyotei?: boolean | null } | null,
+): DeadlineSuggestion[] {
+  if (!attrs) return []
+  const out: DeadlineSuggestion[] = []
+  if (attrs.has_36kyotei === false) {
+    out.push({
+      title: '36協定の締結・届出',
+      timingLabel: '残業をさせる前に',
+      hint: '時間外・休日労働をさせるには、36協定を締結し労働基準監督署へ届け出る必要があります。締結・届出の予定日を期限として登録できます。',
+      recurrence: 'yearly',
+    })
+  }
+  return out
+}
+
 function RiskInner() {
   const params = useSearchParams()
   const companyId = params.get('companyId') ?? ''
@@ -123,6 +146,8 @@ function RiskInner() {
   // 各候補行の期日入力値（title→YYYY-MM-DD）。日付はユーザーが確定する（Phase1: 断定しない）。
   const [dueInputs, setDueInputs] = useState<Record<string, string>>({})
   const [registering, setRegistering] = useState<string | null>(null)
+  // I1: 登録済みにした候補の title（診断由来の補完候補を登録後にリストから外すため）。
+  const [registeredTitles, setRegisteredTitles] = useState<string[]>([])
   // S3: サンプル会社モード中か。true の間は fetch を一切行わず、シェア/AI相談/期限登録を
   //   無効化し、全表示面に「架空のサンプル会社」を明示する。
   const [sampleMode, setSampleMode] = useState(false)
@@ -191,12 +216,14 @@ function RiskInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '登録に失敗しました')
+        showToast(localizeError(data.error, '登録に失敗しました'))
         return
       }
       showToast(`「${s.title}」を期限に登録しました`)
       // 登録済みは候補から外す（suggest=1 の再取得でも除外されるが、即時に反映する）。
       setSuggestions(prev => (prev ? prev.filter(x => x.title !== s.title) : prev))
+      // 診断由来の補完候補（suggestions 状態に無い）も登録後に消えるよう title を控える。
+      setRegisteredTitles(prev => (prev.includes(s.title) ? prev : [...prev, s.title]))
     } catch {
       showToast('登録に失敗しました。通信を確認してください。')
     } finally {
@@ -367,6 +394,15 @@ function RiskInner() {
       : '労務リスクのセルフ診断（目安）の結果について、優先的に見直すとよい点を教えてください。'
     return `/company/chat?companyId=${companyId}&q=${encodeURIComponent(q)}`
   }
+
+  // I1: 診断由来の補完候補（未締結の36協定 等）を既存の年間カレンダー候補へ合流する。
+  //   sampleMode ではサンプル属性、それ以外は自社属性を素に、既に suggestions/登録済みに
+  //   あるものは重複させない。suggestions が未取得(null)の間は補完候補だけ先に見せる。
+  const riskExtra = riskDrivenDeadlines(sampleMode ? SAMPLE_COMPANY_ATTRIBUTES : companyAttrs).filter(
+    r => !registeredTitles.includes(r.title) && !(suggestions ?? []).some(s => s.title === r.title),
+  )
+  const mergedSuggestions: DeadlineSuggestion[] | null =
+    suggestions === null ? (riskExtra.length > 0 ? riskExtra : null) : [...riskExtra, ...suggestions]
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -601,9 +637,9 @@ function RiskInner() {
                 ? `架空のサンプル会社（${SAMPLE_COMPANY_LABEL}）の場合に、1年のうちに巡ってくる代表的な労務手続きの目安です。自社の情報で診断すると、自社に合わせた候補が並び、期限として登録できます。`
                 : '登録された基本情報から、1年のうちに巡ってくる代表的な労務手続きの目安を並べています。期日はご自身で確定してください。登録すると、近づいたときにメールでお知らせします。'}
             </p>
-            {suggestions === null ? (
+            {mergedSuggestions === null ? (
               <p className="text-sm text-neutral-500">カレンダーを読み込み中...</p>
-            ) : suggestions.length === 0 ? (
+            ) : mergedSuggestions.length === 0 ? (
               <Card className="bg-neutral-50">
                 <p className="text-sm leading-relaxed text-neutral-600">
                   いま案内できる候補はすべて期限に登録済みです。登録済みの期限は
@@ -612,7 +648,7 @@ function RiskInner() {
               </Card>
             ) : (
               <ul className="space-y-2">
-                {suggestions.map(s => (
+                {mergedSuggestions.map(s => (
                   <li
                     key={s.title}
                     className="rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5"
@@ -642,6 +678,7 @@ function RiskInner() {
                           期日を確定：
                           <input
                             type="date"
+                            lang="ja"
                             value={dueInputs[s.title] ?? ''}
                             onChange={e =>
                               setDueInputs(prev => ({ ...prev, [s.title]: e.target.value }))

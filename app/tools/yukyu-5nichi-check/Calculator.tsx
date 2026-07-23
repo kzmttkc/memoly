@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CalendarDays, CheckCircle2, AlertCircle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -69,8 +69,15 @@ export function Calculator() {
   const [taken, setTaken] = useState('')
   const [error, setError] = useState('')
   const [result, setResult] = useState<Result | null>(null)
+  // I5: 送信後、結果ブロックへ自動スクロール（結果はフォールド下に描画され「反応した？」と
+  //   二度押し/離脱するのを防ぐ・P02/P08）。結果が確定したときだけ発火。
+  const resultRef = useRef<HTMLDivElement>(null)
 
   useToolOpen('yukyu_5nichi')
+
+  useEffect(() => {
+    if (result) resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [result])
 
   function handleCheck(e: React.FormEvent) {
     e.preventDefault()
@@ -139,6 +146,7 @@ export function Calculator() {
             <input
               id="kijunbi"
               type="date"
+              lang="ja"
               value={kijunbi}
               onChange={(e) => setKijunbi(e.target.value)}
               className={inputClass}
@@ -211,7 +219,7 @@ export function Calculator() {
 
       {/* ===== 結果 ===== */}
       {result && (
-        <Card>
+        <Card ref={resultRef} className="scroll-mt-4">
           {!result.eligible ? (
             <div className="space-y-3">
               <div className="flex items-start gap-2">

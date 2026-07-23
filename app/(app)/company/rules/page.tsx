@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { CopyButton } from '@/components/ui/CopyButton'
 import { CompanyGuard } from '../_components/CompanyGuard'
+import { localizeError } from '../_components/errors'
 
 // ============================================================================
 // /company/rules — 自社ルール編集（adminのみ）
@@ -85,7 +86,7 @@ function RulesEditor() {
       body: JSON.stringify({ companyId, key, value }),
     })
     const data = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(data.error ?? '保存に失敗しました')
+    if (!res.ok) throw new Error(localizeError(data.error, '保存に失敗しました'))
     return data
   }
 
@@ -123,7 +124,7 @@ function RulesEditor() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? '更新に失敗しました')
+        throw new Error(localizeError(data.error, '更新に失敗しました'))
       }
       showToast('更新しました')
     } catch (err) {
@@ -144,7 +145,7 @@ function RulesEditor() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? '削除に失敗しました')
+        throw new Error(localizeError(data.error, '削除に失敗しました'))
       }
       // undo: 直前の key/value を再 upsert で復元する。
       showToast(`「${p.key}」を削除しました`, {

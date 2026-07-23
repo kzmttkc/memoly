@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CheckCircle2, AlertCircle, Circle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -73,8 +73,16 @@ export function Calculator() {
   const [error, setError] = useState('')
   const [measureResult, setMeasureResult] = useState<MeasureCheckResult | null>(null)
   const [childResult, setChildResult] = useState<ChildCheckResult | null>(null)
+  // I5: 送信後、結果ブロックへ自動スクロール（結果はフォールド下・P02/P08）。
+  const resultRef = useRef<HTMLDivElement>(null)
 
   useToolOpen('jyunan_hatarakikata')
+
+  useEffect(() => {
+    if (measureResult && childResult) {
+      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [measureResult, childResult])
 
   function handleCheck(e: React.FormEvent) {
     e.preventDefault()
@@ -280,6 +288,7 @@ export function Calculator() {
               <input
                 id="birthDate"
                 type="date"
+                lang="ja"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
                 className={inputClass}
@@ -293,6 +302,7 @@ export function Calculator() {
               <input
                 id="assessDate"
                 type="date"
+                lang="ja"
                 value={assessDate}
                 onChange={(e) => setAssessDate(e.target.value)}
                 className={inputClass}
@@ -315,7 +325,7 @@ export function Calculator() {
       {measureResult && childResult && (
         <>
           {/* ---- 結果1: 自社の措置は義務(2つ以上)を満たしているか ---- */}
-          <Card>
+          <Card ref={resultRef} className="scroll-mt-4">
             <div className="flex items-start gap-2">
               {measureResult.meetsObligation ? (
                 <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-success-700" aria-hidden />

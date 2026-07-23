@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { CompanyGuard } from '../_components/CompanyGuard'
+import { localizeError } from '../_components/errors'
 
 // ============================================================================
 // /company/deadlines — F4 期限レジストリ
@@ -120,7 +121,7 @@ function DeadlinesInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '登録に失敗しました')
+        showToast(localizeError(data.error, '登録に失敗しました'))
         return
       }
       showToast(`「${data.deadline?.title ?? newTitle}」を登録しました`)
@@ -157,7 +158,7 @@ function DeadlinesInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '登録に失敗しました')
+        showToast(localizeError(data.error, '登録に失敗しました'))
         return
       }
       showToast(`「${s.title}」を登録しました。期日を確認して調整してください`)
@@ -176,7 +177,7 @@ function DeadlinesInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '更新に失敗しました')
+        showToast(localizeError(data.error, '更新に失敗しました'))
         return
       }
       showToast(`「${d.title}」を来年の予定に更新しました`)
@@ -196,7 +197,7 @@ function DeadlinesInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '更新に失敗しました')
+        showToast(localizeError(data.error, '更新に失敗しました'))
         return
       }
       showToast('期日を更新しました')
@@ -214,7 +215,7 @@ function DeadlinesInner() {
       )
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '削除に失敗しました')
+        showToast(localizeError(data.error, '削除に失敗しました'))
         return
       }
       showToast(`「${d.title}」を削除しました`)
@@ -292,6 +293,7 @@ function DeadlinesInner() {
                 <Input
                   id="d-due"
                   type="date"
+                  lang="ja"
                   value={newDue}
                   onChange={e => setNewDue(e.target.value)}
                 />
@@ -381,6 +383,7 @@ function DeadlinesInner() {
                       期日を変更：
                       <input
                         type="date"
+                        lang="ja"
                         defaultValue={d.due_on}
                         onChange={e => updateDue(d, e.target.value)}
                         className="ml-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"

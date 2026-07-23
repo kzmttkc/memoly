@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CheckCircle2, AlertCircle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -84,8 +84,14 @@ export function Calculator() {
   const [specialMonths, setSpecialMonths] = useState('') // 原則45時間を超えた月数（特別条項の適用月数）
   const [error, setError] = useState('')
   const [result, setResult] = useState<Result | null>(null)
+  // I5: 送信後、結果ブロックへ自動スクロール（結果はフォールド下・P02/P08）。
+  const resultRef = useRef<HTMLDivElement>(null)
 
   useToolOpen('36kyotei')
+
+  useEffect(() => {
+    if (result) resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [result])
 
   function handleCheck(e: React.FormEvent) {
     e.preventDefault()
@@ -349,7 +355,7 @@ export function Calculator() {
 
       {/* ===== 結果 ===== */}
       {result && (
-        <Card>
+        <Card ref={resultRef} className="scroll-mt-4">
           {result.flaggedCount === 0 ? (
             <div className="flex items-start gap-2">
               <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-success-700" aria-hidden />

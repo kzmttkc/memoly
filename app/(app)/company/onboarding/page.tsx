@@ -18,6 +18,7 @@ import {
 } from '@/lib/company-attributes'
 import { computeFallbackRiskAudit } from '@/lib/risk-fallback'
 import { CompanyGuard } from '../_components/CompanyGuard'
+import { localizeError } from '../_components/errors'
 
 // ============================================================================
 // /company/onboarding — 会社作成後の「5問 構造化ウィザード」
@@ -130,7 +131,7 @@ function OnboardingInner() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        showToast(data.error ?? '保存に失敗しました')
+        showToast(localizeError(data.error, '保存に失敗しました'))
         setSaving(false)
         return
       }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CheckCircle2, AlertCircle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -53,10 +53,16 @@ export function Calculator() {
   const [isStudent, setIsStudent] = useState<'yes' | 'no' | ''>('')
   const [error, setError] = useState('')
   const [result, setResult] = useState<SyahoKanyuResult | null>(null)
+  // I5: 送信後、結果ブロックへ自動スクロール（結果はフォールド下・P02/P08）。
+  const resultRef = useRef<HTMLDivElement>(null)
   // C08: note= 引き渡し用に、判定に使った入力の控えを結果とセットで保持する。
   const [lastInput, setLastInput] = useState<SyahoKanyuInput | null>(null)
 
   useToolOpen('syaho_kanyu')
+
+  useEffect(() => {
+    if (result) resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [result])
 
   function handleCheck(e: React.FormEvent) {
     e.preventDefault()
@@ -113,6 +119,7 @@ export function Calculator() {
               <input
                 id="assessDate"
                 type="date"
+                lang="ja"
                 value={assessDate}
                 onChange={(e) => setAssessDate(e.target.value)}
                 className={inputClass}
@@ -224,7 +231,7 @@ export function Calculator() {
 
       {/* ===== 結果 ===== */}
       {result && (
-        <Card>
+        <Card ref={resultRef} className="scroll-mt-4">
           {result.status === 'taisho' ? (
             <div className="flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-5 w-5 flex-none text-warning-700" aria-hidden />

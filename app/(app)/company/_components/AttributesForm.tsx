@@ -11,6 +11,7 @@ import {
 } from '@/lib/company-attributes'
 import { Button } from '@/components/ui/Button'
 import { Check } from 'lucide-react'
+import { localizeError } from './errors'
 
 // ============================================================================
 // AttributesForm — 集合知モート用「正規化属性」の入力フォーム（決定的・LLM非依存）
@@ -67,7 +68,7 @@ export function AttributesForm({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        onError?.(data.error ?? '保存に失敗しました')
+        onError?.(localizeError(data.error, '保存に失敗しました'))
         setSaving(false)
         return
       }
