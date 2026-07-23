@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Brain, MessageSquareText, Check, X } from 'lucide-react'
+import { MessageSquareText, Check, X } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { trackV as track } from '../_lib/variant'
 
 // ============================================================================
@@ -65,7 +66,7 @@ export default function CompareToggle() {
               : 'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm text-neutral-500 hover:text-brand-700'
           }
         >
-          <Brain className="h-4 w-4" aria-hidden />
+          <BantoMark className="h-4 w-4" aria-hidden />
           番頭に聞くと
         </button>
       </div>
@@ -95,7 +96,7 @@ export default function CompareToggle() {
           {/* 番頭の回答: 覚えている前提から直接答える */}
           <div className={side === 'banto' ? 'flex items-start gap-2' : 'hidden'}>
             <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-              <Brain className="h-3.5 w-3.5" aria-hidden />
+              <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
             <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 text-[13px] leading-relaxed text-neutral-700">
               自社は<span className="font-semibold text-neutral-900">36協定が未締結</span>

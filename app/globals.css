@@ -23,18 +23,21 @@
    Tailwind v4 @theme記法。--color-* は bg-brand-600 等で利用可能。
    ========================================================================== */
 @theme {
-  /* brand: 濃紺/インディゴ系。CTA / リンク / 選択状態 */
-  --color-brand-50: #eef2fb;
-  --color-brand-100: #d9e0f4;
-  --color-brand-200: #b6c4e9;
-  --color-brand-300: #8ba2d9;
-  --color-brand-400: #5e7cc4;
-  --color-brand-500: #3f5da8;
-  --color-brand-600: #324a8a;
-  --color-brand-700: #283c6f;
-  --color-brand-800: #21305a;
-  --color-brand-900: #1b2747;
-  --color-brand-950: #11182e;
+  /* brand: 藍(#243B6E)系 — 2026-07-23 Takeshi承認ブランド(G05)。
+     旧 濃紺/インディゴ(#324a8a)から藍へ再アンカー。600=藍そのもの。
+     変数の付け替えのみで全面波及させる(コンポーネント個別色は触らない)。
+     白地×brand-600 のコントラストは 10.9:1(旧7.7:1)でAA/AAA充足。 */
+  --color-brand-50: #eef1f8;
+  --color-brand-100: #d8dfee;
+  --color-brand-200: #b4c1de;
+  --color-brand-300: #8a9dc9;
+  --color-brand-400: #5d76ae;
+  --color-brand-500: #38538f;
+  --color-brand-600: #243b6e;
+  --color-brand-700: #1d3159;
+  --color-brand-800: #182747;
+  --color-brand-900: #131f38;
+  --color-brand-950: #0b1223;
 
   /* neutral: 面 / 境界 / テキスト階層 */
   --color-neutral-50: #f8fafc;
@@ -294,4 +297,91 @@ body {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+}
+
+/* ==========================================================================
+   FV01 チャット継続モック（2026-07-23 Takeshi承認ブランド）
+   出典: output/0723/banto_brand_final/fv/fv01-spec.md / fv01-implementation.html
+   G05確定トークン（この5値以外使用禁止・紫系/グラデーション禁止）:
+     藍 #243B6E / 生成り #F5F0E6 / 墨 #1A1A1A /
+     ユーザーバブル地 #ECE7DB / 日付区切り #8A8578
+   G07: .fv-anim のstaggerフェード＝サイト全体2〜3箇所のうちの1箇所
+   （もう1箇所はヒーローの記憶可視化ミニパネル .fv-memory。以上で打ち止め）。
+   transform/opacityのみ＝compositor安全。prefers-reduced-motionで即時表示。
+   ========================================================================== */
+.fv-chat {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(26, 26, 26, 0.08);
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+}
+.fv-chat__header {
+  background: #243b6e;
+  color: #f5f0e6;
+  font-size: 18px;
+  font-weight: 500;
+  padding: 14px 24px;
+}
+.fv-chat__body {
+  padding: 20px 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fv-divider {
+  text-align: center;
+  color: #8a8578;
+  font-size: 15px;
+  font-weight: 300;
+  margin: 6px 0;
+}
+.fv-msg {
+  max-width: 57%;
+  padding: 12px 20px;
+  border-radius: 22px;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 300;
+}
+.fv-msg--user {
+  align-self: flex-start;
+  background: #ece7db;
+  color: #1a1a1a;
+  font-size: 17px;
+}
+.fv-msg--banto {
+  align-self: flex-end;
+  background: #243b6e;
+  color: #f5f0e6;
+}
+
+/* アニメーション: opacity 0→1 + translateY(8px→0) 400ms ease-out・250ms stagger。
+   発火は IntersectionObserver(threshold 0.4)が .is-inview を1回だけ付与。 */
+.fv-anim {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.is-inview .fv-anim {
+  animation: fvFadeUp 0.4s ease-out forwards;
+}
+.is-inview .fv-anim:nth-child(1) { animation-delay: 0ms; }
+.is-inview .fv-anim:nth-child(2) { animation-delay: 250ms; }
+.is-inview .fv-anim:nth-child(3) { animation-delay: 500ms; }
+.is-inview .fv-anim:nth-child(4) { animation-delay: 750ms; }
+.is-inview .fv-anim:nth-child(5) { animation-delay: 1000ms; }
+.is-inview .fv-anim:nth-child(6) { animation-delay: 1250ms; }
+@keyframes fvFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fv-anim {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
 }

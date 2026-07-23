@@ -25,6 +25,17 @@ export const metadata: Metadata = {
   description: DESC,
   manifest: "/manifest.json",
   alternates: { canonical: "/" },
+  // 2026-07-23 Takeshi承認ブランド(L01): ファビコン一式。/favicon.ico は
+  // app/favicon.ico をNextが自動配信する。maskable は manifest.json 側で宣言。
+  icons: {
+    icon: [
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -37,7 +48,7 @@ export const metadata: Metadata = {
     siteName: "番頭(Banto)",
     locale: "ja_JP",
     type: "website",
-    images: [{ url: `${APP_URL}/og-image.png`, width: 1200, height: 630, alt: "番頭(Banto)" }],
+    images: [{ url: `${APP_URL}/og-banto-main.png`, width: 1200, height: 630, alt: "番頭(Banto)" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -45,12 +56,13 @@ export const metadata: Metadata = {
     description: DESC,
     site: "@takeshi_ai_jp",
     creator: "@takeshi_ai_jp",
-    images: [`${APP_URL}/og-image.png`],
+    images: [`${APP_URL}/og-banto-main.png`],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#324a8a",
+  // 2026-07-23 Takeshi承認ブランド(G05): 藍 #243B6E
+  themeColor: "#243B6E",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

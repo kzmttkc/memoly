@@ -1,26 +1,8 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import {
-  Brain,
-  MessageSquareText,
-  FileText,
-  ShieldCheck,
-  Lock,
-  BadgeCheck,
-  ArrowRight,
-  ArrowDown,
-  Check,
-  X,
-  Building2,
-  Sparkles,
-  Database,
-  KeyRound,
-  Trash2,
-  ChevronDown,
-  UserCog,
-  Copy,
-} from 'lucide-react'
+import { MessageSquareText, FileText, ShieldCheck, Lock, BadgeCheck, ArrowRight, ArrowDown, Check, X, Building2, Sparkles, Database, KeyRound, Trash2, ChevronDown, UserCog, Copy } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -81,7 +63,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://banto-roumu.com/og-image.png',
+        url: 'https://banto-roumu.com/og-banto-main.png',
         width: 1200,
         height: 630,
         alt: '番頭｜会社の規程を覚える労務AI',
@@ -93,7 +75,7 @@ export const metadata: Metadata = {
     title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
     description:
       '会社の規程をAIが覚えて、労務の疑問に自社の前提で即答。汎用AIのように毎回前提を説明する必要がありません。中小企業の総務・経営者向けの労務AIです。',
-    images: ['https://banto-roumu.com/og-image.png'],
+    images: ['https://banto-roumu.com/og-banto-main.png'],
   },
 }
 
@@ -135,7 +117,7 @@ const FAQ = [
 // 「肩代わりする手間＝何が減るか」を1枚で言い切る）。
 const FEATURES = [
   {
-    icon: Brain,
+    icon: BantoMark,
     title: '覚える',
     body:
       '会社のプロファイル（所定労働時間・休日・36協定の状況など）と相談の経緯を蓄積。毎回の前提説明がなくなり、二度目からは話が早くなります。',
@@ -312,7 +294,7 @@ function DataIsolationDiagram() {
       {/* 中央：番頭マーク（接続線は引かず、独立を強調） */}
       <div className="flex justify-center">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-md">
-          <Brain className="h-6 w-6" />
+          <BantoMark className="h-6 w-6" />
         </span>
       </div>
 
@@ -377,7 +359,7 @@ export default async function BusinessLandingPage({
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <Link href="/business" className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-white">
-              <Brain className="h-4 w-4" aria-hidden />
+              <BantoMark className="h-4 w-4" aria-hidden />
             </span>
             <span className="text-lg font-bold tracking-tight text-neutral-900">
               番頭
@@ -583,7 +565,7 @@ export default async function BusinessLandingPage({
           </div>
           <div className="rounded-2xl border border-brand-200 bg-white p-5 ring-1 ring-brand-100 sm:p-6">
             <p className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-              <Brain className="h-4 w-4 text-brand-600" aria-hidden />
+              <BantoMark className="h-4 w-4 text-brand-600" aria-hidden />
               番頭にしてから
             </p>
             <ul className="mt-4 space-y-3">
@@ -891,6 +873,12 @@ export default async function BusinessLandingPage({
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
               現在は無料モニター期間です。すべての機能を無料でお試しいただけます。
             </p>
+            {/* 2026-07-23 E01: 無料モニターから有料への移行条件を明示。
+                「知らないうちに課金が始まる」不安を先回りで解消する誠実な一文。 */}
+            <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+              有料化の際は事前にお知らせし、その時点で継続するかをお選びいただけます。
+              事前のご案内なく課金が始まることはありません。
+            </p>
             <p className="mt-2 text-sm text-neutral-500">
               下記は今後の予定価格です。現時点で課金は行いません。
             </p>
@@ -1044,7 +1032,7 @@ export default async function BusinessLandingPage({
             '@type': 'Organization',
             name: 'Kizuna Creation',
             url: 'https://banto-roumu.com/business',
-            logo: 'https://banto-roumu.com/og-image.png',
+            logo: 'https://banto-roumu.com/icon-512.png',
           }),
         }}
       />
@@ -1206,7 +1194,7 @@ export default async function BusinessLandingPage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-                <Brain className="h-3.5 w-3.5" aria-hidden />
+                <BantoMark className="h-3.5 w-3.5" aria-hidden />
               </span>
               <span className="font-semibold text-neutral-900">番頭(Banto)</span>
             </div>

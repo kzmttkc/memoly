@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowRight, ArrowUpRight, Brain } from 'lucide-react'
+import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -109,7 +110,7 @@ export default async function BlogPostPage({
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
           <Link href="/business" className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-              <Brain className="h-3.5 w-3.5" aria-hidden />
+              <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
             <span className="font-semibold tracking-tight text-neutral-900">番頭(Banto)</span>
           </Link>
@@ -163,7 +164,7 @@ export default async function BlogPostPage({
           <Card padded className="space-y-3">
             <div className="flex items-start gap-2">
               <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-md bg-brand-600 text-white">
-                <Brain className="h-3.5 w-3.5" aria-hidden />
+                <BantoMark className="h-3.5 w-3.5" aria-hidden />
               </span>
               <p className="text-sm font-semibold text-neutral-900">番頭はこの課題にこう接続します</p>
             </div>
@@ -264,7 +265,7 @@ export default async function BlogPostPage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Link href="/business" className="flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-                <Brain className="h-3.5 w-3.5" aria-hidden />
+                <BantoMark className="h-3.5 w-3.5" aria-hidden />
               </span>
               <span className="font-semibold text-neutral-900">番頭(Banto)</span>
             </Link>

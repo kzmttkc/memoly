@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Brain } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { Card } from '@/components/ui/Card'
 
 // ============================================================================
@@ -53,7 +53,7 @@ export function MemoryLossWarning({ companyId }: { companyId: string }) {
     <Card className="mb-6 border-neutral-200 bg-neutral-50">
       <div className="flex items-start gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600">
-          <Brain className="h-4.5 w-4.5" aria-hidden />
+          <BantoMark className="h-4.5 w-4.5" aria-hidden />
         </span>
         <div className="min-w-0">
           <p className="text-sm font-medium text-neutral-900">

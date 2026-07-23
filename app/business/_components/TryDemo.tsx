@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Brain, Building2, MessageSquareText, ArrowRight, RefreshCw } from 'lucide-react'
+import { Building2, MessageSquareText, ArrowRight, RefreshCw } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { trackV as track } from '../_lib/variant'
@@ -258,7 +259,7 @@ export default function TryDemo() {
           {/* ウィンドウバー（「記憶あり」インジケータ） */}
           <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
-              <Brain className="h-3 w-3" aria-hidden />
+              <BantoMark className="h-3 w-3" aria-hidden />
             </span>
             <span className="text-xs font-semibold text-neutral-700">番頭</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500">
@@ -435,7 +436,7 @@ function Conversation({ q, a, typing = false }: { q: string; a: string; typing?:
       {/* 番頭の回答（左寄せ） */}
       <div className="flex items-start gap-2">
         <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-          <Brain className="h-3.5 w-3.5" aria-hidden />
+          <BantoMark className="h-3.5 w-3.5" aria-hidden />
         </span>
         <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 text-[13px] leading-relaxed text-neutral-700">
           {a}

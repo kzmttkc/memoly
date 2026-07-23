@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Brain, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { Card } from '@/components/ui/Card'
 
 // ============================================================================
@@ -67,7 +68,7 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
       <Card interactive className="bg-brand-50/40">
         <div className="flex items-center gap-4">
           <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
-            <Brain className="h-5.5 w-5.5" aria-hidden />
+            <BantoMark className="h-5.5 w-5.5" aria-hidden />
             {/* 記憶が生きている（積み上がっている）ことを穏当な発光ドットで示す。 */}
             {!loading && total > 0 && (
               <span

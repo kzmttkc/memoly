@@ -4,7 +4,8 @@ import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams, usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText, Brain, ScrollText, History, CalendarClock, FileBarChart } from 'lucide-react'
+import { BookOpenCheck, Building2, Send, BookmarkPlus, Check, X, LogIn, MessageSquarePlus, FileText, ScrollText, History, CalendarClock, FileBarChart } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { Toast } from '@/components/ui/Toast'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { MarkdownMessage } from '@/components/ui/MarkdownMessage'
@@ -50,7 +51,7 @@ function RecallPanel({ recalled, companyId }: { recalled: RecalledMemory; compan
   return (
     <details open className="mb-1.5 rounded-xl border border-brand-100 bg-brand-50/60">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
-        <Brain className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
+        <BantoMark className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
         この相談で参照した自社の記憶
         <span className="ml-1 rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] tabular-nums text-brand-700">
           {recalled.profileCount + recalled.decisionCount + recalled.ruleDocCount + recalled.memoryCount}件

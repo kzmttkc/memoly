@@ -4,8 +4,8 @@
   "description": "会社のルール・規程・労務の判断を、AIが覚えて最適解を提供。企業ごとにデータを完全分離。",
   "start_url": "/company",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#324a8a",
+  "background_color": "#F5F0E6",
+  "theme_color": "#243B6E",
   "orientation": "portrait",
   "lang": "ja",
   "categories": ["productivity", "business", "utilities"],
@@ -14,13 +14,25 @@
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [

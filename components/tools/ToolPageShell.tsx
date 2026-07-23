@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ArrowRight, Brain, Check } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { buildToolJsonLd, type ToolJsonLdDef } from './meta'
@@ -68,7 +69,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
           <Link href="/business" className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-              <Brain className="h-3.5 w-3.5" aria-hidden />
+              <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
             <span className="font-semibold tracking-tight text-neutral-900">番頭(Banto)</span>
           </Link>
@@ -201,7 +202,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Link href="/business" className="flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-                <Brain className="h-3.5 w-3.5" aria-hidden />
+                <BantoMark className="h-3.5 w-3.5" aria-hidden />
               </span>
               <span className="font-semibold text-neutral-900">番頭(Banto)</span>
             </Link>
