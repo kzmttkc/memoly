@@ -1,4 +1,46 @@
 import Link from 'next/link'
+import { PLANS, PAID_PLAN_IDS } from '@/lib/plans'
+
+// ============================================================================
+// 特定商取引法に基づく表記 — 8/5 課金解禁前の法的必須ページ（W3.5a-1）
+// ----------------------------------------------------------------------------
+// 一次情報照合の記録（2026-07-23 CTO）:
+//   消費者庁「特定商取引法ガイド」通信販売の広告表示事項
+//   （https://www.no-trouble.caa.go.jp/what/mailorder/ の「広告に表示すべき事項」）
+//   と本ページの記載項目を照合済み。網羅する必須項目:
+//   1) 販売価格（役務の対価）＝お支払い総額で表示（総額表示義務に対応。
+//      Stripe Checkout の請求額 = lib/plans.ts の monthlyJpy/yearlyJpy と同額で、
+//      表示価格以外の追加請求は発生しない）
+//   2) 代金の支払時期・方法 3) 役務の提供時期 4) 申込みの撤回・解除（解約・返金）
+//   5) 事業者の氏名・住所・電話番号 → 特商法第11条ただし書・同施行規則の
+//      「消費者からの請求により遅滞なく開示する」省略特例の構成を採用
+//      （個人事業者の氏名・住所・電話の常時掲載は Takeshi 決裁が出るまで行わない既定。
+//        請求があれば遅滞なく電磁的方法で提供する旨と請求方法を明記＝特例の要件）
+//   6) ソフトウェアの動作環境 7) 2回以上継続して契約する場合の販売条件（自動更新）
+//   8) 送料（オンラインサービスのため無し）を明記
+// 価格の SSOT は lib/plans.ts（2026-06-29 Takeshi 承認の確定構造）。
+// 本ページはハードコードせず PLANS を参照し、価格改定時の乖離を構造的に防ぐ。
+// 解約条件は実装事実に一致させる: webhook は請求期間中 plan を維持し、
+// subscription 終了（customer.subscription.deleted）で free へ降格するため、
+// 「請求期間の末日まで利用可・日割り返金なし」が実装と整合する記載。
+// ============================================================================
+
+const SUPPORT_EMAIL = 'support@banto-roumu.com'
+
+/** 表形式の1行。特商法の必須項目を dl で列挙する。 */
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-1 border-b border-neutral-100 py-4 sm:grid-cols-[11rem_1fr] sm:gap-6">
+      <dt className="text-sm font-semibold text-neutral-900">{label}</dt>
+      <dd className="text-sm leading-relaxed text-neutral-700">{children}</dd>
+    </div>
+  )
+}
+
+export const metadata = {
+  title: '特定商取引法に基づく表記 | 番頭',
+  description: '番頭（Banto）の特定商取引法に基づく表記です。',
+}
 
 export default function TokushohoPage() {
   return (
@@ -9,24 +51,121 @@ export default function TokushohoPage() {
             トップに戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">特定商取引法に基づく表記</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年7月20日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年7月23日</p>
         </div>
 
-        <div className="space-y-4 text-sm leading-relaxed text-neutral-700">
+        {/* 無料モニター期間の告知（課金開始前の現況） */}
+        <div className="mb-8 rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-700">
           <p>
-            番頭（Banto）は現在、無料モニター期間として提供しています。有料プランの提供を開始する際に、特定商取引法に基づく事項（事業者名・所在地・連絡先・価格・支払方法・解約条件等）を本ページに掲載します。
-          </p>
-          <p>
-            それ以前でも運営者情報の開示をご希望の場合は、
-            <a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">
-              support@banto-roumu.com
-            </a>
-            までご請求いただければ遅滞なくお知らせします。
-          </p>
-          <p className="text-neutral-500">
-            事業者名（屋号）：Kizuna Creation（個人事業者）。代表者の氏名・番地を含む所在地・電話番号は、ご請求があった場合に遅滞なく開示いたします。
+            番頭（Banto）は現在、無料モニター期間として提供しており、現時点で課金は行っていません。
+            有料プランの提供を開始する際は、事前にご登録のメールアドレスへ通知し、
+            お客さまが支払手段を登録しない限り課金は発生しません。
+            下記の価格・条件は、有料プラン提供開始後に適用されるものです。
           </p>
         </div>
+
+        <dl>
+          <Row label="事業者名">Kizuna Creation（個人事業者）</Row>
+
+          <Row label="代表者の氏名・所在地・電話番号">
+            特定商取引法に基づき、消費者からのご請求があった場合には遅滞なく開示いたします。
+            開示をご希望の方は、下記のお問い合わせ窓口（
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-600 underline">
+              {SUPPORT_EMAIL}
+            </a>
+            ）まで「運営者情報の開示請求」と明記のうえメールでご請求ください。
+            電子メールにて遅滞なくお知らせします。
+          </Row>
+
+          <Row label="お問い合わせ窓口">
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-600 underline">
+              {SUPPORT_EMAIL}
+            </a>
+            （メールでのお問い合わせを受け付けています。原則3営業日以内に返信します）
+          </Row>
+
+          <Row label="販売価格">
+            <ul className="list-disc space-y-1 pl-5">
+              {PAID_PLAN_IDS.map(id => {
+                const p = PLANS[id]
+                return (
+                  <li key={id}>
+                    {p.displayName}プラン：月額 &yen;{p.monthlyJpy.toLocaleString()}
+                    {p.multiClient
+                      ? `（1席あたり・最大${p.seatCap}席）`
+                      : `（1社あたり・利用メンバー${p.seatCap}名まで追加料金なし）`}
+                    {p.yearlyJpy != null && (
+                      <>
+                        ／年額 &yen;{p.yearlyJpy.toLocaleString()}
+                      </>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="mt-2">
+              表示価格はいずれも消費税を含むお支払い総額です。表示価格以外の追加料金はかかりません。
+              オンラインサービスのため送料はかかりません。
+            </p>
+          </Row>
+
+          <Row label="代金の支払方法">
+            クレジットカード決済（決済代行：Stripe, Inc. の決済システムを利用します）
+          </Row>
+
+          <Row label="代金の支払時期">
+            初回はお申し込み手続（クレジットカード決済）の完了時にお支払いいただきます。
+            2回目以降は、月額プランは初回決済日を基準として1か月ごと、
+            年額プランは1年ごとに、ご登録のクレジットカードへ自動的に請求されます（自動更新）。
+          </Row>
+
+          <Row label="サービスの提供時期">
+            決済完了後、直ちにご利用いただけます。
+          </Row>
+
+          <Row label="契約期間・自動更新（継続課金の条件）">
+            本サービスは継続課金型（サブスクリプション）です。
+            契約期間は月額プランが1か月、年額プランが1年で、
+            解約のお手続きがない限り同一条件で自動更新されます。
+          </Row>
+
+          <Row label="解約の条件・方法">
+            解約はいつでもお申し出いただけます。お問い合わせ窓口（
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-600 underline">
+              {SUPPORT_EMAIL}
+            </a>
+            ）へ、ご契約中のメールアドレスから解約希望の旨をご連絡ください。
+            解約のお申し出をいただいた場合、現在お支払い済みの請求期間の末日をもって契約終了となり、
+            期間末日まではサービスをご利用いただけます。次回以降の請求は発生しません。
+          </Row>
+
+          <Row label="返金の方針（申込みの撤回・解除）">
+            サービスの性質上（デジタルコンテンツ・役務の提供）、決済完了後の返金には原則として応じられません。
+            請求期間の途中で解約された場合も、日割りによる返金は行いません。
+            ただし、当方の責めに帰すべき重大な障害によりサービスを利用できなかった場合、
+            または法令上返金が必要とされる場合は、個別に対応いたします。
+            通信販売のため、特定商取引法に基づくクーリング・オフの適用はありません。
+          </Row>
+
+          <Row label="動作環境">
+            インターネット接続環境、および最新版の主要ウェブブラウザ
+            （Google Chrome・Microsoft Edge・Safari・Firefox）でご利用いただけます。
+            アプリのインストールは不要です。
+          </Row>
+
+          <Row label="販売数量・申込みの制限">
+            法人・個人事業主のお客さまを対象としたサービスです。
+            プランごとの利用人数（席数）の上限は上記「販売価格」欄のとおりです。
+          </Row>
+        </dl>
+
+        <p className="mt-8 text-xs text-neutral-500">
+          本表記に関するご質問は{' '}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-600 underline">
+            {SUPPORT_EMAIL}
+          </a>{' '}
+          までお寄せください。
+        </p>
       </div>
     </div>
   )
