@@ -78,6 +78,36 @@ function timingOrder(label: string): number {
   return m ? Number(m[1]) : 99
 }
 
+// N7-①: 診断結果のクライアント保存（会社ごと）。結果は自社の目安スコアで、
+//   保存先は利用者自身の端末（localStorage）のみ＝サーバ集合知テーブルは汚さない。
+//   保存期間が延びると陳腐化するため、保存日時を併記し再診断で上書きできるようにする。
+const RISK_CACHE_PREFIX = 'banto:risk-result:v1:'
+interface CachedRisk {
+  result: RiskResult
+  savedAt: string // ISO
+}
+function readCachedRisk(companyId: string): CachedRisk | null {
+  if (!companyId || typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(RISK_CACHE_PREFIX + companyId)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as CachedRisk
+    if (!parsed?.result || typeof parsed.result.score !== 'number') return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+function writeCachedRisk(companyId: string, result: RiskResult): void {
+  if (!companyId || typeof window === 'undefined') return
+  try {
+    const payload: CachedRisk = { result, savedAt: new Date().toISOString() }
+    window.localStorage.setItem(RISK_CACHE_PREFIX + companyId, JSON.stringify(payload))
+  } catch {
+    // localStorage 不可（プライベートモード等）は保存を諦める＝従来挙動へ劣化。
+  }
+}
+
 // ============================================================================
 // S3 サンプル会社モード（BANTO_DAY0_SPEC §S3）
 //   onboarding をスキップした直後の「空アカウントの受け皿」。純関数
@@ -157,6 +187,9 @@ function RiskInner() {
   // 属性フェッチ結果を保持（速報の算出に使う。従来は充足判定だけで値を捨てていた）。
   const [companyAttrs, setCompanyAttrs] =
     useState<Parameters<typeof computeFallbackRiskAudit>[0] | null>(null)
+  // N7-①: 直近の診断結果を localStorage に保存し、/company/risk 直接再訪で即表示する
+  //   （従来は再訪で結果が消え30秒の再実行が必要だった）。復元中は保存日時を控えめに提示。
+  const [restoredAt, setRestoredAt] = useState<string | null>(null)
   // onboarding の activation 計測(risk_audit_completed{source:onboarding})を1回に保つ。
   const onboardingFired = useRef(false)
   // sample_company_viewed をセッション1回だけ計測するためのフラグ。
@@ -231,6 +264,28 @@ function RiskInner() {
     }
   }
 
+  // N7-①: マウント時、オンボ直後でなく結果が未表示なら、保存済みの直近診断を復元する。
+  //   オンボ経由(from=onboarding)は新規に自動診断を走らせるため復元しない。
+  useEffect(() => {
+    if (fromOnboarding || !companyId || result) return
+    const cached = readCachedRisk(companyId)
+    if (cached) {
+      setResult(cached.result)
+      setRestoredAt(cached.savedAt)
+    }
+    // マウント時1回・companyId 確定後。result を依存に入れると復元直後に再評価されるが
+    // if(result) return で二重復元は防止済み。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId, fromOnboarding])
+
+  // N7-①: 実データの確定診断（速報でもサンプルでもなく、復元表示中でもない）が出たら
+  //   端末に保存する。復元中(restoredAt!=null)は保存日時を上書きしない（陳腐化検知のため）。
+  useEffect(() => {
+    if (result && !sampleMode && !provisional && !restoredAt) {
+      writeCachedRisk(companyId, result)
+    }
+  }, [result, sampleMode, provisional, companyId, restoredAt])
+
   // マウント時に正規化属性の充足を確認（業種/規模が空なら差し込みフォームを出す）。
   useEffect(() => {
     if (!companyId) return
@@ -273,6 +328,8 @@ function RiskInner() {
   //   （sample は runSample 側で送る。sample は KPI 分母に入れない）
   async function run(source: 'onboarding' | 'manual' = 'manual') {
     if (loading) return
+    // 新規に診断を走らせるので、復元表示のラベルは解除する（この結果は保存し直される）。
+    setRestoredAt(null)
 
     // オンボ直後（from=onboarding）は LLM 完了(≈30秒)を待たず、実属性から決定的な
     //   純関数で「速報（自動計算）」を即描画し、価値提供の瞬間に activation を計測する。
@@ -342,6 +399,7 @@ function RiskInner() {
   //   免責（RISK_AUDIT_DISCLAIMER）はサンプル経路でもコード強制付与を維持する。
   function runSample() {
     const fb = computeFallbackRiskAudit(SAMPLE_COMPANY_ATTRIBUTES)
+    setRestoredAt(null)
     setSampleMode(true)
     setResult({ ...fb, disclaimer: RISK_AUDIT_DISCLAIMER })
     // カレンダー候補も純関数から同期生成（S1 と同じ timingLabel 時期順で表示）。
@@ -398,7 +456,23 @@ function RiskInner() {
   // I1: 診断由来の補完候補（未締結の36協定 等）を既存の年間カレンダー候補へ合流する。
   //   sampleMode ではサンプル属性、それ以外は自社属性を素に、既に suggestions/登録済みに
   //   あるものは重複させない。suggestions が未取得(null)の間は補完候補だけ先に見せる。
-  const riskExtra = riskDrivenDeadlines(sampleMode ? SAMPLE_COMPANY_ATTRIBUTES : companyAttrs).filter(
+  //   ★構造化属性(has_36kyotei)だけでなく、診断結果(result.topRisks)がLLM由来で
+  //     36協定未締結をリスク高と名指しした場合も候補を出す（監査 P01/P03: 構造化属性が
+  //     未回答=null でも自由記述から36協定リスクを検知した会社で候補が欠落していた）。
+  const risk36FromResult =
+    !!result &&
+    result.topRisks.some(
+      r =>
+        r.severity === 'high' &&
+        (r.title.includes('36協定') || r.title.includes('三六協定') || r.why.includes('36協定')),
+    )
+  const attrExtra = riskDrivenDeadlines(sampleMode ? SAMPLE_COMPANY_ATTRIBUTES : companyAttrs)
+  // 結果が36協定を高リスクにしているのに属性由来の候補に無ければ、確実に補う。
+  const combinedExtra =
+    risk36FromResult && !attrExtra.some(r => r.title === '36協定の締結・届出')
+      ? [...attrExtra, ...riskDrivenDeadlines({ has_36kyotei: false })]
+      : attrExtra
+  const riskExtra = combinedExtra.filter(
     r => !registeredTitles.includes(r.title) && !(suggestions ?? []).some(s => s.title === r.title),
   )
   const mergedSuggestions: DeadlineSuggestion[] | null =
@@ -487,6 +561,31 @@ function RiskInner() {
             </Card>
           )}
 
+          {/* N7-①: 復元した保存済み結果であることを控えめに提示（陳腐化の可能性を正直に）。 */}
+          {restoredAt && !sampleMode && !provisional && (
+            <Card className="border-neutral-200 bg-neutral-50">
+              <div className="flex items-start gap-2">
+                <ClipboardList className="mt-0.5 h-5 w-5 shrink-0 text-neutral-500" aria-hidden />
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">
+                    前回の診断結果を表示しています
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+                    保存日時：
+                    {new Date(restoredAt).toLocaleString('ja-JP', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    。自社ルールを更新した場合は、上の「最新の状態でもう一度セルフ診断する」で診断し直せます。
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* ============ S3: 架空のサンプル会社バナー（常時表示・切替導線つき） ============ */}
           {sampleMode && (
             <Card className="border-warning-500/40 bg-warning-50">
@@ -532,10 +631,20 @@ function RiskInner() {
               ))}
             </div>
 
-            {result.summary && (
+            {/* N5: 速報（provisional）で指摘ゼロのとき、フォールバックのsummaryは
+                「大きく気になる点は見つかりませんでした」と断定してしまう。約30秒後のAI精査で
+                リスク高に一変することがあり、第一印象の"問題なし"は信用毀損になる。
+                精査待ちの間だけ中立の文面に差し替える（指摘が既にある場合の件数サマリは残す）。 */}
+            {provisional && !sampleMode && result.topRisks.length === 0 ? (
               <p className="mt-5 border-t border-neutral-200 pt-4 text-sm leading-relaxed text-neutral-700">
-                {result.summary}
+                現在、AIが登録内容を精査しています。詳細な確認結果が出るまで、もう少しお待ちください（精査後に数値や指摘が変わることがあります）。
               </p>
+            ) : (
+              result.summary && (
+                <p className="mt-5 border-t border-neutral-200 pt-4 text-sm leading-relaxed text-neutral-700">
+                  {result.summary}
+                </p>
+              )
             )}
           </Card>
 
@@ -576,9 +685,17 @@ function RiskInner() {
                 : '自社の属性から、優先的に確認するとよいと考えられる点です。'}
             </p>
             {result.topRisks.length === 0 ? (
-              <p className="text-sm text-neutral-500">
-                大きく気になる点は見つかりませんでした。自社ルールを登録すると精度が上がります。
-              </p>
+              provisional && !sampleMode ? (
+                // N5: 速報段階では「問題なし」と断定しない（AI精査でリスク高に変わりうる）。
+                <p className="flex items-center gap-2 text-sm text-neutral-600">
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-brand-600" aria-hidden />
+                  AIが詳細を精査中です。確認結果が出るまでお待ちください（指摘が追加されることがあります）。
+                </p>
+              ) : (
+                <p className="text-sm text-neutral-500">
+                  大きく気になる点は見つかりませんでした。自社ルールを登録すると精度が上がります。
+                </p>
+              )
             ) : (
               <div className="space-y-3">
                 {result.topRisks.map((r, i) => {

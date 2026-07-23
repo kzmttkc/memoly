@@ -72,9 +72,11 @@ function DeadlinesInner() {
   const load = useCallback(async () => {
     if (!companyId) return
     try {
+      // N7-②: ブラウザキャッシュで stale な一覧が返ると、追加直後に「まだありません」の
+      //   ままに見え二重登録を招く。GET は常に最新を取りにいく（no-store）。
       const [listRes, sugRes] = await Promise.all([
-        fetch(`/api/company/deadlines?companyId=${companyId}`),
-        fetch(`/api/company/deadlines?companyId=${companyId}&suggest=1`),
+        fetch(`/api/company/deadlines?companyId=${companyId}`, { cache: 'no-store' }),
+        fetch(`/api/company/deadlines?companyId=${companyId}&suggest=1`, { cache: 'no-store' }),
       ])
       const listData = await listRes.json().catch(() => ({}))
       const sugData = await sugRes.json().catch(() => ({}))
@@ -94,6 +96,16 @@ function DeadlinesInner() {
   useEffect(() => {
     load()
   }, [load])
+
+  // N7-②: 追加成功時に、サーバの再取得を待たず一覧へ即時反映する（楽観的更新）。
+  //   id で重複排除し due_on 昇順に整列（サーバ一覧の並びと一致させる）。直後の load() が
+  //   最終的な整合を取るが、この即時挿入で「追加したのに一覧が空のまま」を無くす。
+  const upsertDeadline = useCallback((d: Deadline) => {
+    setDeadlines(prev => {
+      const base = (prev ?? []).filter(x => x.id !== d.id)
+      return [...base, d].sort((a, b) => a.due_on.localeCompare(b.due_on))
+    })
+  }, [])
 
   async function addDeadline(e: React.FormEvent) {
     e.preventDefault()
@@ -129,6 +141,7 @@ function DeadlinesInner() {
       setNewDue('')
       setNewNote('')
       setNewRecurrence('yearly')
+      if (data.deadline) upsertDeadline(data.deadline as Deadline) // 楽観的に即時反映
       await load()
     } catch {
       showToast('登録できませんでした。通信の状態を確かめて、もう一度お試しいただけますか')
@@ -162,6 +175,9 @@ function DeadlinesInner() {
         return
       }
       showToast(`「${s.title}」を登録しました。期日を確認して調整してください`)
+      // 楽観的に即時反映＋登録した候補は候補リストから外す（二重登録を防ぐ）。
+      if (data.deadline) upsertDeadline(data.deadline as Deadline)
+      setSuggestions(prev => prev.filter(x => x.title !== s.title))
       await load()
     } catch {
       showToast('登録できませんでした。通信の状態を確かめて、もう一度お試しいただけますか')
