@@ -186,6 +186,14 @@ const DRAFTABLE_RE = /就業規則|規程|36協定|労使協定/
 const UNCERTAIN_RE =
   /断定できません|判断が分かれ|個別の事情|個別の判断|専門家|社労士[にへ]|労働基準監督署に確認|確認をおすすめ/
 
+// P01/P07(2026-07-24): 回答が「自社の規程・情報が未登録なので分からない」と述べたとき、
+//   その場から規程を覚えさせる入口（/company/rules）を出す。番頭の看板「会社を覚える」の
+//   価値が、まさに情報が無い瞬間に一歩で回収できるようにする。system プロンプトが未登録時に
+//   使う定型（「登録されていません」「番頭に伝えて登録」「取込済みの範囲では見当たりません」等）
+//   に一致する語で検出する。
+const TEACH_RULES_RE =
+  /登録されていません|登録されていない|未登録|取込済みの範囲では見当たりません|番頭に(?:伝えて|覚え)|覚えさせ|登録していただく|登録すると次回/
+
 // I2(2026-07-24): 課金/解約/退会など「番頭の労務スコープ外」の質問を検知する。
 //   従来はチャットAIが「専用の労務AIなので案内できません」と導線ゼロで門前払いしていた
 //   （答えは /tokushoho・/company/billing・サポート窓口に実在するのに製品外へ放り出す＝P05/P09）。
@@ -798,6 +806,8 @@ function CompanyChat() {
           const showFixPremise = isLatestAnswer && msg.content.includes('【根拠】')
           // I08: 断定を避けた回答には「社労士に相談する下準備」への次アクションを標準提示。
           const showUncertainNext = isLatestAnswer && UNCERTAIN_RE.test(msg.content)
+          // P01/P07: 自社情報が未登録で答えられなかった回答には「規程を覚えさせる」入口を出す。
+          const showTeachRules = isLatestAnswer && TEACH_RULES_RE.test(msg.content)
           return (
             <div key={i}>
               {/* 記憶想起の可視化: assistant 回答の直前に「参照した自社の記憶」を提示する。 */}
@@ -875,6 +885,16 @@ function CompanyChat() {
                       >
                         <FileText className="h-3.5 w-3.5" aria-hidden />
                         この内容で規程ドラフトの下書きを作る
+                      </Link>
+                    )}
+                    {showTeachRules && (
+                      <Link
+                        href={`/company/rules?companyId=${companyId}`}
+                        onClick={() => track('chat_action_chip', { chip: 'teach_rules' })}
+                        className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      >
+                        <ScrollText className="h-3.5 w-3.5" aria-hidden />
+                        番頭に規程を覚えさせる
                       </Link>
                     )}
                     {showFixPremise && (
