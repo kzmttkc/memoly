@@ -9,7 +9,7 @@ import { SCENARIOS } from '../_lib/scenarios'
 //
 //   - データは _lib/scenarios.ts の TS 配列駆動。配列が空なら何も描画しない。
 //   - デザインは「お客様の声」互換のカードグリッド。ただしラベル・見出しは
-//     「導入シナリオ（社内検証に基づく）」で固定し、実在顧客の声と誤認される
+//     「導入シナリオ（社内検証に基づく利用例）」で固定し、実在顧客の声と誤認される
 //     表記（氏名・会社名風の架空固有名詞・「お客様の声」見出し）は使わない。
 //   - サーバーコンポーネント（インタラクションなし・計測なし）。
 // ============================================================================
@@ -22,7 +22,7 @@ export default function ScenarioSection() {
       <div className="mx-auto max-w-5xl px-6 py-20">
         <div className="mx-auto mb-10 max-w-2xl text-center">
           <Badge tone="neutral" className="mb-3">
-            導入シナリオ（社内検証に基づく）
+            導入シナリオ（社内検証に基づく利用例）
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
             実際の使われ方を、検証記録から

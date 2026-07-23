@@ -100,6 +100,14 @@ const FAQ = [
     a: '番頭が提供するのは一般的な情報提供と、自社の数値を入れた下書きの補助です。就業規則の作成代行や個別の法的助言ではありません。最終的な判断は、必要に応じて専門家にご確認ください。',
   },
   {
+    q: '就業規則のファイルをアップロードして覚えさせられますか',
+    a: '現在、PDFやWordなどのファイルを取り込む機能はありません。就業規則や36協定などの規程は、対話や入力で要点を番頭に伝えていくと、その内容を覚えて以降の回答に反映します。一度覚えた内容は繰り返し説明する必要がなく、二度目からは前提を省いて相談できます。',
+  },
+  {
+    q: 'SmartHRなど既存のツールを使っています。乗り換えや全項目の入れ直しが必要ですか',
+    a: '番頭は既存の手続きシステムを置き換えるものではなく、併用を前提にしています。SmartHRやオフィスステーションは手続き・データ管理を、番頭は自社ルールの相談を担う役割分担です。従業員情報や規程のすべてを入れ直す必要はありません。相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。',
+  },
+  {
     q: '社労士資格との関係はどうなっていますか',
     a: '運営者は社会保険労務士試験に合格していますが、社会保険労務士会への登録は行っておらず、資格者としての個別相談・書類作成代行は提供していません。番頭は、自社の規程を覚えて一般的な情報を即答するツールであり、法的な最終判断が必要な場面では登録済みの専門家にご確認ください。',
   },
@@ -121,7 +129,7 @@ const FEATURES = [
     icon: BantoMark,
     title: '覚える',
     body:
-      '会社のプロファイル（所定労働時間・休日・36協定の状況など）と相談の経緯を蓄積。毎回の前提説明がなくなり、二度目からは話が早くなります。',
+      '就業規則や36協定などの規程の要点は、対話や入力で番頭に伝えて覚えさせます（ファイルの取り込みには対応していません）。会社のプロファイル（所定労働時間・休日・36協定の状況など）と相談の経緯も蓄積され、毎回の前提説明がなくなり、二度目からは話が早くなります。',
   },
   {
     icon: MessageSquareText,
@@ -235,6 +243,9 @@ const PLAN_COPY = [
     yearly: PLANS.starter.yearlyJpy,
     tagline: 'まず使ってみる',
     badge: 'おすすめ',
+    // 士業のみ CTA に plan=shigyo を載せる（I3・2026-07-24）。他プランは既定の
+    // /signup?next=/company（TrackedCTA の既定 href）を使う。
+    signupHref: undefined as string | undefined,
     anchor: `1日あたり約${Math.round(PLANS.starter.monthlyJpy / 31)}円で、労務の調べ物と記録をいつでも任せられます。`,
     // 2026-07-23 B17: CTA文言をプラン別に分化（リンク先・計測locationは不変）。
     cta: 'Entryで始める（今は無料）',
@@ -254,6 +265,7 @@ const PLAN_COPY = [
     yearly: PLANS.standard.yearlyJpy,
     tagline: 'チームでしっかり使う',
     badge: null,
+    signupHref: undefined as string | undefined,
     anchor: '総務担当を1人増やす前に、まず番頭に任せられる範囲を確かめられます。',
     cta: 'Standardで始める（今は無料）',
     features: [
@@ -271,6 +283,8 @@ const PLAN_COPY = [
     yearly: PLANS.shigyo.yearlyJpy,
     tagline: '複数の顧問先を管理',
     badge: '士業向け',
+    // 士業CTAは士業文脈を導線に持たせる（I3・2026-07-24。ゲート本体は別班）。
+    signupHref: '/signup?next=/company&plan=shigyo' as string | undefined,
     // 士業プランは設計案にアンカー無し（席単位課金で「1日あたり」換算が誤解を生むため付けない）。
     anchor: null,
     cta: '士業として顧問先を登録',
@@ -389,6 +403,22 @@ export default async function BusinessLandingPage({
             </span>
           </Link>
           <nav className="flex items-center gap-2">
+            {/* 2026-07-24 L1(発見性): 無料ツール・労務記事への上部導線。従来はページ
+                最下部にしか無く、モバイル客・記事目的の来訪者が辿れなかった。
+                ヘッダは狭いモバイルでは畳み、FV圏内の別導線（下記ヒーロー内リンク行）で
+                モバイルを担保する。内部Linkのみ（既存の下部ツールリンクと同じ素の遷移）。 */}
+            <Link
+              href="/tools"
+              className={buttonClass({ variant: 'ghost', size: 'sm', className: 'hidden sm:inline-flex' })}
+            >
+              無料ツール
+            </Link>
+            <Link
+              href="/roumu"
+              className={buttonClass({ variant: 'ghost', size: 'sm', className: 'hidden sm:inline-flex' })}
+            >
+              労務の記事
+            </Link>
             <Link
               href="/login?next=/company"
               className={buttonClass({ variant: 'ghost', size: 'sm' })}
@@ -490,6 +520,26 @@ export default async function BusinessLandingPage({
             <p className="mt-3 text-center text-xs text-neutral-500 lg:text-left">
               登録不要で体験できます。クレジットカードも不要、預けたデータはいつでも全削除できます。
             </p>
+            {/* 2026-07-24 L1(発見性): モバイルFV圏内に無料ツール・記事への明示リンク。
+                ヘッダのツール/記事リンクはモバイルで畳むため、ここでFV内到達を担保する。
+                目的に最も近い「登録不要の答え」（セルフ点検ツール）と、記事目的の来訪者の
+                入口（労務の記事）を、離脱前に届ける。内部Linkのみ。 */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs lg:justify-start">
+              <Link
+                href="/tools"
+                className="inline-flex items-center gap-1 font-medium text-brand-700 hover:text-brand-800"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+                無料ツールでセルフ点検（登録不要）
+              </Link>
+              <Link
+                href="/roumu"
+                className="inline-flex items-center gap-1 font-medium text-brand-700 hover:text-brand-800"
+              >
+                <FileText className="h-3.5 w-3.5" aria-hidden />
+                労務の記事を読む
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -729,8 +779,12 @@ export default async function BusinessLandingPage({
                   顧問先が「社労士に渡すメモ」で論点を整理して持ち込めば、面談は前提の確認ではなく論点から始められます。
                 </p>
               </div>
+              {/* 2026-07-24 I3(士業導線): 汎用signupでなく士業文脈を持たせる。
+                  会社作成ゲート本体は別班実装中のため、LP側は導線(plan=shigyo)と
+                  コピーのみ。顧問先ごとに記憶が分かれる士業プラン前提を上のコピーで明示。 */}
               <TrackedCTA
                 location="shigyo_section"
+                href="/signup?next=/company&plan=shigyo"
                 className={buttonClass({
                   variant: 'secondary',
                   size: 'sm',
@@ -930,6 +984,22 @@ export default async function BusinessLandingPage({
             2026年7月時点の各社公開情報にもとづく一般的な整理です。正確な機能・料金は各サービスの公式サイトをご確認ください。
             番頭は手続きシステムの代替ではないため、SmartHRやオフィスステーションと併用できます。
           </p>
+
+          {/* 2026-07-24 I4(比較検討者の不安): 「併用できます」だけでは『また全部
+              入れ直すのか』が宙に浮く。置き換えない・全項目の再入力は不要・規程は
+              対話で覚える、という実装どおりの事実を正直に1ブロックで補う（誇張・
+              虚偽能力なし。Phase1コンプラ）。 */}
+          <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
+            <p className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+              <Database className="h-4 w-4 text-brand-600" aria-hidden />
+              すでにSmartHRなどをお使いの方へ
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+              番頭は既存の手続きシステムを置き換えません。従業員情報や規程を、番頭にすべて入れ直す必要はありません。
+              相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。
+              手続き・給与関連はこれまでのツールのまま、番頭は「自社ルールの相談窓口」を1つ足す位置づけです。
+            </p>
+          </div>
         </div>
       </section>
 
@@ -1006,9 +1076,11 @@ export default async function BusinessLandingPage({
                     </li>
                   ))}
                 </ul>
-                {/* 2026-07-23 B17: CTA文言をプラン別に分化（リンク先・計測は不変） */}
+                {/* 2026-07-23 B17: CTA文言をプラン別に分化（計測は不変）。
+                    2026-07-24 I3: 士業プランのみ href に plan=shigyo を載せる。 */}
                 <TrackedCTA
                   location={`pricing_${p.name}`}
+                  href={p.signupHref}
                   className={buttonClass({
                     variant: p.featured ? 'primary' : 'secondary',
                     className: 'mt-6 w-full',
