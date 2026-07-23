@@ -56,12 +56,23 @@ export async function GET(req: NextRequest) {
     .eq('company_id', companyId)
     .maybeSingle()
 
-  const [sum, dec, rule, prof, attrs] = await Promise.all([
+  // D09(2026-07-23): 「先週比 +N」の実数。直近7日に作られた company_memories の件数
+  //   （created_at を持つ唯一の記憶テーブル。profiles は updated_at のみ＝増分と更新を
+  //   区別できないため数えない＝過大表示しない）。
+  const weekAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const weekQuery = supabase
+    .from('company_memories')
+    .select('*', { count: 'exact', head: true })
+    .eq('company_id', companyId)
+    .gte('created_at', weekAgoIso)
+
+  const [sum, dec, rule, prof, attrs, week] = await Promise.all([
     countOf('company_memories', 'summary'),
     countOf('company_memories', 'decision'),
     countOf('company_memories', 'rule'),
     countOf('company_profiles'),
     attrsQuery,
+    weekQuery,
   ])
 
   const memories = sum.count ?? 0
@@ -83,5 +94,7 @@ export async function GET(req: NextRequest) {
     rules,
     profiles,
     profileFacts,
+    // 直近7日で増えた記憶の件数（D09 成長の可視化）。取得失敗時は 0（表示側で非表示）。
+    weekDelta: week.count ?? 0,
   })
 }

@@ -26,6 +26,8 @@ interface MemoryStats {
   rules: number
   profiles: number
   profileFacts: number
+  /** 直近7日で増えた記憶の件数（D09）。旧APIレスポンス互換のため optional。 */
+  weekDelta?: number
 }
 
 export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
@@ -53,6 +55,7 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
 
   const total = stats?.total ?? 0
   const decisions = stats?.decisions ?? 0
+  const weekDelta = stats?.weekDelta ?? 0
   const loading = stats === null
 
   return (
@@ -84,6 +87,12 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
                 {decisions > 0 && (
                   <span className="text-xs text-neutral-500">
                     （うち過去の判断 {decisions}件）
+                  </span>
+                )}
+                {/* D09: 直近7日の増分。増えたときだけ出す（0や取得不可では出さない）。 */}
+                {weekDelta > 0 && (
+                  <span className="rounded-full bg-success-50 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-success-700">
+                    先週比 +{weekDelta}
                   </span>
                 )}
               </p>
