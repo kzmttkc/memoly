@@ -1,19 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Noto_Sans_JP } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import { CookieBanner } from "@/components/ui/CookieBanner";
 import { Clarity } from "@/components/analytics/Clarity";
 
-// 欧文/数字は Geist、日本語は Noto Sans JP。両方を CSS 変数で公開し
-// globals.css の --font-sans フォールバックスタックから参照する。
+// 欧文/数字は Geist(latin・軽量)。日本語は OS標準フォント
+// (Hiragino Sans / Noto Sans JP / Yu Gothic)に委ねる。
+// 2026-07-23 W3.5d LCP修正: 従来の next/font Noto_Sans_JP(400/500/700) は
+// unicode-range 分割で woff2 41本・795KiB(総転送の68%)がクリティカル
+// チェーンに載り、/business の LCP 7.4s(Render Delay 92%)の主因だった
+// (Lighthouse 12 mobile simulate 実測・output/0723/banto_cwv_report.md)。
+// Android の標準日本語フォントは Noto Sans JP そのもの、macOS/iOS は
+// Hiragino Sans のため、見た目の劣化は最小。Webフォントを再導入する場合は
+// 遅延適用(post-load swap)にすること。
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
-const notoSansJP = Noto_Sans_JP({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  variable: "--font-noto-jp",
-});
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://banto-roumu.com'
 const TITLE = '番頭(Banto) — 会社を覚える労務AI'
@@ -67,7 +68,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className={`h-full ${geist.variable} ${notoSansJP.variable}`}>
+    <html lang="ja" className={`h-full ${geist.variable}`}>
       <head>
         <Script
           defer

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import { MessageSquareText, FileText, ShieldCheck, Lock, BadgeCheck, ArrowRight, ArrowDown, Check, X, Building2, Sparkles, Database, KeyRound, Trash2, ChevronDown, UserCog, Copy } from 'lucide-react'
+import { MessageSquareText, FileText, ShieldCheck, Lock, BadgeCheck, ArrowRight, ArrowDown, Check, X, Building2, Sparkles, Database, KeyRound, Trash2, ChevronDown, UserCog, Copy, ClipboardList } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -181,6 +181,20 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
       { text: '主目的ではありません' },
       { text: '主目的ではありません' },
       { text: '汎用の記憶機能はあるものの、規程や期限に特化した管理ではありません' },
+    ],
+  },
+  // 導入までの時間（2026-07-23 W3.5d G-f）。番頭は登録直後から相談でき初回回答
+  // まで数分が目安（TTV設計はC03/C06で充足済みの事実）。他社は導入形態が会社ごとに
+  // 異なるため「〜できない/〜かかる」の断定を避けた中立表現に留める（正直な土俵）。
+  // ※「データ分離」行は競合のセキュリティ体制を当社が断定できず優良誤認リスクの
+  //   ため追加しない（2026-07-23 CTO裁定・自社セキュリティ節で語る）。
+  {
+    label: '導入までの時間',
+    cells: [
+      { text: '登録からそのまま相談を始められ、初回の回答まで数分が目安です', strong: true },
+      { text: '初期設定・従業員情報の登録を経て利用を開始する流れです（会社の規模により異なります）' },
+      { text: '初期設定を経て利用を開始する流れです（会社の規模により異なります）' },
+      { text: 'すぐに使い始められます（自社の前提の説明は毎回必要です）', strong: true },
     ],
   },
   {
@@ -601,6 +615,29 @@ export default async function BusinessLandingPage({
             )
           })}
         </div>
+
+        {/* ===== 引き継ぎビュー（D15・2026-07-23 W3.5d） =====
+            新節は作らず本節末尾に1ブロック追記（LP総高さ配慮・B01短縮と整合）。
+            実装事実のみ: /company/memory の引き継ぎビュー(HandoverView)は確定した
+            自社ルール・過去の判断・関係者ごとの状況・リスク要点を1画面に集約し、
+            印刷とコピーに対応（PDF生成・外部送信はしない実装のため「PDF」とは
+            書かない）。 */}
+        <div className="mt-5 rounded-2xl border border-neutral-200 bg-neutral-50 p-5 sm:p-6">
+          <div className="flex items-start gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+              <ClipboardList className="h-5 w-5" aria-hidden />
+            </span>
+            <div>
+              <h3 className="text-lg font-semibold text-neutral-900">
+                担当者が代わる日も、会社の記憶はそのまま
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+                担当交代のときは「引き継ぎビュー」で、確定した自社ルール・過去の判断の経緯・関係者ごとの状況・労務リスクの要点を1画面にまとめて確認できます。
+                印刷やコピーでそのまま引き継ぎ書として渡せるので、前任者の頭の中に頼らずに引き継げます。
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ===== 社労士に渡すメモ（B20・2026-07-23） =====
@@ -624,8 +661,7 @@ export default async function BusinessLandingPage({
                 相談したい論点を添えて1枚のメモに整理。コピーして、そのまま顧問社労士に渡せます。
               </p>
               <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-                専門家には論点から話を始められるので、相談の往復を減らせます。
-                メモに載る数値や期限は、登録済みの内容だけにもとづきます。
+                論点から話を始められるので相談の往復が減ります。メモに載る数値や期限は、登録済みの内容だけにもとづきます。
               </p>
             </div>
 
@@ -663,6 +699,40 @@ export default async function BusinessLandingPage({
                   ワンクリックでコピーして、そのまま渡せます
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* ===== 士業の方へ（P2-2・2026-07-23 W3.5d） =====
+              第2表#3裁定: 別LP(/business/pro)には分離せず、本節を拡充する。
+              実装事実のみで書く: 士業プランは複数顧問先の切り替えに対応し、記憶と
+              データは企業ごとに分離（lib/plans.ts shigyo・FAQ「社労士事務所でも
+              使えますか」と同一の事実）。上のメモ訴求との接続=顧問先側がメモで
+              論点を持ち込む世界を、受け手（士業）の視点から言い直す。 */}
+          <div className="mt-10 rounded-2xl border border-brand-200 bg-white p-6 sm:p-7">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold text-brand-700">
+                  <UserCog className="h-4 w-4" aria-hidden />
+                  士業の方へ — 顧問先ごとに、記憶が分かれます
+                </p>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600">
+                  士業プランでは複数の顧問先を切り替えて使え、記憶とデータは企業ごとに分離されます。
+                  A社で覚えた規程や経緯がB社の回答に混ざることはなく、切り替えた瞬間から、
+                  その顧問先について覚えた前提で相談の続きを始められます。
+                  顧問先が「社労士に渡すメモ」で論点を整理して持ち込めば、面談は前提の確認ではなく論点から始められます。
+                </p>
+              </div>
+              <TrackedCTA
+                location="shigyo_section"
+                className={buttonClass({
+                  variant: 'secondary',
+                  size: 'sm',
+                  className: 'shrink-0 self-start sm:self-center',
+                })}
+              >
+                士業として顧問先を登録
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </TrackedCTA>
             </div>
           </div>
         </div>

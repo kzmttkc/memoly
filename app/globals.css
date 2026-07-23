@@ -9,10 +9,13 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* フォント: 日本語=Noto Sans JP / 欧文・数字=Geist。両方を root layout が
-     CSS変数(--font-noto-jp / --font-geist-sans)で公開する。 */
-  --font-sans: var(--font-noto-jp), var(--font-geist-sans), system-ui,
-    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  /* フォント: 欧文・数字=Geist(next/font・latinのみ軽量)。日本語=OS標準
+     (macOS/iOS=Hiragino Sans・Android=Noto Sans JP・Windows=Yu Gothic)。
+     2026-07-23 W3.5d LCP修正: Noto Sans JP Webフォント(41ファイル795KiB)を
+     クリティカルパスから撤去(詳細は app/layout.tsx のコメント参照)。 */
+  --font-sans: var(--font-geist-sans), system-ui,
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+    "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
     monospace;
 }

@@ -21,6 +21,28 @@ import { TOOL_LIST } from '@/lib/tools'
 const BASE = 'https://banto-roumu.com'
 const URL = `${BASE}/tools`
 
+// ============================================================================
+// 「よくある確認」上位強調（G-g・2026-07-23 W3.5d）
+//   ツール完了イベントの実績集計はまだ母数が無い（2026-07-23時点・funnel台帳に
+//   ツール別完了実績なしを実測確認）ため、実務頻度順の静的順位で表示する。
+//   根拠: 年5日有給=全社が毎年必ず対象／残業代=毎月の給与計算で発生、に対し
+//   社保加入=パート採用時・36協定=年次締結時・柔軟な働き方=2025年10月の新義務。
+//   実績が貯まったら tool別の完了イベント集計で並べ替えに切り替える。
+//   SSOT(lib/tools.ts)の順序は他面（相互リンク・sitemap）と共有のため触らず、
+//   表示順はこのページ内でのみ確定する。
+// ============================================================================
+const DISPLAY_ORDER = [
+  'yukyu-5nichi-check',
+  'zangyodai-check',
+  'syaho-kanyu-taisho-check',
+  '36kyotei-jougen-check',
+  'jyunan-hatarakikata-check',
+]
+const FREQUENT_SLUGS = new Set(['yukyu-5nichi-check', 'zangyodai-check'])
+const ORDERED_TOOLS = [...TOOL_LIST].sort(
+  (a, b) => DISPLAY_ORDER.indexOf(a.slug) - DISPLAY_ORDER.indexOf(b.slug),
+)
+
 export const metadata: Metadata = {
   title: '労務の無料セルフ点検ツール一覧｜番頭(Banto)',
   description:
@@ -61,7 +83,7 @@ export default function ToolsIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: '労務の無料セルフ点検ツール一覧',
-    itemListElement: TOOL_LIST.map((t, i) => ({
+    itemListElement: ORDERED_TOOLS.map((t, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: t.name,
@@ -126,21 +148,39 @@ export default function ToolsIndexPage() {
       {/* ===== ツール一覧（クローラブルな内部リンク集） ===== */}
       <section className="mx-auto max-w-3xl px-6 pb-4">
         <ul className="space-y-4">
-          {TOOL_LIST.map((t) => (
-            <li key={t.slug}>
-              <Card interactive padded={false}>
-                <Link href={`/tools/${t.slug}`} className="block p-5 sm:p-6">
-                  <p className="text-xs font-medium text-brand-700">無料ツール</p>
-                  <p className="mt-1 text-base font-semibold text-neutral-900">{t.name}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{t.blurb}</p>
-                  <span className="mt-2.5 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
-                    無料で点検する
-                    <ArrowRight className="h-4 w-4" aria-hidden />
-                  </span>
-                </Link>
-              </Card>
-            </li>
-          ))}
+          {ORDERED_TOOLS.map((t) => {
+            const frequent = FREQUENT_SLUGS.has(t.slug)
+            return (
+              <li key={t.slug}>
+                <Card
+                  interactive
+                  padded={false}
+                  className={frequent ? 'border-brand-200 ring-1 ring-brand-100' : undefined}
+                >
+                  <Link href={`/tools/${t.slug}`} className="block p-5 sm:p-6">
+                    <p className="flex items-center gap-2 text-xs font-medium text-brand-700">
+                      無料ツール
+                      {frequent && <Badge tone="brand">よくある確認</Badge>}
+                    </p>
+                    <p
+                      className={
+                        frequent
+                          ? 'mt-1.5 text-lg font-bold text-neutral-900'
+                          : 'mt-1 text-base font-semibold text-neutral-900'
+                      }
+                    >
+                      {t.name}
+                    </p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{t.blurb}</p>
+                    <span className="mt-2.5 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+                      無料で点検する
+                      <ArrowRight className="h-4 w-4" aria-hidden />
+                    </span>
+                  </Link>
+                </Card>
+              </li>
+            )
+          })}
         </ul>
       </section>
 
