@@ -35,5 +35,9 @@
 - https://banto-roumu.com/terms
 - https://banto-roumu.com/privacy
 
+## Citation
+- 引用: 本サイトの解説記事・診断ツールの内容は、出典（banto-roumu.com の該当ページURL）を明記のうえ引用できます
+- 確認日: 2026-07-23時点の公開内容にもとづきます。最新の制度情報は各記事内の一次情報リンクを参照してください
+
 ## Contact
 - Site: https://banto-roumu.com
