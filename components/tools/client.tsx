@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Loader2 } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { track } from '@/lib/analytics'
 
@@ -43,15 +43,32 @@ export function useHydrated() {
  *   （冒頭で e.preventDefault()）が正しく発火する。SSR と初回クライアントレンダは
  *   ともに type="button" で一致するため mismatch は出ない。
  *   低速回線 × 超速タップ（283ms のハンドラ装着を待たずに押す経路）を恒久的に殺す。
+ *
+ *   押下フィードバック（P08・2026-07-24）: Loop2でデータ消失は解消したが、
+ *   「hydration前タップは値は残るが送信が無反応→再タップ要」でユーザーが戸惑った。
+ *   → hydration前は disabled + スピナー + 「読み込み中です…」を出し、
+ *   「押しても無反応」ではなく「まだ押せない（準備中）」だと視覚的に伝える。
+ *   disabled により native form 送信も走らず、Loop2の消失対策はより強固になる。
+ *   SSR と初回クライアントレンダはともに !hydrated（＝同じ「読み込み中」ラベル）で
+ *   一致するため hydration mismatch は出ない。マウント後の effect で hydrated=true に
+ *   なり children（例:「点検する」）へ切り替わる＝通常のクライアント状態遷移。
  */
 export function ToolSubmitButton({ children }: { children: React.ReactNode }) {
   const hydrated = useHydrated()
   return (
     <button
       type={hydrated ? 'submit' : 'button'}
-      className={buttonClass({ variant: 'primary', size: 'lg', className: 'w-full' })}
+      disabled={!hydrated}
+      aria-busy={!hydrated}
+      title={hydrated ? undefined : '読み込み中です。少しお待ちください'}
+      className={buttonClass({
+        variant: 'primary',
+        size: 'lg',
+        className: hydrated ? 'w-full' : 'w-full cursor-wait',
+      })}
     >
-      {children}
+      {!hydrated && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+      {hydrated ? children : '読み込み中です。少しお待ちください'}
     </button>
   )
 }

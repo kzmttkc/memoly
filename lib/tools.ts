@@ -67,6 +67,14 @@ export const TOOL_LIST: ToolEntry[] = [
       '2025年10月に義務化された「柔軟な働き方を実現するための措置」について、自社が要件どおりに講じているかを整理できます。',
     relatedRoumuSlug: 'ikuji-kaigo-kaisei',
   },
+  {
+    slug: 'saitei-chingin-check',
+    label: '最低賃金',
+    name: '最低賃金を下回っていないかセルフ点検する',
+    blurb:
+      '都道府県と自社の時給を入れると、令和7年度の地域別最低賃金を下回っていないか、下回っている場合はあと何円上げる必要があるかを確認できます。',
+    relatedRoumuSlug: 'saitei-chingin-kaitei',
+  },
 ]
 
 export const TOOL_SLUGS = TOOL_LIST.map((t) => t.slug)

@@ -34,11 +34,12 @@ const URL = `${BASE}/tools`
 const DISPLAY_ORDER = [
   'yukyu-5nichi-check',
   'zangyodai-check',
+  'saitei-chingin-check',
   'syaho-kanyu-taisho-check',
   '36kyotei-jougen-check',
   'jyunan-hatarakikata-check',
 ]
-const FREQUENT_SLUGS = new Set(['yukyu-5nichi-check', 'zangyodai-check'])
+const FREQUENT_SLUGS = new Set(['yukyu-5nichi-check', 'zangyodai-check', 'saitei-chingin-check'])
 const ORDERED_TOOLS = [...TOOL_LIST].sort(
   (a, b) => DISPLAY_ORDER.indexOf(a.slug) - DISPLAY_ORDER.indexOf(b.slug),
 )

@@ -154,6 +154,23 @@ function riskDrivenDeadlines(
   return out
 }
 
+// I-P08/P01(2026-07-24): 診断の上位リスクカードから、その場で対応期限を登録するための
+//   「リスク→期限」対応表。年間カレンダータブへ遷移させず、リスクを読んだ画面のまま
+//   期日を選んで1タップ登録できるようにする（既存の DeadlineSuggestion / registerSuggestion を流用）。
+//   現状は 36協定 未締結（診断が高リスクで名指しする代表ケース）のみ対応。
+//   マッチしないリスクは null（＝カード内に期限登録UIを出さない）。
+function deadlineForRisk(risk: TopRisk): DeadlineSuggestion | null {
+  const is36 =
+    risk.severity === 'high' &&
+    (risk.title.includes('36協定') ||
+      risk.title.includes('三六協定') ||
+      risk.why.includes('36協定'))
+  if (is36) {
+    return riskDrivenDeadlines({ has_36kyotei: false })[0] ?? null
+  }
+  return null
+}
+
 function RiskInner() {
   const params = useSearchParams()
   const companyId = params.get('companyId') ?? ''
@@ -700,6 +717,13 @@ function RiskInner() {
               <div className="space-y-3">
                 {result.topRisks.map((r, i) => {
                   const sev = SEVERITY[r.severity]
+                  // I-P08/P01: このリスクに対応する期限（あれば）。sampleMode/非admin/登録済みでは出さない。
+                  const dl = deadlineForRisk(r)
+                  const showDeadline =
+                    !sampleMode &&
+                    isAdmin &&
+                    !!dl &&
+                    !registeredTitles.includes(dl.title)
                   return (
                     <Card key={i} className="space-y-2">
                       <div className="flex items-center gap-2">
@@ -719,19 +743,62 @@ function RiskInner() {
                       {/* C06: 指摘ごとのワンクリック相談。チャット側は ?q= を自動送信する
                           （chat/page.tsx の initialQ 自動送信）ため、押した瞬間に相談が始まる。
                           サンプル会社では出さない（架空の前提を実データのチャットに持ち込まない）。 */}
-                      {!sampleMode && (
-                        <Link
-                          href={`/company/chat?companyId=${companyId}&q=${encodeURIComponent(
-                            `労務リスクのセルフ診断（目安）で「${r.title}」と出ました。自社の場合、まず何から確認すればよいか教えてください。`,
-                          )}`}
-                          onClick={() =>
-                            track('risk_consult_clicked', { location: 'top_risk', rank: i + 1 })
-                          }
-                          className={buttonClass({ variant: 'secondary', size: 'sm' })}
-                        >
-                          <MessageSquareText className="h-3.5 w-3.5" aria-hidden />
-                          この1問を相談する
-                        </Link>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {!sampleMode && (
+                          <Link
+                            href={`/company/chat?companyId=${companyId}&q=${encodeURIComponent(
+                              `労務リスクのセルフ診断（目安）で「${r.title}」と出ました。自社の場合、まず何から確認すればよいか教えてください。`,
+                            )}`}
+                            onClick={() =>
+                              track('risk_consult_clicked', { location: 'top_risk', rank: i + 1 })
+                            }
+                            className={buttonClass({ variant: 'secondary', size: 'sm' })}
+                          >
+                            <MessageSquareText className="h-3.5 w-3.5" aria-hidden />
+                            この1問を相談する
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* I-P08/P01: 診断リスク → 対応期限を、この場で（年間カレンダータブへ
+                          遷移させずに）登録する。期日はユーザーが確定してから押す＝日付を断定しない
+                          （Phase1）。既存 dueInputs / registerSuggestion をそのまま流用する。 */}
+                      {showDeadline && dl && (
+                        <div className="mt-1 rounded-xl border border-brand-200 bg-brand-50/60 px-3.5 py-3">
+                          <p className="flex items-center gap-1.5 text-xs font-medium text-neutral-700">
+                            <CalendarClock className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
+                            この項目を期限として登録できます（「{dl.title}」）
+                          </p>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <label className="text-xs text-neutral-500">
+                              期日を確定：
+                              <input
+                                type="date"
+                                lang="ja"
+                                value={dueInputs[dl.title] ?? ''}
+                                onChange={e =>
+                                  setDueInputs(prev => ({ ...prev, [dl.title]: e.target.value }))
+                                }
+                                aria-label={`${dl.title}の期日`}
+                                className="ml-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+                              />
+                            </label>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                track('risk_deadline_registered', {
+                                  location: 'top_risk',
+                                  rank: i + 1,
+                                })
+                                registerSuggestion(dl)
+                              }}
+                              disabled={registering === dl.title}
+                            >
+                              <Plus className="h-3.5 w-3.5" aria-hidden />
+                              {registering === dl.title ? '登録中...' : 'この期限を登録'}
+                            </Button>
+                          </div>
+                        </div>
                       )}
                     </Card>
                   )

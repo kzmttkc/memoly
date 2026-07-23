@@ -84,18 +84,20 @@ function OnboardingInner() {
   //   空のホームでなく、答えた内容がその場で診断結果になる＝「会社が覚えられた」を最短で体感させる。
   const riskHref = `/company/risk?companyId=${companyId}&from=onboarding`
 
-  // 最低1問の回答があるか（全未回答の空登録を防ぐ。強制はしない＝「あとで入力する」で通れる）。
-  //   全未回答のまま登録→診断へ進むと、空の前提で診断が走り体験が薄くなるため。
-  const hasAnyAnswer =
-    industry !== '' || band !== '' || BOOL_QUESTIONS.some(q => tri[q.key] !== 'unknown')
+  // 実際に何か操作したか（速報プレビューの表示条件）。着地直後の無操作でスコアを
+  //   出さないためのフラグ。業種/規模/三値のいずれかを触ると true になる。
+  const [touched, setTouched] = useState(false)
 
-  // C07 進捗の可視化: 回答済みの数（5問中）。「わからない」を選ぶのも回答として数える
-  //   （三値の unknown は初期値と区別できないため、tri は初期 'unknown' 以外を回答扱い。
-  //   実測の所要は1問あたり数秒〜10秒程度のため、残り時間は1問8秒の目安で出す）。
+  // C-2(2026-07-24) 「わからない」プリ選択と「0/5・登録無効」の矛盾を解消する（P07）。
+  //   3つの制度設問は初期値「わからない」が視覚的に選択状態（brand色ハイライト）で描画され、
+  //   ユーザーには最初から「回答済み」に見える。にもかかわらず旧実装は unknown を未回答扱いにして
+  //   「回答0/5・登録ボタン無効」の行き止まりを作っていた。「わからない」も明示的な回答（三値の一つ）
+  //   として数え、常に登録へ進めるようにする。初心者が「もう全部選んでいるのに進めない」で詰まらない。
+  //   ※保存値は不変: triToBool(unknown)=null で保存し false と取り違えない（集計純度は保たれる）。
   const answeredCount =
     (industry !== '' ? 1 : 0) +
     (band !== '' ? 1 : 0) +
-    BOOL_QUESTIONS.filter(q => tri[q.key] !== 'unknown').length
+    BOOL_QUESTIONS.length // 制度3問は常に選択状態（「わからない」も回答としてカウント）
   const remainingSeconds = Math.max(0, 5 - answeredCount) * 8
 
   // C09 ライブプレビュー: 答えるたびに、決定的な純関数（LLM・API・DB書込みゼロ）で
@@ -103,7 +105,7 @@ function OnboardingInner() {
   //   risk_audit_completed は発火しない（北極星KPIの分子を汚さない。正式な計測は
   //   /company/risk 側の既存経路のみ）。表記は「速報（目安）」に固定（誠実関所）。
   const preview = useMemo(() => {
-    if (!hasAnyAnswer) return null
+    if (!touched) return null
     return computeFallbackRiskAudit({
       industry_major: industry || null,
       employee_band: band || null,
@@ -111,7 +113,7 @@ function OnboardingInner() {
       has_work_rules: triToBool(tri.has_work_rules),
       has_fixed_ot: triToBool(tri.has_fixed_ot),
     })
-  }, [hasAnyAnswer, industry, band, tri])
+  }, [touched, industry, band, tri])
 
   async function save() {
     if (saving || !companyId) return
@@ -176,7 +178,10 @@ function OnboardingInner() {
           <select
             id="ob-industry"
             value={industry}
-            onChange={e => setIndustry(e.target.value)}
+            onChange={e => {
+              setIndustry(e.target.value)
+              setTouched(true)
+            }}
             className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           >
             <option value="">選択してください</option>
@@ -196,7 +201,10 @@ function OnboardingInner() {
           <select
             id="ob-band"
             value={band}
-            onChange={e => setBand(e.target.value)}
+            onChange={e => {
+              setBand(e.target.value)
+              setTouched(true)
+            }}
             className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           >
             <option value="">選択してください</option>
@@ -227,7 +235,10 @@ function OnboardingInner() {
                     key={val}
                     type="button"
                     aria-pressed={active}
-                    onClick={() => setTri(prev => ({ ...prev, [q.key]: val }))}
+                    onClick={() => {
+                      setTri(prev => ({ ...prev, [q.key]: val }))
+                      setTouched(true)
+                    }}
                     className={
                       active
                         ? 'flex-1 rounded-xl border border-brand-500 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
@@ -265,7 +276,7 @@ function OnboardingInner() {
         )}
 
         <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 pt-5">
-          <Button size="lg" onClick={save} disabled={saving || !hasAnyAnswer}>
+          <Button size="lg" onClick={save} disabled={saving}>
             <Check className="h-4 w-4" aria-hidden />
             {saving ? '保存中...' : '登録して始める'}
           </Button>
@@ -285,11 +296,10 @@ function OnboardingInner() {
           >
             あとで入力する
           </Link>
-          {!hasAnyAnswer && (
-            <p className="w-full text-xs leading-relaxed text-neutral-500">
-              どれか1問に答えると登録できます（全部でなくて大丈夫です）。
-            </p>
-          )}
+          {/* C-2: 「わからない」のままでも進めることを明示（0/5無効の行き止まりを作らない）。 */}
+          <p className="w-full text-xs leading-relaxed text-neutral-500">
+            わからない項目は「わからない」のままで登録できます（全部わかっていなくて大丈夫です）。
+          </p>
           <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-neutral-500">
             <Building2 className="h-3.5 w-3.5" aria-hidden />
             この情報は自社内でのみ利用されます
