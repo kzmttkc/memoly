@@ -139,6 +139,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [cmdKey, setCmdKey] = useState('Ctrl')
   useEffect(() => {
     if (typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform)) {
+      // navigator（外部システム）判定はマウント後にしかできない（SSRは中立表記）。
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCmdKey('⌘')
     }
   }, [])
@@ -148,6 +150,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!urlCompanyId) {
       try {
         const v = localStorage.getItem(LAST_COMPANY_KEY)
+        // localStorage（外部システム）との同期。SSRハイドレーション不一致回避のため
+        // 描画中でなくマウント後に読む必要がある（lib/theme.tsx と同じ流儀）。
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (v) setStoredCompanyId(v)
       } catch {
         /* localStorage 不可はフォールバックなし（従来挙動） */

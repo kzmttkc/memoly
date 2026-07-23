@@ -41,6 +41,9 @@ export function CompanyGuard({ children }: { children: React.ReactNode }) {
       router.replace(`${pathname}?companyId=${stored}`)
       return
     }
+    // localStorage（外部システム）確認後の一度きりの確定。マウント後にしか読めない
+    // （SSRでは localStorage が無い）ため effect 内で確定させる。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFallback('none')
   }, [companyId, pathname, router])
 
