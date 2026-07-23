@@ -15,6 +15,7 @@ import CompareToggle from './_components/CompareToggle'
 import ScenarioSection from './_components/ScenarioSection'
 import ScrollProgress from './_components/ScrollProgress'
 import ForcePaidVariant from './_components/ForcePaidVariant'
+import LeadCapture from './_components/LeadCapture'
 import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
 import { PLANS } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
@@ -528,10 +529,12 @@ export default async function BusinessLandingPage({
         </div>
       </section>
 
-      {/* ===== micro-CV（LeadCapture）は一時非表示（2026-07-11 CMO判断） =====
-          配布資料（就業規則の点検資料）が未完成のため、「受け取れる」と見せて
-          直後に「準備中」と明かす構造ごと外した。一等地から不確実要素を消し、
-          資料が完成したら _components/LeadCapture.tsx を再掲載する（コンポーネントは温存）。 */}
+      {/* ===== micro-CV（LeadCapture）再掲載（2026-07-23 B06） =====
+          配布資料「労務引き継ぎチェックシート」PDFが完成し /downloads/ で本番配信中の
+          ため再掲載（2026-07-11の一時非表示は「資料未完成」が理由で、解消済み）。
+          メール登録→その場でPDFダウンロードの軽い一歩。計測は既存語彙 lead_captured
+          のみ（source='lead_magnet' / 'lead_magnet_download'）。 */}
+      <LeadCapture />
 
       {/* ===== 機能と効率化（統合・2026-07-23 B01+I01+B04） =====
           旧「業務効率化」(4カード+概念バー)と旧「機能4軸」(4カード+スコアカード)の

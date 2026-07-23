@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, ArrowRight, Check, ClipboardCheck, Loader2 } from 'lucide-react'
+import { Mail, ArrowRight, Check, ClipboardCheck, Download, Loader2 } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { trackV as track } from '../_lib/variant'
@@ -10,21 +10,27 @@ import { trackV as track } from '../_lib/variant'
 // LeadCapture — /business 公開LPの micro-CV（'use client'）
 //
 //   目的: 会社作成という重い本登録の手前に「メアドだけ」の軽い一歩を置き、
-//         ファネルの漏れを塞ぐ。フックは無料配布（就業規則チェックリスト）。
+//         ファネルの漏れを塞ぐ。フックは無料配布（労務引き継ぎチェックシート
+//         PDF・2026-07-23 B06で配布物が完成し再掲載。/downloads/ で本番配信中）。
 //         ＝テイカー型の「登録して」ではなく、先に役立つものを渡すギバー型。
+//         登録成功のその場でダウンロードできる（「準備中」の不確実要素なし）。
 //
 //   方式: 薄い client コンポーネント。/api/company/leads に POST し、成功で
 //         サンクス表示に切り替える。LP本体は server component のまま無傷
 //         （TrackedCTA と同じ分離手法）＝SSR/SEO/metadata を壊さない。
 //
-//   計測: 送信成功で lead_captured(source) を1回発火（Plausible）。PIIは送らない。
+//   計測: 既存語彙のみ使用（新イベント名は増やさない）。
+//     - 送信成功: lead_captured { source: 'lead_magnet' }
+//     - DLクリック: lead_captured { source: 'lead_magnet_download' }
+//     PIIは送らない。DB側 source は許可リスト内の 'checklist_dl' を維持。
 //
 //   制約: 画像/AI生成画像なし（lucide + CSS のみ）。emoji機能アイコン禁止・
 //         markdown強調記号禁止。Phase1: 社労士監修/AI社労士/法的精度は使わない。
 //         honeypot(website)でボットを弾く（人間には不可視・サーバ側でドロップ）。
 // ============================================================================
 
-const SOURCE = 'checklist_dl'
+const SOURCE = 'checklist_dl' // /api/company/leads の許可リスト内の値（DB集計キー）
+const PDF_URL = '/downloads/banto-hikitsugi-checklist.pdf'
 
 export default function LeadCapture() {
   const [email, setEmail] = useState('')
@@ -55,7 +61,7 @@ export default function LeadCapture() {
         setErrorMsg(data?.error ?? '送信に失敗しました。時間をおいて再度お試しください。')
         return
       }
-      track('lead_captured', { source: SOURCE })
+      track('lead_captured', { source: 'lead_magnet' })
       setState('done')
     } catch {
       setState('error')
@@ -74,24 +80,33 @@ export default function LeadCapture() {
           {state === 'done' ? (
             <>
               <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
-                ご登録を受け付けました
+                ありがとうございます
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-                ご登録ありがとうございます。就業規則の点検ポイント資料は、完成し次第ご登録のメールアドレスへお届けします。
-                お待ちいただく間に、自社の規程を覚える番頭を登録なしでそのままお試しいただけます。
+                下のボタンから、労務引き継ぎチェックシート（PDF・A4で2ページ）をすぐにダウンロードできます。
               </p>
-              <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-success-50 px-3 py-1 text-sm font-medium text-success-700">
+              <a
+                href={PDF_URL}
+                target="_blank"
+                rel="noopener"
+                onClick={() => track('lead_captured', { source: 'lead_magnet_download' })}
+                className={buttonClass({ variant: 'primary', className: 'mt-6' })}
+              >
+                <Download className="h-4 w-4" aria-hidden />
+                チェックシートをダウンロード
+              </a>
+              <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-success-50 px-3 py-1 text-sm font-medium text-success-700">
                 <Check className="h-4 w-4" aria-hidden />
-                受け付けました
+                ご登録を受け付けました
               </p>
             </>
           ) : (
             <>
               <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
-                就業規則の見落としやすいポイントをまとめた点検資料（無料）
+                労務引き継ぎチェックシート（無料PDF）
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-                自社の就業規則を見直すとき、どこから確認すればよいかが分かる資料です。メールアドレスのご登録だけで受け取れます。お待ちいただく間も、このページの上のデモで番頭の使い心地を登録なしで試せます。
+                総務・労務の担当が替わるとき、引き継ぎで漏れやすい項目をA4の2ページにまとめた点検用チェックシートです。メールアドレスのご登録だけで、その場でダウンロードできます。
               </p>
 
               <form onSubmit={onSubmit} className="mt-7 w-full max-w-md">
@@ -141,7 +156,7 @@ export default function LeadCapture() {
                       </>
                     ) : (
                       <>
-                        完成したら受け取る
+                        登録してダウンロード
                         <ArrowRight className="h-4 w-4" aria-hidden />
                       </>
                     )}
@@ -155,8 +170,7 @@ export default function LeadCapture() {
                 )}
 
                 <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-                  資料は現在準備中です。完成し次第、ご登録のアドレスへお届けします。
-                  メールアドレスは資料の送付と、番頭に関するお知らせにのみ利用します。配信はいつでも停止できます。
+                  メールアドレスは資料のご案内と、番頭に関するお知らせにのみ利用します。配信はいつでも停止できます。
                 </p>
               </form>
             </>
