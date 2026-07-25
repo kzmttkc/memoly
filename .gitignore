@@ -30,6 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# cronジョブの実行ログ(billing_e2e_cron.sh等)
+/logs/
+
 # env files (can opt-in for committing if needed)
 .env*
 
