@@ -46,6 +46,10 @@ function BillingInner() {
   const [error, setError] = useState<string | null>(null)
   const [selectedSeats, setSelectedSeats] = useState<Record<string, number>>({})
   const [submitting, setSubmitting] = useState<string | null>(null)
+  // 2026-07-25 CTO修正: 年額Priceを提供するプラン（今はEntryのみ・lib/plans.ts SSOT）向けの
+  //   月額/年額切り替え。既定は月額。年額Price未設定のプランでは選ばせない（API側も400で弾く
+  //   二重ガードだが、UI側でも出さないことで無駄なエラー往復を避ける）。
+  const [selectedInterval, setSelectedInterval] = useState<Record<string, 'month' | 'year'>>({})
   const [toast, setToast] = useState<{ show: boolean; message: string }>({
     show: false,
     message: '',
@@ -105,18 +109,23 @@ function BillingInner() {
       const seats = PLANS[planId].multiClient
         ? (selectedSeats[planId] ?? Math.max(state.seatsUsed, 1))
         : 1
+      // 年額切り替え（Entryのみ提供・lib/plans.ts SSOT）。未選択時は既定の月額。
+      const interval = selectedInterval[planId] ?? 'month'
       const res = await fetch('/api/company/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companyId, plan: planId, seats }),
+        body: JSON.stringify({ companyId, plan: planId, seats, interval }),
       })
       const data = await res.json().catch(() => ({}))
       if (res.status === 503) {
         setToast({
           show: true,
-          message:
-            data.message ?? '現在は無料モニター期間のため、課金は有効化されていません。',
+          message: data.message ?? 'このプランは現在お申し込みいただけません。',
         })
+        return
+      }
+      if (data.code === 'YEARLY_NOT_AVAILABLE') {
+        setToast({ show: true, message: '年額プランは現在準備中です。月額プランをご利用ください。' })
         return
       }
       if (!res.ok || !data.url) {
@@ -226,6 +235,10 @@ function BillingInner() {
           const featured = p.featured
           const isCurrent = state.plan === id
           const seatVal = selectedSeats[id] ?? Math.max(state.seatsUsed, 1)
+          // 年額を提供するプラン（今はEntryのみ）だけ切り替えUIを出す。
+          const offersYearly = p.yearlyJpy != null
+          const interval = selectedInterval[id] ?? 'month'
+          const isYearly = offersYearly && interval === 'year'
           return (
             <Card
               key={id}
@@ -238,18 +251,47 @@ function BillingInner() {
                 {featured && <Badge tone="brand">おすすめ</Badge>}
                 {isCurrent && <Badge tone="success">利用中</Badge>}
               </div>
+              {/* 2026-07-25 CTO修正: 年額を提供するプラン（Entryのみ）に月額/年額の切り替えを追加。
+                  LPの「年額¥39,800（月払いより2ヶ月分お得）」を実際に選んで申し込めるようにする。 */}
+              {offersYearly && isAdmin && (
+                <div className="mt-4 inline-flex rounded-lg border border-neutral-200 p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInterval(s => ({ ...s, [id]: 'month' }))}
+                    className={`rounded-md px-3 py-1 font-medium transition-colors ${
+                      !isYearly ? 'bg-brand-600 text-white' : 'text-neutral-500'
+                    }`}
+                  >
+                    月額
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInterval(s => ({ ...s, [id]: 'year' }))}
+                    className={`rounded-md px-3 py-1 font-medium transition-colors ${
+                      isYearly ? 'bg-brand-600 text-white' : 'text-neutral-500'
+                    }`}
+                  >
+                    年額
+                  </button>
+                </div>
+              )}
               {/* 課金単位の表記（SSOT: docs/BANTO_BILLING_GATE.md §4・§5・LP /business と同一表記）:
                   Entry/Standard = 1社あたりの月額（seatCap 人数まで追加料金なし）。
-                  士業のみ席（シート）単位 = 事務所の利用メンバー数に応じて課金。 */}
+                  士業のみ席（シート）単位 = 事務所の利用メンバー数に応じて課金。
+                  年額選択時は年額の総額を表示する（月割り換算は誤解を生むため出さない）。 */}
               <p className="mt-4 flex items-baseline gap-1">
                 <span className="text-3xl font-bold tracking-tight text-neutral-900 tabular-nums">
-                  &yen;{p.monthlyJpy.toLocaleString()}
+                  &yen;{(isYearly ? (p.yearlyJpy as number) : p.monthlyJpy).toLocaleString()}
                 </span>
                 <span className="text-sm text-neutral-500">
-                  {p.multiClient ? '/月（1席あたり）' : '/月（1社あたり）'}
+                  {isYearly
+                    ? '/年（1社あたり）'
+                    : p.multiClient
+                      ? '/月（1席あたり）'
+                      : '/月（1社あたり）'}
                 </span>
               </p>
-              {p.yearlyJpy && (
+              {p.yearlyJpy && !isYearly && (
                 <p className="mt-1 text-xs text-neutral-500 tabular-nums">
                   年額 &yen;{p.yearlyJpy.toLocaleString()}（2ヶ月分お得）
                 </p>

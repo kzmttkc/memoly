@@ -86,11 +86,11 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: '料金はいくらですか',
-    a: '予定価格は1社あたり月額¥3,980（Entryプラン）からです。EntryとStandardは会社単位の月額で、プランの上限人数（Entry 5名・Standard 20名）までは何人で使っても料金は変わりません。士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です。現在は無料モニター期間のため、すべての機能を無料でご利用いただけます。',
+    a: '月額料金は1社あたり¥3,980（Entryプラン）からです。EntryとStandardは会社単位の月額で、プランの上限人数（Entry 5名・Standard 20名）までは何人で使っても料金は変わりません。士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です。年払い（Entryのみ）は¥39,800/年で、月払い2ヶ月分お得になります。登録するとまず無料プランでお使いいただけ、有料プランへの切り替えはご自身の操作で申し込んだときのみ課金されます。',
   },
   {
     q: '無料で使えますか',
-    a: '現在は無料モニター期間のため、会社の登録から相談・規程ドラフトの下書きまで、すべての機能を無料でご利用いただけます。二度目の相談が前回の続きから始まる体験も、そのままお試しいただけます。',
+    a: '会社の登録と、相談・規程ドラフトの下書きは無料プランの範囲でお試しいただけます（1日あたりの利用回数に上限があります）。二度目の相談が前回の続きから始まる体験もそのままご確認いただけます。より多く使いたくなったときは、有料プラン（Entry ¥3,980/月〜）にいつでも切り替えられます。',
   },
   {
     q: '自社の労務データは安全に保管されますか',
@@ -257,7 +257,7 @@ const PLAN_COPY = [
     signupHref: undefined as string | undefined,
     anchor: `1日あたり約${Math.round(PLANS.starter.monthlyJpy / 31)}円で、労務の調べ物と記録をいつでも任せられます。`,
     // 2026-07-23 B17: CTA文言をプラン別に分化（リンク先・計測locationは不変）。
-    cta: 'Entryで始める（今は無料）',
+    cta: 'Entryで始める',
     features: [
       '自社の規程・会社プロファイルの記憶',
       `AIチャット相談 1日${PLANS.starter.limits.chat}回まで`,
@@ -276,7 +276,7 @@ const PLAN_COPY = [
     badge: null,
     signupHref: undefined as string | undefined,
     anchor: '総務担当を1人増やす前に、まず番頭に任せられる範囲を確かめられます。',
-    cta: 'Standardで始める（今は無料）',
+    cta: 'Standardで始める',
     features: [
       'Entry のすべての機能',
       `AIチャット相談 1日${PLANS.standard.limits.chat}回まで（Entryの3倍）`,
@@ -548,8 +548,8 @@ export default async function BusinessLandingPage({
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </TrackedCTA>
             </div>
-            {/* 2026-07-23 A06: リスクリバーサル1行。クレカ不要・全削除可は
-                本文（料金=無料モニター期間・削除はあなたの権利）と整合する事実。 */}
+            {/* 2026-07-23 A06: リスクリバーサル1行。この登録不要デモ体験自体は
+                会社登録前のセルフ点検ツールで課金と無関係。全削除可は削除自己サーブと整合する事実。 */}
             <p className="mt-3 text-center text-xs text-neutral-500 lg:text-left">
               登録不要で体験できます。クレジットカードも不要、預けたデータはいつでも全削除できます。
             </p>
@@ -1047,31 +1047,29 @@ export default async function BusinessLandingPage({
       {/* ===== 料金 ===== */}
       <section className="border-t border-neutral-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          {/* 2026-07-23 B08: 料金の直前に「無料の理由と、育つ価値」の誠実な説明を1ブロック。
-              誇張なし: 無料モニター期間・記憶の蓄積・全削除可はいずれも本文と整合する事実。 */}
+          {/* 2026-07-25 CTO修正: 課金開始(BILLING_ENABLED=true)に合わせて「無料モニター期間」
+              表記を撤去。無料プランは引き続き存在するが、有料プランは実際に課金される。
+              誇張なし: 無料プランの利用上限・記憶の蓄積・全削除可はいずれも本文と整合する事実。 */}
           <div className="mx-auto mb-12 max-w-2xl rounded-2xl border border-brand-200 bg-brand-50/50 p-6 text-center sm:p-8">
             <p className="text-lg font-semibold text-neutral-900">
-              今は無料です。そして番頭は、使うほど御社専用に育ちます。
+              無料プランから始められます。そして番頭は、使うほど御社専用に育ちます。
             </p>
             <p className="mt-3 text-sm leading-relaxed text-neutral-600">
               規程や相談の記憶が貯まるほど、答えは自社の実態に近づいていきます。
               だからこそ先にお伝えします。合わないと感じたら、預けたデータごと全削除してやめられます。
-              無料のいまが、記憶を貯め始めるいちばん良いタイミングです。
+              無料プランのいまが、記憶を貯め始めるいちばん良いタイミングです。
             </p>
           </div>
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">料金</h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
-              現在は無料モニター期間です。すべての機能を無料でお試しいただけます。
+              登録するとまずは無料プランでお使いいただけます。下記は有料プランに切り替えた場合の月額料金です。
             </p>
-            {/* 2026-07-23 E01: 無料モニターから有料への移行条件を明示。
-                「知らないうちに課金が始まる」不安を先回りで解消する誠実な一文。 */}
+            {/* 2026-07-25 CTO修正: 課金は既に有効。「予告してから課金開始」ではなく
+                「自分の操作で申し込んだときだけ課金される」という自己サーブの事実を明示する。 */}
             <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-              有料化の際は事前にお知らせし、その時点で継続するかをお選びいただけます。
-              事前のご案内なく課金が始まることはありません。
-            </p>
-            <p className="mt-2 text-sm text-neutral-500">
-              下記は今後の予定価格です。現時点で課金は行いません。
+              ご自身で有料プランを選び、お申し込みの操作をしたときだけ課金されます。
+              登録しただけで自動的に課金が始まることはありません。
             </p>
           </div>
           <div className="grid items-start gap-5 sm:grid-cols-3">
