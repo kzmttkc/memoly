@@ -13,6 +13,7 @@ import { track, trackThenNavigate, markSignupCompletedAt } from '@/lib/analytics
 import { Input } from '@/components/ui/Input'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
+import { PAID_PLAN_IDS, type PlanId } from '@/lib/plans'
 
 export default function SignupPage() {
   return (
@@ -91,6 +92,15 @@ function SignupForm() {
   //   ツール結果の要約(note)を /company に載せ、会社作成時に「会社の記憶」へ保存する
   //   （app/(app)/company/page.tsx が消費）。約束（保存）と実挙動を一致させる。
   const noteParam = (searchParams.get('note') ?? '').trim().slice(0, 400)
+  // 2026-07-26 CTO修正(I3導線バグ): LP士業CTA(app/business/page.tsx)は
+  //   /signup?next=/company&plan=shigyo を送るが、signup 側に受け皿が無く
+  //   plan= は握りつぶされていた（帰属も事前選択も効かない＝CTAが機能していなかった）。
+  //   company/note と同じ流儀で /company・/company/onboarding まで持ち回る。
+  //   未知の値・改ざんは無視（有料プランIDのみ許可）。
+  const planParam = useMemo(() => {
+    const raw = (searchParams.get('plan') ?? '').trim()
+    return PAID_PLAN_IDS.includes(raw as PlanId) ? (raw as PlanId) : ''
+  }, [searchParams])
   // C03: フォームで入力された会社名（あれば）を優先して /company へ持ち回る。
   //   未入力なら従来どおり ?company= プリフィル値。どちらも無ければ素の next。
   const companyForNext = useMemo(() => {
@@ -98,14 +108,15 @@ function SignupForm() {
     return typed || companyParam
   }, [companyName, companyParam])
   const nextDest = useMemo(() => {
-    if (!companyForNext && !noteParam) return next
+    if (!companyForNext && !noteParam && !planParam) return next
     const [path, query = ''] = next.split('?')
     if (path !== '/company') return next
     const sp = new URLSearchParams(query)
     if (companyForNext) sp.set('company', companyForNext)
     if (noteParam) sp.set('note', noteParam)
+    if (planParam) sp.set('plan', planParam)
     return `${path}?${sp.toString()}`
-  }, [next, companyForNext, noteParam])
+  }, [next, companyForNext, noteParam, planParam])
 
   // C03: 会社名が入力済みなら、signup成立直後にその場で会社を作成して onboarding へ直行する
   //   （/company の会社作成画面を1段削減）。発動条件は「着地が /company（ハブ）そのもの」かつ
@@ -128,7 +139,13 @@ function SignupForm() {
         if (res.ok && newId) {
           // /company 画面と同じ活性化ファネルイベント（POST成功後のみ・PIIなし）。
           track('company_created')
-          router.push(`/company/onboarding?companyId=${newId}`)
+          // planParam(例: shigyo LP CTA由来)があれば onboarding へも持ち回る
+          // （onboarding 側が保存/スキップ後の遷移先で billing へ反映する）。
+          router.push(
+            planParam
+              ? `/company/onboarding?companyId=${newId}&plan=${planParam}`
+              : `/company/onboarding?companyId=${newId}`,
+          )
           return
         }
       } catch {

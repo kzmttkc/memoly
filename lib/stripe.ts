@@ -81,12 +81,19 @@ export async function createSeatCheckoutSession(
     user_id: args.userId,
   }
 
+  // 2026-07-26 CTO緊急修正(verifier検出バグ): returnUrl は呼び出し側(checkout route)で
+  //   既に `?companyId=<uuid>` を付与済み。ここで無条件に `?billing=...` を足すと
+  //   `?companyId=<uuid>?billing=success` という不正なクエリ文字列（`?`が2つ）になり、
+  //   billing クエリが companyId 値の一部として誤解釈される（実測: 403・subscription_started
+  //   が構造的に一度も発火しない）。returnUrl が既にクエリを持つかで `&`/`?` を出し分ける。
+  const separator = args.returnUrl.includes('?') ? '&' : '?'
+
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     // 請求数量: 会社単位プラン(Entry/Standard)は 1、席課金(士業)は席数。
     line_items: [{ price: priceId, quantity: args.quantity ?? args.seats }],
-    success_url: `${args.returnUrl}?billing=success`,
-    cancel_url: `${args.returnUrl}?billing=canceled`,
+    success_url: `${args.returnUrl}${separator}billing=success`,
+    cancel_url: `${args.returnUrl}${separator}billing=canceled`,
     metadata,
     allow_promotion_codes: true,
     // 既存顧客があれば再利用（再課金時の重複顧客作成を防ぐ）。

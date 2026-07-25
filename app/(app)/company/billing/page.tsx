@@ -40,7 +40,15 @@ interface BillingState {
 }
 
 function BillingInner() {
-  const companyId = useSearchParams().get('companyId') ?? ''
+  const searchParams = useSearchParams()
+  const companyId = searchParams.get('companyId') ?? ''
+  // 2026-07-26 CTO修正(I3導線バグ): 士業LP CTA(/signup?plan=shigyo → onboarding →
+  //   ここ)由来の該当プランを視覚的に事前選択（枠線ハイライト+案内文）する。
+  //   自動購入・自動送信は一切しない（クリックは既存の startCheckout のまま）。
+  const preselectPlan = (() => {
+    const raw = (searchParams.get('plan') ?? '').trim()
+    return PAID_PLAN_IDS.includes(raw as PlanId) ? (raw as PlanId) : ''
+  })()
 
   const [state, setState] = useState<BillingState | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -80,6 +88,12 @@ function BillingInner() {
   useEffect(() => {
     load()
   }, [load])
+
+  // 事前選択プランがある場合、モバイル幅でも見えるようスクロール（初回のみ・純追加）。
+  useEffect(() => {
+    if (!preselectPlan || !state) return
+    document.getElementById(`plan-${preselectPlan}`)?.scrollIntoView({ block: 'nearest' })
+  }, [preselectPlan, state])
 
   // checkout から戻ってきたときのフィードバック（?billing=success|canceled）。
   useEffect(() => {
@@ -205,6 +219,17 @@ function BillingInner() {
         <MemoryLossWarning companyId={companyId} />
       )}
 
+      {/* ===== 士業CTA由来の事前選択案内（plan= がある時のみ）===== */}
+      {preselectPlan && (
+        <Card className="mb-6 border-brand-300 bg-brand-50/60">
+          <p className="text-sm text-neutral-700">
+            さきほどの案内から、
+            <span className="font-semibold text-brand-700">{PLANS[preselectPlan].displayName}</span>
+            をご案内します。下記の枠でハイライトしているプランです。
+          </p>
+        </Card>
+      )}
+
       {/* ===== 無料モニターの告知（billing無効時）===== */}
       {!billingOn && (
         <Card className="mb-6 border-info-500/30 bg-info-50">
@@ -239,16 +264,23 @@ function BillingInner() {
           const offersYearly = p.yearlyJpy != null
           const interval = selectedInterval[id] ?? 'month'
           const isYearly = offersYearly && interval === 'year'
+          const isPreselected = preselectPlan === id
           return (
             <Card
               key={id}
+              id={`plan-${id}`}
               className={
-                featured ? 'border-brand-300 shadow-md ring-1 ring-brand-200' : undefined
+                isPreselected
+                  ? 'border-brand-500 shadow-md ring-2 ring-brand-400'
+                  : featured
+                    ? 'border-brand-300 shadow-md ring-1 ring-brand-200'
+                    : undefined
               }
             >
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-semibold text-neutral-900">{p.displayName}</h3>
-                {featured && <Badge tone="brand">おすすめ</Badge>}
+                {featured && !isPreselected && <Badge tone="brand">おすすめ</Badge>}
+                {isPreselected && <Badge tone="brand">ご案内中</Badge>}
                 {isCurrent && <Badge tone="success">利用中</Badge>}
               </div>
               {/* 2026-07-25 CTO修正: 年額を提供するプラン（Entryのみ）に月額/年額の切り替えを追加。

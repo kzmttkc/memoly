@@ -19,6 +19,7 @@ import {
 import { computeFallbackRiskAudit } from '@/lib/risk-fallback'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { localizeError } from '../_components/errors'
+import { PAID_PLAN_IDS, type PlanId } from '@/lib/plans'
 
 // ============================================================================
 // /company/onboarding — 会社作成後の「5問 構造化ウィザード」
@@ -60,6 +61,14 @@ function OnboardingInner() {
   const params = useSearchParams()
   const router = useRouter()
   const companyId = params.get('companyId') ?? ''
+  // 2026-07-26 CTO修正(I3導線バグ): 士業LP CTA(/signup?plan=shigyo)由来の意図を
+  //   5問ウィザードの後まで持ち回る。5問自体（自社属性の集合知モート）は不変で、
+  //   保存/スキップ後の「次の一歩」だけを billing（該当プラン事前選択）に差し替える
+  //   （通常フローの risk 診断誘導は plan 無指定時のみ・既存挙動不変）。
+  const planParam = (() => {
+    const raw = (params.get('plan') ?? '').trim()
+    return PAID_PLAN_IDS.includes(raw as PlanId) ? (raw as PlanId) : ''
+  })()
 
   const [industry, setIndustry] = useState('')
   const [band, setBand] = useState('')
@@ -83,6 +92,14 @@ function OnboardingInner() {
   // TTV: 5問の回答を「集めて終わり」にせず、登録直後に自社専用のリスク診断を即提示する。
   //   空のホームでなく、答えた内容がその場で診断結果になる＝「会社が覚えられた」を最短で体感させる。
   const riskHref = `/company/risk?companyId=${companyId}&from=onboarding`
+  // 士業CTA由来(planParam)の場合のみ「次の一歩」を billing に差し替える
+  // （該当プランを billing 側で事前選択・ハイライトする。plan 無指定時は従来どおり不変）。
+  const nextHref = planParam
+    ? `/company/billing?companyId=${companyId}&plan=${planParam}`
+    : riskHref
+  const skipHref = planParam
+    ? `/company/billing?companyId=${companyId}&plan=${planParam}`
+    : homeHref
 
   // 実際に何か操作したか（速報プレビューの表示条件）。着地直後の無操作でスコアを
   //   出さないためのフラグ。業種/規模/三値のいずれかを触ると true になる。
@@ -141,7 +158,8 @@ function OnboardingInner() {
       //   variant を載せ、スキップ導線A/Bが活性化率に効いたかを変種別に読めるようにする。
       track('company_activated', { variant })
       // 登録直後に診断へ送り、答えた内容を即「自社のリスク結果」として返す（TTV短縮）。
-      router.push(riskHref)
+      // 士業CTA由来なら billing（該当プラン事前選択）へ（上の nextHref 定義参照）。
+      router.push(nextHref)
     } catch {
       showToast('保存に失敗しました。通信を確認してください。')
       setSaving(false)
@@ -286,7 +304,7 @@ function OnboardingInner() {
             </p>
           )}
           <Link
-            href={homeHref}
+            href={skipHref}
             onClick={() => track('onboarding_skipped', { variant })}
             className={
               variant === 'B'

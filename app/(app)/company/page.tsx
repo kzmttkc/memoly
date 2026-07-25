@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { StatPill } from '@/components/ui/StatPill'
 import { Badge } from '@/components/ui/Badge'
 import { track } from '@/lib/analytics'
-import { resolvePlan } from '@/lib/plans'
+import { resolvePlan, PAID_PLAN_IDS, type PlanId } from '@/lib/plans'
 import { localizeError } from './_components/errors'
 
 // ============================================================================
@@ -56,6 +56,14 @@ function CompanyHome() {
   //   会社作成時（または既所属なら保存ボタン）に /api/company/memory?action=note で
   //   「会社の記憶」へ保存する＝CTAの約束（保存）を実挙動にする。自動保存はしない。
   const prefillNote = (searchParams.get('note') ?? '').trim().slice(0, 400)
+
+  // 2026-07-26 CTO修正(I3導線バグ): 士業LP CTA(/signup?plan=shigyo)由来の plan を
+  //   /company（会社作成画面）まで持ち回り、作成直後の onboarding へも渡す
+  //   （signup の nextDest が company/note と同じ流儀で持ち回る・受け皿はここ）。
+  const prefillPlan = (() => {
+    const raw = (searchParams.get('plan') ?? '').trim()
+    return PAID_PLAN_IDS.includes(raw as PlanId) ? (raw as PlanId) : ''
+  })()
 
   const [companies, setCompanies] = useState<Membership[] | null>(null)
   const [summaries, setSummaries] = useState<Record<string, ProfileSummary>>({})
@@ -171,7 +179,11 @@ function CompanyHome() {
         // ツール結果の持ち回りがあれば、作った会社の「記憶」へ保存してから進む
         // （保存CTAの約束を実挙動に。失敗しても遷移は止めない）。
         if (prefillNote) await saveToolNote(newId)
-        router.push(`/company/onboarding?companyId=${newId}`)
+        router.push(
+          prefillPlan
+            ? `/company/onboarding?companyId=${newId}&plan=${prefillPlan}`
+            : `/company/onboarding?companyId=${newId}`,
+        )
         return
       }
       await load()
