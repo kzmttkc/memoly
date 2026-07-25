@@ -36,6 +36,7 @@ import { spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { buildBillingReturnUrls } from '../lib/checkout-url.ts'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -90,11 +91,15 @@ if (cmd === 'prepare') {
   const metadata = {
     product: 'banto', company_id: companyId, plan: 'starter', seats: '1', user_id: 'e2e-real-script',
   }
+  // 2026-07-26: lib/stripe.ts と同じ純関数を使い、実運用の returnUrl 形状
+  // （`?companyId=...` 付き）と同じ経路で success_url/cancel_url を組み立てる
+  // （独自実装を並存させると2026-07-26の?二重バグのような乖離が再発しうるため）。
+  const { successUrl, cancelUrl } = buildBillingReturnUrls(`${BASE}/company/billing?companyId=${companyId}`)
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price: PRICE_STARTER, quantity: 1 }],
-    success_url: `${BASE}/company/billing?companyId=${companyId}&billing=success`,
-    cancel_url: `${BASE}/company/billing?companyId=${companyId}&billing=canceled`,
+    success_url: successUrl,
+    cancel_url: cancelUrl,
     metadata,
     allow_promotion_codes: true,
     customer: customer.id,

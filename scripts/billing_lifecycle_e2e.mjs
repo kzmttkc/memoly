@@ -41,6 +41,8 @@ import crypto from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { buildBillingReturnUrls } from '../lib/checkout-url.ts'
+import { PLANS, PAID_PLAN_IDS, priceIdForPlan } from '../lib/plans.ts'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -197,6 +199,66 @@ try {
     await startServer()
   }
   console.log(`\n=== 番頭 決済ライフサイクル E2E（mock署名・実ルート・実DB） ${HOOK} ===\n`)
+
+  // --- -1. 回帰防止(2026-07-26発見バグ): success_url/cancel_url の?二重連結ガード ---
+  //   lib/stripe.ts createSeatCheckoutSession が実際に使う純関数を直接呼び、
+  //   companyId付きreturnUrl(実運用の実際の形)を渡した際に ? が1つだけになることを
+  //   このゲート自身でも検知する（tests/unit/checkout-url.test.ts と二重防御）。
+  const urlCheckReturnUrl = 'https://banto-roumu.com/company/billing?companyId=e2e-dummy-company-id'
+  const { successUrl: urlCheckSuccess, cancelUrl: urlCheckCancel } = buildBillingReturnUrls(urlCheckReturnUrl)
+  A('回帰防止: success_urlの?は1つのみ（companyId付きreturnUrlで二重?にならない）',
+    (urlCheckSuccess.match(/\?/g) ?? []).length === 1 && urlCheckSuccess.endsWith('&billing=success'),
+    urlCheckSuccess)
+  A('回帰防止: cancel_urlの?は1つのみ（companyId付きreturnUrlで二重?にならない）',
+    (urlCheckCancel.match(/\?/g) ?? []).length === 1 && urlCheckCancel.endsWith('&billing=canceled'),
+    urlCheckCancel)
+
+  // --- -0.5. Entry/Standard/士業 3プランの Price 実額チェック + Checkout画面到達 ---
+  //   webhookの状態遷移テスト(下の1〜4)は「Stripeがこのamountで通知してきたら」を
+  //   前提にした mock であり、env の STRIPE_PRICE_* が実際に正しい金額のPriceを
+  //   指しているか・実際にcheckout.stripe.comへ到達するURLが発行されるかは検証していない。
+  //   STRIPE_SECRET_KEY が sk_test_ の場合のみ、実Stripe API(read-only retrieve +
+  //   未完了のcheckout session作成のみ・カード入力・決済は一切発生しない)で検証する。
+  const stripeKey = env.STRIPE_SECRET_KEY ?? ''
+  if (!stripeKey.startsWith('sk_test_')) {
+    console.log('  ⚠️  SKIP  Price実額/Checkout到達チェック（STRIPE_SECRET_KEYがsk_test_以外のため安全側でスキップ）')
+  } else {
+    const { default: StripeSDK } = await import('stripe')
+    const stripeCheck = new StripeSDK(stripeKey)
+    for (const planId of PAID_PLAN_IDS) {
+      const def = PLANS[planId]
+      const monthPriceId = def.priceEnvVar ? env[def.priceEnvVar] : undefined
+      if (!monthPriceId) {
+        A(`Price設定確認: ${planId}(月額) env(${def.priceEnvVar})が未設定`, false, '未設定＝checkoutは503で塞がる想定')
+        continue
+      }
+      // 実額チェック（read-only retrieve。決済も作成も発生しない）
+      try {
+        const priceObj = await stripeCheck.prices.retrieve(monthPriceId)
+        A(`Price実額: ${planId}(月額) Stripe Price.unit_amount === PLANS定義(¥${def.stripeAmount})`,
+          priceObj.unit_amount === def.stripeAmount, `stripe=${priceObj.unit_amount} plans.ts=${def.stripeAmount}`)
+      } catch (e) {
+        A(`Price実額: ${planId}(月額) retrieve失敗`, false, e.message)
+      }
+      // Checkout到達性チェック（実session作成→checkout.stripe.comのURLか確認→即expireで痕跡消去）
+      try {
+        const quantity = def.multiClient ? 2 : 1 // 士業=席課金の実挙動を反映（2席）。他は1固定。
+        const session = await stripeCheck.checkout.sessions.create({
+          mode: 'subscription',
+          line_items: [{ price: monthPriceId, quantity }],
+          success_url: 'https://banto-roumu.com/company/billing?companyId=e2e-canary&billing=success',
+          cancel_url: 'https://banto-roumu.com/company/billing?companyId=e2e-canary&billing=canceled',
+          metadata: { product: 'banto', company_id: 'e2e-canary', plan: planId, seats: String(quantity), canary: 'true' },
+        })
+        A(`Checkout到達: ${planId}(月額) checkout.stripe.comのURLが発行される`,
+          typeof session.url === 'string' && session.url.startsWith('https://checkout.stripe.com/'),
+          session.url ?? 'url=null')
+        await stripeCheck.checkout.sessions.expire(session.id) // 未完了のまま即失効（テスト痕跡を残さない）
+      } catch (e) {
+        A(`Checkout到達: ${planId}(月額) session作成失敗`, false, e.message)
+      }
+    }
+  }
 
   // --- 0. 署名不正は 400 ---
   const bad = await postEv(ckEvent({ id: evId('bad'), amount: 3980, companyId: 'x', plan: 'starter', seats: 1, cust: 'cus_x', sub: 'sub_x' }), true)
