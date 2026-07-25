@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">事業者情報</h2>
             <ul className="space-y-1 text-neutral-600">
-              <li><span className="text-neutral-800">事業者名：</span>Kizuna Creation（責任者 / Kazumoto Takeshi）</li>
+              <li><span className="text-neutral-800">事業者名：</span>KIZUNA Creation（責任者 / Kazumoto Takeshi）</li>
               <li><span className="text-neutral-800">代表者：</span>Kazumoto Takeshi</li>
               <li><span className="text-neutral-800">所在地：</span>日本</li>
               <li><span className="text-neutral-800">お問い合わせ：</span><a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">support@banto-roumu.com</a></li>

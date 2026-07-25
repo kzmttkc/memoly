@@ -169,7 +169,7 @@ export default function FaqPage() {
             番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
-          <p className="mt-2 text-xs text-neutral-400">運営：Kizuna Creation</p>
+          <p className="mt-2 text-xs text-neutral-400">運営：KIZUNA Creation</p>
         </div>
       </footer>
     </div>

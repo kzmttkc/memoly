@@ -15,7 +15,7 @@ export default function TermsPage() {
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">1. サービス概要</h2>
-            <p>番頭（Banto、以下「本サービス」）は、会社のルール・規程・労務を覚えて回答するAIアシスタントです。運営は Kizuna Creation（Kazumoto Takeshi 個人事業）。<a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropic（Claude API）</a>を使用してAI回答を生成します。</p>
+            <p>番頭（Banto、以下「本サービス」）は、会社のルール・規程・労務を覚えて回答するAIアシスタントです。運営は KIZUNA Creation（Kazumoto Takeshi 個人事業）。<a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropic（Claude API）</a>を使用してAI回答を生成します。</p>
           </section>
 
           <section>

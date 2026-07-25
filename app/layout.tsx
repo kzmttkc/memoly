@@ -96,7 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               url: APP_URL,
               inLanguage: "ja",
               offers: { "@type": "Offer", price: "0", priceCurrency: "JPY" },
-              publisher: { "@type": "Organization", name: "Kizuna Creation" },
+              publisher: { "@type": "Organization", name: "KIZUNA Creation" },
             }),
           }}
         />

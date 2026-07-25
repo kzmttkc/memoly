@@ -1204,7 +1204,7 @@ export default async function BusinessLandingPage({
       </section>
 
       {/* ===== 構造化データ（rich results 適格化）=====
-          FAQPage は上の可視FAQと対。Organization=Kizuna Creation。
+          FAQPage は上の可視FAQと対。Organization=KIZUNA Creation。
           BreadcrumbList=トップ > 番頭（業務効率化）。aggregateRating は捏造しない。 */}
       <script
         type="application/ld+json"
@@ -1226,7 +1226,7 @@ export default async function BusinessLandingPage({
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'Organization',
-            name: 'Kizuna Creation',
+            name: 'KIZUNA Creation',
             url: 'https://banto-roumu.com/business',
             logo: 'https://banto-roumu.com/icon-512.png',
           }),
@@ -1423,7 +1423,7 @@ export default async function BusinessLandingPage({
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
           <p className="mt-2 text-xs text-neutral-400">
-            © {new Date().getFullYear()} 番頭(Banto)（Kizuna Creation）
+            © {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）
           </p>
         </div>
       </footer>
