@@ -165,7 +165,7 @@ export function ToolSignupCta({
 //   ツール結果＝利用者が実際に点検結果を受け取った直後にだけ、登録CTAの下へ控えめに置く。
 //   iframe埋め込みはしない(next.config.ts の frame-src に koewall.jp が無く default-src 'self' に落ちる)
 //   ＝外部リンク先へ飛ばすプレーンな <a>(next/link)のみ＝CSP適合。
-//   全製品で1つのWall(Kizuna Creation)を共有し、utm で流入元を判別する。
+//   全製品で1つのWall(KIZUNA Creation)を共有し、utm で流入元を判別する。
 export function VoiceInvite({ location }: { location: string }) {
   const href =
     'https://koewall.jp/submit/u/f2ed973b495255f3827c73858a4dcffe' +

@@ -96,7 +96,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
   // 無料モニター: アハ体験/継続率の検証期間。コア機能は触れるが上限は控えめ。
   free: {
     id: 'free',
-    displayName: '無料モニター',
+    displayName: '無料プラン',
     monthlyJpy: 0,
     yearlyJpy: null,
     featured: false,

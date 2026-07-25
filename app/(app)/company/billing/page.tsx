@@ -184,7 +184,7 @@ function BillingInner() {
               <p className="text-xs text-neutral-500">現在のプラン</p>
               <p className="flex items-center gap-2 text-base font-semibold text-neutral-900">
                 {state.planName}
-                {state.plan === 'free' && <Badge tone="neutral">無料モニター</Badge>}
+                {state.plan === 'free' && <Badge tone="neutral">無料プラン</Badge>}
                 {state.status === 'past_due' && <Badge tone="warning">お支払い確認中</Badge>}
                 {state.status === 'canceled' && <Badge tone="neutral">解約済み</Badge>}
               </p>
