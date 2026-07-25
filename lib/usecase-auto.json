@@ -301,7 +301,11 @@
         "q": "10人未満の会社でも就業規則は作った方がいいですか？",
         "a": "労働基準法89条の作成・届出義務が生じるのは「常時10人以上の労働者を使用する事業場」ですが、10人未満の会社であっても作成しておくことを検討する価値はあります。就業規則がないと、退職・懲戒・休職などのルールが明文化されていないため、トラブル時に判断の根拠がなくなります。また、従業員が増えて10人に達したタイミングで慌てて作るよりも、早めに整備しておく方が実務上も安心です。"
       }
-    ]
+    ],
+    "relatedArticle": {
+      "href": "https://sharoushi-agent.com/shugyokisoku-template.html",
+      "label": "就業規則ひな形（全文コピー・印刷対応・sharoushi-agent.com）"
+    }
   },
   {
     "slug": "roudou-jouken-tsuuchisho-kakikata",
@@ -383,6 +387,10 @@
     "relatedTool": {
       "href": "/tools/zangyodai-check",
       "label": "残業代の計算が合っているか無料で点検する"
+    },
+    "relatedArticle": {
+      "href": "https://sharoushi-agent.com/roudou-jouken-tsuuchisho-guide.html",
+      "label": "労働条件通知書ガイド（必須項目の詳解・sharoushi-agent.com）"
     }
   },
   {
@@ -459,7 +467,11 @@
         "q": "本記事の情報はそのまま手続き判断に使えますか？",
         "a": "本記事は一般的な情報提供を目的としており、社会保険労務士による個別の相談・書類作成代行ではありません。制度は法改正により変わることがあります。実際の加入判断・手続き・届出については、社会保険労務士などの専門家にご確認いただくことを強くお勧めします。番頭は情報の整理や確認作業の補助を担いますが、最終的な判断は専門家との連携のもとで行ってください。"
       }
-    ]
+    ],
+    "relatedArticle": {
+      "href": "https://sharoushi-agent.com/shu20jikan-syaho-kanyu-guide.html",
+      "label": "週20時間の壁と社会保険加入要件の解説（sharoushi-agent.com）"
+    }
   },
   {
     "slug": "roumu-kanri-excel-kadai-kaiketsu",
@@ -533,7 +545,11 @@
         "q": "従業員が何名になったらエクセル管理の見直しを検討すべきですか。",
         "a": "明確な基準はありませんが、実務上は従業員30名前後を境に「エクセル管理の手間が増えてきた」と感じる会社が多いです。特に、雇用形態が複数ある・シフト制・育休や時短勤務の社員がいる、といった条件が重なると、それより小規模でも管理の複雑さが増します。「月に何時間を労務管理に使っているか」を一度棚卸しして、その時間に見合った仕組みかどうかを確認することが判断の出発点になります。"
       }
-    ]
+    ],
+    "relatedArticle": {
+      "href": "https://sharoushi-agent.com/roumu-excel-genkai-guide.html",
+      "label": "労務管理エクセルの限界と移行先の整理（sharoushi-agent.com）"
+    }
   },
   {
     "slug": "roumu-ai-agent-sentaku-katsuyou",

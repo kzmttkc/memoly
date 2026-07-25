@@ -259,6 +259,30 @@ export default async function RoumuUseCasePage({
         </section>
       )}
 
+      {/* ===== sharoushi-agent.com の同一テーマ記事への外部リンク
+          （Focus2製品間のトピッククラスタ権威補強・relatedArticleを持つslugのみ・2026-07-25） ===== */}
+      {u.relatedArticle && (
+        <section className="mx-auto max-w-3xl px-6 pb-4">
+          <Card interactive padded={false}>
+            <Link
+              href={u.relatedArticle.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-5 sm:p-6"
+            >
+              <p className="text-xs font-medium text-brand-700">あわせて読みたい解説記事</p>
+              <p className="mt-1 text-sm font-semibold text-neutral-900">
+                {u.relatedArticle.label}
+              </p>
+              <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+                sharoushi-agent.com で読む
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </span>
+            </Link>
+          </Card>
+        </section>
+      )}
+
       {/* ===== 番頭がどう答えるか（具体例） ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <h2 className="text-lg font-bold tracking-tight text-neutral-900">番頭はこう答えます</h2>

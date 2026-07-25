@@ -41,6 +41,12 @@ export type Faq = { q: string; a: string }
  *  内容が対応する記事にだけ手動で張る（doorway量産の相互リンクにしない）。 */
 export type RelatedTool = { href: string; label: string }
 
+/** 記事→sharoushi-agent.com の同一テーマ記事への外部リンク（Focus2製品間のトピック
+ *  クラスタ権威補強・2026-07-25 CMO SEO/AEO/GEO戦略Tier1）。テーマが実際に重複する
+ *  記事にだけ手動で張る（doorway量産の相互リンクにしない）。sharoushi側にも同じ方向で
+ *  banto該当記事へのリンクを追加し、双方向にする。 */
+export type RelatedArticle = { href: string; label: string }
+
 export type UseCase = {
   /** URLスラッグ。/roumu/{slug} */
   slug: string
@@ -62,6 +68,8 @@ export type UseCase = {
   faqs: Faq[]
   /** 関連する無料セルフ点検ツール（内容が対応する記事にだけ設定。任意） */
   relatedTool?: RelatedTool
+  /** sharoushi-agent.com の同一テーマ記事への外部リンク（内容が対応する記事にだけ設定。任意） */
+  relatedArticle?: RelatedArticle
   /** signup CTAに付与する計測用UTMクエリ（?next=/company に & で連結する。utm_source等）。
    *  底面ファネル語の実需検証など、流入元別のCVRを分離計測したいLPにだけ設定する。任意。 */
   signupUtm?: string
@@ -659,6 +667,10 @@ const USECASE_LIST_CURATED: UseCase[] = [
         a: '完了にはなりません。番頭が担うのは、自社の条項や対応の経緯を覚えて、次の対応の整理を助ける部分です。方針の決定や重大な事案の判断は、会社と、必要に応じて専門家が行う前提です。',
       },
     ],
+    relatedArticle: {
+      href: 'https://sharoushi-agent.com/kasuhara-shugyokisoku-kitei-guide.html',
+      label: '就業規則へのカスハラ対応条項の入れ方（規定例つき・sharoushi-agent.com）',
+    },
     signupUtm: 'utm_source=roumu_kasuhara_taisaku&utm_medium=lp&utm_campaign=kasuhara2026_campaign',
   },
 
