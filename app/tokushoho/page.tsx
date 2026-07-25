@@ -67,7 +67,7 @@ export default function TokushohoPage() {
         </div>
 
         <dl>
-          <Row label="事業者名">Kizuna Creation（個人事業者）</Row>
+          <Row label="事業者名">KIZUNA Creation（個人事業者）</Row>
 
           <Row label="代表者の氏名・所在地・電話番号">
             特定商取引法に基づき、消費者からのご請求があった場合には遅滞なく開示いたします。
