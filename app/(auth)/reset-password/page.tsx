@@ -1,10 +1,11 @@
 'use client'
 
-// 2026-07-25 CTO緊急修正: Turbopack(Next 16.2.9)の静的プリレンダが(auth)グループ全ルートを
-//   サイレントに直近の not-found 境界へ落としていた既知の症状の回避（詳細は
-//   app/(auth)/login/page.tsx コメント参照）。
-export const dynamic = 'force-dynamic'
-
+// 2026-07-25 CTO緊急修正 → 2026-07-26 是正: Turbopack(Next 16.2.9)の静的プリレンダが(auth)
+//   グループ全ルートをサイレントに直近の not-found 境界へ落としていた既知の症状の回避
+//   （詳細は app/(auth)/login/page.tsx コメント参照）。
+//   `export const dynamic = 'force-dynamic'` をここ('use client'ファイル)に置いていたが
+//   無効だった（サーバーコンポーネントからのエクスポートでないと効かない）。宣言は
+//   app/(auth)/layout.tsx（サーバーコンポーネント）へ移設済み。
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -47,7 +48,9 @@ export default function ResetPasswordPage() {
           placeholder="新しいパスワード（8文字以上）"
           autoComplete="new-password"
           required
-          minLength={8}
+          // 2026-07-26 CTO修正(F-7横断スイープ): minLengthのネイティブ検証はブラウザUI言語依存の
+          // 英語文言になりうる（signupページと同型・詳細は同ページのコメント参照）。上のJS側の
+          // password.length<8 チェックが同じ検証を日本語エラーで担うため、minLength属性は不要。
         />
         {error && <p className="text-xs text-danger-600">{error}</p>}
         <Button type="submit" size="lg" disabled={loading || !password} className="w-full">

@@ -1,14 +1,13 @@
 'use client'
 
-// 2026-07-25 CTO緊急修正: Turbopack(Next 16.2.9)の静的プリレンダが本ルートを
+// 2026-07-25 CTO緊急修正 → 2026-07-26 是正: Turbopack(Next 16.2.9)の静的プリレンダが本ルートを
 //   サイレントに直近の not-found 境界へ落としていた（ビルドはエラー無しで成功と表示するが
 //   .next/server/app/login.html の実体が空の404ページになる既知の症状。/signup・
-//   /forgot-password・/reset-password の(auth)グループ全ルートで同時に再現・
-//   40e31c1時点のビルドでも再現＝本コミット由来ではなく既存のプリレンダ不具合と特定）。
-//   動的レンダリングに切り替えて回避する（本ページはSupabaseセッション判定を伴う
-//   認証UIのため、そもそも静的プリレンダの恩恵が薄く副作用も無い）。
-export const dynamic = 'force-dynamic'
-
+//   /forgot-password・/reset-password の(auth)グループ全ルートで同時に再現）。
+//   `export const dynamic = 'force-dynamic'` をここ('use client'ファイル)に置いていたが、
+//   Next.js のルートセグメント設定はサーバーコンポーネントからのエクスポートでなければ
+//   効かないため無効だった（本番実測でプリレンダ配信が継続していたことが07-26に判明）。
+//   宣言はグループ共通のサーバーコンポーネント app/(auth)/layout.tsx へ移設済み。詳細は同ファイル。
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'

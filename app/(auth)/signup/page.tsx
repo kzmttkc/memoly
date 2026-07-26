@@ -1,10 +1,11 @@
 'use client'
 
-// 2026-07-25 CTO緊急修正: Turbopack(Next 16.2.9)の静的プリレンダが(auth)グループ全ルートを
-//   サイレントに直近の not-found 境界へ落としていた既知の症状の回避（詳細は
-//   app/(auth)/login/page.tsx コメント参照）。
-export const dynamic = 'force-dynamic'
-
+// 2026-07-25 CTO緊急修正 → 2026-07-26 是正: Turbopack(Next 16.2.9)の静的プリレンダが(auth)
+//   グループ全ルートをサイレントに直近の not-found 境界へ落としていた既知の症状の回避
+//   （詳細は app/(auth)/login/page.tsx コメント参照）。
+//   `export const dynamic = 'force-dynamic'` をここ('use client'ファイル)に置いていたが
+//   無効だった（サーバーコンポーネントからのエクスポートでないと効かない）。宣言は
+//   app/(auth)/layout.tsx（サーバーコンポーネント）へ移設済み。
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -226,6 +227,15 @@ function SignupForm() {
       return
     }
 
+    // 2026-07-26 CTO修正(F-7): 年齢チェックボックスと同型の問題（2026-07-19に是正済み）が
+    //   パスワード欄の minLength={8} に残っていた。ネイティブバリデーションのメッセージは
+    //   ブラウザUI言語依存の英語文言("Please lengthen this text to 8 characters or more...")に
+    //   なりうり、日本語UIの中で1箇所だけ浮く。minLength属性を外し、この分岐で日本語エラーを出す。
+    if (password.length < 8) {
+      setError('パスワードは8文字以上で設定してください。')
+      return
+    }
+
     setLoading(true)
     const supabase = createClient()
     const { data, error } = await supabase.auth.signUp({
@@ -426,7 +436,6 @@ function SignupForm() {
           onChange={e => setPassword(e.target.value)}
           placeholder="パスワード（8文字以上）"
           required
-          minLength={8}
           autoComplete="new-password"
         />
 

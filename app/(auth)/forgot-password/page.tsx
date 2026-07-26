@@ -1,10 +1,11 @@
 'use client'
 
-// 2026-07-25 CTO緊急修正: Turbopack(Next 16.2.9)の静的プリレンダが(auth)グループ全ルートを
-//   サイレントに直近の not-found 境界へ落としていた既知の症状の回避（詳細は
-//   app/(auth)/login/page.tsx コメント参照）。
-export const dynamic = 'force-dynamic'
-
+// 2026-07-25 CTO緊急修正 → 2026-07-26 是正: Turbopack(Next 16.2.9)の静的プリレンダが(auth)
+//   グループ全ルートをサイレントに直近の not-found 境界へ落としていた既知の症状の回避
+//   （詳細は app/(auth)/login/page.tsx コメント参照）。
+//   `export const dynamic = 'force-dynamic'` をここ('use client'ファイル)に置いていたが
+//   無効だった（サーバーコンポーネントからのエクスポートでないと効かない）。宣言は
+//   app/(auth)/layout.tsx（サーバーコンポーネント）へ移設済み。
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'

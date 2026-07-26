@@ -9,7 +9,18 @@ import Link from 'next/link'
 //   /business・/company と同じ手法でブランドを統一する。
 //
 //   Phase1 コンプラ厳守: 絵文字アイコンは使わない。AI生成画像は使わない。
+//
+// 2026-07-26 CTO緊急修正(F-2): 2026-07-25の404バグ修正コミット(9b970a0)は
+//   login/signup/forgot-password/reset-password の各 page.tsx（すべて 'use client'）に
+//   `export const dynamic = 'force-dynamic'` を足していたが、Next.js のルートセグメント
+//   設定はサーバーコンポーネントからのエクスポートでなければ効かず、クライアント
+//   コンポーネントファイルからのエクスポートはビルドエラーにもならず黙って無視される。
+//   実際 `npm run build` の出力は修正後も /signup /login /forgot-password /reset-password が
+//   ○(Static) のまま＝プリレンダされ続けていた（本番実測 x-nextjs-prerender:1 / x-vercel-cache:HIT
+//   と一致）。このグループ共通の *サーバーコンポーネント* layout.tsx に dynamic 宣言を移し、
+//   ルートセグメント単位で確実に動的レンダリングへ切り替える。
 // ============================================================================
+export const dynamic = 'force-dynamic'
 
 export default function AuthLayout({
   children,
