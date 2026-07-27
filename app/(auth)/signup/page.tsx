@@ -421,6 +421,14 @@ function SignupForm() {
         <div className="h-px flex-1 bg-neutral-200" />
       </div>
 
+      {/* 2026-07-27 growth施策(週次): signup_started→signup_completed完了率改善のための
+          最小変更。フォーム項目・デザインは不変。フォーム直上に所要時間・カード不要を明示し、
+          着手前の不確実性を消す（goal-gradient）。必須項目は既に email+password のみ
+          （会社名は任意・氏名フィールドは無し）で、氏名・会社名・年齢確認の扱いは変更しない。 */}
+      <p className="mb-3 text-center text-xs font-medium text-neutral-500">
+        入力は1分・クレジットカード不要
+      </p>
+
       <form onSubmit={handleSignup} className="space-y-4">
         <Input
           type="email"
