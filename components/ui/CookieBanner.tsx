@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import Link from 'next/link'
 
 // ============================================================================
@@ -34,7 +34,12 @@ export function CookieBanner() {
     if (!accepted) setShow(true)
   }, [])
 
-  useEffect(() => {
+  // 2026-07-28 CTO修正（L1監査#14）: useEffect（コミット後・描画後に非同期実行）だと、
+  //   バナー出現の初回フレームで body の padding-bottom がまだ反映されず、その一瞬
+  //   バナーがCTA/下部コンテンツに重なって見えることがあった（ペルソナ1指摘）。
+  //   useLayoutEffect（ブラウザが描画を確定する前に同期実行）に切り替え、
+  //   paddingの確保とバナー表示を同じフレームで揃える（ロジック・キー・挙動は不変）。
+  useLayoutEffect(() => {
     if (!show || !ref.current) {
       document.body.style.paddingBottom = ''
       return

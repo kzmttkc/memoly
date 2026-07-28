@@ -10,6 +10,7 @@ import {
   getIndustry,
   type IndustryKey,
 } from '../_lib/industries'
+import { setSharedIndustry } from '../_lib/industry-selection'
 
 // ============================================================================
 // IndustryHeroPreview — ヒーロー右側の製品プレビュー。
@@ -71,9 +72,15 @@ export default function IndustryHeroPreview() {
     // 選択中タブの再クリックは解除＝FV01（初期表示）へ戻す。計測は発火しない。
     if (next === selected) {
       setSelected(null)
+      // 2026-07-28 CTO修正（L1監査#11）: 解除時は下の体験デモとの引き継ぎ状態も
+      // 既定（製造）に戻す（ヒーロー自身の表示はFV01のまま・不変）。
+      setSharedIndustry(DEFAULT_INDUSTRY)
       return
     }
     setSelected(next)
+    // 下の体験デモ(TryDemo)が同じ業種から始まるよう共有ストアへ反映する
+    // （ヒーロー自身の初期表示=FV01は不変。書き込みのみ・読み出しはしない）。
+    setSharedIndustry(next)
     track('demo_question_clicked', { source: 'hero_tab', industry: next })
   }
 
@@ -83,7 +90,7 @@ export default function IndustryHeroPreview() {
       <div
         role="tablist"
         aria-label="業種を選んで答え方の例を見る"
-        className="mb-2 flex items-center gap-1"
+        className="mb-2 flex flex-wrap items-center gap-1"
       >
         <span className="mr-1 text-[11px] font-medium text-neutral-400">業種の例</span>
         {INDUSTRIES.map(i => (

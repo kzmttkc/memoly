@@ -53,7 +53,7 @@ export function HeaderCta({ className }: { className: string }) {
         }
       }}
     >
-      {deep ? '診断を始める' : '無料で始める'}
+      {deep ? '無料登録して診断へ' : '無料で始める'}
     </Link>
   )
 }

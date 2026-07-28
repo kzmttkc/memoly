@@ -10,11 +10,11 @@ import { Card } from '@/components/ui/Card'
 import { trackV as track } from '../_lib/variant'
 import {
   INDUSTRIES,
-  DEFAULT_INDUSTRY,
   getIndustry,
   type IndustryKey,
   type DemoQA,
 } from '../_lib/industries'
+import { useSharedIndustry, setSharedIndustry } from '../_lib/industry-selection'
 
 // ============================================================================
 // TryDemo — /business 公開LPの「体験デモ」セクション（'use client'）
@@ -80,7 +80,15 @@ export default function TryDemo() {
   const reducedMotion = usePrefersReducedMotion()
 
   // 業種プリセット（B13+A14）。切替で会話をリセットする。
-  const [industryKey, setIndustryKey] = useState<IndustryKey>(DEFAULT_INDUSTRY)
+  //   2026-07-28 CTO修正（L1監査#11）: ヒーローの業種チップ選択（共有ストア・
+  //   useSharedIndustryでリアクティブに購読）を既定値として引き継ぐ。ユーザーが
+  //   この体験デモ自身のタブを一度でも選んだら、以後はその選択（localOverride）を
+  //   優先し、ヒーロー側の後からの変更で上書きしない（体験デモでの明示的選択を尊重）。
+  //   ヒーロー側は常にFV01が初期表示（Takeshi承認済みブランド・不変）のため、この
+  //   購読は書き込み専用のヒーローの表示自体には影響しない。
+  const sharedIndustry = useSharedIndustry()
+  const [localOverride, setLocalOverride] = useState<IndustryKey | null>(null)
+  const industryKey = localOverride ?? sharedIndustry
   const industry = getIndustry(industryKey)
 
   // 会話に積み上がった完了済みターン。
@@ -90,6 +98,12 @@ export default function TryDemo() {
   const [typedLen, setTypedLen] = useState(0)
   // 一度でも回答が出たか（CTAの文言を体験後トーンに切り替える）。
   const [started, setStarted] = useState(false)
+  // 2026-07-28 CTO修正（L1監査#1・最重要）: タイプ中に次の質問がクリックされた場合、
+  //   従来は isBusy を理由に完全に無視していた（クリックしたのに何も起きたように
+  //   見えない＝「2問目・3問目をクリックしても表示が変わらない」というペルソナ2/3の
+  //   報告と一致）。直近1件だけを保留（state＝チップに「次に表示」の見た目も出す）し、
+  //   タイプ完了直後に続けて再生する（クリックは常に反映される・連打時は最後の1件が勝つ）。
+  const [pending, setPending] = useState<{ qa: DemoQA; qIndex: number } | null>(null)
 
   const nextId = useRef(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -153,9 +167,22 @@ export default function TryDemo() {
     setTyping({ id, q: qa.q, full: qa.a })
   }, [])
 
+  // 2026-07-28 CTO修正（L1監査#1・最重要）: タイプ中の保留クリックを、タイプ完了
+  //   直後（isBusy===false に落ちた瞬間）に1回だけ続けて再生する。従来はタイプ中の
+  //   クリックを isBusy ガードでサイレントに無視しており、これが「2問目・3問目を
+  //   クリックしても表示が変わらない」というペルソナ2/3の報告の実体だった
+  //   （クリック自体は正しいQAに紐づいていたが、忙しい間のクリックが消えていた）。
+  useEffect(() => {
+    if (isBusy || !pending) return
+    const { qa } = pending
+    setPending(null)
+    // 直前の setTyping(null) のコミットと同一tickで競合しないよう1マクロタスク遅らせる。
+    const t = setTimeout(() => play(qa), 0)
+    return () => clearTimeout(t)
+  }, [isBusy, pending, play])
+
   const ask = useCallback(
     (qa: DemoQA, qIndex: number) => {
-      if (isBusy) return // タイプ中は次の質問を受け付けない（順に積み上げる）。
       // 手動クリック=能動的アハ。初回タッチを demo_engaged で1回だけ計測。
       // （自動再生はここを通らない＝engagedRef/demo_engaged を汚さない）
       if (!engagedRef.current) {
@@ -167,6 +194,12 @@ export default function TryDemo() {
         source: 'demo',
         industry: industryKey,
       })
+      if (isBusy) {
+        // タイプ中でもクリックを破棄しない。直近1件だけを保留し、
+        // 今の回答のタイプが終わり次第、続けて再生する（L1監査#1の恒久修正）。
+        setPending({ qa, qIndex })
+        return
+      }
       play(qa)
     },
     [isBusy, play, industryKey],
@@ -174,11 +207,17 @@ export default function TryDemo() {
 
   // 業種タブの切替（B13）。前提の違う回答が混ざらないよう会話をリセットする。
   //   計測は既存語彙 demo_question_clicked に source='demo_tab' を載せて分離。
+  //   2026-07-28 CTO修正（L1監査#11）: 選択した業種をヒーロー⇄体験デモ間の
+  //   共有ストアにも反映し、以後の相互引き継ぎに使う。
   const switchIndustry = useCallback(
     (next: IndustryKey) => {
       if (next === industryKey) return
       if (timerRef.current) clearTimeout(timerRef.current)
-      setIndustryKey(next)
+      setPending(null)
+      // 2026-07-28 CTO修正（L1監査#11）: 体験デモ自身での明示的な選択は
+      // localOverride として固定し、以後ヒーロー側の変更で上書きされないようにする。
+      setLocalOverride(next)
+      setSharedIndustry(next)
       setTurns([])
       setTyping(null)
       setTypedLen(0)
@@ -192,6 +231,9 @@ export default function TryDemo() {
   //   demo_question_clicked は発火しない）。ユーザーが後から質問をクリックすれば
   //   通常どおり demo_engaged が立ち、受動→能動の転換が測れる。
   //   reduced-motion 時も自動再生は行う（既存のタイプ即確定パスに乗り即時全文表示）。
+  //   2026-07-28 CTO修正（L1監査#11）: 常に製造業(INDUSTRIES[0])固定だと、ヒーローで
+  //   他業種を選んでから体験デモが視界に入った場合にタブ表示と回答内容が食い違う。
+  //   その時点の industry（現在選択中の業種）の1問目を再生する。
   useEffect(() => {
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
     const el = sectionRef.current
@@ -204,12 +246,15 @@ export default function TryDemo() {
         autoplayedRef.current = true
         observer.disconnect()
         track('demo_autoplayed')
-        play(INDUSTRIES[0].qa[0])
+        play(industry.qa[0])
       },
       { threshold: 0.4 },
     )
     observer.observe(el)
     return () => observer.disconnect()
+    // industry は初回表示時点のスナップショットで十分（自動再生は1回だけのため
+    // 依存に含めない＝以後の業種変更で再発火させない）。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [play])
 
   // 回答が1件でも確定していれば再計算CTA（B14）を出す。
@@ -361,18 +406,24 @@ export default function TryDemo() {
                   key={qa.q}
                   type="button"
                   onClick={() => ask(qa, i)}
-                  disabled={isBusy}
+                  aria-pressed={pending?.qIndex === i}
                   className={
-                    'inline-flex items-center gap-1.5 rounded-full border border-neutral-200 ' +
-                    'bg-white px-3 py-1.5 text-[13px] text-neutral-700 shadow-sm ' +
+                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] shadow-sm ' +
                     'transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 ' +
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ' +
                     'focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-50 ' +
-                    'disabled:cursor-not-allowed disabled:opacity-50'
+                    (pending?.qIndex === i
+                      ? 'border-brand-300 bg-brand-50 text-brand-700'
+                      : 'border-neutral-200 bg-white text-neutral-700')
                   }
                 >
                   <MessageSquareText className="h-3.5 w-3.5 text-brand-600" aria-hidden />
                   {qa.q}
+                  {/* 2026-07-28 CTO修正（L1監査#1）: タイプ中に受け付けたクリックは
+                      サイレントに消さず「次に表示」で見せる（クリックが効いた実感を作る）。 */}
+                  {pending?.qIndex === i && (
+                    <span className="text-[10px] font-medium text-brand-500">次に表示</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -389,10 +440,14 @@ export default function TryDemo() {
           <p className="mt-1 text-sm leading-relaxed text-neutral-600">
             自社の規程を覚えさせれば、自社専用の答えが返ります。
           </p>
-          <div className="mt-4 flex justify-center">
+          {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: 長い日本語CTA文言が
+              whitespace-nowrap（Buttonの既定）で折り返せず、極端に狭い実効幅で
+              ページ全体の横スクロールに寄与していた。ここだけ折り返し可にする
+              （通常倍率では1行に収まるため見た目は不変）。 */}
+          <div className="mt-4 flex min-w-0 justify-center">
             <Link
               href="/signup?next=/company"
-              className={buttonClass({ variant: 'primary' })}
+              className={buttonClass({ variant: 'primary', className: 'whitespace-normal text-center' })}
               onClick={(e) => {
                 track('signup_cta_clicked', {
                   location: 'trydemo',

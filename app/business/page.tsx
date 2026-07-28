@@ -117,6 +117,14 @@ const FAQ = [
     a: '士業プランで、複数の顧問先企業を切り替えて使えます。記憶とデータは企業ごとに分離され、顧問先ごとに覚えた前提で、切り替えてすぐ相談を続けられます。料金は事務所の利用メンバー数に応じた席単位の課金です。',
   },
   {
+    // 2026-07-28 CTO修正（L1監査#5）: 士業プランの案内が社労士事務所のみに読め、
+    // 複数クライアントの労務まわりを扱うフリーランスのバックオフィス代行者が
+    // 「自分が申し込んでよいか」を判断できなかった（ペルソナ9）。資格の有無ではなく
+    // 「複数社を切り替えて使うか」で選べることを明記する。
+    q: '社労士資格がなくても、複数のクライアント企業を1つの契約で管理できますか',
+    a: 'できます。士業プランは社会保険労務士に限定していません。記帳代行・バックオフィス代行など、複数のクライアント企業の労務まわりを切り替えて管理したい方であればご利用いただけます。会社ごとに記憶とデータが分離されるため、クライアントの情報が混ざる心配はありません。料金は事務所・ご自身の利用メンバー数に応じた席単位の課金です。',
+  },
+  {
     q: '専任の労務担当がいなくても使えますか',
     a: '中小企業の総務担当や経営者が、社内規程の管理や日々の労務管理の調べ物を減らす用途を想定しています。専任の労務担当がいなくても、自社の前提に合わせた答えを得られます。',
   },
@@ -411,7 +419,11 @@ export default async function BusinessLandingPage({
               <span className="ml-1 text-sm font-medium text-neutral-400">Banto</span>
             </span>
           </Link>
-          <nav className="flex items-center gap-2">
+          {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: 極端に狭い実効幅（高倍率
+              ズーム時）でナビ項目(ハンバーガー/ログイン/CTA)が1行に収まりきらず、
+              ページ全体の横スクロールに寄与していた。flex-wrap で折り返し可能にする
+              （通常倍率では1行に収まるため見た目は不変）。 */}
+          <nav className="flex flex-wrap items-center justify-end gap-2">
             {/* 2026-07-24 P02(発見性): モバイル(sm未満)はデスクトップの
                 無料ツール/労務記事リンクが hidden sm:inline-flex で畳まれ、ヘッダから
                 主要導線へ届かなかった。ハンバーガーでその2導線だけを補う（sm以上では
@@ -433,6 +445,27 @@ export default async function BusinessLandingPage({
             >
               労務の記事
             </Link>
+            {/* 2026-07-28 CTO修正（L1監査#5）: ヘッダから料金への直接導線が無く、
+                料金を比較検討したい来訪者（複数クライアント運用者等）が本文末尾まで
+                スクロールしないと料金に辿り着けなかった。ページ内アンカー(#pricing)で
+                即到達させる（専用ページの新設は本文と二重管理になるため見送り）。 */}
+            <Link
+              href="#pricing"
+              className={buttonClass({ variant: 'ghost', size: 'sm', className: 'hidden sm:inline-flex' })}
+            >
+              料金
+            </Link>
+            {/* 2026-07-28 CTO修正（L1監査#3）: EN/JPトグル。英語ネイティブ来訪者向けの
+                要約LP(/business/en)への導線。ヒーロー下の"Ask in English"の1文だけでは
+                発見されにくく、ヘッダに常設する（デスクトップのみ・モバイルは
+                MobileNavから辿れるツール/記事導線を優先しここでは省略）。 */}
+            <Link
+              href="/business/en"
+              className={buttonClass({ variant: 'ghost', size: 'sm', className: 'hidden sm:inline-flex' })}
+            >
+              <Globe className="h-3.5 w-3.5" aria-hidden />
+              EN
+            </Link>
             <Link
               href="/login?next=/company"
               className={buttonClass({ variant: 'ghost', size: 'sm' })}
@@ -441,7 +474,9 @@ export default async function BusinessLandingPage({
             </Link>
             {/* A12: スクロール深度で「無料で始める」→「診断を始める」へ動的変化。
                 リンク先・location='header' 計測・utm引き継ぎは従来と同一。 */}
-            <HeaderCta className={buttonClass({ variant: 'primary', size: 'sm' })} />
+            {/* 2026-07-28 CTO修正（L1監査#2）: whitespace-normal で極端に狭い実効幅でも
+                折り返せるようにする（通常倍率では1行に収まるため見た目は不変）。 */}
+            <HeaderCta className={buttonClass({ variant: 'primary', size: 'sm', className: 'whitespace-normal text-center' })} />
           </nav>
         </div>
       </header>
@@ -474,9 +509,18 @@ export default async function BusinessLandingPage({
           「H1 → プレビュー → CTA」に変更。lg では従来どおり左=言葉・右=プレビュー
           （プレビューを row-span-2 で右列に固定）。 */}
       <section className="mx-auto max-w-5xl px-6 pb-16 pt-10 sm:pt-16">
+        {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: grid の暗黙トラックは
+            既定で子要素の min-content 幅を下限にする。H1見出しは「語中改行を防ぐ」ため
+            各意味単位を inline-block(=改行不可の1ブロック)にしており、これが
+            min-content 計算上「分割不可の1単語」として扱われ、極端に狭い実効幅
+            （高倍率ズーム時）でも grid トラックがその幅ぶん縮まずページ全体が
+            横スクロールする実害があった（実測: 375px幅で200%ズーム相当の実効幅では
+            scrollWidth が clientWidth を超過）。各グリッド子要素に min-w-0 を付け、
+            トラックが利用可能幅まで縮む＝内部でテキストが折り返す（オーバーフローで
+            隠れるのではなく見えたまま折り返す）ようにする。見た目は通常倍率で不変。 */}
         <div className="grid items-center gap-y-8 lg:grid-cols-2 lg:gap-x-10">
           {/* ブロック1：言葉（ブランド行・アイブロー・H1・サブコピー） */}
-          <div className="text-center lg:text-left">
+          <div className="min-w-0 text-center lg:text-left">
             {/* 2026-07-23 A10: ブランド名 BANTO をH1付近でヒーロー級に（テキストのみ。
                 新ロゴ画像は承認待ちのため入れない。A/B共通・変種スロットの外）。 */}
             <p className="mb-4 flex items-baseline justify-center gap-2.5 lg:justify-start">
@@ -522,7 +566,7 @@ export default async function BusinessLandingPage({
           {/* ブロック2：見て分かる（モバイルではH1直下・lgでは右列に固定）
               2026-07-23 A14+B13+I01: 業種タブ付きプレビューへ置換（初期表示は
               従来と同じ製造業＝A/BのFV体験は不変。グロー装飾は撤去しフラット化）。 */}
-          <div className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:pl-4">
+          <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:pl-4">
             <IndustryHeroPreview />
           </div>
 
@@ -531,20 +575,25 @@ export default async function BusinessLandingPage({
               会社登録を先に迫らず、まず数秒でアハに届ける。純粋な内部アンカー。
               2026-07-23 A04/A05: 主CTAを時間約束型・従CTAを成果型の文言へ変更
               （リンク先・計測イベント(location="hero")・UTM引き継ぎは不変）。 */}
-          <div className="lg:col-start-1 lg:row-start-2">
+          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <a
                 href="#demo"
-                className={buttonClass({ variant: 'primary', size: 'lg' })}
+                className={buttonClass({ variant: 'primary', size: 'lg', className: 'whitespace-normal text-center' })}
               >
                 30秒で答え方を見る
                 <ArrowDown className="h-4 w-4" aria-hidden />
               </a>
+              {/* 2026-07-28 CTO修正（L1監査#7）: 「1分で自社リスク診断」は診断が
+                  その場で始まるかのような文言だったが、実際はここから登録フォーム
+                  (/signup)への遷移のみで、診断自体は登録後の5問（オンボーディング）
+                  で行われる。実態（登録して診断に進む）に即した文言へ修正する
+                  （リンク先・計測location="hero"は不変）。 */}
               <TrackedCTA
                 location="hero"
-                className={buttonClass({ variant: 'ghost', size: 'lg' })}
+                className={buttonClass({ variant: 'ghost', size: 'lg', className: 'whitespace-normal text-center' })}
               >
-                1分で自社リスク診断
+                無料登録して1分でリスク診断
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </TrackedCTA>
             </div>
@@ -655,7 +704,7 @@ export default async function BusinessLandingPage({
         </div>
 
         {/* B04: Before/After を具体シーンで対比 */}
-        <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <div className="mb-4 grid min-w-0 gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5 sm:p-6">
             <p className="flex items-center gap-2 text-sm font-semibold text-neutral-500">
               <MessageSquareText className="h-4 w-4" aria-hidden />
@@ -689,11 +738,11 @@ export default async function BusinessLandingPage({
           シーンは作業のイメージ例です。時間・回数は実測値や効果の保証ではありません。
         </p>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-5 sm:grid-cols-2">
           {FEATURES.map(f => {
             const Icon = f.icon
             return (
-              <Card key={f.title} interactive className="flex items-start gap-4">
+              <Card key={f.title} interactive className="min-w-0 flex items-start gap-4">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
@@ -821,7 +870,7 @@ export default async function BusinessLandingPage({
                 className={buttonClass({
                   variant: 'secondary',
                   size: 'sm',
-                  className: 'shrink-0 self-start sm:self-center',
+                  className: 'shrink-0 self-start whitespace-normal text-center sm:self-center',
                 })}
               >
                 士業として顧問先を登録
@@ -849,34 +898,34 @@ export default async function BusinessLandingPage({
             会社ごとに記憶もデータも分離。会社のデータは他社と混ざりません。
           </p>
         </Card>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Card className="flex items-start gap-4">
+        <div className="grid min-w-0 gap-5 sm:grid-cols-2">
+          <Card className="min-w-0 flex items-start gap-4">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
               <Lock className="h-5 w-5" aria-hidden />
             </span>
-            <div>
+            <div className="min-w-0">
               <h3 className="font-semibold text-neutral-900">会社ごとに完全分離</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
                 自社のデータは、他社からは仕組みの上で見えない設計です。アクセスできるのは自社だけです（データベースの行レベルで分離しています）。
               </p>
             </div>
           </Card>
-          <Card className="flex items-start gap-4">
+          <Card className="min-w-0 flex items-start gap-4">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
               <ShieldCheck className="h-5 w-5" aria-hidden />
             </span>
-            <div>
+            <div className="min-w-0">
               <h3 className="font-semibold text-neutral-900">通信・保管の暗号化</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
                 やり取りは暗号化された通信（HTTPS/TLS）で守られます。データの保管も、暗号化に対応した管理されたクラウド基盤（Supabase）で行います。
               </p>
             </div>
           </Card>
-          <Card className="flex items-start gap-4">
+          <Card className="min-w-0 flex items-start gap-4">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
               <Database className="h-5 w-5" aria-hidden />
             </span>
-            <div>
+            <div className="min-w-0">
               <h3 className="font-semibold text-neutral-900">AIの学習には使いません</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
                 入力した相談内容や自社データを、AIモデルの学習には使用しません
@@ -884,11 +933,11 @@ export default async function BusinessLandingPage({
               </p>
             </div>
           </Card>
-          <Card className="flex items-start gap-4">
+          <Card className="min-w-0 flex items-start gap-4">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
               <Trash2 className="h-5 w-5" aria-hidden />
             </span>
-            <div>
+            <div className="min-w-0">
               <h3 className="font-semibold text-neutral-900">削除はあなたの権利</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
                 アカウント削除と同時に全データを削除します。開示・訂正・削除のご請求にも対応します。
@@ -903,7 +952,7 @@ export default async function BusinessLandingPage({
           （画像なし・藍系#243B6Eトーン・「名前は番頭から」の物語と響き合う場所に限定）。 */}
       <section className="border-t border-neutral-200 bg-neutral-50 bg-[repeating-linear-gradient(90deg,rgba(36,59,110,0.03)_0,rgba(36,59,110,0.03)_1px,transparent_1px,transparent_32px)]">
         <div className="mx-auto max-w-5xl px-6 py-16">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
                 <BadgeCheck className="h-5 w-5" aria-hidden />
@@ -1045,7 +1094,9 @@ export default async function BusinessLandingPage({
       </section>
 
       {/* ===== 料金 ===== */}
-      <section className="border-t border-neutral-200 bg-white">
+      {/* id="pricing": ヘッダの「料金」リンク・MobileNavの着地アンカー（L1監査#5）。
+          scroll-mt-20 でスティッキーヘッダ(h-16)ぶんのオフセットを確保する。 */}
+      <section id="pricing" className="scroll-mt-20 border-t border-neutral-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-20">
           {/* 2026-07-25 CTO修正: 課金開始(BILLING_ENABLED=true)に合わせて「無料モニター期間」
               表記を撤去。無料プランは引き続き存在するが、有料プランは実際に課金される。
@@ -1072,14 +1123,18 @@ export default async function BusinessLandingPage({
               登録しただけで自動的に課金が始まることはありません。
             </p>
           </div>
-          <div className="grid items-start gap-5 sm:grid-cols-3">
+          {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: グリッド子要素に min-w-0 を
+              付け、極端に狭い実効幅でもカード内の長いCTA文言を理由に横スクロールが
+              発生しないようにする（通常倍率では見た目は不変）。 */}
+          <div className="grid min-w-0 items-start gap-5 sm:grid-cols-3">
             {PLAN_COPY.map(p => (
               <Card
                 key={p.name}
                 className={
-                  p.featured
+                  'min-w-0 ' +
+                  (p.featured
                     ? 'border-brand-300 shadow-md ring-1 ring-brand-200'
-                    : undefined
+                    : '')
                 }
               >
                 <div className="flex items-center gap-2">
@@ -1089,7 +1144,7 @@ export default async function BusinessLandingPage({
                   )}
                 </div>
                 <p className="mt-1 text-sm text-neutral-500">{p.tagline}</p>
-                <p className="mt-4 flex items-baseline gap-1">
+                <p className="mt-4 flex flex-wrap items-baseline gap-1">
                   <span className="text-3xl font-bold tracking-tight text-neutral-900 tabular-nums">
                     &yen;{p.price}
                   </span>
@@ -1122,7 +1177,7 @@ export default async function BusinessLandingPage({
                   href={p.signupHref}
                   className={buttonClass({
                     variant: p.featured ? 'primary' : 'secondary',
-                    className: 'mt-6 w-full',
+                    className: 'mt-6 w-full whitespace-normal text-center',
                   })}
                 >
                   {p.cta}
@@ -1264,7 +1319,7 @@ export default async function BusinessLandingPage({
           <h2 className="text-center text-2xl font-bold tracking-tight text-neutral-900">
             今日やることは、3つだけ
           </h2>
-          <ol className="mt-6 grid gap-4 sm:grid-cols-3">
+          <ol className="mt-6 grid min-w-0 gap-4 sm:grid-cols-3">
             {[
               { step: '1', title: '無料で会社を登録', body: 'メールアドレスだけで始められます。クレジットカードは不要です。' },
               { step: '2', title: '気になる質問を5つ', body: '残業・有給・規程など、いつも調べていたことをそのまま聞いてみてください。' },
@@ -1295,12 +1350,13 @@ export default async function BusinessLandingPage({
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
             会社を登録して、最初の相談を投げてみてください。今日話したことを、番頭は明日も覚えています。
           </p>
-          <div className="mt-7 flex justify-center">
+          <div className="mt-7 flex min-w-0 justify-center">
             <TrackedCTA
               location="final"
               className={buttonClass({
                 variant: 'secondary',
                 size: 'lg',
+                className: 'whitespace-normal text-center',
               })}
             >
               無料で会社を登録して試す

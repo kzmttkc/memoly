@@ -59,6 +59,14 @@ export default function PrivacyPage() {
               <li><strong className="text-neutral-800">Stripe</strong>：有料プランの決済処理（米国）。カード情報はStripeが直接取り扱い、番頭のサーバーには保存されません。<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripeのプライバシーポリシー</a></li>
             </ul>
             <p className="mt-2 text-neutral-500">これらの第三者への情報提供は本サービス提供に必要な範囲に限定されます。EU/EEA在住の方：上記の第三国移転はGDPR第46条に基づく標準契約条項（SCC）に準拠します。</p>
+            {/* 2026-07-28 CTO修正（L1監査#9）: 日本の個人情報保護法が求める外国第三者提供の
+                説明（本人同意・移転先の制度水準）が欠けていた（ペルソナ4/10指摘）。 */}
+            <p className="mt-2 text-neutral-500">
+              日本の個人情報保護法（外国にある第三者への提供）に基づく説明: 上記の委託先はいずれも米国に所在します。
+              本サービスにご登録・ご利用いただくことをもって、業務委託に伴うこれらの外国第三者への情報提供に同意いただいたものとして取り扱います。
+              各社との間では、提供先の個人情報の取扱いに関する契約上の義務づけ（データ処理契約・SCC等）を確認したうえで利用しています。
+              同意の撤回・詳細の確認をご希望の場合は、下記お問い合わせ窓口までご連絡ください。
+            </p>
           </section>
 
           <section>
@@ -93,7 +101,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">9. お問い合わせ</h2>
-            <p><a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">support@banto-roumu.com</a></p>
+            <p><a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">support@banto-roumu.com</a>（メールでのお問い合わせを受け付けています。原則3営業日以内に返信します）</p>
           </section>
         </div>
       </div>

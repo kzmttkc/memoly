@@ -68,7 +68,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className={`h-full ${geist.variable}`}>
+    <html lang="ja" className={`h-full overflow-x-hidden ${geist.variable}`}>
       <head>
         <Script
           defer
@@ -101,7 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="font-sans bg-gray-950 text-gray-100 min-h-screen">
+      <body className="font-sans bg-gray-950 text-gray-100 min-h-screen overflow-x-hidden">
         {children}
         <CookieBanner />
         <Clarity />

@@ -50,10 +50,39 @@ function jpSignupError(message: string): string {
   return '登録に失敗しました。時間をおいてもう一度お試しください。'
 }
 
+// 2026-07-28 CTO修正（L1監査#3）: ?lang=en の英語化用エラー文言。ロジック（判定条件）は
+//   jpSignupError と完全に同一。表示文言のみ英語にする（新しい失敗パターンは追加しない）。
+function enSignupError(message: string): string {
+  const m = message.toLowerCase()
+  if (m.includes('already registered') || m.includes('already been registered')) {
+    return 'This email address is already registered.'
+  }
+  if (m.includes('password') && (m.includes('at least') || m.includes('too short') || m.includes('weak'))) {
+    return 'Password must be at least 8 characters.'
+  }
+  if (m.includes('invalid') && (m.includes('email') || m.includes('format'))) {
+    return 'Please check the format of your email address.'
+  }
+  if (m.includes('rate limit') || m.includes('for security purposes') || m.includes('too many requests')) {
+    return 'Too many attempts in a short time. Please wait a moment and try again.'
+  }
+  if (m.includes('signups not allowed') || m.includes('signup is disabled')) {
+    return 'New sign-ups are temporarily unavailable. Please try again later.'
+  }
+  if (m.includes('network') || m.includes('fetch')) {
+    return 'A network error occurred. Please check your connection and try again.'
+  }
+  return 'Sign-up failed. Please wait a moment and try again.'
+}
+
 function SignupForm() {
   // searchParams 由来のプリフィルを state 初期値に使うため、フックの先頭で読む
   //   （effect での setState を避ける＝react-hooks/set-state-in-effect 非違反）。
   const searchParams = useSearchParams()
+  // 2026-07-28 CTO修正（L1監査#3）: ?lang=en は表示文言だけを英語化する（ロジック・
+  //   バリデーション・Supabase呼び出しは完全に不変）。EN LP(/business/en)からの
+  //   signupHref に &lang=en を付けて渡す想定。
+  const isEn = searchParams.get('lang') === 'en'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   // C03: 会社名をsignupに統合し、/company（会社作成画面）の1段を削減する。
@@ -64,6 +93,9 @@ function SignupForm() {
   )
   const [ageOk, setAgeOk] = useState(false)
   const [digestOptIn, setDigestOptIn] = useState(false)
+  // 2026-07-28 CTO修正（L1監査#8）: 個人情報を預ける契約という性質上、利用規約・
+  //   プライバシーポリシーへの同意を注記文言だけでなく明示チェックボックスにする。
+  const [consentOk, setConsentOk] = useState(false)
   const [error, setError] = useState('')
   // 既登録の再訪（＝ログイン迷子）を、その場で回復できるインライン導線を出すためのフラグ。
   //   これまで「このメールアドレスはすでに登録されています。」の文言は出ていたが、
@@ -213,26 +245,47 @@ function SignupForm() {
     //   fire-and-forget の追加イベント（レイアウト・フィールド順・踏み板位置は一切不変＝A/B非汚染）。
     track('signup_submit_attempted', Object.keys(attribution).length ? attribution : undefined)
 
-    // 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け）
-    // 2026-07-19 growth修正: このチェックボックスは HTML の required 属性も併用していたため、
-    //   ブラウザのネイティブバリデーション（実測=Chromiumではブラウザの表示言語依存の英語文言
-    //   "Please check this box if you want to proceed." になりうる。ページ本体は日本語UIで
-    //   統一しているため、この一箇所だけ言語・見た目が浮いて離脱を招く恐れがあった）が
-    //   onSubmit より先に発火し、下のjpSignupError相当の丁寧な日本語エラー文が実際には
-    //   一度も表示されない死んだコードになっていた（required により早期リターンで止まる）。
-    //   required属性を外し、この分岐が実際に実行されるようにした（文言・チェック要件自体は不変）。
-    if (!ageOk) {
-      setError('事業者としてのご利用（18歳以上）に同意のうえチェックをお願いします。')
-      track('signup_blocked_age', Object.keys(attribution).length ? attribution : undefined)
-      return
+    // 2026-07-28 CTO修正（L1監査#12）: 従来は各項目を早期return（1件ずつ）でしか
+    //   検証しておらず、1回の送信で1つのエラーしか見えなかった（直してもまた次が出る
+    //   体験・ペルソナ6指摘）。<form noValidate> と併せて、ここで全項目をまとめて検証し、
+    //   該当する不備を全て一度に表示する。個々のメッセージ文言・判定条件は従来と不変。
+    //
+    // 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け）。
+    // 2026-07-19 growth修正 / 2026-07-26 CTO修正(F-7): チェックボックスの native required
+    //   や password の native minLength はブラウザ表示言語依存の英語ツールチップになりうるため
+    //   使わず、ここで日本語/英語の自前エラーとして検証する（要件自体は不変）。
+    // 2026-07-28 CTO修正（L1監査#12）: メールアドレスも native type="email" の検証に頼らず
+    //   ここで検証し、ブラウザネイティブの非日本語ツールチップが出ないようにする。
+    const errors: string[] = []
+    const emailTrimmed = email.trim()
+    const emailFormatOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)
+    if (!emailTrimmed) {
+      errors.push(isEn ? 'Please enter your email address.' : 'メールアドレスを入力してください。')
+    } else if (!emailFormatOk) {
+      errors.push(isEn ? 'Please check the format of your email address.' : 'メールアドレスの形式をご確認ください。')
     }
-
-    // 2026-07-26 CTO修正(F-7): 年齢チェックボックスと同型の問題（2026-07-19に是正済み）が
-    //   パスワード欄の minLength={8} に残っていた。ネイティブバリデーションのメッセージは
-    //   ブラウザUI言語依存の英語文言("Please lengthen this text to 8 characters or more...")に
-    //   なりうり、日本語UIの中で1箇所だけ浮く。minLength属性を外し、この分岐で日本語エラーを出す。
     if (password.length < 8) {
-      setError('パスワードは8文字以上で設定してください。')
+      errors.push(isEn ? 'Password must be at least 8 characters.' : 'パスワードは8文字以上で設定してください。')
+    }
+    if (!ageOk) {
+      errors.push(
+        isEn
+          ? 'Please confirm you are using this as a business (18+) by checking the box.'
+          : '事業者としてのご利用（18歳以上）に同意のうえチェックをお願いします。',
+      )
+    }
+    if (!consentOk) {
+      errors.push(
+        isEn
+          ? 'Please agree to the Terms of Service and Privacy Policy by checking the box.'
+          : '利用規約とプライバシーポリシーへの同意にチェックをお願いします。',
+      )
+    }
+    if (errors.length > 0) {
+      // 改行区切りで結合し、表示側は whitespace-pre-line で1行ずつ見せる
+      // （L1監査#12: 一括表示化。区切り文字に依存した split はしない）。
+      setError(errors.join('\n'))
+      if (!ageOk) track('signup_blocked_age', Object.keys(attribution).length ? attribution : undefined)
       return
     }
 
@@ -257,7 +310,7 @@ function SignupForm() {
       // 計測: 登録失敗を可視化（今まで完全に不可視だった）。既登録の再訪＝ログイン迷子は別問題として切り分け。
       track('signup_failed', { reason: already ? 'already_registered' : 'other', ...attribution })
       // Supabase の英語エラー原文をそのまま出さない（主要パターンは日本語化・他は汎用日本語文）。
-      setError(jpSignupError(error.message))
+      setError(isEn ? enSignupError(error.message) : jpSignupError(error.message))
       // 既登録なら、意図した着地(nextDest)を保ったままログインへ回すインライン回復導線を出す。
       setAlreadyRegistered(already)
       setLoading(false)
@@ -315,7 +368,11 @@ function SignupForm() {
       options: { emailRedirectTo: `${location.origin}${nextDest}` },
     })
     if (error) {
-      setError('確認メールの再送に失敗しました。時間をおいて試してください。')
+      setError(
+        isEn
+          ? 'Failed to resend the confirmation email. Please wait a moment and try again.'
+          : '確認メールの再送に失敗しました。時間をおいて試してください。',
+      )
     } else {
       setResent(true)
     }
@@ -325,36 +382,58 @@ function SignupForm() {
   if (done) {
     return (
       <div className="text-center">
-        <h2 className="mb-2 text-lg font-semibold text-neutral-900">確認メールを送りました</h2>
+        <h2 className="mb-2 text-lg font-semibold text-neutral-900">
+          {isEn ? 'Confirmation email sent' : '確認メールを送りました'}
+        </h2>
         <p className="text-sm leading-relaxed text-neutral-600">
-          {email} に確認メールをお送りしました。メール内のリンクを開くと登録が完了し、そのまま会社の登録画面に進めます。
+          {isEn
+            ? `We sent a confirmation email to ${email}. Opening the link in the email completes your sign-up and takes you straight to the company setup screen.`
+            : `${email} に確認メールをお送りしました。メール内のリンクを開くと登録が完了し、そのまま会社の登録画面に進めます。`}
         </p>
         <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-          数分待ってもメールが届かない場合は、迷惑メールフォルダもご確認ください。
+          {isEn
+            ? 'If the email doesn’t arrive after a few minutes, please also check your spam folder.'
+            : '数分待ってもメールが届かない場合は、迷惑メールフォルダもご確認ください。'}
         </p>
 
         {/* C01: 確認待ちを空白時間にしない。登録が終わった先で番頭が何を覚えるかを先出しし、
             デモ/ツール由来の文脈（fromBanto/fromTool）はここでも引き継ぎを約束する。
             記載は実挙動の範囲のみ（覚える対象は既存機能: 自社ルール・相談履歴・期限）。 */}
         <div className="mt-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-left">
-          <p className="text-xs font-medium text-neutral-500">確認を待つあいだに ─ 番頭が覚えること</p>
+          <p className="text-xs font-medium text-neutral-500">
+            {isEn ? 'While you wait — what Banto will remember' : '確認を待つあいだに ─ 番頭が覚えること'}
+          </p>
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-neutral-700">
-            <li>・就業規則や36協定など、自社ルールの前提</li>
-            <li>・有給や残業の運用と、過去に相談した内容</li>
-            <li>・年間の労務手続きと、自社で確定した期限</li>
+            {isEn ? (
+              <>
+                <li>Your work rules and 36 Agreement status</li>
+                <li>Your paid-leave/overtime practices and past consultations</li>
+                <li>Your annual labor procedures and confirmed deadlines</li>
+              </>
+            ) : (
+              <>
+                <li>・就業規則や36協定など、自社ルールの前提</li>
+                <li>・有給や残業の運用と、過去に相談した内容</li>
+                <li>・年間の労務手続きと、自社で確定した期限</li>
+              </>
+            )}
           </ul>
           <p className="mt-2.5 text-xs leading-relaxed text-neutral-600">
-            {fromBanto
-              ? fromTool
-                ? 'さきほどの点検結果も、登録後にそのまま引き継げます。二度目の相談は、昨日の続きから始まります。'
-                : 'さきほどの答え方も、登録後は自社の前提で続けられます。二度目の相談は、昨日の続きから始まります。'
-              : '一度覚えた前提は説明し直す必要がありません。二度目の相談は、昨日の続きから始まります。'}
+            {isEn
+              ? 'Once you’re in, you won’t need to explain the same context again — your next conversation picks up where today’s left off.'
+              : fromBanto
+                ? fromTool
+                  ? 'さきほどの点検結果も、登録後にそのまま引き継げます。二度目の相談は、昨日の続きから始まります。'
+                  : 'さきほどの答え方も、登録後は自社の前提で続けられます。二度目の相談は、昨日の続きから始まります。'
+                : '一度覚えた前提は説明し直す必要がありません。二度目の相談は、昨日の続きから始まります。'}
           </p>
         </div>
 
         <div className="mt-6 space-y-3">
           {resent ? (
-            <p className="text-sm text-success-700">確認メールを再送しました。</p>
+            <p className="text-sm text-success-700">
+              {isEn ? 'Confirmation email resent.' : '確認メールを再送しました。'}
+            </p>
           ) : (
             <Button
               type="button"
@@ -364,12 +443,12 @@ function SignupForm() {
               disabled={resending}
               className="w-full"
             >
-              {resending ? '再送中...' : '確認メールを再送する'}
+              {resending ? (isEn ? 'Resending...' : '再送中...') : isEn ? 'Resend confirmation email' : '確認メールを再送する'}
             </Button>
           )}
 
           <Link href={`/login?next=${encodeURIComponent(nextDest)}`} className={buttonClass({ variant: 'ghost', size: 'lg', className: 'w-full' })}>
-            ログイン画面へ
+            {isEn ? 'Go to login' : 'ログイン画面へ'}
           </Link>
         </div>
 
@@ -387,37 +466,48 @@ function SignupForm() {
       {fromBanto && (
         <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-sm leading-relaxed text-neutral-700">
           <p>
-            {fromTool
-              ? 'さきほどの点検結果を、自社の前提でそのまま受け取るための登録です。'
-              : 'さきほどの答え方を、自社の前提でそのまま受け取るための登録です。'}
+            {isEn
+              ? 'This sign-up lets you continue with your own company’s context.'
+              : fromTool
+                ? 'さきほどの点検結果を、自社の前提でそのまま受け取るための登録です。'
+                : 'さきほどの答え方を、自社の前提でそのまま受け取るための登録です。'}
           </p>
+          {/* 2026-07-28 CTO修正（L1監査#16）: 「会社の登録は次の画面で」は、実際には
+              この画面に会社名欄（任意）が既にあり、下の「はじめるまでの流れ」とも
+              食い違っていた（ペルソナ2指摘）。実挙動（この画面でまとめて入力できる・
+              未入力でも進める）に合わせて修正する。 */}
           <p className="mt-1 text-neutral-600">
-            会社の登録は次の画面で、まず1社ぶんから無料で始められます。
+            {isEn
+              ? 'You can enter your company name on this same screen (optional, can add later). You can start with your first company for free.'
+              : '会社名はこの画面でまとめて入力できます（未入力でもあとから登録できます）。まず1社ぶんから無料で始められます。'}
           </p>
         </div>
       )}
 
-      <p className="mb-2 text-center text-sm text-neutral-600">無料で始める</p>
+      <p className="mb-2 text-center text-sm text-neutral-600">{isEn ? 'Start free' : '無料で始める'}</p>
 
       {/* 2026-07-25 CTO修正: 課金開始(BILLING_ENABLED=true)に合わせて「無料モニター期間」表記を撤去。
           直接流入（bare /signup）にも安心材料を1行出す。事実（この登録画面ではカード情報を収集しない・
           有料プランへの切り替えは会社ページからご自身の操作でのみ発生・アカウント削除と同時に全データ削除）
           の範囲のみ。 */}
       <p className="mb-4 text-center text-xs leading-relaxed text-neutral-500">
-        登録は無料で、クレジットカードの登録も不要です。有料プランへの切り替えは、
-        登録後に会社ページからご自身で行っていただきます。データはアカウント削除と同時にすべて削除できます。
+        {isEn
+          ? 'Sign-up is free and does not require a credit card. You can switch to a paid plan yourself from the company page after signing up. All data can be deleted at the same time as account deletion.'
+          : '登録は無料で、クレジットカードの登録も不要です。有料プランへの切り替えは、登録後に会社ページからご自身で行っていただきます。データはアカウント削除と同時にすべて削除できます。'}
       </p>
 
       {/* C02: OAuth（Google/GitHub）を主導線として先頭へ（メール登録より摩擦が少ない）。
           Supabase側のプロバイダ設定は有効を実測確認済み（/auth/v1/authorize が302）。 */}
       <OAuthButtons next={nextDest} />
       <p className="mt-2 text-center text-xs text-neutral-500">
-        GitHub・Googleでの登録も、事業者としてのご利用（18歳以上）とみなします。
+        {isEn
+          ? 'Signing up with GitHub or Google is also treated as confirming business use (18+).'
+          : 'GitHub・Googleでの登録も、事業者としてのご利用（18歳以上）とみなします。'}
       </p>
 
       <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
         <div className="h-px flex-1 bg-neutral-200" />
-        またはメールアドレスで登録
+        {isEn ? 'or sign up with email' : 'またはメールアドレスで登録'}
         <div className="h-px flex-1 bg-neutral-200" />
       </div>
 
@@ -426,24 +516,25 @@ function SignupForm() {
           着手前の不確実性を消す（goal-gradient）。必須項目は既に email+password のみ
           （会社名は任意・氏名フィールドは無し）で、氏名・会社名・年齢確認の扱いは変更しない。 */}
       <p className="mb-3 text-center text-xs font-medium text-neutral-500">
-        入力は1分・クレジットカード不要
+        {isEn ? 'Takes about 1 minute · no credit card' : '入力は1分・クレジットカード不要'}
       </p>
 
-      <form onSubmit={handleSignup} className="space-y-4">
+      {/* 2026-07-28 CTO修正（L1監査#12）: ブラウザ表示言語依存の非日本語ネイティブ
+          バリデーション（メール形式等）を封じ、下の一括検証（errors配列）に完全移管する。
+          noValidate は挙動を変えない＝送信時に必ず handleSignup 側の検証を通る。 */}
+      <form onSubmit={handleSignup} className="space-y-4" noValidate>
         <Input
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          placeholder="メールアドレス"
-          required
+          placeholder={isEn ? 'Email address' : 'メールアドレス'}
           autoComplete="email"
         />
         <Input
           type="password"
           value={password}
           onChange={e => setPassword(e.target.value)}
-          placeholder="パスワード（8文字以上）"
-          required
+          placeholder={isEn ? 'Password (8+ characters)' : 'パスワード（8文字以上）'}
           autoComplete="new-password"
         />
 
@@ -454,26 +545,63 @@ function SignupForm() {
           <Input
             value={companyName}
             onChange={e => setCompanyName(e.target.value)}
-            placeholder="会社名（任意・あとでも入力できます）"
+            placeholder={isEn ? 'Company name (optional, can add later)' : '会社名（任意・あとでも入力できます）'}
             maxLength={100}
             autoComplete="organization"
-            aria-label="会社名（任意）"
+            aria-label={isEn ? 'Company name (optional)' : '会社名（任意）'}
           />
           <p className="mt-1 text-xs text-neutral-500">
-            入力しておくと、登録後すぐに自社の診断に進めます。
+            {isEn
+              ? 'If entered, you’ll go straight into your company risk check right after signing up.'
+              : '入力しておくと、登録後すぐに自社の診断に進めます。'}
           </p>
         </div>
 
-        {/* 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け） */}
+        {/* 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け）。
+            2026-07-28 CTO修正（L1監査#15）: 必須項目であることが視覚的に分かるよう
+            アスタリスク(*)を付ける（チェック要件自体は不変）。 */}
         <label className="flex cursor-pointer items-start gap-3">
           <input
             type="checkbox"
             checked={ageOk}
             onChange={e => setAgeOk(e.target.checked)}
             className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/30"
+            aria-required="true"
           />
           <span className="text-xs text-neutral-600">
-            事業者として利用します（18歳以上）
+            {isEn ? 'I am using this as a business (18+)' : '事業者として利用します（18歳以上）'}
+            <span className="text-danger-600"> *</span>
+          </span>
+        </label>
+
+        {/* 2026-07-28 CTO修正（L1監査#8）: 利用規約・プライバシーポリシーへの同意を
+            注記文言だけでなく明示チェックボックスにする（機密の労務データを預ける
+            契約という性質上、能動的な同意取得が必要というペルソナ10の指摘）。
+            リンク先は ?lang=en のときのみ英語版に切り替える。 */}
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={consentOk}
+            onChange={e => setConsentOk(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/30"
+            aria-required="true"
+          />
+          <span className="text-xs text-neutral-600">
+            {isEn ? (
+              <>
+                I agree to the{' '}
+                <Link href="/terms/en" className="underline hover:text-neutral-700" target="_blank">Terms of Service</Link>{' '}
+                and{' '}
+                <Link href="/privacy/en" className="underline hover:text-neutral-700" target="_blank">Privacy Policy</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/terms" className="underline hover:text-neutral-700" target="_blank">利用規約</Link>と
+                <Link href="/privacy" className="underline hover:text-neutral-700" target="_blank">プライバシーポリシー</Link>
+                に同意します
+              </>
+            )}
+            <span className="text-danger-600"> *</span>
           </span>
         </label>
 
@@ -486,11 +614,15 @@ function SignupForm() {
             className="mt-0.5 accent-brand-600"
           />
           <span className="text-xs text-neutral-600">
-            番頭の新機能・労務の最新情報をメールで受け取る（任意・いつでも停止可能）
+            {isEn
+              ? 'Receive product updates and labor-law news by email (optional, unsubscribe anytime)'
+              : '番頭の新機能・労務の最新情報をメールで受け取る（任意・いつでも停止可能）'}
           </span>
         </label>
 
-        {error && <p className="text-sm text-danger-600">{error}</p>}
+        {/* 2026-07-28 CTO修正（L1監査#12）: 複数の不備がある場合は1行ずつ改行して
+            まとめて表示する（従来は1件ずつ・直しては次が出る体験だった）。 */}
+        {error && <p className="whitespace-pre-line text-sm text-danger-600">{error}</p>}
 
         {/* 既登録の再訪（ログイン迷子）を行き止まりにしない: 意図した着地(nextDest)を
             保ったまま1クリックでログインへ回す。純追加でフォーム構造・A/Bは不変。
@@ -502,21 +634,28 @@ function SignupForm() {
               onClick={() => track('login_from_already_registered')}
               className={buttonClass({ variant: 'secondary', size: 'lg', className: 'w-full' })}
             >
-              このメールアドレスでログインする
+              {isEn ? 'Log in with this email address' : 'このメールアドレスでログインする'}
             </Link>
             {/* C11延長: パスワード忘れも行き止まりにしない（既登録→ログイン導線の補完）。 */}
             <p className="text-center text-xs text-neutral-500">
-              パスワードを忘れた場合は{' '}
-              <Link href="/forgot-password" className="underline hover:text-neutral-700">
-                こちらから再設定
-              </Link>
-              できます。
+              {isEn ? (
+                <>
+                  Forgot your password?{' '}
+                  <Link href="/forgot-password" className="underline hover:text-neutral-700">Reset it here</Link>.
+                </>
+              ) : (
+                <>
+                  パスワードを忘れた場合は{' '}
+                  <Link href="/forgot-password" className="underline hover:text-neutral-700">こちらから再設定</Link>
+                  できます。
+                </>
+              )}
             </p>
           </>
         )}
 
         <Button type="submit" size="lg" disabled={loading} className="w-full">
-          {loading ? '登録中...' : '無料で始める'}
+          {loading ? (isEn ? 'Signing up...' : '登録中...') : isEn ? 'Start free' : '無料で始める'}
         </Button>
       </form>
 
@@ -531,13 +670,22 @@ function SignupForm() {
           押し出されていたため、この枠をフォーム送信ボタンの下へ移動（内容・文言は不変・位置のみ）。
           measure=既存 signup_started→signup_completed 通過率（judge 2026-07-22）。 */}
       <div className="mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
-        <p className="mb-2.5 text-xs font-medium text-neutral-500">はじめるまでの流れ（1〜2分ほど）</p>
+        <p className="mb-2.5 text-xs font-medium text-neutral-500">
+          {isEn ? 'How it starts (about 1–2 minutes)' : 'はじめるまでの流れ（1〜2分ほど）'}
+        </p>
         <ol className="space-y-2">
-          {[
-            'メールアドレスとパスワードを入力する',
-            '会社名を1つ登録する（この画面でまとめて入力できます）',
-            '任意の5つの質問に答えると、自社のリスク診断と年間手続きカレンダーがその場で出る',
-          ].map((step, i) => (
+          {(isEn
+            ? [
+                'Enter your email address and password',
+                'Enter one company name (you can do this on this same screen)',
+                'Answer 5 optional questions to get an instant risk check and annual procedure calendar',
+              ]
+            : [
+                'メールアドレスとパスワードを入力する',
+                '会社名を1つ登録する（この画面でまとめて入力できます）',
+                '任意の5つの質問に答えると、自社のリスク診断と年間手続きカレンダーがその場で出る',
+              ]
+          ).map((step, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-neutral-700">
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">
                 {i + 1}
@@ -548,16 +696,18 @@ function SignupForm() {
         </ol>
       </div>
 
-      <p className="mt-4 text-center text-xs text-neutral-500">
-        登録することで
-        <Link href="/terms" className="underline hover:text-neutral-700">利用規約</Link>と
-        <Link href="/privacy" className="underline hover:text-neutral-700">プライバシーポリシー</Link>
-        に同意したものとみなします
-      </p>
-
       <p className="mt-4 text-center text-sm text-neutral-500">
-        すでにアカウントをお持ちの方は{' '}
-        <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">ログイン</Link>
+        {isEn ? (
+          <>
+            Already have an account?{' '}
+            <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">Log in</Link>
+          </>
+        ) : (
+          <>
+            すでにアカウントをお持ちの方は{' '}
+            <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">ログイン</Link>
+          </>
+        )}
       </p>
     </div>
   )

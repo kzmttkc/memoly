@@ -21,6 +21,8 @@ import { Menu, X } from 'lucide-react'
 const LINKS = [
   { href: '/tools', label: '無料ツール' },
   { href: '/roumu', label: '労務の記事' },
+  // 2026-07-28 CTO修正（L1監査#5）: モバイルもハンバーガーから料金へ直接届くようにする。
+  { href: '#pricing', label: '料金' },
 ] as const
 
 export function MobileNav() {
