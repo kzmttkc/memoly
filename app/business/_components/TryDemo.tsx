@@ -113,6 +113,21 @@ export default function TryDemo() {
   const engagedRef = useRef(false)
   // ビューポート進入での「受動再生」を1回だけ発火するためのフラグ。
   const autoplayedRef = useRef(false)
+  // 2026-07-28 CTO修正（L2監査#7・実機再現で特定）: 下のIntersectionObserver
+  //   effectは [play] のみに依存し、コールバック自体はマウント時に1度だけ作られる。
+  //   そのクロージャが捕まえる `industry` はマウント時点のスナップショットのままで、
+  //   以後ヒーロー側の業種タブ切替で sharedIndustry が変わっても更新されない。
+  //   その結果「ヒーローで業種を変えてから体験デモが初めて視界に入る」順序のとき、
+  //   自動再生が古い業種（既定=製造）の1問目を再生してしまい、タブ表示（新業種）と
+  //   回答内容（旧業種）が食い違って見える＝ペルソナ報告の「数秒後に製造へ巻き戻る」
+  //   の実体（実際は巻き戻りではなく、遅れて発火する自動再生が古い業種のまま、だった）。
+  //   レンダーの度に最新値を書き込むrefを用意し、Observerのコールバックはこのrefを
+  //   読むことで常に最新の業種を再生する（IntersectionObserver自体の「1回だけ」発火
+  //   ロジックは変えない）。
+  const industryRef = useRef(industry)
+  useEffect(() => {
+    industryRef.current = industry
+  }, [industry])
 
   const isBusy = typing !== null
 
@@ -234,6 +249,10 @@ export default function TryDemo() {
   //   2026-07-28 CTO修正（L1監査#11）: 常に製造業(INDUSTRIES[0])固定だと、ヒーローで
   //   他業種を選んでから体験デモが視界に入った場合にタブ表示と回答内容が食い違う。
   //   その時点の industry（現在選択中の業種）の1問目を再生する。
+  //   2026-07-28 CTO修正（L2監査#7）: 上記を「その時点」で読むために、依存配列に
+  //   industry を含めるとObserverが再生成され「1回だけ」の保証が崩れるため、代わりに
+  //   industryRef（常に最新値へ同期済み）をコールバック内で読む。これでObserver自体は
+  //   マウント時に1回だけ張られたまま、実際に発火した瞬間の最新業種を再生する。
   useEffect(() => {
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
     const el = sectionRef.current
@@ -246,15 +265,12 @@ export default function TryDemo() {
         autoplayedRef.current = true
         observer.disconnect()
         track('demo_autoplayed')
-        play(industry.qa[0])
+        play(industryRef.current.qa[0])
       },
       { threshold: 0.4 },
     )
     observer.observe(el)
     return () => observer.disconnect()
-    // industry は初回表示時点のスナップショットで十分（自動再生は1回だけのため
-    // 依存に含めない＝以後の業種変更で再発火させない）。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [play])
 
   // 回答が1件でも確定していれば再計算CTA（B14）を出す。
@@ -285,9 +301,12 @@ export default function TryDemo() {
           {INDUSTRIES.map(i => (
             <button
               key={i.key}
+              id={`trydemo-tab-${i.key}`}
               type="button"
               role="tab"
               aria-selected={i.key === industryKey}
+              aria-controls="trydemo-tabpanel"
+              tabIndex={i.key === industryKey ? 0 : -1}
               onClick={() => switchIndustry(i.key)}
               className={
                 i.key === industryKey
@@ -300,7 +319,17 @@ export default function TryDemo() {
           ))}
         </div>
 
-        <Card className="overflow-hidden p-0 shadow-md ring-1 ring-neutral-200/60">
+        {/* 2026-07-28 CTO修正（L2監査#12）: role="tab"のボタンにaria-controlsは
+            付いていたが、対応するrole="tabpanel"の要素が存在せず片側だけの実装
+            だった（ペルソナ8指摘）。このCard自体を業種タブのパネルとして
+            id・role・aria-labelledbyで結線する。 */}
+        <Card
+          id="trydemo-tabpanel"
+          role="tabpanel"
+          aria-labelledby={`trydemo-tab-${industryKey}`}
+          tabIndex={0}
+          className="overflow-hidden p-0 shadow-md ring-1 ring-neutral-200/60"
+        >
           {/* ウィンドウバー（「記憶あり」インジケータ） */}
           <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">

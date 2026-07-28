@@ -72,7 +72,16 @@ export default function TokushohoPage() {
         <dl>
           <Row label="事業者名">KIZUNA Creation（個人事業者）</Row>
 
-          <Row label="代表者の氏名・所在地・電話番号">
+          {/* 2026-07-28 CTO修正（L2監査#4）: /terms・/privacy には代表者名
+              「Kazumoto Takeshi」を既に明記しているのに、本ページだけ氏名まで
+              請求開示制の対象としており、同一サイト内で開示レベルが矛盾していた
+              （ペルソナ4指摘）。特定商取引法の請求開示特例は住所・電話番号のみが
+              対象で、氏名は常時表示が原則のため、氏名はここでも直接開示し、
+              住所・電話番号のみ請求開示のままとする（新規の個人情報開示は行わない
+              ＝他ページで既に公開済みの氏名を、この一覧にも一致させるのみ）。 */}
+          <Row label="代表者の氏名">Kazumoto Takeshi</Row>
+
+          <Row label="所在地・電話番号">
             個人事業主として運営しているため、特定商取引法の定めに基づき、常時表示ではなく
             消費者からのご請求により遅滞なく開示する方式を採用しています（法令上認められた表示方法です）。
             開示をご希望の方は、下記のお問い合わせ窓口（
@@ -98,7 +107,7 @@ export default function TokushohoPage() {
                   <li key={id}>
                     {p.displayName}プラン：月額 &yen;{p.monthlyJpy.toLocaleString()}
                     {p.multiClient
-                      ? `（1席あたり・最大${p.seatCap}席）`
+                      ? `（1席あたり・最大${p.seatCap}席・顧問先は最大${p.maxCompanies}社まで登録可能）`
                       : `（1社あたり・利用メンバー${p.seatCap}名まで追加料金なし）`}
                     {p.yearlyJpy != null && (
                       <>

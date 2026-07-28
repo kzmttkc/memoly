@@ -96,9 +96,12 @@ export default function IndustryHeroPreview() {
         {INDUSTRIES.map(i => (
           <button
             key={i.key}
+            id={`hero-tab-${i.key}`}
             type="button"
             role="tab"
             aria-selected={i.key === selected}
+            aria-controls="hero-tabpanel"
+            tabIndex={selected === null ? (i.key === INDUSTRIES[0].key ? 0 : -1) : i.key === selected ? 0 : -1}
             onClick={() => select(i.key)}
             className={
               i.key === selected
@@ -111,6 +114,11 @@ export default function IndustryHeroPreview() {
         ))}
       </div>
 
+      {/* 2026-07-28 CTO修正（L2監査#12）: role="tab"に対応するrole="tabpanel"が
+          存在しなかった（ペルソナ8指摘）。選択中パネル全体をtabpanelとして結線する。
+          未選択(FV01)時はどのタブにも属さない読み上げ専用の説明のため、
+          aria-labelledbyは付けない（tablist自体のaria-labelで文脈は伝わる）。 */}
+      <div id="hero-tabpanel" role="tabpanel" aria-labelledby={selected ? `hero-tab-${selected}` : undefined}>
       {selected === null ? (
         <>
           {/* ===== FV01: チャット継続モック（承認済みコピー・変えない） ===== */}
@@ -171,6 +179,7 @@ export default function IndustryHeroPreview() {
       ) : (
         <IndustryPanel industry={selected} />
       )}
+      </div>
     </div>
   )
 }

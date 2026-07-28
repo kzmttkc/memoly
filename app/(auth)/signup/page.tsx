@@ -459,6 +459,27 @@ function SignupForm() {
 
   return (
     <div>
+      {/* 2026-07-28 CTO修正（L2監査#1）: /signup に見出し(h1等)が1つも無く、
+          スクリーンリーダーの見出しナビゲーションが使えなかった（ペルソナ8指摘）。
+          視覚デザイン（既存の小さい"無料で始める"文言）は変えず、読み上げ専用の
+          h1を追加する。 */}
+      <h1 className="sr-only">{isEn ? 'Sign up for Banto' : '番頭(Banto) 新規登録'}</h1>
+
+      {/* 2026-07-28 CTO修正（L2監査#3）: /signup?plan=shigyo で来ても画面上には
+          何も反映されず、遷移先(nextDest)へ静かに持ち回るだけだった（ペルソナ10
+          指摘：「plan=shigyo導線がsignup画面に反映されない」）。士業プランでの
+          登録であることをその場で明示する（実挙動＝登録後にonboardingへ
+          plan=shigyoが引き継がれる、の範囲のみを伝える）。 */}
+      {planParam === 'shigyo' && (
+        <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-sm leading-relaxed text-neutral-700">
+          <p>
+            {isEn
+              ? 'Signing up for the 士業 (professional) plan — you’ll be able to manage multiple client companies with separate memory for each.'
+              : '士業プランでの登録ですね。登録後、複数の顧問先企業を切り替えて管理できるようになります（企業ごとに記憶は分離されます）。'}
+          </p>
+        </div>
+      )}
+
       {/* 継続コンテキスト（踏み板）: 番頭起点の流入だけに表示。デモ/ツールで温まった
           文脈を「御社の前提で受け取るための登録」として言い直し、温度を持ち越す。
           景表法＝果たせる約束のみ（会社登録は次画面・まず1社ぶんから無料で）。
@@ -497,8 +518,10 @@ function SignupForm() {
       </p>
 
       {/* C02: OAuth（Google/GitHub）を主導線として先頭へ（メール登録より摩擦が少ない）。
-          Supabase側のプロバイダ設定は有効を実測確認済み（/auth/v1/authorize が302）。 */}
-      <OAuthButtons next={nextDest} />
+          Supabase側のプロバイダ設定は有効を実測確認済み（/auth/v1/authorize が302）。
+          2026-07-28 CTO修正（L2監査#5）: OAuthボタンの文言が?lang=enでも日本語の
+          ままだった（ペルソナ6指摘・部分翻訳）。isEnを渡して英語化する。 */}
+      <OAuthButtons next={nextDest} isEn={isEn} />
       <p className="mt-2 text-center text-xs text-neutral-500">
         {isEn
           ? 'Signing up with GitHub or Google is also treated as confirming business use (18+).'
@@ -523,20 +546,40 @@ function SignupForm() {
           バリデーション（メール形式等）を封じ、下の一括検証（errors配列）に完全移管する。
           noValidate は挙動を変えない＝送信時に必ず handleSignup 側の検証を通る。 */}
       <form onSubmit={handleSignup} className="space-y-4" noValidate>
-        <Input
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder={isEn ? 'Email address' : 'メールアドレス'}
-          autoComplete="email"
-        />
-        <Input
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          placeholder={isEn ? 'Password (8+ characters)' : 'パスワード（8文字以上）'}
-          autoComplete="new-password"
-        />
+        {/* 2026-07-28 CTO修正（L2監査#1）: メール・パスワード欄がplaceholderのみに
+            依存し、label/aria-labelもrequired/aria-required属性も無かった
+            （ペルソナ8指摘。スクリーンリーダー利用者はプレースホルダー消失後に
+            項目名が分からなくなる）。視覚デザイン（プレースホルダー表示）は不変のまま、
+            sr-onlyのlabelとaria-requiredを追加する（native requiredは英語ツールチップを
+            避けるため引き続き付けない＝L1監査#12の判断を継承）。 */}
+        <div>
+          <label htmlFor="signup-email" className="sr-only">
+            {isEn ? 'Email address' : 'メールアドレス'}
+          </label>
+          <Input
+            id="signup-email"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder={isEn ? 'Email address' : 'メールアドレス'}
+            autoComplete="email"
+            aria-required="true"
+          />
+        </div>
+        <div>
+          <label htmlFor="signup-password" className="sr-only">
+            {isEn ? 'Password (8+ characters)' : 'パスワード（8文字以上）'}
+          </label>
+          <Input
+            id="signup-password"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder={isEn ? 'Password (8+ characters)' : 'パスワード（8文字以上）'}
+            autoComplete="new-password"
+            aria-required="true"
+          />
+        </div>
 
         {/* C03: 会社名の統合入力（任意）。入力があれば登録直後に会社を作成して
             5問オンボーディングへ直行し、会社作成画面の1段を削減する。
@@ -590,14 +633,14 @@ function SignupForm() {
             {isEn ? (
               <>
                 I agree to the{' '}
-                <Link href="/terms/en" className="underline hover:text-neutral-700" target="_blank">Terms of Service</Link>{' '}
+                <Link href="/terms/en" className="underline hover:text-neutral-700" target="_blank" rel="noopener noreferrer">Terms of Service</Link>{' '}
                 and{' '}
-                <Link href="/privacy/en" className="underline hover:text-neutral-700" target="_blank">Privacy Policy</Link>
+                <Link href="/privacy/en" className="underline hover:text-neutral-700" target="_blank" rel="noopener noreferrer">Privacy Policy</Link>
               </>
             ) : (
               <>
-                <Link href="/terms" className="underline hover:text-neutral-700" target="_blank">利用規約</Link>と
-                <Link href="/privacy" className="underline hover:text-neutral-700" target="_blank">プライバシーポリシー</Link>
+                <Link href="/terms" className="underline hover:text-neutral-700" target="_blank" rel="noopener noreferrer">利用規約</Link>と
+                <Link href="/privacy" className="underline hover:text-neutral-700" target="_blank" rel="noopener noreferrer">プライバシーポリシー</Link>
                 に同意します
               </>
             )}

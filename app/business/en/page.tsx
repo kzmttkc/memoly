@@ -113,8 +113,12 @@ export default function BusinessEnglishPage() {
               <Globe className="h-3.5 w-3.5" aria-hidden />
               日本語
             </Link>
+            {/* 2026-07-28 CTO fix (L2 audit #5): this link previously dropped to
+                /login?next=/company with no lang=en, so an English-reading visitor
+                landed on a fully Japanese login screen. /login now supports
+                ?lang=en, so carry it through. */}
             <Link
-              href="/login?next=/company"
+              href="/login?next=/company&lang=en"
               className={buttonClass({ variant: 'ghost', size: 'sm' })}
             >
               Log in
@@ -314,7 +318,7 @@ export default function BusinessEnglishPage() {
             </div>
             <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
               <Link href="/business" className="hover:text-brand-700">日本語サイト</Link>
-              <Link href="/login?next=/company" className="hover:text-brand-700">Log in</Link>
+              <Link href="/login?next=/company&lang=en" className="hover:text-brand-700">Log in</Link>
               <Link href="/terms/en" className="hover:text-brand-700">Terms (English)</Link>
               <Link href="/privacy/en" className="hover:text-brand-700">Privacy (English)</Link>
               <Link href="/tokushoho" className="hover:text-brand-700">特定商取引法に基づく表記</Link>

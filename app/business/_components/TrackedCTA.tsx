@@ -52,17 +52,27 @@ export function TrackedCTA({
   // 既定で確認後/登録後の着地を /company に固定（活性化の次の一歩を保証）。
   // signup ページは ?next を読んで尊重する実装になっている。
   href = '/signup?next=/company',
+  // 2026-07-28 CTO修正（L2監査#13）: 同一ページ内に同じ href(既定値)を持つ
+  //   TrackedCTAが複数（hero/pricing x2/final/footer）マウントされ、かつヘッダの
+  //   HeaderCta（常時マウント・prefetch既定=true）も同じhrefを持つため、ページ
+  //   読み込み・スクロールのたびに同一ルートへの重複したprefetch通信が発生していた
+  //   （軽微・実害小・ペルソナ9指摘）。/signupの初回prefetchはHeaderCta1本に
+  //   任せれば十分なため、TrackedCTA側は既定でprefetchを無効化する（クリック時の
+  //   遷移自体・計測・utm引き継ぎは無変更）。
+  prefetch = false,
   children,
 }: {
   location: string
   className: string
   href?: string
+  prefetch?: boolean
   children: React.ReactNode
 }) {
   const router = useRouter()
   return (
     <Link
       href={href}
+      prefetch={prefetch}
       className={className}
       onClick={(e) => {
         track('signup_cta_clicked', { location })

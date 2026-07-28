@@ -21,7 +21,7 @@ export default function PrivacyEnglishPage() {
             Back to top
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">Privacy Policy</h1>
-          <p className="mt-1 text-sm text-neutral-500">Last updated: July 23, 2026</p>
+          <p className="mt-1 text-sm text-neutral-500">Last updated: July 28, 2026</p>
           <p className="mt-1 text-xs text-neutral-400">
             English translation for reference. The <Link href="/privacy" className="underline">Japanese version</Link> is the governing text in case of any discrepancy.
           </p>
@@ -81,11 +81,12 @@ export default function PrivacyEnglishPage() {
             <p className="mt-2 text-neutral-500">
               Under Japan&apos;s Act on the Protection of Personal Information (cross-border
               provision to third parties): all vendors listed above are located in the United
-              States. By registering for and using the Service, you are treated as having consented
-              to this cross-border provision of information as part of our use of these vendors. We
-              have confirmed contractual safeguards (data processing agreements, SCCs, etc.) with
-              each vendor regarding their handling of personal information. To withdraw consent or
-              request details, please contact us at the address below.
+              States. At sign-up, you provide explicit consent to this Privacy Policy (and the Terms
+              of Service) via an active checkbox, and this cross-border provision of information is
+              carried out on the basis of that explicit consent. We have confirmed contractual
+              safeguards (data processing agreements, SCCs, etc.) with each vendor regarding their
+              handling of personal information. To withdraw consent or request details, please
+              contact us at the address below.
             </p>
           </section>
 

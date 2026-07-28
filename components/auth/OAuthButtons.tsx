@@ -8,7 +8,17 @@ import { buttonClass } from '@/components/ui/Button'
 // Client ID/Secret は本アプリの env ではなく Supabase ダッシュボード
 // （Authentication > Providers）側に設定する。ここは signInWithOAuth を
 // 呼ぶだけで、Supabase がプロバイダの認可画面へリダイレクトする。
-export function OAuthButtons({ next = '/company' }: { next?: string }) {
+//
+// 2026-07-28 CTO修正（L2監査#5）: isEn=true(/signup?lang=en, /login?lang=en)でも
+//   ボタン文言・エラー文言が日本語のままだった（ペルソナ6指摘・部分翻訳）。
+//   ロジック・呼び出し方は完全に不変、表示文言だけを言語で出し分ける。
+export function OAuthButtons({
+  next = '/company',
+  isEn = false,
+}: {
+  next?: string
+  isEn?: boolean
+}) {
   const [loadingProvider, setLoadingProvider] = useState<'google' | 'github' | null>(null)
   const [error, setError] = useState('')
 
@@ -24,7 +34,11 @@ export function OAuthButtons({ next = '/company' }: { next?: string }) {
       },
     })
     if (error) {
-      setError('連携ログインに失敗しました。時間をおいてもう一度お試しください。')
+      setError(
+        isEn
+          ? 'Failed to sign in with the connected account. Please wait a moment and try again.'
+          : '連携ログインに失敗しました。時間をおいてもう一度お試しください。',
+      )
       setLoadingProvider(null)
     }
     // 成功時はプロバイダの認可画面へ遷移するのでここでは何もしない
@@ -39,7 +53,7 @@ export function OAuthButtons({ next = '/company' }: { next?: string }) {
         className={buttonClass({ variant: 'secondary', size: 'lg', className: 'w-full' })}
       >
         <GoogleMark />
-        Googleで続ける
+        {isEn ? 'Continue with Google' : 'Googleで続ける'}
       </button>
       <button
         type="button"
@@ -48,7 +62,7 @@ export function OAuthButtons({ next = '/company' }: { next?: string }) {
         className={buttonClass({ variant: 'secondary', size: 'lg', className: 'w-full' })}
       >
         <GitHubMark />
-        GitHubで続ける
+        {isEn ? 'Continue with GitHub' : 'GitHubで続ける'}
       </button>
       {error && <p className="text-sm text-danger-600">{error}</p>}
     </div>

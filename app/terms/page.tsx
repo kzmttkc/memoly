@@ -9,7 +9,7 @@ export default function TermsPage() {
             トップに戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">利用規約</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年6月21日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年7月28日</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
@@ -53,7 +53,17 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">7. 免責事項</h2>
-            <p>本サービスの利用により生じた損害について、運営者は一切の責任を負いません。サービスは予告なく変更・停止される場合があります。</p>
+            {/* 2026-07-28 CTO修正（L2監査#8）: 「一切の責任を負いません」という無制限の
+                完全免責は、内部統制を重視する検討者（ペルソナ4）にとって懸念材料になる
+                だけでなく、事業者間契約でも過度に一方的な免責は無効と判断されうる。
+                個人事業として提供できる常識的な水準（故意・重過失は免責しない／
+                賠償額はお支払いいただいた利用料金相当額を上限とする）へ改める。 */}
+            <p>
+              運営者の故意または重過失による場合を除き、本サービスの利用により生じた損害についての
+              運営者の賠償責任は、損害の原因となった事由が発生した月に貴社が本サービスに対してお支払い
+              いただいた利用料金相当額（無料プランでのご利用の場合は0円）を上限とします。
+              サービスは予告なく変更・停止される場合があります。
+            </p>
             <p className="mt-2">
               障害対応の方針（稼働率保証(SLA)は提供していないこと・障害検知から通知までの目安時間）は
               <Link href="/tokushoho" className="text-brand-600 underline">特定商取引法に基づく表記</Link>の「障害対応の方針」に記載しています。
@@ -66,8 +76,15 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">9. 準拠法</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">9. 準拠法・合意管轄</h2>
             <p>本規約は日本法に準拠します。</p>
+            {/* 2026-07-28 CTO修正（L2監査#8）: 裁判管轄の指定がなく、紛争時にどの
+                裁判所を利用するかが不明だった（ペルソナ4指摘）。個人事業の所在地を
+                基準に専属的合意管轄を定める。 */}
+            <p className="mt-2">
+              本サービスに関して運営者とユーザーとの間に生じた紛争については、
+              東京地方裁判所を第一審の専属的合意管轄裁判所とします。
+            </p>
           </section>
 
           <section>

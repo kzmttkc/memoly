@@ -23,7 +23,7 @@ export default function TermsEnglishPage() {
             Back to top
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">Terms of Service</h1>
-          <p className="mt-1 text-sm text-neutral-500">Last updated: June 21, 2026</p>
+          <p className="mt-1 text-sm text-neutral-500">Last updated: July 28, 2026</p>
           <p className="mt-1 text-xs text-neutral-400">
             English translation for reference. The <Link href="/terms" className="underline">Japanese version</Link> is the governing text in case of any discrepancy.
           </p>
@@ -107,9 +107,15 @@ export default function TermsEnglishPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">7. Disclaimer</h2>
+            {/* 2026-07-28 CTO fix (L2 audit #8): mirrors the same change made to /terms
+                (Japanese governing text) — replace unlimited disclaimer with a reasonable
+                cap for a sole-proprietor service. */}
             <p>
-              The operator assumes no liability for damages arising from use of the Service. The
-              Service may be changed or suspended without prior notice.
+              Except in cases of the operator&apos;s willful misconduct or gross negligence, the
+              operator&apos;s liability for damages arising from use of the Service is limited to the
+              amount of fees you paid for the Service in the month the event giving rise to the claim
+              occurred (or ¥0 if you were on the free plan). The Service may be changed or suspended
+              without prior notice.
             </p>
             <p className="mt-2">
               Our incident-response policy (no formal uptime SLA is offered; target time from
@@ -134,8 +140,13 @@ export default function TermsEnglishPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">9. Governing law</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">9. Governing law and jurisdiction</h2>
             <p>These Terms are governed by the laws of Japan.</p>
+            <p className="mt-2">
+              Any dispute arising in connection with the Service between the operator and a user
+              shall be subject to the exclusive jurisdiction of the Tokyo District Court as the court
+              of first instance.
+            </p>
           </section>
 
           <section>
