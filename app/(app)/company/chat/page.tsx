@@ -16,6 +16,7 @@ import type { RecalledMemory } from '@/lib/recall'
 import type { CompanyAttributesRow } from '@/lib/company-attributes'
 import { INDUSTRY_MAJORS } from '@/lib/company-attributes'
 import { track } from '@/lib/analytics'
+import { useLocale, t } from '@/lib/locale'
 import { CompanySwitcher } from '../_components/CompanySwitcher'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { PLANS } from '@/lib/plans'
@@ -236,6 +237,13 @@ function CompanyChat() {
   const router = useRouter()
   const companyId = params.get('companyId') ?? ''
   const initialQ = params.get('q') ?? ''
+  // 2026-07-29 CTO (L3 audit #2): minimum-scope chat UI localization (placeholder /
+  //   send button / input aria-label), per the audit's own fallback instruction
+  //   ("if full app-wide i18n is too large, start with just the chat UI text").
+  //   Deliberately NOT touching the onboarding greeting / sample prompts / message
+  //   history, which are entangled with the company-switch reset effect below and
+  //   would need a separate, more careful pass to avoid resetting live conversations.
+  const locale = useLocale(params.get('lang'))
 
   const [messages, setMessages] = useState<Message[]>([ONBOARDING_MESSAGE])
   const [input, setInput] = useState('')
@@ -1104,26 +1112,26 @@ function CompanyChat() {
               sendMessage()
             }
           }}
-          placeholder="自社の労務について相談"
+          placeholder={t(locale, '自社の労務について相談', "Ask about your company's labor rules")}
           rows={1}
-          aria-label="メッセージを入力"
+          aria-label={t(locale, 'メッセージを入力', 'Type a message')}
           className="flex-1 resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />
         <Button
           size="lg"
           onClick={() => sendMessage()}
           disabled={loading || !input.trim()}
-          aria-label="送信"
+          aria-label={t(locale, '送信', 'Send')}
         >
           <Send className="h-4 w-4" aria-hidden />
-          {loading ? '...' : '送信'}
+          {loading ? '...' : t(locale, '送信', 'Send')}
         </Button>
       </div>
 
       {/* 操作説明は placeholder から分離（相談内容の誘い文句と混ぜない）。
           キーボード前提の説明のためモバイルでは出さない。 */}
       <p className="hidden pt-1 text-right text-[11px] text-neutral-400 sm:block">
-        Enterで送信 / Shift+Enterで改行
+        {t(locale, 'Enterで送信 / Shift+Enterで改行', 'Enter to send / Shift+Enter for a new line')}
       </p>
 
       <Toast

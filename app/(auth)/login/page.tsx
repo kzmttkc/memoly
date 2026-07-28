@@ -58,7 +58,13 @@ function LoginForm() {
       setLoading(false)
     } else {
       // 相対パスのみ許可（'//evil.com' はプロトコル相対URL＝open redirect になるため除外）。
-      router.push(next.startsWith('/') && !next.startsWith('//') ? next : '/company')
+      const dest = next.startsWith('/') && !next.startsWith('//') ? next : '/company'
+      // 2026-07-29 CTO修正（L3監査#2）: 従来はここで lang=en を next に引き継がず、
+      //   /business/en → /login?next=/company&lang=en → ログイン成功後は /company
+      //   （lang無し）に着地し、サインアップ後のアプリが常に日本語UIになっていた
+      //   （lang は next とは別のsiblingクエリのため、next だけを push すると失われる）。
+      //   既存の langSuffix（アカウントが無い場合のsignupリンク等で使用中）をそのまま使う。
+      router.push(dest + langSuffix)
     }
   }
 
@@ -115,7 +121,10 @@ function LoginForm() {
         <div className="h-px flex-1 bg-neutral-200" />
       </div>
 
-      <OAuthButtons next={next} isEn={isEn} />
+      {/* 2026-07-29 CTO修正（L3監査#2）: next 単体だと lang=en が sibling クエリのため
+          OAuthコールバック(/auth/callback)着地に引き継がれなかった。langSuffix を
+          合成して渡す（OAuthButtons側は安全な相対パスかを再検証するのでこのままでよい）。 */}
+      <OAuthButtons next={next + langSuffix} isEn={isEn} />
 
       <div className="mt-6 space-y-2 text-center text-sm text-neutral-500">
         <p>

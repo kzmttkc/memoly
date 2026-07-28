@@ -18,7 +18,7 @@ import ScrollProgress from './_components/ScrollProgress'
 import ForcePaidVariant from './_components/ForcePaidVariant'
 import LeadCapture from './_components/LeadCapture'
 import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
-import { PLANS } from '@/lib/plans'
+import { PLANS, billingEnabled } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
 import { TOOL_LIST } from '@/lib/tools'
 
@@ -138,6 +138,17 @@ const FAQ = [
     q: '専任の労務担当がいなくても使えますか',
     a: '中小企業の総務担当や経営者が、社内規程の管理や日々の労務管理の調べ物を減らす用途を想定しています。専任の労務担当がいなくても、自社の前提に合わせた答えを得られます。',
   },
+]
+
+// 専門用語の簡潔な補足（2026-07-29 CTO・L3監査#7）: FAQ・体験デモ・比較表などの
+//   本文中に前提知識として出てくる労務用語を、初めて読む方（学生インターン等）
+//   向けに1箇所にまとめて簡潔に補足する。個々の本文（FAQ回答・デモの回答文言）は
+//   Phase1レビュー済みの言い回しのため書き換えず、独立した用語集として追加する。
+const JARGON = [
+  { term: '36協定（サブロク協定）', body: '残業や休日出勤をさせる前に、会社と労働者の代表が結んで労働基準監督署へ届け出る労使協定です。これが無いと、原則として残業をさせること自体が労働基準法違反になります。' },
+  { term: '特別条項', body: '36協定の残業時間の上限（原則 月45時間・年360時間）を、繁忙期など臨時的な事情に限って超えられるようにする、協定内の特別なルールです。' },
+  { term: '比例付与', body: '週の勤務日数が少ないパート・アルバイトの方に、フルタイムより少ない日数で有給休暇を計算して付与する仕組みです。' },
+  { term: '就業規則', body: '労働時間・休日・賃金など、会社と従業員の間のルールをまとめた文書です。常時10人以上を雇う会社は作成・届出が義務です。' },
 ]
 
 // 機能4軸（2026-07-23 B01+I01: 旧「業務効率化」4カードと旧「機能」4カードを
@@ -413,6 +424,9 @@ export default async function BusinessLandingPage({
   const isPaidLanding =
     PAID_MEDIA.includes(medium) || 'gclid' in sp || 'msclkid' in sp || 'yclid' in sp
   const variant: LpVariant = isPaidLanding ? 'B' : hv === 'B' ? 'B' : 'A'
+  // 2026-07-29 CTO修正（L3監査#6）: 料金セクションの課金状況文言を、特商法ページ
+  //   (/tokushoho) と同じ billingEnabled() から導出する（詳細は同ページの同日コメント参照）。
+  const paidSignupOpen = billingEnabled()
   return (
     <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
       {/* B19: 読了位置プログレスバー（装飾・compositor安全） */}
@@ -421,7 +435,13 @@ export default async function BusinessLandingPage({
       {isPaidLanding && <ForcePaidVariant />}
       {/* ===== ヘッダ ===== */}
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
+        {/* 2026-07-29 CTO修正（L3監査#4・200%ズーム対応）: この行が固定高さ h-16 だと、
+            極端に狭い実効幅で右側nav（flex-wrap）が2行に折り返したとき、はみ出した
+            2行目がボックスの外側（＝直下のサブナビ帯＝冒頭サマリー欄）に重なって見えた
+            （近藤氏・ペルソナ4が200%ズームで再現）。h-16 を min-h-16 に変え、折り返しが
+            発生したときはヘッダ自体の高さが伸びて後続セクションを押し下げる（＝重ならない）
+            ようにする。通常倍率では1行に収まるため見た目は不変。 */}
+        <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-x-2 px-6 py-2">
           <Link href="/business" className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-white">
               <BantoMark className="h-4 w-4" aria-hidden />
@@ -1089,26 +1109,38 @@ export default async function BusinessLandingPage({
           {/* 2026-07-24 I4(比較検討者の不安): 「併用できます」だけでは『また全部
               入れ直すのか』が宙に浮く。置き換えない・全項目の再入力は不要・規程は
               対話で覚える、という実装どおりの事実を正直に1ブロックで補う（誇張・
-              虚偽能力なし。Phase1コンプラ）。 */}
-          <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
-            <p className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-              <Database className="h-4 w-4 text-brand-600" aria-hidden />
-              すでにSmartHR・freeeなどをお使いの方へ
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-              番頭は既存の手続きシステムを置き換えません。従業員情報や規程を、番頭にすべて入れ直す必要はありません。
-              相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。
-              手続き・給与関連はこれまでのツールのまま、番頭は「自社ルールの相談窓口」を1つ足す位置づけです。
-            </p>
-            {/* 2026-07-24 P03(勤怠ツール併用の比較検討者): 打刻データの二重入力不安を
-                登録前に解消する。チャットが固有名込みで即答している事実（勤怠はMF等に
-                入れるだけ・番頭に打刻を転記する必要はない）をLPへ焼き戻す。誇張・虚偽
-                能力なし・実挙動と一致。 */}
-            <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-              勤怠（マネーフォワード勤怠・ジョブカン・KING OF TIMEなど）とお使いの方も、打刻データを番頭に入れ直す必要はありません。
-              打刻はこれまでの勤怠ツールのまま、番頭はそのルール照合・記憶・期限・書類のたたき台を足す役割です。
-            </p>
-          </div>
+              虚偽能力なし。Phase1コンプラ）。
+              2026-07-29 CTO修正（L3監査#8）: 比較表の直下がすでに情報密度の高い
+              セクションのため、既存システム併用者向けの補足2段落は<details>で畳み、
+              関係する人だけが開く段階的開示にする（本文はDOM上に常に存在＝SEO/GEO
+              への影響なし。既存のFAQアコーディオンと同じ手法）。 */}
+          <details className="group mx-auto mt-8 max-w-3xl rounded-2xl border border-neutral-200 bg-neutral-50">
+            <summary className="flex cursor-pointer select-none items-center justify-between gap-2 p-6 text-sm font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden">
+              <span className="flex items-center gap-2">
+                <Database className="h-4 w-4 text-brand-600" aria-hidden />
+                すでにSmartHR・freeeなどをお使いの方へ
+              </span>
+              <ChevronDown
+                className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                aria-hidden
+              />
+            </summary>
+            <div className="px-6 pb-6">
+              <p className="text-sm leading-relaxed text-neutral-600">
+                番頭は既存の手続きシステムを置き換えません。従業員情報や規程を、番頭にすべて入れ直す必要はありません。
+                相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。
+                手続き・給与関連はこれまでのツールのまま、番頭は「自社ルールの相談窓口」を1つ足す位置づけです。
+              </p>
+              {/* 2026-07-24 P03(勤怠ツール併用の比較検討者): 打刻データの二重入力不安を
+                  登録前に解消する。チャットが固有名込みで即答している事実（勤怠はMF等に
+                  入れるだけ・番頭に打刻を転記する必要はない）をLPへ焼き戻す。誇張・虚偽
+                  能力なし・実挙動と一致。 */}
+              <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+                勤怠（マネーフォワード勤怠・ジョブカン・KING OF TIMEなど）とお使いの方も、打刻データを番頭に入れ直す必要はありません。
+                打刻はこれまでの勤怠ツールのまま、番頭はそのルール照合・記憶・期限・書類のたたき台を足す役割です。
+              </p>
+            </div>
+          </details>
         </div>
       </section>
 
@@ -1136,10 +1168,22 @@ export default async function BusinessLandingPage({
               登録するとまずは無料プランでお使いいただけます。下記は有料プランに切り替えた場合の月額料金です。
             </p>
             {/* 2026-07-25 CTO修正: 課金は既に有効。「予告してから課金開始」ではなく
-                「自分の操作で申し込んだときだけ課金される」という自己サーブの事実を明示する。 */}
+                「自分の操作で申し込んだときだけ課金される」という自己サーブの事実を明示する。
+                2026-07-29 CTO修正（L3監査#6）: 上記は billingEnabled() が true の前提でしか
+                正しくない。false の間にこの文言のままだと特商法ページの「一時停止中」表記と
+                矛盾する（実際に本番で矛盾が起きていたことを確認済み）。両状態を出し分ける。 */}
             <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-              ご自身で有料プランを選び、お申し込みの操作をしたときだけ課金されます。
-              登録しただけで自動的に課金が始まることはありません。
+              {paidSignupOpen ? (
+                <>
+                  ご自身で有料プランを選び、お申し込みの操作をしたときだけ課金されます。
+                  登録しただけで自動的に課金が始まることはありません。
+                </>
+              ) : (
+                <>
+                  有料プランへの切り替えは、現在お申し込みの受付を一時的に停止しています（無料プランは引き続きご利用いただけます）。
+                  受付を再開する際は、このページと特定商取引法に基づく表記でお知らせします。
+                </>
+              )}
             </p>
           </div>
           {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: グリッド子要素に min-w-0 を
@@ -1277,6 +1321,27 @@ export default async function BusinessLandingPage({
               </div>
             </details>
           </div>
+
+          {/* 2026-07-29 CTO修正（L3監査#7）: 本文・FAQ・体験デモに前提知識として
+              出てくる労務用語を、初めて読む方向けに簡潔に補足する（軽い段階的開示・
+              アコーディオンで畳み、情報密度を上げすぎない）。 */}
+          <details className="group mt-8 rounded-2xl border border-neutral-200 bg-white">
+            <summary className="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700 [&::-webkit-details-marker]:hidden">
+              はじめて読む方へ — よく出てくる労務用語の補足
+              <ChevronDown
+                className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                aria-hidden
+              />
+            </summary>
+            <dl className="space-y-3 px-5 pb-5">
+              {JARGON.map(j => (
+                <div key={j.term}>
+                  <dt className="text-sm font-semibold text-neutral-900">{j.term}</dt>
+                  <dd className="mt-0.5 text-sm leading-relaxed text-neutral-600">{j.body}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
         </div>
       </section>
 

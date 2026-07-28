@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { PLANS, PAID_PLAN_IDS } from '@/lib/plans'
+import { PLANS, PAID_PLAN_IDS, billingEnabled } from '@/lib/plans'
 
 // ============================================================================
 // 特定商取引法に基づく表記 — 8/5 課金解禁前の法的必須ページ（W3.5a-1）
@@ -43,6 +43,15 @@ export const metadata = {
 }
 
 export default function TokushohoPage() {
+  // 2026-07-29 CTO修正（L3監査#6）: このページの「一時停止中」表記が、料金ページ
+  //   (/business#pricing) の「お申し込みの操作をしたときだけ課金されます」という
+  //   自己サーブ課金の前提の表記と食い違っていた（山田氏・ペルソナ9が両ページを
+  //   突合して発見）。原因は両ページが同じ実体（BILLING_ENABLED env）を別々の日に
+  //   別々の文言でハードコードしていたこと＝今後も別々の日に更新されるたび再発する。
+  //   根本修正として、両ページとも lib/plans.ts の billingEnabled() を直接参照し、
+  //   同じ1つの実体から文言を導出する（本ページはサーバーコンポーネントのため
+  //   ここで直接呼べる）。これにより「どちらが正しいか」を毎回突合する必要がなくなる。
+  const paidSignupOpen = billingEnabled()
   return (
     <div className="company-light min-h-screen bg-white">
       <div className="mx-auto max-w-2xl px-6 py-12">
@@ -62,10 +71,21 @@ export default function TokushohoPage() {
             変更しない。 */}
         <div className="mb-8 rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-700">
           <p>
-            番頭（Banto）は無料プランを引き続きご利用いただけます。下記「販売価格」欄の有料プランは、
-            現在お申し込みの受付を一時的に停止しています。有料プランのお申し込み手続き
-            （クレジットカード情報の入力を含むStripe決済画面での操作）を実際に完了した場合にのみ課金が発生する仕組みで、
-            お申し込みの操作をしない限り課金が発生することはありません。受付を再開する際は、このページと料金ページでお知らせします。
+            {paidSignupOpen ? (
+              <>
+                番頭（Banto）は無料プランを引き続きご利用いただけます。下記「販売価格」欄の有料プランは、
+                現在お申し込みいただけます。お申し込みの手続き
+                （クレジットカード情報の入力を含むStripe決済画面での操作）を実際に完了した場合にのみ課金が発生する仕組みで、
+                お申し込みの操作をしない限り課金が発生することはありません。
+              </>
+            ) : (
+              <>
+                番頭（Banto）は無料プランを引き続きご利用いただけます。下記「販売価格」欄の有料プランは、
+                現在お申し込みの受付を一時的に停止しています。有料プランのお申し込み手続き
+                （クレジットカード情報の入力を含むStripe決済画面での操作）を実際に完了した場合にのみ課金が発生する仕組みで、
+                お申し込みの操作をしない限り課金が発生することはありません。受付を再開する際は、このページと料金ページでお知らせします。
+              </>
+            )}
           </p>
         </div>
 

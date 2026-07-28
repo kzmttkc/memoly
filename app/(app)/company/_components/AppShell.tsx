@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
+import { useLocale, withLocale, t } from '@/lib/locale'
 import { CompanySwitcher } from './CompanySwitcher'
 import { CommandPalette } from './CommandPalette'
 
@@ -41,6 +42,8 @@ import { CommandPalette } from './CommandPalette'
 interface NavItem {
   href: string
   label: string
+  /** 2026-07-29 CTO (L3 audit #2): 英語ロケール表示用ラベル。 */
+  labelEn: string
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
   /** この項目/タブをアクティブ表示する追加パス（同じ柱の配下ページ）。 */
   activePaths?: string[]
@@ -49,37 +52,42 @@ interface NavItem {
 interface NavGroup {
   /** 柱の見出し（null はグループ見出しなし＝ホーム）。 */
   label: string | null
+  labelEn: string | null
   items: NavItem[]
 }
 
 // D01: 10項目の平置きをやめ、4柱（相談する/気づく/つくる/覚える）に再編する。
 //   既存URLは一切変えない（リダイレクト不要）。billing はナビ末尾の「設定」領域へ。
 const NAV_GROUPS: NavGroup[] = [
-  { label: null, items: [{ href: '/company/home', label: 'ホーム', icon: Home }] },
+  { label: null, labelEn: null, items: [{ href: '/company/home', label: 'ホーム', labelEn: 'Home', icon: Home }] },
   {
     label: '相談する',
-    items: [{ href: '/company/chat', label: '相談', icon: MessageSquareText }],
+    labelEn: 'Consult',
+    items: [{ href: '/company/chat', label: '相談', labelEn: 'Chat', icon: MessageSquareText }],
   },
   {
     label: '気づく',
+    labelEn: 'Notice',
     items: [
-      { href: '/company/risk', label: 'リスク診断', icon: ShieldCheck },
-      { href: '/company/insights', label: '助成金・法改正', icon: Sparkles },
-      { href: '/company/deadlines', label: '期限', icon: CalendarClock },
+      { href: '/company/risk', label: 'リスク診断', labelEn: 'Risk check', icon: ShieldCheck },
+      { href: '/company/insights', label: '助成金・法改正', labelEn: 'Subsidies & law changes', icon: Sparkles },
+      { href: '/company/deadlines', label: '期限', labelEn: 'Deadlines', icon: CalendarClock },
     ],
   },
   {
     label: 'つくる',
+    labelEn: 'Create',
     items: [
-      { href: '/company/documents', label: '書類', icon: FileText },
-      { href: '/company/reports', label: '社労士に渡すメモ', icon: FileBarChart },
+      { href: '/company/documents', label: '書類', labelEn: 'Documents', icon: FileText },
+      { href: '/company/reports', label: '社労士に渡すメモ', labelEn: 'Memo for your labor consultant', icon: FileBarChart },
     ],
   },
   {
     label: '覚える',
+    labelEn: 'Remember',
     items: [
-      { href: '/company/memory', label: '会社の記憶', icon: History },
-      { href: '/company/rules', label: '自社ルール', icon: BookOpenCheck },
+      { href: '/company/memory', label: '会社の記憶', labelEn: 'Company memory', icon: History },
+      { href: '/company/rules', label: '自社ルール', labelEn: 'Company rules', icon: BookOpenCheck },
     ],
   },
 ]
@@ -87,23 +95,26 @@ const NAV_GROUPS: NavGroup[] = [
 // モバイル下部タブ（5枠・D02: 記憶を復帰）。柱の起点ページに遷移し、
 // 同柱の配下ページでもタブがアクティブになる（activePaths）。
 const MOBILE_TAB_NAV: NavItem[] = [
-  { href: '/company/home', label: 'ホーム', icon: Home },
-  { href: '/company/chat', label: '相談', icon: MessageSquareText },
+  { href: '/company/home', label: 'ホーム', labelEn: 'Home', icon: Home },
+  { href: '/company/chat', label: '相談', labelEn: 'Chat', icon: MessageSquareText },
   {
     href: '/company/insights',
     label: '気づく',
+    labelEn: 'Notice',
     icon: Sparkles,
     activePaths: ['/company/risk', '/company/deadlines'],
   },
   {
     href: '/company/documents',
     label: 'つくる',
+    labelEn: 'Create',
     icon: FileText,
     activePaths: ['/company/reports'],
   },
   {
     href: '/company/memory',
     label: '記憶',
+    labelEn: 'Memory',
     icon: History,
     activePaths: ['/company/rules'],
   },
@@ -112,12 +123,12 @@ const MOBILE_TAB_NAV: NavItem[] = [
 // D03: 最後に選択した会社の保持キー（値は companyId のみ・PIIなし）。
 const LAST_COMPANY_KEY = 'banto-last-company'
 
-function Wordmark() {
+function Wordmark({ locale }: { locale: import('@/lib/locale').Locale }) {
   return (
     <Link
-      href="/company"
+      href={withLocale('/company', locale)}
       className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-      aria-label="番頭ホーム"
+      aria-label={t(locale, '番頭ホーム', 'Banto home')}
     >
       <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-sm font-bold text-white">
         番
@@ -132,6 +143,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const urlCompanyId = searchParams.get('companyId') ?? ''
+  // 2026-07-29 CTO (L3 audit #2): サインアップ後のアプリに言語分岐が一切なく、
+  //   /business/en → ?lang=en で来た英語話者もここでは常に日本語UIになっていた
+  //   （companyId と同じ「URL優先・無ければlocalStorageの前回値」流儀で持ち回す）。
+  const locale = useLocale(searchParams.get('lang'))
   const [drawerOpen, setDrawerOpen] = useState(false)
   // D03: URL に companyId が無いときのフォールバック（最後に選択した会社）。
   //   SSR とのハイドレーション不一致を避けるため、マウント後にだけ読む。
@@ -170,9 +185,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const companyId = urlCompanyId || storedCompanyId
 
-  // companyId を保ったままナビ遷移する。
+  // companyId・lang を保ったままナビ遷移する。
   const withCompany = (href: string) =>
-    companyId ? `${href}?companyId=${companyId}` : href
+    withLocale(companyId ? `${href}?companyId=${companyId}` : href, locale)
 
   const isActive = (item: NavItem) =>
     pathname === item.href ||
@@ -198,12 +213,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div key={group.label ?? `g${gi}`} className={gi > 0 ? 'mt-4' : undefined}>
           {group.label && (
             <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
-              {group.label}
+              {locale === 'en' ? group.labelEn : group.label}
             </p>
           )}
           <div className="space-y-1">
             {group.items.map(item => {
-              const { href, label, icon: Icon } = item
+              const { href, label, labelEn, icon: Icon } = item
               const active = isActive(item)
               return (
                 <Link
@@ -221,7 +236,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   )}
                 >
                   <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden />
-                  {label}
+                  {locale === 'en' ? labelEn : label}
                 </Link>
               )
             })}
@@ -243,7 +258,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         >
           <CreditCard className="h-4.5 w-4.5 shrink-0" aria-hidden />
-          プラン
+          {t(locale, 'プラン', 'Plan')}
         </Link>
         {/* F05: 退会・データ削除/エクスポート/監査ログの発見性是正。
             従来はプラン/請求ページの奥にしか無く /account は 404 だった（persona05/07）。
@@ -261,7 +276,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         >
           <UserCog className="h-4.5 w-4.5 shrink-0" aria-hidden />
-          アカウント・データ
+          {t(locale, 'アカウント・データ', 'Account & data')}
         </Link>
       </div>
     </>
@@ -277,12 +292,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             type="button"
             onClick={() => setDrawerOpen(true)}
             className="grid h-9 w-9 place-items-center rounded-lg text-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 lg:hidden"
-            aria-label="メニューを開く"
+            aria-label={t(locale, 'メニューを開く', 'Open menu')}
           >
             <Menu className="h-5 w-5" aria-hidden />
           </button>
 
-          <Wordmark />
+          <Wordmark locale={locale} />
 
           {/* D21: 会社スイッチャーは全幅で同一行に置く（2段目を廃止・truncateで収める）。 */}
           <div className="ml-2 min-w-0 flex-1">
@@ -294,19 +309,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new Event('banto-open-command-palette'))}
-              aria-label="コマンドパレットを開く"
-              title="コマンドパレット"
+              aria-label={t(locale, 'コマンドパレットを開く', 'Open command palette')}
+              title={t(locale, 'コマンドパレット', 'Command palette')}
               className="hidden items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-500 transition-colors duration-150 hover:border-neutral-300 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:flex"
             >
               <Search className="h-3.5 w-3.5" aria-hidden />
-              <span>検索・操作</span>
+              <span>{t(locale, '検索・操作', 'Search & actions')}</span>
               <span className="banto-kbd">{cmdKey}</span>
               <span className="banto-kbd">K</span>
             </button>
             <button
               type="button"
               onClick={() => window.dispatchEvent(new Event('banto-open-command-palette'))}
-              aria-label="コマンドパレットを開く"
+              aria-label={t(locale, 'コマンドパレットを開く', 'Open command palette')}
               className="grid h-9 w-9 place-items-center rounded-lg text-neutral-600 transition-colors duration-150 hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:hidden"
             >
               <Search className="h-5 w-5" aria-hidden />
@@ -321,7 +336,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="mx-auto flex max-w-6xl">
         {/* ===== 左サイドナビ(>=lg)・D01 4柱 ===== */}
         <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 flex-col overflow-y-auto border-r border-neutral-200 px-3 py-5 lg:flex">
-          <nav aria-label="会社版ナビゲーション">{renderGroups(undefined, true)}</nav>
+          <nav aria-label={t(locale, '会社版ナビゲーション', 'App navigation')}>{renderGroups(undefined, true)}</nav>
           {/* D20: ログアウトはナビ末尾（区切り線の下）。主要導線との誤タップを避ける。 */}
           <div className="mt-auto border-t border-neutral-200 pt-3">
             <button
@@ -330,7 +345,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <LogOut className="h-4.5 w-4.5 shrink-0" aria-hidden />
-              ログアウト
+              {t(locale, 'ログアウト', 'Log out')}
             </button>
           </div>
         </aside>
@@ -348,11 +363,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav
         id="banto-mobile-tabbar"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-200 bg-white/95 backdrop-blur lg:hidden"
-        aria-label="会社版ナビゲーション（モバイル）"
+        aria-label={t(locale, '会社版ナビゲーション（モバイル）', 'App navigation (mobile)')}
       >
         <div className="mx-auto grid max-w-md grid-cols-5">
           {MOBILE_TAB_NAV.map(item => {
-            const { href, label, icon: Icon } = item
+            const { href, label, labelEn, icon: Icon } = item
             const active = isActive(item)
             return (
               <Link
@@ -366,7 +381,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden />
-                {label}
+                {locale === 'en' ? labelEn : label}
               </Link>
             )
           })}
@@ -379,22 +394,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             className="absolute inset-0 bg-neutral-900/30"
-            aria-label="メニューを閉じる"
+            aria-label={t(locale, 'メニューを閉じる', 'Close menu')}
             onClick={() => setDrawerOpen(false)}
           />
           <div className="absolute left-0 top-0 h-full w-72 overflow-y-auto bg-white p-4 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <Wordmark />
+              <Wordmark locale={locale} />
               <button
                 type="button"
                 onClick={() => setDrawerOpen(false)}
                 className="grid h-9 w-9 place-items-center rounded-lg text-neutral-600 hover:bg-neutral-100"
-                aria-label="閉じる"
+                aria-label={t(locale, '閉じる', 'Close')}
               >
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </div>
-            <nav aria-label="会社版ナビゲーション（ドロワー）">
+            <nav aria-label={t(locale, '会社版ナビゲーション（ドロワー）', 'App navigation (drawer)')}>
               {renderGroups(() => setDrawerOpen(false))}
             </nav>
             {/* D20: モバイルはドロワー末尾からログアウト（ヘッダ直置きの誤タップ防止）。 */}
@@ -405,7 +420,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
                 <LogOut className="h-4.5 w-4.5 shrink-0" aria-hidden />
-                ログアウト
+                {t(locale, 'ログアウト', 'Log out')}
               </button>
             </div>
           </div>

@@ -140,16 +140,26 @@ function SignupForm() {
     const typed = companyName.trim().slice(0, 100)
     return typed || companyParam
   }, [companyName, companyParam])
+  // 2026-07-29 CTO修正（L3監査#2）: 従来は companyForNext/noteParam/planParam の
+  //   いずれも無ければ nextDest=next をそのまま返しており、isEn(=?lang=en) が
+  //   next とは別の sibling クエリだったため、ここで捨てられていた。結果、
+  //   /business/en → /signup?lang=en の英語話者がメール確認・OAuth・会社作成後の
+  //   着地(/company, /company/onboarding)で常に日本語UIに戻っていた。
+  //   nextDest はここ1箇所を通れば以降 emailRedirectTo・OAuthButtons・
+  //   ログイン迷子リンクの全てに伝播する（signup 側の唯一の合流点）ため、
+  //   ここで lang=en を焼き込む（path が /company かどうかに関わらず常に）。
   const nextDest = useMemo(() => {
-    if (!companyForNext && !noteParam && !planParam) return next
     const [path, query = ''] = next.split('?')
-    if (path !== '/company') return next
     const sp = new URLSearchParams(query)
-    if (companyForNext) sp.set('company', companyForNext)
-    if (noteParam) sp.set('note', noteParam)
-    if (planParam) sp.set('plan', planParam)
-    return `${path}?${sp.toString()}`
-  }, [next, companyForNext, noteParam, planParam])
+    if (path === '/company') {
+      if (companyForNext) sp.set('company', companyForNext)
+      if (noteParam) sp.set('note', noteParam)
+      if (planParam) sp.set('plan', planParam)
+    }
+    if (isEn) sp.set('lang', 'en')
+    const qs = sp.toString()
+    return qs ? `${path}?${qs}` : path
+  }, [next, companyForNext, noteParam, planParam, isEn])
 
   // C03: 会社名が入力済みなら、signup成立直後にその場で会社を作成して onboarding へ直行する
   //   （/company の会社作成画面を1段削減）。発動条件は「着地が /company（ハブ）そのもの」かつ
@@ -174,11 +184,13 @@ function SignupForm() {
           track('company_created')
           // planParam(例: shigyo LP CTA由来)があれば onboarding へも持ち回る
           // （onboarding 側が保存/スキップ後の遷移先で billing へ反映する）。
-          router.push(
-            planParam
-              ? `/company/onboarding?companyId=${newId}&plan=${planParam}`
-              : `/company/onboarding?companyId=${newId}`,
-          )
+          // 2026-07-29 CTO修正（L3監査#2）: このパスは nextDest を経由しないため、
+          //   lang=en を別途ここでも付与する（付けないと英語話者だけこの分岐で
+          //   日本語のonboardingに落ちる）。
+          const onboardingParams = new URLSearchParams({ companyId: newId })
+          if (planParam) onboardingParams.set('plan', planParam)
+          if (isEn) onboardingParams.set('lang', 'en')
+          router.push(`/company/onboarding?${onboardingParams.toString()}`)
           return
         }
       } catch {

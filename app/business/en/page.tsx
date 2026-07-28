@@ -1,23 +1,37 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { MessageSquareText, FileText, ShieldCheck, Lock, ArrowRight, Globe, Check } from 'lucide-react'
+import { MessageSquareText, FileText, ShieldCheck, Lock, ArrowRight, ArrowDown, Globe, Check } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { PLANS } from '@/lib/plans'
+import { PLANS, billingEnabled } from '@/lib/plans'
+import TryDemoEnLazy from '../_components/TryDemoEnLazy'
+import ScenarioSectionEn from '../_components/ScenarioSectionEn'
+import CompareToggleEn from '../_components/CompareToggleEn'
+import LeadCaptureEn from '../_components/LeadCaptureEn'
 
 // ============================================================================
-// /business/en — English summary landing page (2026-07-28 CTO, L1 audit #3)
+// /business/en — English landing page (2026-07-28 CTO, L1 audit #3)
 // ----------------------------------------------------------------------------
-//   Scope: this is a concise English SUMMARY of the Japanese /business LP, not
-//   a full translation of every article/tool on the site (out of scope per
-//   the audit instruction). It exists so an English-reading visitor (e.g. an
-//   overseas HQ manager of a Japan subsidiary) can understand what Banto does,
-//   trust the security/privacy posture, and sign up, without needing to read
-//   Japanese. The product chat itself already answers in English when asked
-//   in English (existing, verified behavior) — this page makes that
-//   discoverable instead of buried behind a single JP-only hint line.
+//   Scope: this is a concise English rendering of the Japanese /business LP,
+//   not a full translation of every article/tool on the site (out of scope).
+//   It exists so an English-reading visitor (e.g. an overseas HQ manager of a
+//   Japan subsidiary) can understand what Banto does, try it, trust the
+//   security/privacy posture, and sign up, without needing to read Japanese.
+//   The product chat itself already answers in English when asked in English
+//   (existing, verified behavior) — this page makes that discoverable
+//   instead of buried behind a single JP-only hint line.
+//
+//   2026-07-29 CTO (L3 audit #1, most critical finding): this page previously
+//   imported none of TryDemo/ScenarioSection/CompareToggle/LeadCapture at
+//   all, so an English-only visitor could not experience the "it remembers
+//   your company" demo, the verified usage scenarios, the side-by-side
+//   comparison, or the PDF lead magnet — all of which the Japanese LP has.
+//   This page now uses English-content counterparts of all four
+//   (TryDemoEn/ScenarioSectionEn/CompareToggleEn/LeadCaptureEn in
+//   ../_components/, data in ../_lib/*.en.ts). Same mechanisms, same
+//   Phase1-reviewed facts, translated — not new claims.
 //
 //   Phase1 compliance carried over from the JP LP: no "supervised by a
 //   licensed labor consultant" / "AI labor consultant" / guaranteed legal
@@ -91,6 +105,11 @@ const FEATURES = [
 ]
 
 export default function BusinessEnglishPage() {
+  // 2026-07-29 CTO (L3 audit #6, applied here too for consistency with the JP
+  // page and /tokushoho): derive the billing-status copy from the same
+  // single source of truth instead of a hardcoded claim that can drift out
+  // of sync with the actual flag.
+  const paidSignupOpen = billingEnabled()
   return (
     <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
       {/* ===== Header ===== */}
@@ -150,18 +169,26 @@ export default function BusinessEnglishPage() {
           <span>Ask Banto&apos;s chat in English and it answers in English — this works today, not a roadmap item.</span>
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href="/signup?next=/company&lang=en" className={buttonClass({ variant: 'primary', size: 'lg' })}>
+          <a href="#demo" className={buttonClass({ variant: 'primary', size: 'lg' })}>
+            Try it in 30 seconds
+            <ArrowDown className="h-4 w-4" aria-hidden />
+          </a>
+          <Link href="/signup?next=/company&lang=en" className={buttonClass({ variant: 'ghost', size: 'lg' })}>
             Start free — no credit card
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
-          <Link href="/business" className={buttonClass({ variant: 'ghost', size: 'lg' })}>
-            See the full Japanese site
-          </Link>
         </div>
         <p className="mt-3 text-center text-xs text-neutral-500">
-          Free to start. No credit card required. You can delete all your data at any time.
+          Free to start. No credit card required. You can delete all your data at any time. ·{' '}
+          <Link href="/business" className="underline hover:text-brand-700">See the full Japanese site</Link>
         </p>
       </section>
+
+      {/* ===== Try it (demo) — 2026-07-29 CTO, L3 audit #1 ===== */}
+      <TryDemoEnLazy />
+
+      {/* ===== Real usage scenarios — 2026-07-29 CTO, L3 audit #1 ===== */}
+      <ScenarioSectionEn />
 
       {/* ===== What it does ===== */}
       <section className="border-t border-neutral-200 bg-neutral-50 py-16">
@@ -189,6 +216,25 @@ export default function BusinessEnglishPage() {
           </div>
         </div>
       </section>
+
+      {/* ===== The core difference: "does it remember?" — 2026-07-29 CTO, L3 audit #1 ===== */}
+      <section className="border-y border-neutral-200 bg-neutral-50">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
+              The difference is whether it remembers
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-neutral-600">
+              Switch between the two and compare the same question. One asks you to re-explain
+              your premise; the other already starts from it.
+            </p>
+          </div>
+          <CompareToggleEn />
+        </div>
+      </section>
+
+      {/* ===== Lead magnet (micro-CV) — 2026-07-29 CTO, L3 audit #1 ===== */}
+      <LeadCaptureEn />
 
       {/* ===== Security ===== */}
       <section className="mx-auto max-w-5xl px-6 py-16">
@@ -233,8 +279,9 @@ export default function BusinessEnglishPage() {
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">Pricing</h2>
             <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-              You can start on the free plan. Paid plans are self-serve — you are only charged when you
-              choose a plan and complete checkout yourself.
+              {paidSignupOpen
+                ? 'You can start on the free plan. Paid plans are self-serve — you are only charged when you choose a plan and complete checkout yourself.'
+                : 'You can start on the free plan today. Paid-plan sign-up is temporarily paused; we will announce here and on the Japanese tokushoho page when it reopens.'}
             </p>
           </div>
           <div className="grid gap-5 sm:grid-cols-3">
