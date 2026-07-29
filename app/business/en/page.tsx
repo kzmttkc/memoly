@@ -303,9 +303,9 @@ export default function BusinessEnglishPage() {
               <h3 className="text-lg font-semibold text-neutral-900">{PLANS.shigyo.displayName} (multi-client)</h3>
               <p className="mt-4 text-3xl font-bold tracking-tight text-neutral-900">
                 &yen;{PLANS.shigyo.monthlyJpy.toLocaleString()}
-                <span className="ml-1 text-sm font-normal text-neutral-500">/mo per seat</span>
+                <span className="ml-1 text-sm font-normal text-neutral-500">/mo per seat (up to {PLANS.shigyo.seatCap} seats)</span>
               </p>
-              <p className="mt-2 text-xs text-neutral-500">For anyone managing multiple client companies — not limited to licensed labor consultants.</p>
+              <p className="mt-2 text-xs text-neutral-500">For anyone managing multiple client companies — not limited to licensed labor consultants. Manage up to {PLANS.shigyo.maxCompanies} client companies.</p>
             </Card>
           </div>
           <div className="mt-8 flex justify-center">

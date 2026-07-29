@@ -254,13 +254,26 @@ export default function TryDemo() {
   //   クリックを isBusy ガードでサイレントに無視しており、これが「2問目・3問目を
   //   クリックしても表示が変わらない」というペルソナ2/3の報告の実体だった
   //   （クリック自体は正しいQAに紐づいていたが、忙しい間のクリックが消えていた）。
+  // 2026-07-29 CTO修正（UX監査Round5#1・最重要・再発）: 上記の初回修正は
+  //   setPending(null) と setTimeout(() => play(qa), 0) を分けて実行していた。
+  //   setPending(null) 自体がこのeffectの依存（pending）を変える再レンダーを起こすため、
+  //   その再レンダー後にReactがこのeffectのクリーンアップ（＝直前にセットした
+  //   setTimeoutをclearTimeoutする処理）を、ブラウザが setTimeout(...,0) のコールバックを
+  //   発火させるより先に実行してしまうと、play(qa) が一度も呼ばれないまま保留が
+  //   消える。両者の実行順序はReact/ブラウザのスケジューラ内部実装に依存し保証されない
+  //   （実機のみで低頻度に再現し、通常のQA・複数回のCI実行では再現しない典型的な
+  //   競合状態）。これが「Up nextバッジ（pending state）は正しく切り替わるのに、
+  //   実際に表示される問い・回答テキスト（play()が更新するturns/typing state）が
+  //   質問1のまま止まる」というRound5報告の実体と判定。setTimeoutを完全に排し、
+  //   pendingのクリアとplay()の呼び出しを同一の同期実行内で行う。Reactの自動バッチング
+  //   により両方の状態更新が確実に1回のレンダーへまとまり、上記の競合が構造的に
+  //   起こり得なくなる（"同一tickで競合"という従来の懸念は、そもそもこの effect の
+  //   実行自体が直前コミットの後続パスであり同一tickではないため当たらない）。
   useEffect(() => {
     if (isBusy || !pending) return
     const { qa } = pending
     setPending(null)
-    // 直前の setTyping(null) のコミットと同一tickで競合しないよう1マクロタスク遅らせる。
-    const t = setTimeout(() => play(qa), 0)
-    return () => clearTimeout(t)
+    play(qa)
   }, [isBusy, pending, play])
 
   const ask = useCallback(
