@@ -121,7 +121,7 @@ const FAQ = [
     // 2026-07-29 CTO修正（UX監査Round5#4・軽）: 顧問先の社数上限（50社）は開示済みだったが、
     // 事務所の利用メンバー数（席）自体の上限（50席・lib/plans.ts shigyo.seatCap）が
     // /tokushoho にしか記載されておらず、料金の全体像を判断できなかった（Round5指摘）。
-    a: `士業プランで、複数の顧問先企業を切り替えて使えます（顧問先は最大${PLANS.shigyo.maxCompanies}社まで登録できます）。記憶とデータは企業ごとに分離され、顧問先ごとに覚えた前提で、切り替えてすぐ相談を続けられます。料金は事務所の利用メンバー数に応じた席単位の課金で、席数の上限は事務所あたり最大${PLANS.shigyo.seatCap}席です。`,
+    a: `士業プランで、複数の顧問先企業を切り替えて使えます（顧問先は最大${PLANS.shigyo.maxCompanies}社まで登録できます）。記憶とデータは企業ごとに分離され、顧問先ごとに覚えた前提で、切り替えてすぐ相談を続けられます。料金は事務所の利用メンバー数に応じた席単位の課金で、これとは別に席数の上限が事務所あたり最大${PLANS.shigyo.seatCap}席あります（顧問先数と席数は別々の上限です）。`,
   },
   {
     // 2026-07-28 CTO修正（L2監査#2）: 複数店舗・複数拠点の運用方法がLP/FAQの
@@ -138,7 +138,7 @@ const FAQ = [
     // 2026-07-28 追記（L2監査#3）: 顧問先の登録上限（50社）を開示する。
     q: '社労士資格がなくても、複数のクライアント企業を1つの契約で管理できますか',
     // 2026-07-29 CTO修正（UX監査Round5#4・軽）: 席数の上限（50席）をあわせて開示する。
-    a: `できます。士業プランは社会保険労務士に限定していません。記帳代行・バックオフィス代行など、複数のクライアント企業の労務まわりを切り替えて管理したい方であればご利用いただけます。会社ごとに記憶とデータが分離されるため、クライアントの情報が混ざる心配はありません（顧問先は最大${PLANS.shigyo.maxCompanies}社まで登録できます）。料金は事務所・ご自身の利用メンバー数に応じた席単位の課金で、席数の上限は事務所あたり最大${PLANS.shigyo.seatCap}席です。`,
+    a: `できます。士業プランは社会保険労務士に限定していません。記帳代行・バックオフィス代行など、複数のクライアント企業の労務まわりを切り替えて管理したい方であればご利用いただけます。会社ごとに記憶とデータが分離されるため、クライアントの情報が混ざる心配はありません（顧問先は最大${PLANS.shigyo.maxCompanies}社まで登録できます）。料金は事務所・ご自身の利用メンバー数に応じた席単位の課金で、これとは別に席数の上限が事務所あたり最大${PLANS.shigyo.seatCap}席あります（顧問先数と席数は別々の上限です）。`,
   },
   {
     q: '専任の労務担当がいなくても使えますか',
@@ -524,19 +524,21 @@ export default async function BusinessLandingPage({
           AI検索・要約エンジンが本文全体を読まずに1段落で製品を要約できるよう、
           ヒーロー(A/B変種スロット)より前に、常に同一の平文サマリーを保持する。
           文面は public/llms.txt の冒頭要約と一致させ、複数面での一貫性を保つ。
-          A03: 人間の初見客には帯がFVを圧迫しH1到達を遅らせるため <details> で
-          折りたたむ。本文テキストは閉じていても DOM 上に常に存在するため、
-          クローラ・要約エンジンは従来どおり全文を読める（GEO効果は維持）。 */}
+          A03: 人間の初見客には帯がFVを圧迫しH1到達を遅らせるため折りたたむ。
+          本文テキストは閉じていても DOM 上に常に存在するため、クローラ・
+          要約エンジンは従来どおり全文を読める（GEO効果は維持）。
+          2026-07-29 CTO修正（UX監査Round6#1）: ネイティブ<details>から
+          Disclosureコンポーネントへ統一（詳細は同コンポーネントのコメント参照）。 */}
       <section className="border-b border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-5xl px-6 py-2.5">
-          <details>
-            <summary className="cursor-pointer select-none text-center text-xs font-medium text-neutral-500 hover:text-neutral-700 sm:text-left">
-              番頭(Banto)とは — 30秒でわかる概要
-            </summary>
+          <Disclosure
+            summaryClassName="block w-full cursor-pointer select-none text-center text-xs font-medium text-neutral-500 hover:text-neutral-700 sm:text-left"
+            summary="番頭(Banto)とは — 30秒でわかる概要"
+          >
             <p className="mt-2 pb-1 text-center text-sm leading-relaxed text-neutral-600 sm:text-left">
               番頭(Banto)は、中小企業の総務・経営者向けの労務記憶AIです。就業規則・36協定・有給休暇管理などの自社規程をAIに覚えさせておき、労務の疑問に自社の前提で即答します。汎用AIのように、聞くたびに社内規程や過去の運用を説明し直す必要がありません。企業ごとにデータを分離して保管し、無料で試せます。
             </p>
-          </details>
+          </Disclosure>
         </div>
       </section>
 
@@ -677,7 +679,18 @@ export default async function BusinessLandingPage({
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-6 py-3">
           <p className="flex items-center gap-1.5 text-xs text-neutral-600">
             <FileText className="h-3.5 w-3.5 text-brand-600" aria-hidden />
-            就業規則・36協定・賃金規程・労働条件通知書の下書きに対応
+            就業規則・
+            {/* 2026-07-29 CTO修正（UX監査Round6#5・軽微）: 「36協定」の初出（ヒーロー
+                直下のこの社会的証明バー）に用語解説（lib/faq.ts JARGON_TERMSと同一の
+                文言）へのtitle属性ツールチップを追加。詳しい解説はFAQ末尾の用語集
+                （すぐ下にリンク）にある。 */}
+            <span
+              title="残業や休日出勤をさせる前に、会社と労働者の代表が結んで労働基準監督署へ届け出る労使協定です。これが無いと、原則として残業をさせること自体が労働基準法違反になります。"
+              className="underline decoration-dotted decoration-neutral-400 underline-offset-2"
+            >
+              36協定
+            </span>
+            ・賃金規程・労働条件通知書の下書きに対応
           </p>
           <p className="flex items-center gap-1.5 text-xs text-neutral-600">
             <ShieldCheck className="h-3.5 w-3.5 text-brand-600" aria-hidden />
@@ -1126,7 +1139,7 @@ export default async function BusinessLandingPage({
               （Tab+Enter/Space）を明示的に保証する（詳細は同コンポーネントのコメント参照）。 */}
           <Disclosure
             className="group mx-auto mt-8 max-w-3xl rounded-2xl border border-neutral-200 bg-neutral-50"
-            summaryClassName="flex cursor-pointer select-none items-center justify-between gap-2 p-6 text-sm font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden"
+            summaryClassName="flex w-full cursor-pointer select-none items-center justify-between gap-2 p-6 text-sm font-semibold text-neutral-900"
             summary={
               <>
                 <span className="flex items-center gap-2">
@@ -1134,7 +1147,7 @@ export default async function BusinessLandingPage({
                   すでにSmartHR・freeeなどをお使いの方へ
                 </span>
                 <ChevronDown
-                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
                   aria-hidden
                 />
               </>
@@ -1266,8 +1279,11 @@ export default async function BusinessLandingPage({
           <p className="mt-6 text-center text-xs leading-relaxed text-neutral-500">
             EntryとStandardは1社あたりの月額です。プランの上限人数までは、何人で使っても料金は変わりません。
             {/* 2026-07-29 CTO修正（UX監査Round5#4・軽）: 席数の上限（seatCap）が/tokushohoにしか
-                記載されておらず、料金カード直下の説明文にも明記する。 */}
-            士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です（顧問先は最大{PLANS.shigyo.maxCompanies}社まで、席数は事務所あたり最大{PLANS.shigyo.seatCap}席まで）。
+                記載されておらず、料金カード直下の説明文にも明記する。
+                2026-07-29 CTO修正（UX監査Round6#6・軽微）: 顧問先数の上限（{PLANS.shigyo.maxCompanies}社）と
+                席数の上限（{PLANS.shigyo.seatCap}席）が偶然同じ数字のため、1文に並べると「実績数」と
+                誤読されるとの指摘（ペルソナ10）。両者が別々の上限であることを明示する言い回しに変える。 */}
+            士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です。顧問先の登録数の上限は{PLANS.shigyo.maxCompanies}社までで、これとは別に、事務所の利用メンバー数（席）の上限は{PLANS.shigyo.seatCap}席までです（顧問先数と席数は別々の上限です）。
             年払い（月払いより2ヶ月分お得）は現在Entryプランのみのご用意で、Standardと士業プランは月払いのみです。
             {/* 2026-07-28 CTO修正（L2監査#2）: 複数店舗の扱いを料金セクション直下にも明記する。 */}
             複数店舗をお持ちの場合は、1社の契約にまとめて店舗ごとの前提を登録する方法と、
@@ -1287,56 +1303,75 @@ export default async function BusinessLandingPage({
               中小企業の総務・経営者からよく寄せられる質問をまとめました。
             </p>
           </div>
-          {/* 2026-07-23 B10: アコーディオン化（native <details>・JS不要）。初期表示は
-              先頭3問のみで、残りは「すべての質問を見る」で展開。全問のテキストは
-              閉じていても常にDOM上に存在し、FAQPage構造化データも全問を維持する。 */}
+          {/* 2026-07-23 B10: アコーディオン化。初期表示は先頭3問のみで、残りは
+              「すべての質問を見る」で展開。全問のテキストは閉じていても常にDOM上に
+              存在し、FAQPage構造化データも全問を維持する。
+              2026-07-29 CTO修正（UX監査Round6#1）: ネイティブ<details>から
+              Disclosureコンポーネントへ統一（詳細は同コンポーネントのコメント参照）。 */}
           <div className="space-y-3">
             {FAQ.slice(0, 3).map(item => (
-              <details
+              <Disclosure
                 key={item.q}
                 className="group rounded-2xl border border-neutral-200 bg-white"
+                summaryClassName="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-5 text-left text-base font-semibold text-neutral-900"
+                summary={
+                  <>
+                    {item.q}
+                    <ChevronDown
+                      className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
+                      aria-hidden
+                    />
+                  </>
+                }
               >
-                <summary className="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-base font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden">
-                  {item.q}
-                  <ChevronDown
-                    className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
-                    aria-hidden
-                  />
-                </summary>
                 <p className="px-5 pb-5 text-sm leading-relaxed text-neutral-600">
                   {item.a}
                 </p>
-              </details>
+              </Disclosure>
             ))}
 
-            <details className="group">
-              <summary className="flex cursor-pointer select-none items-center justify-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 [&::-webkit-details-marker]:hidden">
-                すべての質問を見る（あと{FAQ.length - 3}問）
-                <ChevronDown
-                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
-                  aria-hidden
-                />
-              </summary>
+            <Disclosure
+              className="group"
+              summaryClassName="flex w-full cursor-pointer select-none items-center justify-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+              summary={
+                <>
+                  すべての質問を見る（あと{FAQ.length - 3}問）
+                  <ChevronDown
+                    className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
+                    aria-hidden
+                  />
+                </>
+              }
+            >
+              {/* 2026-07-29 CTO修正（UX監査Round6#1・派生バグ）: この内側の各FAQ項目は
+                  外側「すべての質問を見る」Disclosureの入れ子。両方に無名の`group`を
+                  付けると、Tailwindの`group-data-[state=open]:`は最も近い祖先ではなく
+                  マッチする祖先全てに反応するため、外側だけが開いた状態でも内側の
+                  閉じたchevronまで回転してしまう。名前付きgroup(`group/item`)で
+                  内側だけに独立してスコープする（旧実装の`group/item`と同じ意図）。 */}
               <div className="mt-3 space-y-3">
                 {FAQ.slice(3).map(item => (
-                  <details
+                  <Disclosure
                     key={item.q}
                     className="group/item rounded-2xl border border-neutral-200 bg-white"
+                    summaryClassName="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-5 text-left text-base font-semibold text-neutral-900"
+                    summary={
+                      <>
+                        {item.q}
+                        <ChevronDown
+                          className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]/item:rotate-180"
+                          aria-hidden
+                        />
+                      </>
+                    }
                   >
-                    <summary className="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-base font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden">
-                      {item.q}
-                      <ChevronDown
-                        className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open/item:rotate-180"
-                        aria-hidden
-                      />
-                    </summary>
                     <p className="px-5 pb-5 text-sm leading-relaxed text-neutral-600">
                       {item.a}
                     </p>
-                  </details>
+                  </Disclosure>
                 ))}
               </div>
-            </details>
+            </Disclosure>
           </div>
 
           {/* 2026-07-29 CTO修正（L3監査#7）: 本文・FAQ・体験デモに前提知識として
@@ -1346,12 +1381,12 @@ export default async function BusinessLandingPage({
               キーボード操作（Tab+Enter/Space）を明示的に保証する。 */}
           <Disclosure
             className="group mt-8 rounded-2xl border border-neutral-200 bg-white"
-            summaryClassName="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700 [&::-webkit-details-marker]:hidden"
+            summaryClassName="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700"
             summary={
               <>
                 はじめて読む方へ — よく出てくる労務用語の補足
                 <ChevronDown
-                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
                   aria-hidden
                 />
               </>

@@ -123,12 +123,12 @@ export default function FaqPage() {
       <section className="mx-auto max-w-3xl px-6 pb-8">
         <Disclosure
           className="group rounded-2xl border border-neutral-200 bg-white"
-          summaryClassName="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700 [&::-webkit-details-marker]:hidden"
+          summaryClassName="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700"
           summary={
             <>
               はじめて読む方へ — よく出てくる労務用語の補足
               <ChevronDown
-                className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
                 aria-hidden
               />
             </>
