@@ -49,6 +49,31 @@ export async function DELETE() {
         .neq('user_id', user.id)
 
       if ((count ?? 0) === 0) {
+        // 無人になる会社は削除する前に、必ず Stripe のサブスクリプションを解約する。
+        //   これを飛ばすと「退会したのに課金だけ続く」金銭被害が出る。しかも companies 行が
+        //   消えると webhook 側の突合キー（stripe_subscription_id）まで失われ、以後の
+        //   customer.subscription.* は 0 行一致で成功扱いになりエラーにも残らない
+        //   （2026-07-30 セキュリティ/可用性監査で検出）。
+        //   解約に失敗しても退会自体は止めない（本人の到達性を断つことを優先）。ただし
+        //   請求が残るため console.error で必ず痕跡を残し、手動対応できるようにする。
+        const { data: comp } = await admin
+          .from('companies')
+          .select('stripe_subscription_id')
+          .eq('id', company_id)
+          .maybeSingle()
+
+        if (comp?.stripe_subscription_id) {
+          try {
+            const { cancelSubscription } = await import('@/lib/stripe')
+            await cancelSubscription(comp.stripe_subscription_id)
+          } catch (e) {
+            console.error(
+              '[account:delete] stripe cancel failed — 課金が残っている可能性あり。要手動確認',
+              { company_id, subscription: comp.stripe_subscription_id, error: e },
+            )
+          }
+        }
+
         // 無人になる会社のみ削除。companies → 全 company_* が ON DELETE CASCADE で消える。
         await admin.from('companies').delete().eq('id', company_id)
       }

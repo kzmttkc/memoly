@@ -244,7 +244,14 @@ export async function GET(req: Request) {
         const { data: authUser } = await admin.auth.admin.getUserById(member.user_id)
         const email = authUser?.user?.email
         if (!email) continue
-        if (authUser?.user?.user_metadata?.digest_unsubscribed) continue
+        // digest_unsubscribed ではガードしない（2026-07-30 UX監査 B-2）。
+        //   このフラグは登録時の「番頭の新機能・労務の最新情報をメールで受け取る（任意）」
+        //   ＝プロダクトニュースの任意購読に対応するもので、既定は配信停止（true）になる。
+        //   一方この通知は「利用者が自分で登録した自社の期限」が近づいたことを知らせる
+        //   トランザクショナル通知であり、サービス提供に必要な連絡にあたる。マーケ通知の
+        //   opt-in と同一フラグで殺すと、メール登録ユーザーには期限通知が1通も届かない
+        //   （再訪の最強トリガーを既定で失っていた）。
+        //   なお解除手段はメール内の配信停止リンクで別途提供する（下の unsubscribe 導線）。
 
         const resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',

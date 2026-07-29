@@ -56,19 +56,24 @@ const EMPLOYEE_BAND_SET = new Set<string>(EMPLOYEE_BANDS)
 //   help 文言は最優先ペルソナ「総務をお一人で担当している方」（E09）に合わせる:
 //   前任者から引き継いだ書類しか手がかりがない前提で、「ある/ない」の判断基準を
 //   具体的な現物（届出控え・雇用契約書・ファイル）で示す。key/label の法的定義は不変。
+//   profileKey: company_profiles に写すときの key（人が読む短い名前）。
+//   attributesToProfileRows がこれを使う。設問文（label）は長いのでそのままは使わない。
 export const BOOL_QUESTIONS = [
   {
     key: 'has_36kyotei',
+    profileKey: '36協定',
     label: '36協定（時間外・休日労働に関する協定）を締結していますか？',
     help: '残業や休日出勤をさせる場合に必要な労使協定です。前任の方が届け出た控えが残っている場合も「ある」で大丈夫です。',
   },
   {
     key: 'has_work_rules',
+    profileKey: '就業規則',
     label: '就業規則を整備していますか？',
     help: '常時10人以上を雇用する場合は作成・届出の義務があります。書庫や共有フォルダに以前作られたものがある場合も「ある」です。',
   },
   {
     key: 'has_fixed_ot',
+    profileKey: '固定残業代',
     label: '固定残業代（みなし残業代）の制度がありますか？',
     help: '一定の残業代をあらかじめ給与に含める制度です。雇用契約書や求人票に「固定残業代」「みなし残業」とあれば「ある」に当たります。',
   },
@@ -130,6 +135,45 @@ export function sanitizeAttributes(input: CompanyAttributesInput): CompanyAttrib
     has_fixed_ot: tri(input.has_fixed_ot),
     benchmark_optout: input.benchmark_optout === true,
   }
+}
+
+/**
+ * オンボーディング5問の回答を company_profiles の行（key/value）へ変換する。
+ *
+ * なぜ要るか（2026-07-30 UX監査で検出した看板の破れ）:
+ *   5問の保存先は company_attributes だが、チャットが読む loadCompanyContext は
+ *   company_profiles と company_memories しか見ておらず、system プロンプトに
+ *   attributes が渡る経路が存在しなかった（grep -c "attributes" lib/prompts.ts → 0）。
+ *   その一方でチャット画面は「番頭はこの前提で答えます：建設業・30〜49人・36協定なし」と
+ *   表示していた＝**表示は前提を踏まえると言い、実挙動はモデルに何も渡していない**。
+ *   結果、5問に答えた直後の初回相談が業種も人数も知らない一般論で返り、
+ *   「会社を覚える」という製品の看板が実装で裏切られていた。
+ *
+ *   ここで company_profiles に写すことで、既存の想起パネル（参照した自社ルール）・
+ *   記憶残高メーターにも同時に乗る（チャット側の改修が不要で、可視化とも整合する）。
+ *
+ * 値は人が読む文にする。モデルにも利用者にも同じ文字列が見えるようにして、
+ * 表示と実挙動の乖離を構造的に起こさないため。
+ */
+export function attributesToProfileRows(
+  attrs: CompanyAttributesRow,
+): { key: string; value: string }[] {
+  const rows: { key: string; value: string }[] = []
+
+  const industry = INDUSTRY_MAJORS.find(i => i.code === attrs.industry_major)?.label
+  if (industry) rows.push({ key: '業種', value: industry })
+
+  if (attrs.employee_band) rows.push({ key: '従業員規模', value: `${attrs.employee_band}人` })
+
+  // 三値（yes/no/unknown）のうち、unknown(null) は書かない。
+  // 「わからない」を「無い」と断定してモデルに渡すと、事実でない前提で法令判断をしてしまう。
+  const yesNo = (v: boolean | null): string | null => (v === true ? 'あり' : v === false ? 'なし' : null)
+  for (const q of BOOL_QUESTIONS) {
+    const v = yesNo(attrs[q.key as keyof CompanyAttributesRow] as boolean | null)
+    if (v) rows.push({ key: q.profileKey, value: v })
+  }
+
+  return rows
 }
 
 export { INDUSTRY_CODE_SET, EMPLOYEE_BAND_SET, BOOL_KEY_SET }

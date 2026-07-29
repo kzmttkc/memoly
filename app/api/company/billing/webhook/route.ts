@@ -78,6 +78,23 @@ async function alreadyProcessed(supabase: ServiceClient, eventId: string): Promi
 }
 
 /** 監査ログ＋冪等マーカーを1行記録する。INSERT が PK 重複なら「並行で処理済み」とみなす。 */
+// subscription id での突合が0行だったときに必ず痕跡を残す。
+//   退会や手動削除で companies 行が消えると、以後の customer.subscription.* は
+//   .eq('stripe_subscription_id', ...) が0行一致になり、update は成功扱い（error=null）で
+//   静かに無反映になる。Stripe 側は 200 を受け取って再送もしないため、
+//   「課金は生きているのに DB に反映されない」状態がどこにも記録されずに続く
+//   （2026-07-30 可用性監査で検出）。2xx は維持しつつ（Stripe の無限再送を避ける）、
+//   ログに FATAL 相当を残して人が気づけるようにする。
+function warnIfNoMatch(count: number | null, eventType: string, subId: string): void {
+  if (count === 0) {
+    console.error(
+      '[billing:webhook] 突合0行 — Stripeイベントを受けたが該当会社が存在しない。' +
+        '課金が残っている可能性あり。要手動確認',
+      { event_type: eventType, stripe_subscription_id: subId },
+    )
+  }
+}
+
 async function recordEvent(
   supabase: ServiceClient,
   row: {
@@ -241,11 +258,12 @@ export async function POST(req: NextRequest) {
       })
       if (rec.duplicate) return new Response('ok: duplicate', { status: 200 })
 
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from('companies')
-        .update({ plan, status })
+        .update({ plan, status }, { count: 'exact' })
         .eq('stripe_subscription_id', sub.id)
       if (error) throw error
+      warnIfNoMatch(count, event.type, sub.id)
     }
 
     // ----------------------------------------------------------------------
@@ -268,11 +286,12 @@ export async function POST(req: NextRequest) {
       })
       if (rec.duplicate) return new Response('ok: duplicate', { status: 200 })
 
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from('companies')
-        .update({ plan: 'free', status: 'canceled' })
+        .update({ plan: 'free', status: 'canceled' }, { count: 'exact' })
         .eq('stripe_subscription_id', sub.id)
       if (error) throw error
+      warnIfNoMatch(count, event.type, sub.id)
     }
 
     // ----------------------------------------------------------------------

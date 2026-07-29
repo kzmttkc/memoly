@@ -21,7 +21,7 @@ export default function PrivacyEnglishPage() {
             Back to top
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">Privacy Policy</h1>
-          <p className="mt-1 text-sm text-neutral-500">Last updated: July 28, 2026</p>
+          <p className="mt-1 text-sm text-neutral-500">Last updated: July 30, 2026</p>
           <p className="mt-1 text-xs text-neutral-400">
             English translation for reference. The <Link href="/privacy" className="underline">Japanese version</Link> is the governing text in case of any discrepancy.
           </p>
@@ -33,7 +33,10 @@ export default function PrivacyEnglishPage() {
             <ul className="space-y-1 text-neutral-600">
               <li><span className="text-neutral-800">Operator:</span> KIZUNA Creation (responsible person / Kazumoto Takeshi)</li>
               <li><span className="text-neutral-800">Representative:</span> Kazumoto Takeshi</li>
-              <li><span className="text-neutral-800">Location:</span> Japan</li>
+              <li>
+                <span className="text-neutral-800">Location:</span> Japan (as a sole proprietorship, the full address is not displayed at all times; it is disclosed without delay upon request, as described in the{' '}
+                <Link href="/tokushoho" className="text-brand-600 underline">Specified Commercial Transactions Act notice</Link>)
+              </li>
               <li><span className="text-neutral-800">Contact:</span> <a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">support@banto-roumu.com</a></li>
             </ul>
           </section>
@@ -45,8 +48,19 @@ export default function PrivacyEnglishPage() {
               <li>Email address (at account creation)</li>
               <li>Company profile and chat consultation content</li>
               <li>Attributes/memory extracted by the AI (e.g., standard working hours, holidays, status of internal rules)</li>
+              {/* 2026-07-30 法務追加: /privacy（日本語・正文）と同期。従業員等の個人情報の
+                  類型と要配慮個人情報を含みうる旨を追加。 */}
+              <li>
+                Personal information of your employees, officers and other related persons that you (the company) enter into the Service
+                (name or label, department, work/employment status, background of the consultation).
+                Given the nature of labor-related consultations, <span className="text-warning-700">this may include sensitive personal information (e.g., leave of absence, illness or injury, harassment reports).</span>
+                We handle such data as a processor entrusted by you (see <Link href="/terms" className="text-brand-600 underline">Terms of Service, Section 5</Link>; Japanese text only).
+              </li>
               <li>Service usage (anonymous statistics)</li>
             </ul>
+            <p className="mt-2 text-neutral-500">
+              When creating long-term memories from conversations, we instruct the AI not to retain raw full names, addresses or national identification numbers in the subject label, and to use initials or roles instead (as this is performed by an AI model, automatic pseudonymization cannot be guaranteed). Please do not enter Japanese Individual Numbers (My Number) or documents containing them.
+            </p>
           </section>
 
           <section>
@@ -78,16 +92,24 @@ export default function PrivacyEnglishPage() {
               Service. For EU/EEA residents: the above international transfers rely on Standard
               Contractual Clauses (SCCs) under GDPR Article 46.
             </p>
+            {/* 2026-07-30 法務修正: /privacy（日本語・正文）と同期。同意単独の構成から
+                「従業員等＝委託／登録者本人＝同意」の二層構成へ組み替え。 */}
             <p className="mt-2 text-neutral-500">
               Under Japan&apos;s Act on the Protection of Personal Information (cross-border
               provision to third parties): all vendors listed above are located in the United
-              States. At sign-up, you provide explicit consent to this Privacy Policy (and the Terms
-              of Service) via an active checkbox, and this cross-border provision of information is
-              carried out on the basis of that explicit consent. We have confirmed contractual
-              safeguards (data processing agreements, SCCs, etc.) with each vendor regarding their
-              handling of personal information. To withdraw consent or request details, please
-              contact us at the address below.
+              States. The basis for handling differs depending on the information concerned:
             </p>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-neutral-500">
+              <li>
+                <span className="text-neutral-800">Personal information of your employees and related persons that you enter</span>: handled on the basis of entrustment (outsourcing) by you as the company
+                (see <Link href="/terms" className="text-brand-600 underline">Terms of Service, Section 5</Link>; Japanese text only).
+                Provision to the vendors above occurs as sub-processing, limited to what is necessary to provide the Service, and we have confirmed through contractual safeguards (data processing agreements, SCCs, etc.) that each vendor maintains appropriate ongoing measures for handling personal information.
+                Notice to, and where required consent of, the individuals concerned is the responsibility of you as the entrusting company. Individuals should direct requests for disclosure, correction or suspension of use to their employer first.
+              </li>
+              <li>
+                <span className="text-neutral-800">Information about the registered user (e.g., email address)</span>: at sign-up, you provide explicit consent to this Privacy Policy (and the Terms of Service) via an active checkbox, and this information is handled on the basis of that explicit consent. To withdraw consent or request details, please contact us at the address below.
+              </li>
+            </ul>
           </section>
 
           <section>
