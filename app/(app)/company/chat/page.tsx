@@ -758,7 +758,12 @@ function CompanyChat() {
   }, [initialQ, companyId, sendMessage])
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col" style={{ minHeight: 'calc(100dvh - 8rem)' }}>
+    /* height（min-height ではない）で親の高さを固定する。
+       min-height だと子の flex-1 が内容ぶん伸び続け、メッセージ枠の overflow-y-auto が
+       一度も発火しない。結果、回答が長いほど入力欄が画面外へ押し出され、
+       「次を聞く」たびにスクロールが必要だった（2026-07-30 UX監査 A-2）。
+       高さを固定すればメッセージ枠だけがスクロールし、入力欄は常に見える。 */
+    <div className="mx-auto flex max-w-3xl flex-col" style={{ height: 'calc(100dvh - 8rem)' }}>
       {/* この会社専用 / 参照ルール件数（常時表示） */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Badge tone="brand">

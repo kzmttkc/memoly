@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getCurrentUser, getMembership } from '@/lib/company'
-import { sanitizeAttributes, type CompanyAttributesRow } from '@/lib/company-attributes'
+import {
+  attributesToProfileRows,
+  sanitizeAttributes,
+  type CompanyAttributesRow,
+} from '@/lib/company-attributes'
 
 // ============================================================================
 // /api/company/attributes — 集合知モート用「正規化属性」の取得/更新
@@ -77,6 +81,35 @@ export async function POST(req: NextRequest) {
     console.error('[company:attributes] upsert failed', error.message)
     return NextResponse.json({ error: '会社属性の保存に失敗しました' }, { status: 500 })
   }
+
+  // 同じ内容を company_profiles にも写す（2026-07-30 UX監査の指摘への対応）。
+  //   チャットが読む loadCompanyContext は company_profiles / company_memories しか見ないため、
+  //   ここで写さないとオンボ5問の回答が system プロンプトに一切届かない。
+  //   「番頭はこの前提で答えます」と画面に出しながらモデルには渡っていない、という
+  //   看板と実装の乖離をここで塞ぐ。想起パネル・記憶残高メーターにも同時に乗る。
+  //
+  //   属性保存自体は成功しているので、写しの失敗では 500 にしない（オンボを止めない）。
+  //   ただしログには必ず残す＝「前提が効いていない」相談が起きた時に追跡できるようにする。
+  try {
+    const rows = attributesToProfileRows(attrs)
+    if (rows.length > 0) {
+      const { error: profErr } = await supabase.from('company_profiles').upsert(
+        rows.map(r => ({
+          company_id: companyId as string,
+          key: r.key,
+          value: r.value,
+          updated_at: new Date().toISOString(),
+        })),
+        { onConflict: 'company_id,key' },
+      )
+      if (profErr) {
+        console.error('[company:attributes] profile mirror failed', profErr.message)
+      }
+    }
+  } catch (e) {
+    console.error('[company:attributes] profile mirror threw', e)
+  }
+
   return NextResponse.json({ attributes: data })
 }
 
