@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { FAQ_CATEGORIES, FAQ_ITEMS } from '@/lib/faq'
+import { Disclosure } from '@/components/ui/Disclosure'
+import { FAQ_CATEGORIES, FAQ_ITEMS, JARGON_TERMS } from '@/lib/faq'
 
 // ============================================================================
 // /faq — 独立FAQページ（SSG・クローラブル）。2026-07-22 新設。
@@ -113,6 +114,36 @@ export default function FaqPage() {
           </div>
         </section>
       ))}
+
+      {/* 2026-07-29 CTO修正（UX監査Round4#9・軽微）: /business トップページの
+          FAQプレビューにのみ存在した専門用語補足アコーディオンが、この独立
+          /faqページには複製されておらず、検索・GEO経由で直接ここに着地する初心者
+          読者（社労士事務所の新人など）が用語補足に出会えなかった（ペルソナ10指摘）。
+          文言・トーン（lib/faq.ts の JARGON_TERMS）は/businessと同一・複製配置のみ。 */}
+      <section className="mx-auto max-w-3xl px-6 pb-8">
+        <Disclosure
+          className="group rounded-2xl border border-neutral-200 bg-white"
+          summaryClassName="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700 [&::-webkit-details-marker]:hidden"
+          summary={
+            <>
+              はじめて読む方へ — よく出てくる労務用語の補足
+              <ChevronDown
+                className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                aria-hidden
+              />
+            </>
+          }
+        >
+          <dl className="space-y-3 px-5 pb-5">
+            {JARGON_TERMS.map((j) => (
+              <div key={j.term}>
+                <dt className="text-sm font-semibold text-neutral-900">{j.term}</dt>
+                <dd className="mt-0.5 text-sm leading-relaxed text-neutral-600">{j.body}</dd>
+              </div>
+            ))}
+          </dl>
+        </Disclosure>
+      </section>
 
       {/* ===== 番頭本体・関連コンテンツへの導線 ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">

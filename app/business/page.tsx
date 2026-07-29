@@ -6,6 +6,7 @@ import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { Disclosure } from '@/components/ui/Disclosure'
 import TryDemoLazy from './_components/TryDemoLazy'
 import { TrackedCTA } from './_components/TrackedCTA'
 import { HeroEyebrow, HeroHeadline, HeroSubcopy } from './_components/HeroCopy'
@@ -18,6 +19,7 @@ import ScrollProgress from './_components/ScrollProgress'
 import ForcePaidVariant from './_components/ForcePaidVariant'
 import LeadCapture from './_components/LeadCapture'
 import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
+import { JARGON_TERMS } from '@/lib/faq'
 import { PLANS, billingEnabled } from '@/lib/plans'
 import { USECASE_LIST } from '@/lib/usecase'
 import { TOOL_LIST } from '@/lib/tools'
@@ -144,12 +146,9 @@ const FAQ = [
 //   本文中に前提知識として出てくる労務用語を、初めて読む方（学生インターン等）
 //   向けに1箇所にまとめて簡潔に補足する。個々の本文（FAQ回答・デモの回答文言）は
 //   Phase1レビュー済みの言い回しのため書き換えず、独立した用語集として追加する。
-const JARGON = [
-  { term: '36協定（サブロク協定）', body: '残業や休日出勤をさせる前に、会社と労働者の代表が結んで労働基準監督署へ届け出る労使協定です。これが無いと、原則として残業をさせること自体が労働基準法違反になります。' },
-  { term: '特別条項', body: '36協定の残業時間の上限（原則 月45時間・年360時間）を、繁忙期など臨時的な事情に限って超えられるようにする、協定内の特別なルールです。' },
-  { term: '比例付与', body: '週の勤務日数が少ないパート・アルバイトの方に、フルタイムより少ない日数で有給休暇を計算して付与する仕組みです。' },
-  { term: '就業規則', body: '労働時間・休日・賃金など、会社と従業員の間のルールをまとめた文書です。常時10人以上を雇う会社は作成・届出が義務です。' },
-]
+// 2026-07-29 CTO修正（UX監査Round4#9）: lib/faq.ts の JARGON_TERMS（SSOT）へ移設。
+//   /faq 独立ページとの複製配置のため、このページ側は再エクスポートせずimportで参照する。
+const JARGON = JARGON_TERMS
 
 // 機能4軸（2026-07-23 B01+I01: 旧「業務効率化」4カードと旧「機能」4カードを
 // 1セクション4カードへ統合し、中盤を約50%短縮。各カードは「機能名＝何をするか」と
@@ -1114,17 +1113,25 @@ export default async function BusinessLandingPage({
               セクションのため、既存システム併用者向けの補足2段落は<details>で畳み、
               関係する人だけが開く段階的開示にする（本文はDOM上に常に存在＝SEO/GEO
               への影響なし。既存のFAQアコーディオンと同じ手法）。 */}
-          <details className="group mx-auto mt-8 max-w-3xl rounded-2xl border border-neutral-200 bg-neutral-50">
-            <summary className="flex cursor-pointer select-none items-center justify-between gap-2 p-6 text-sm font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden">
-              <span className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-brand-600" aria-hidden />
-                すでにSmartHR・freeeなどをお使いの方へ
-              </span>
-              <ChevronDown
-                className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
-                aria-hidden
-              />
-            </summary>
+          {/* 2026-07-29 CTO修正（UX監査Round4#10）: ネイティブ<details>/<summary>を
+              Disclosure（components/ui/Disclosure.tsx）に置き換え、キーボード操作
+              （Tab+Enter/Space）を明示的に保証する（詳細は同コンポーネントのコメント参照）。 */}
+          <Disclosure
+            className="group mx-auto mt-8 max-w-3xl rounded-2xl border border-neutral-200 bg-neutral-50"
+            summaryClassName="flex cursor-pointer select-none items-center justify-between gap-2 p-6 text-sm font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden"
+            summary={
+              <>
+                <span className="flex items-center gap-2">
+                  <Database className="h-4 w-4 text-brand-600" aria-hidden />
+                  すでにSmartHR・freeeなどをお使いの方へ
+                </span>
+                <ChevronDown
+                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                  aria-hidden
+                />
+              </>
+            }
+          >
             <div className="px-6 pb-6">
               <p className="text-sm leading-relaxed text-neutral-600">
                 番頭は既存の手続きシステムを置き換えません。従業員情報や規程を、番頭にすべて入れ直す必要はありません。
@@ -1140,7 +1147,7 @@ export default async function BusinessLandingPage({
                 打刻はこれまでの勤怠ツールのまま、番頭はそのルール照合・記憶・期限・書類のたたき台を足す役割です。
               </p>
             </div>
-          </details>
+          </Disclosure>
         </div>
       </section>
 
@@ -1324,15 +1331,22 @@ export default async function BusinessLandingPage({
 
           {/* 2026-07-29 CTO修正（L3監査#7）: 本文・FAQ・体験デモに前提知識として
               出てくる労務用語を、初めて読む方向けに簡潔に補足する（軽い段階的開示・
-              アコーディオンで畳み、情報密度を上げすぎない）。 */}
-          <details className="group mt-8 rounded-2xl border border-neutral-200 bg-white">
-            <summary className="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700 [&::-webkit-details-marker]:hidden">
-              はじめて読む方へ — よく出てくる労務用語の補足
-              <ChevronDown
-                className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
-                aria-hidden
-              />
-            </summary>
+              アコーディオンで畳み、情報密度を上げすぎない）。
+              2026-07-29 CTO修正（UX監査Round4#10）: Disclosureへ置き換え、
+              キーボード操作（Tab+Enter/Space）を明示的に保証する。 */}
+          <Disclosure
+            className="group mt-8 rounded-2xl border border-neutral-200 bg-white"
+            summaryClassName="flex cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700 [&::-webkit-details-marker]:hidden"
+            summary={
+              <>
+                はじめて読む方へ — よく出てくる労務用語の補足
+                <ChevronDown
+                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                  aria-hidden
+                />
+              </>
+            }
+          >
             <dl className="space-y-3 px-5 pb-5">
               {JARGON.map(j => (
                 <div key={j.term}>
@@ -1341,7 +1355,7 @@ export default async function BusinessLandingPage({
                 </div>
               ))}
             </dl>
-          </details>
+          </Disclosure>
         </div>
       </section>
 

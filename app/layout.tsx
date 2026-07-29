@@ -66,9 +66,20 @@ export const viewport: Viewport = {
   themeColor: "#243B6E",
 };
 
+// 2026-07-29 CTO修正（UX監査Round4#1・最重要）: Round1(L1)で横スクロール
+// 安全網として html/body に overflow-x-hidden を追加したが、CSSの仕様上
+// overflow-x に visible 以外の値（hidden/auto/scroll）を指定すると、
+// overflow-y を明示していなくても used value が自動的に auto へ変わる
+// （html/body の両方が独立したスクロールコンテナ化する）。これにより
+// /business ヘッダの position:sticky の基準スクロールポートが body の
+// （実際にはスクロールしない）内部スクロール領域に固定され、実際のページ
+// スクロールは html 側で起きるため、ヘッダが画面外へ完全に流れ去っていた
+// （Round4監査ペルソナ2・3通りの手法で実測確認）。overflow-x: clip は同じ
+// spec上のカップリング規則の対象外（overflow-y は visible のまま）で横スクロール
+// 抑止効果は同一のため、hidden→clip に変更してsticky破壊を解消する。
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className={`h-full overflow-x-hidden ${geist.variable}`}>
+    <html lang="ja" className={`h-full overflow-x-clip ${geist.variable}`}>
       <head>
         <Script
           defer
@@ -101,7 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="font-sans bg-gray-950 text-gray-100 min-h-screen overflow-x-hidden">
+      <body className="font-sans bg-gray-950 text-gray-100 min-h-screen overflow-x-clip">
         {children}
         <CookieBanner />
         <Clarity />

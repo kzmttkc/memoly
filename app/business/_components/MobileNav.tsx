@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Globe } from 'lucide-react'
 
 // ============================================================================
 // MobileNav — 公開LP(/business)ヘッダのモバイル用ナビ（2026-07-24 P02）。
@@ -24,6 +24,13 @@ const LINKS = [
   // 2026-07-28 CTO修正（L1監査#5）: モバイルもハンバーガーから料金へ直接届くようにする。
   { href: '#pricing', label: '料金' },
 ] as const
+
+// 2026-07-29 CTO修正（UX監査Round4#6・重大）: デスクトップ版EN/JPトグル
+//   （page.tsx）は `hidden sm:inline-flex` でモバイルには一切出ておらず、
+//   モバイルからのJP→EN導線が構造的にゼロだった（EN側は /business/en に
+//   別途JP導線があり、そちらは機能していたため「EN→JPは動くがJP→ENは動かない
+//   一方通行」に見えていた＝ペルソナ4指摘）。ハンバーガーの通常リンクとは
+//   別扱い（見た目で言語切替と分かるようGlobeアイコン付き）にする。
 
 export function MobileNav() {
   const [open, setOpen] = useState(false)
@@ -60,6 +67,14 @@ export function MobileNav() {
                   {l.label}
                 </Link>
               ))}
+              <Link
+                href="/business/en"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-1.5 rounded-lg px-2 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              >
+                <Globe className="h-4 w-4" aria-hidden />
+                English
+              </Link>
             </nav>
           </div>
         </>

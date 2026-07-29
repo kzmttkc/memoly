@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Building2, MessageSquareText, ArrowRight, RefreshCw } from 'lucide-react'
@@ -46,6 +46,26 @@ import { useSharedIndustry, setSharedIndustry } from '../_lib/industry-selection
 // ============================================================================
 
 type Turn = { id: number; q: string; a: string }
+
+// 2026-07-29 CTO修正（UX監査Round4#5・重大）: 文字ごとの累積表示タイミング(ms)を
+//   再生開始前に一括計算する。従来は setTimeout を1文字ごとに直列で積み上げる方式
+//   （前の1文字の完了→次のsetTimeoutを積む、を217回繰り返す）で、理論値こそ
+//   20ms/字・句読点90msだったが、1回でもレンダーやタイマーの発火が想定より遅れると
+//   その遅延がそのまま後続にすべて積算される構造だった。実機（複数ペルソナ・モバイル
+//   中心）で45〜70秒/問という理論値の8〜10倍の遅さが報告されたのは、この「遅延が
+//   積算していく」設計が主因と判定。経過時間(performance.now())基準の絶対時刻表に
+//   差し替え、途中でフレームが遅れても後続で必ず追いつく（遅延が蓄積しない）。
+//   あわせて基準速度も引き上げ（20ms→12ms、句読点90ms→60ms）、体感の速度自体も上げる。
+function buildCumulativeDelays(text: string): number[] {
+  const cumulative: number[] = []
+  let acc = 0
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    acc += ch === '。' || ch === '、' || ch === '）' ? 60 : 12
+    cumulative.push(acc)
+  }
+  return cumulative
+}
 
 // prefers-reduced-motion を購読するフック。SSRでは false。
 function usePrefersReducedMotion(): boolean {
@@ -106,7 +126,10 @@ export default function TryDemo() {
   const [pending, setPending] = useState<{ qa: DemoQA; qIndex: number } | null>(null)
 
   const nextId = useRef(0)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rafRef = useRef<number | null>(null)
+  // 現在再生中ターンの文字ごとの累積表示タイミング表と、再生開始時刻。
+  const cumulativeRef = useRef<number[]>([])
+  const startTimeRef = useRef<number>(0)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const sectionRef = useRef<HTMLElement | null>(null)
   // デモに初めて触れた瞬間(アハ到達の代理)を1回だけ計測するためのフラグ。
@@ -131,14 +154,27 @@ export default function TryDemo() {
 
   const isBusy = typing !== null
 
-  // アンマウント時にタイマを片付ける。
+  // アンマウント時にrAFを片付ける。
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
     }
   }, [])
 
-  // タイプ進行: typing がセットされている間、1文字ずつ進める。
+  // 2026-07-29 CTO修正（UX監査Round4#4,#5・重大）: タイプ進行をrequestAnimationFrame
+  //   ＋経過時間ベースへ全面差し替え。従来は typedLen が変わるたびにeffectが再実行され
+  //   1文字ずつ setTimeout を再スケジュールする直列積み上げ方式だった。この方式は
+  //   ・レンダーやタイマー発火が遅れるたびその遅延がそのまま後続へ積算される
+  //     （実測45〜70秒/問の主因と判定・#5）
+  //   ・タブがバックグラウンドに回るなど何らかの理由でタイマー連鎖が一度でも
+  //     途切れると、それ以降 typedLen を進める再スケジュールが発生せず、
+  //     見た目上「同じ箇所で完全に停止したまま」になりうる（#4のフリーズ疑い）
+  //   という構造的リスクを持っていた。経過時間(performance.now())から
+  //   「今何文字目まで見えているべきか」を毎フレーム再計算する方式に変えると、
+  //   1回のフレームがどれだけ遅れても次のフレームで正しい位置に追いつくため、
+  //   遅延の蓄積も完全停止も構造的に起こらない。
+  //   依存配列は [typing?.id, reducedMotion] のみ（1文字ごとの再実行をやめ、
+  //   新しいターンが始まった時だけ実行し直す）。
   useEffect(() => {
     if (!typing) return
 
@@ -150,22 +186,50 @@ export default function TryDemo() {
       return
     }
 
-    if (typedLen >= typing.full.length) {
-      // タイプ完了 → 確定ターンへ移す。
-      setTurns(prev => [...prev, { id: typing.id, q: typing.q, a: typing.full }])
-      setTyping(null)
-      setTypedLen(0)
-      return
+    const cumulative = cumulativeRef.current
+    const total = typing.full.length
+    let shown = 0
+
+    const step = () => {
+      const elapsed = performance.now() - startTimeRef.current
+      let target = total
+      for (let i = shown; i < total; i++) {
+        if (cumulative[i] > elapsed) {
+          target = i
+          break
+        }
+      }
+      if (target !== shown) {
+        shown = target
+        setTypedLen(target)
+      }
+      if (target >= total) {
+        setTurns(prev => [...prev, { id: typing.id, q: typing.q, a: typing.full }])
+        setTyping(null)
+        setTypedLen(0)
+        return
+      }
+      rafRef.current = requestAnimationFrame(step)
     }
 
-    // 読みやすい速度（句読点でわずかに溜める）。概ね15-25ms/字。
-    const ch = typing.full[typedLen]
-    const delay = ch === '。' || ch === '、' || ch === '）' ? 90 : 20
-    timerRef.current = setTimeout(() => setTypedLen(n => n + 1), delay)
+    rafRef.current = requestAnimationFrame(step)
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
     }
-  }, [typing, typedLen, reducedMotion])
+  }, [typing?.id, reducedMotion])
+
+  // 2026-07-29 CTO修正（UX監査Round4#4,#5・重大）: タイプ中の回答をタップ（または
+  //   キーボードでEnter/Space）すると即座に全文表示へ切り替える「スキップ」機能。
+  //   #5（表示が遅い）への直接的な回避策であると同時に、#4（特定条件でのフリーズ
+  //   疑い）に対する保険でもある＝rAFの進行が万一止まっても、ユーザーはいつでも
+  //   タップ一つで詰まりを抜けられる（詰まりが致命的な行き止まりにならない）。
+  const skipTyping = useCallback(() => {
+    if (!typing) return
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+    setTurns(prev => [...prev, { id: typing.id, q: typing.q, a: typing.full }])
+    setTyping(null)
+    setTypedLen(0)
+  }, [typing])
 
   // 会話末尾へスクロール追従（モーション配慮）。
   useEffect(() => {
@@ -178,6 +242,9 @@ export default function TryDemo() {
   const play = useCallback((qa: DemoQA) => {
     setStarted(true)
     const id = nextId.current++
+    // 経過時間ベースのタイプ進行(#5)の起点：累積表を作り直し、開始時刻を記録する。
+    cumulativeRef.current = buildCumulativeDelays(qa.a)
+    startTimeRef.current = performance.now()
     setTypedLen(0)
     setTyping({ id, q: qa.q, full: qa.a })
   }, [])
@@ -198,6 +265,17 @@ export default function TryDemo() {
 
   const ask = useCallback(
     (qa: DemoQA, qIndex: number) => {
+      // 2026-07-29 CTO修正（UX監査Round4#2・最重要）: 最初の質問クリック＝
+      //   会話の開始時点で、今表示中の業種を localOverride として固定する。
+      //   従来は「体験デモ自身のタブを押した時だけ」ロックしており、ヒーロー側の
+      //   業種チップ（IndustryHeroPreview）を押しただけでは固定されなかった。
+      //   そのためヒーローで業種を押すたび sharedIndustry が変わり、会話の途中
+      //   （回答を読んでいる最中）でも体験デモのプロファイル・質問セットが無断で
+      //   別業種へ切り替わっていた（ペルソナ6が2回再現）。「質問した時点の業種」を
+      //   会話が続く限り不変にする。
+      if (localOverride === null) {
+        setLocalOverride(industryKey)
+      }
       // 手動クリック=能動的アハ。初回タッチを demo_engaged で1回だけ計測。
       // （自動再生はここを通らない＝engagedRef/demo_engaged を汚さない）
       if (!engagedRef.current) {
@@ -217,7 +295,7 @@ export default function TryDemo() {
       }
       play(qa)
     },
-    [isBusy, play, industryKey],
+    [isBusy, play, industryKey, localOverride],
   )
 
   // 業種タブの切替（B13）。前提の違う回答が混ざらないよう会話をリセットする。
@@ -227,7 +305,7 @@ export default function TryDemo() {
   const switchIndustry = useCallback(
     (next: IndustryKey) => {
       if (next === industryKey) return
-      if (timerRef.current) clearTimeout(timerRef.current)
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
       setPending(null)
       // 2026-07-28 CTO修正（L1監査#11）: 体験デモ自身での明示的な選択は
       // localOverride として固定し、以後ヒーロー側の変更で上書きされないようにする。
@@ -382,12 +460,13 @@ export default function TryDemo() {
               <Conversation key={t.id} q={t.q} a={t.a} />
             ))}
 
-            {/* タイプ中のターン（カーソル付き） */}
+            {/* タイプ中のターン（カーソル付き・タップでスキップ可） */}
             {typing && (
               <Conversation
                 q={typing.q}
                 a={typing.full.slice(0, typedLen)}
                 typing
+                onSkip={skipTyping}
               />
             )}
 
@@ -424,12 +503,27 @@ export default function TryDemo() {
           </p>
 
           {/* 質問チップ */}
+          {/* 2026-07-29 CTO修正（UX監査Round4#3・重大）: タイプ中でも業種タブ・
+              質問チップの操作自体はL1監査#1時点から受け付けていた（保留キュー）が、
+              見た目には無効化のサインが一切なく「押しても反応がない壊れたボタン」に
+              見えるとの報告（ペルソナ8が4回再現）。isBusy中はチップ列全体を
+              aria-busy＋淡色化し「回答表示中…」の明示ラベルを出す。クリック自体は
+              従来どおり無効化しない（disabled属性は使わない）。 */}
           <div className="border-t border-neutral-200 bg-neutral-50 px-4 py-4">
             <p className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
               <MessageSquareText className="h-3.5 w-3.5" aria-hidden />
               質問を選んで試す
+              {isBusy && (
+                <span className="ml-1 inline-flex items-center gap-1 normal-case text-brand-600">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-500" aria-hidden />
+                  回答表示中…（押した質問は表示後すぐ再生されます）
+                </span>
+              )}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div
+              className={'flex flex-wrap gap-2 transition-opacity' + (isBusy ? ' opacity-60' : '')}
+              aria-busy={isBusy}
+            >
               {industry.qa.map((qa, i) => (
                 <button
                   key={qa.q}
@@ -441,6 +535,7 @@ export default function TryDemo() {
                     'transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 ' +
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ' +
                     'focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-50 ' +
+                    (isBusy ? 'cursor-wait ' : '') +
                     (pending?.qIndex === i
                       ? 'border-brand-300 bg-brand-50 text-brand-700'
                       : 'border-neutral-200 bg-white text-neutral-700')
@@ -506,8 +601,22 @@ export default function TryDemo() {
 // ---------------------------------------------------------------------------
 // Conversation — 1往復（ユーザー質問＝右吹き出し / 番頭回答＝左吹き出し）。
 //   typing=true のときは回答末尾に点滅カーソルを添える（装飾＝aria-hidden）。
+//   2026-07-29 CTO修正（UX監査Round4#4,#5）: typing中は onSkip をタップ/
+//   Enter/Spaceで発火できるようにし（表示速度が遅い・フリーズしたと感じた時の
+//   即時脱出路）、視覚的にも「タップで全文表示」ヒントとカーソル可視化で
+//   操作可能であることを明示する。
 // ---------------------------------------------------------------------------
-function Conversation({ q, a, typing = false }: { q: string; a: string; typing?: boolean }) {
+function Conversation({
+  q,
+  a,
+  typing = false,
+  onSkip,
+}: {
+  q: string
+  a: string
+  typing?: boolean
+  onSkip?: () => void
+}) {
   return (
     <div className="space-y-3">
       {/* ユーザーの質問（右寄せ） */}
@@ -522,7 +631,26 @@ function Conversation({ q, a, typing = false }: { q: string; a: string; typing?:
         <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
           <BantoMark className="h-3.5 w-3.5" aria-hidden />
         </span>
-        <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 text-[13px] leading-relaxed text-neutral-700">
+        <div
+          className={
+            'max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 text-[13px] leading-relaxed text-neutral-700' +
+            (typing && onSkip ? ' cursor-pointer' : '')
+          }
+          {...(typing && onSkip
+            ? {
+                role: 'button' as const,
+                tabIndex: 0,
+                'aria-label': 'タップして回答を全文表示する',
+                onClick: onSkip,
+                onKeyDown: (e: KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onSkip()
+                  }
+                },
+              }
+            : {})}
+        >
           {a}
           {typing && (
             <span
@@ -532,6 +660,9 @@ function Conversation({ q, a, typing = false }: { q: string; a: string; typing?:
           )}
         </div>
       </div>
+      {typing && onSkip && (
+        <p className="pl-8 text-[11px] text-neutral-400">タップで全文表示</p>
+      )}
     </div>
   )
 }
