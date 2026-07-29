@@ -63,6 +63,18 @@ export function Disclosure({
         aria-expanded={open}
         aria-controls={contentId}
         className={summaryClassName}
+        // 2026-07-29 CTO修正（Round6直後の実測確定バグ）: 実OSキーボードでフォーカス→Enterを
+        // 押してもaria-expandedがfalseのまま変化しない事象をCEOが実機で確定させた。原因は
+        // 「<button>への差し替え」自体ではなく、Safari(WebKit)がデフォルト設定
+        // （システム環境設定「フルキーボードアクセス」オフ、多くのMacの初期値）では
+        // ボタン等のフォームコントロールをTabキーのフォーカス移動対象から除外する既知の
+        // 挙動にある。マウスクリックは正常に動く（クリックはTab移動を経由しないため）一方、
+        // 実際のTabキー操作ではこの<button>にフォーカスが到達しない＝Enterを押しても
+        // 何も起きないまま、という症状に一致する。明示的なtabIndex属性を付与すると、
+        // WebKitはこのフォームコントロール除外ルールより著者の明示指定を優先し、
+        // Full Keyboard Access設定に関わらずTabキーでの到達を保証する（他ブラウザは
+        // native buttonが既定でtabIndex=0相当のため実害なし）。
+        tabIndex={0}
         onClick={() => setOpen(v => !v)}
       >
         {summary}
