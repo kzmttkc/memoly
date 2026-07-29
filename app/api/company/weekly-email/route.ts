@@ -122,21 +122,24 @@ export async function GET(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // --- 直近7日にアクティビティのある会社を抽出（会話の updated_at を活動シグナルに） ---
+  // --- 対象会社の抽出（2026-07-30 継続利用監査 B-3 の是正）---
+  //   従来は「直近7日に会話がある会社」だけを対象にしていた。だが会話が一度も無い会社は
+  //   company_conversations に行そのものが存在しないため**永久に対象外**になり、
+  //   「登録したが使わずに離れた人」＝最も戻ってきてほしい相手にだけ届かない、という
+  //   ウィンバックとして向きが逆の設計だった。
+  //   全社を対象にし、直近7日の活動有無で本文を出し分ける（休眠側は再開のきっかけを送る）。
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const { data: activeConvs, error: convErr } = await admin
-    .from('company_conversations')
-    .select('company_id')
-    .gte('updated_at', since)
-  if (convErr) {
-    console.error('[banto:weekly-email] active company query failed', convErr)
+  const [{ data: allCompanies, error: compErr }, { data: activeConvs }] = await Promise.all([
+    admin.from('companies').select('id').limit(MAX_COMPANIES_PER_RUN),
+    admin.from('company_conversations').select('company_id').gte('updated_at', since),
+  ])
+  if (compErr) {
+    console.error('[banto:weekly-email] company query failed', compErr)
     return NextResponse.json({ error: '対象会社の集計に失敗しました' }, { status: 500 })
   }
 
-  const companyIds = [...new Set((activeConvs ?? []).map(r => r.company_id))].slice(
-    0,
-    MAX_COMPANIES_PER_RUN
-  )
+  const activeIds = new Set((activeConvs ?? []).map(r => r.company_id))
+  const companyIds = (allCompanies ?? []).map(c => c.id)
   if (companyIds.length === 0) return NextResponse.json({ sent: 0, companies: 0 })
 
   const cacheCutoff = new Date(
@@ -170,7 +173,13 @@ export async function GET(req: Request) {
         .maybeSingle()
       const payload = digestRow?.payload as DigestPayload | undefined
       const cards = (payload?.cards ?? []).slice(0, MAX_CARDS_PER_EMAIL)
-      if (cards.length === 0) continue // キャッシュ無し/カード無しの会社は送らない（ノイズ抑制）
+
+      // 2026-07-30 B-3 是正: 休眠会社（直近7日に会話なし）は、そもそもダイジェストの
+      //   キャッシュが作られないため、ここで continue すると永久に何も届かなかった。
+      //   アクティブ会社は従来どおり「カードが無ければ送らない」（ノイズ抑制）。
+      //   休眠会社はカードが無くても、再開のきっかけを1通だけ送る。
+      const isDormant = !activeIds.has(companyId)
+      if (cards.length === 0 && !isDormant) continue
 
       // --- メンバー解決 ---
       const { data: members } = await admin
@@ -227,7 +236,11 @@ export async function GET(req: Request) {
           body: JSON.stringify({
             from: DIGEST_FROM_EMAIL,
             to: email,
-            subject: '今週の労務ダイジェスト｜番頭',
+            // 休眠会社（直近7日に会話なし）には、ダイジェストではなく再開のきっかけとして届ける。
+            // 中身が薄いのに「今週のダイジェスト」と名乗ると期待を裏切るため、件名で正直に分ける。
+            subject: isDormant
+              ? '就業規則を貼り付けると、自社の条文で答えます｜番頭'
+              : '今週の労務ダイジェスト｜番頭',
             headers: {
               'List-Unsubscribe': `<${BANTO_URL}/unsubscribe>`,
               'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',

@@ -179,12 +179,30 @@ export async function POST(req: NextRequest) {
   //       挙動は変わらない（キャッシュは課金最適化であって正しさには影響しない）。
   //     - userQuery 連動で system は会話ごとに変わるが、同一会話内の連続ターンでは安定し、
   //       直近プレフィクスのヒットで効く。完全一致でなくても前方一致分は再利用される。
-  const stream = await anthropic.messages.stream({
-    model: CHAT_MODEL,
-    max_tokens: 2048,
-    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-    messages: sanitizedMessages,
-  })
+  // 2026-07-30 可用性監査: この呼び出しは try の外にあり、接続時の 429/529/ネットワーク断が
+  //   ハンドラを貫通して素の 500 になっていた（下の try はストリーム消費側だけを守っている）。
+  //   ユーザーの発言は既に保存済みなので、画面上は「質問だけ飲み込まれた」状態になる。
+  //   製品で最も叩かれるルートなので、接続段でも必ず日本語で理由が返るようにする。
+  let stream: ReturnType<typeof anthropic.messages.stream>
+  try {
+    stream = anthropic.messages.stream({
+      model: CHAT_MODEL,
+      max_tokens: 2048,
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      messages: sanitizedMessages,
+    })
+  } catch (e) {
+    console.error('[company:chat] anthropic stream の開始に失敗', e)
+    return NextResponse.json(
+      {
+        error:
+          'AIの応答を開始できませんでした。時間をおいてもう一度お試しください。' +
+          '続く場合は support@banto-roumu.com までご連絡ください。',
+        code: 'AI_UNAVAILABLE',
+      },
+      { status: 503 },
+    )
+  }
 
   const readable = new ReadableStream({
     async start(controller) {
