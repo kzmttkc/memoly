@@ -32,7 +32,7 @@ const TryDemoEn = dynamic(() => import('./TryDemoEn'), {
 
       <div className="mx-auto w-full max-w-2xl" aria-hidden>
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-xs font-medium text-neutral-400">Industry</span>
+          <span className="mr-1 text-xs font-medium text-neutral-500">Industry</span>
           {EN_INDUSTRIES.map(i => (
             <span
               key={i.key}

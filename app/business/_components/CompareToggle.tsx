@@ -101,7 +101,7 @@ export default function CompareToggle() {
             <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-neutral-200 bg-white px-3 py-2 text-[13px] leading-relaxed text-neutral-700">
               自社は<span className="font-semibold text-neutral-900">36協定が未締結</span>
               なので、現状のまま残業をさせると労働基準法に触れるおそれがあります。まず過半数代表の選出と協定の締結・届出から。手順を出しましょうか。
-              <span className="text-neutral-400">（一般的な情報です）</span>
+              <span className="text-neutral-500">（一般的な情報です）</span>
             </div>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function CompareToggle() {
                 : 'hidden'
             }
           >
-            <X className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+            <X className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
             答えの前に、毎回この聞き返しに答える往復が入ります。
           </p>
           <p
@@ -131,7 +131,7 @@ export default function CompareToggle() {
         </div>
       </div>
 
-      <p className="mt-3 text-center text-xs leading-relaxed text-neutral-400">
+      <p className="mt-3 text-center text-xs leading-relaxed text-neutral-500">
         どちらも回答の一例です。番頭の回答は一般的な情報提供であり、個別の法的助言ではありません。
       </p>
     </div>

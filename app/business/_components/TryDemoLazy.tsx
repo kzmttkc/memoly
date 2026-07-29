@@ -39,7 +39,7 @@ const TryDemo = dynamic(() => import('./TryDemo'), {
       <div className="mx-auto w-full max-w-2xl" aria-hidden>
         {/* 業種タブ行のプレースホルダ（実コンポーネントと同じ高さ・同じ業種数） */}
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-xs font-medium text-neutral-400">業種</span>
+          <span className="mr-1 text-xs font-medium text-neutral-500">業種</span>
           {INDUSTRIES.map(i => (
             <span
               key={i.key}

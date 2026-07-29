@@ -279,7 +279,7 @@ export default function TryDemoEn() {
 
       <div className="mx-auto w-full max-w-2xl">
         <div role="tablist" aria-label="Choose the sample company's industry" className="mb-3 flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-xs font-medium text-neutral-400">Industry</span>
+          <span className="mr-1 text-xs font-medium text-neutral-500">Industry</span>
           {EN_INDUSTRIES.map(i => (
             <button
               key={i.key}
@@ -340,7 +340,7 @@ export default function TryDemoEn() {
 
           <div ref={scrollRef} aria-live="polite" className="max-h-[26rem] space-y-3 overflow-y-auto px-4 py-4">
             {turns.length === 0 && !typing && (
-              <p className="py-6 text-center text-sm text-neutral-400">
+              <p className="py-6 text-center text-sm text-neutral-500">
                 Click a question below to see Banto&apos;s answer here.
               </p>
             )}
@@ -508,7 +508,7 @@ function Conversation({
         </div>
       </div>
       {typing && onSkip && (
-        <p className="pl-8 text-[11px] text-neutral-400">Tap to show full answer</p>
+        <p className="pl-8 text-[11px] text-neutral-500">Tap to show full answer</p>
       )}
     </div>
   )

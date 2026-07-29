@@ -33,9 +33,15 @@ const variants: Record<Variant, string> = {
     'focus-visible:ring-danger-500',
 }
 
+// 2026-07-30 UX監査 A-4: モバイルのタップ領域を推奨44pxに上げる。
+//   sm は iPhone(390px)実測で 32px しかなく、ヘッダの「ログイン」「無料で始める」＝
+//   登録導線そのものが最も押しにくい要素になっていた。
+//   ただし sm はナビが1行に収まらない問題への対処として意図的に採用された経緯があるため
+//   （app/business/page.tsx のナビ実装コメント）、**モバイルだけ 44px に上げ、
+//   sm(640px)以上では従来の 32px に戻す**。狭い画面ほど行が余るので1行制約は壊れない。
 const sizes: Record<Size, string> = {
-  sm: 'h-8 px-3 text-xs',
-  md: 'h-10 px-4 text-sm',
+  sm: 'h-11 px-3 text-xs sm:h-8',
+  md: 'h-11 px-4 text-sm sm:h-10',
   lg: 'h-12 px-5 text-sm',
 }
 

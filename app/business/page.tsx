@@ -455,7 +455,7 @@ export default async function BusinessLandingPage({
             </span>
             <span className="text-lg font-bold tracking-tight text-neutral-900">
               番頭
-              <span className="ml-1 text-sm font-medium text-neutral-400">Banto</span>
+              <span className="ml-1 text-sm font-medium text-neutral-500">Banto</span>
             </span>
           </Link>
           {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: 極端に狭い実効幅（高倍率
@@ -598,8 +598,8 @@ export default async function BusinessLandingPage({
                 答える（実装済み・実証済み）が、入口が日本語のみでその価値が発見されず
                 離脱する。UIシェルの全訳はせず、「英語で聞けば英語で答える」への控えめな
                 誘導一行のみ。虚偽能力主張なし＝UI全体が英語対応と誤認させない範囲。 */}
-            <p className="mx-auto mt-2 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-400 lg:mx-0 lg:justify-start">
-              <Globe className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+            <p className="mx-auto mt-2 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
+              <Globe className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
               <span lang="en">Ask in English — Banto answers your labor questions in English.</span>
             </p>
           </div>
@@ -607,7 +607,12 @@ export default async function BusinessLandingPage({
           {/* ブロック2：見て分かる（モバイルではH1直下・lgでは右列に固定）
               2026-07-23 A14+B13+I01: 業種タブ付きプレビューへ置換（初期表示は
               従来と同じ製造業＝A/BのFV体験は不変。グロー装飾は撤去しフラット化）。 */}
-          <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:pl-4">
+          {/* 2026-07-30 UX監査 A-1: モバイルでは order を使って CTA を先に出す。
+              従来は「言葉 → この巨大プレビュー → CTA」の順で、iPhone(390x844)実測で
+              主CTAが y=1793px＝2.1画面ぶんスクロールしないと到達できなかった。
+              FV内にあるのは高さ32pxのヘッダCTAだけという状態。
+              lg 以上は従来どおり右列にプレビューを固定する（デスクトップのレイアウトは不変）。 */}
+          <div className="order-3 min-w-0 lg:order-none lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:pl-4">
             <IndustryHeroPreview />
           </div>
 
@@ -616,7 +621,7 @@ export default async function BusinessLandingPage({
               会社登録を先に迫らず、まず数秒でアハに届ける。純粋な内部アンカー。
               2026-07-23 A04/A05: 主CTAを時間約束型・従CTAを成果型の文言へ変更
               （リンク先・計測イベント(location="hero")・UTM引き継ぎは不変）。 */}
-          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+          <div className="order-2 min-w-0 lg:order-none lg:col-start-1 lg:row-start-2">
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <a
                 href="#demo"
@@ -765,7 +770,7 @@ export default async function BusinessLandingPage({
             <ul className="mt-4 space-y-3">
               {BEFORE_SCENES.map(item => (
                 <li key={item} className="flex items-start gap-2 text-sm text-neutral-600">
-                  <X className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+                  <X className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
                   <span className="leading-relaxed">{item}</span>
                 </li>
               ))}
@@ -786,7 +791,7 @@ export default async function BusinessLandingPage({
             </ul>
           </div>
         </div>
-        <p className="mb-10 text-center text-xs text-neutral-400">
+        <p className="mb-10 text-center text-xs text-neutral-500">
           シーンは作業のイメージ例です。時間・回数は実測値や効果の保証ではありません。
         </p>
 
@@ -1121,7 +1126,7 @@ export default async function BusinessLandingPage({
               </tbody>
             </table>
           </div>
-          <p className="mt-4 text-center text-xs leading-relaxed text-neutral-400">
+          <p className="mt-4 text-center text-xs leading-relaxed text-neutral-500">
             2026年7月時点の各社公開情報にもとづく一般的な整理です。正確な機能・料金は各サービスの公式サイトをご確認ください。
             番頭は手続きシステムの代替ではないため、SmartHR・freee・オフィスステーションなどと併用できます。
           </p>
@@ -1147,7 +1152,7 @@ export default async function BusinessLandingPage({
                   すでにSmartHR・freeeなどをお使いの方へ
                 </span>
                 <ChevronDown
-                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
+                  className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-data-[state=open]:rotate-180"
                   aria-hidden
                 />
               </>
@@ -1318,7 +1323,7 @@ export default async function BusinessLandingPage({
                   <>
                     {item.q}
                     <ChevronDown
-                      className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
+                      className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-data-[state=open]:rotate-180"
                       aria-hidden
                     />
                   </>
@@ -1337,7 +1342,7 @@ export default async function BusinessLandingPage({
                 <>
                   すべての質問を見る（あと{FAQ.length - 3}問）
                   <ChevronDown
-                    className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
+                    className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-data-[state=open]:rotate-180"
                     aria-hidden
                   />
                 </>
@@ -1359,7 +1364,7 @@ export default async function BusinessLandingPage({
                       <>
                         {item.q}
                         <ChevronDown
-                          className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]/item:rotate-180"
+                          className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-data-[state=open]/item:rotate-180"
                           aria-hidden
                         />
                       </>
@@ -1386,7 +1391,7 @@ export default async function BusinessLandingPage({
               <>
                 はじめて読む方へ — よく出てくる労務用語の補足
                 <ChevronDown
-                  className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
+                  className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-data-[state=open]:rotate-180"
                   aria-hidden
                 />
               </>
@@ -1517,7 +1522,7 @@ export default async function BusinessLandingPage({
           全一覧へは既存の /roumu ハブページで到達できる（クロール経路は sitemap と
           /roumu 側で維持されるため、SEO上の deindex は起きない）。 */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
-        <p className="mb-4 text-center text-xs font-medium text-neutral-400">
+        <p className="mb-4 text-center text-xs font-medium text-neutral-500">
           代表的な使い方から見る
         </p>
         <div className="flex flex-wrap justify-center gap-2">
@@ -1543,10 +1548,10 @@ export default async function BusinessLandingPage({
           /tools 一覧（ハブ）と各ツールへ /business から直接リンクし、
           クロール経路を確立する（未インデックスの /tools/* を拾わせる）。 */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
-        <p className="mb-1 text-center text-xs font-medium text-neutral-400">
+        <p className="mb-1 text-center text-xs font-medium text-neutral-500">
           自社の数字で確かめる無料ツール
         </p>
-        <p className="mb-4 text-center text-xs text-neutral-400">
+        <p className="mb-4 text-center text-xs text-neutral-500">
           登録不要・会社データは保存しません
         </p>
         <div className="flex flex-wrap justify-center gap-2">
@@ -1624,7 +1629,7 @@ export default async function BusinessLandingPage({
             番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
-          <p className="mt-2 text-xs text-neutral-400">
+          <p className="mt-2 text-xs text-neutral-500">
             © {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）
           </p>
         </div>

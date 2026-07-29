@@ -388,7 +388,7 @@ export default function TryDemo() {
           aria-label="サンプル会社の業種を選ぶ"
           className="mb-3 flex flex-wrap items-center gap-1.5"
         >
-          <span className="mr-1 text-xs font-medium text-neutral-400">業種</span>
+          <span className="mr-1 text-xs font-medium text-neutral-500">業種</span>
           {INDUSTRIES.map(i => (
             <button
               key={i.key}
@@ -463,7 +463,7 @@ export default function TryDemo() {
             className="max-h-[26rem] space-y-3 overflow-y-auto px-4 py-4"
           >
             {turns.length === 0 && !typing && (
-              <p className="py-6 text-center text-sm text-neutral-400">
+              <p className="py-6 text-center text-sm text-neutral-500">
                 下の質問をクリックすると、ここに番頭の答えが表示されます。
               </p>
             )}
@@ -674,7 +674,7 @@ function Conversation({
         </div>
       </div>
       {typing && onSkip && (
-        <p className="pl-8 text-[11px] text-neutral-400">タップで全文表示</p>
+        <p className="pl-8 text-[11px] text-neutral-500">タップで全文表示</p>
       )}
     </div>
   )

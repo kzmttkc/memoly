@@ -92,7 +92,7 @@ export default function IndustryHeroPreview() {
         aria-label="業種を選んで答え方の例を見る"
         className="mb-2 flex flex-wrap items-center gap-1"
       >
-        <span className="mr-1 text-[11px] font-medium text-neutral-400">業種の例</span>
+        <span className="mr-1 text-[11px] font-medium text-neutral-500">業種の例</span>
         {INDUSTRIES.map(i => (
           <button
             key={i.key}
@@ -155,7 +155,7 @@ export default function IndustryHeroPreview() {
                 <BantoMark className="h-3 w-3" aria-hidden />
               </span>
               <span className="text-xs font-semibold text-neutral-700">会社の記憶</span>
-              <span className="ml-auto text-[11px] text-neutral-400">表示イメージ</span>
+              <span className="ml-auto text-[11px] text-neutral-500">表示イメージ</span>
             </div>
             <ul className="space-y-1.5 px-4 py-3">
               {MEMORY_ROWS.map(row => (
@@ -165,7 +165,7 @@ export default function IndustryHeroPreview() {
                 >
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-600" aria-hidden />
                   <span className="truncate text-[12px] text-neutral-700">{row.label}</span>
-                  <span className="ml-auto shrink-0 text-[10px] text-neutral-400">{row.kind}</span>
+                  <span className="ml-auto shrink-0 text-[10px] text-neutral-500">{row.kind}</span>
                 </li>
               ))}
             </ul>

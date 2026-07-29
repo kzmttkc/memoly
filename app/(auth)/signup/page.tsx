@@ -621,7 +621,7 @@ function SignupForm() {
         {/* 利用主体・年齢の確認（COPPA / 個情法対応・事業者向け）。
             2026-07-28 CTO修正（L1監査#15）: 必須項目であることが視覚的に分かるよう
             アスタリスク(*)を付ける（チェック要件自体は不変）。 */}
-        <label className="flex cursor-pointer items-start gap-3">
+        <label className="flex cursor-pointer items-start gap-3 py-2.5">
           <input
             type="checkbox"
             checked={ageOk}
@@ -639,7 +639,7 @@ function SignupForm() {
             注記文言だけでなく明示チェックボックスにする（機密の労務データを預ける
             契約という性質上、能動的な同意取得が必要というペルソナ10の指摘）。
             リンク先は ?lang=en のときのみ英語版に切り替える。 */}
-        <label className="flex cursor-pointer items-start gap-3">
+        <label className="flex cursor-pointer items-start gap-3 py-2.5">
           <input
             type="checkbox"
             checked={consentOk}
@@ -667,7 +667,7 @@ function SignupForm() {
         </label>
 
         {/* 更新情報オプトイン */}
-        <label className="flex cursor-pointer items-start gap-3">
+        <label className="flex cursor-pointer items-start gap-3 py-2.5">
           <input
             type="checkbox"
             checked={digestOptIn}

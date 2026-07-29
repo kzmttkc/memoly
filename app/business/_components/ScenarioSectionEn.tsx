@@ -50,12 +50,12 @@ export default function ScenarioSectionEn() {
               <blockquote className="mt-2 flex-1 border-l-2 border-brand-200 pl-3 text-sm leading-relaxed text-neutral-600">
                 {s.quote}
               </blockquote>
-              <p className="mt-3 text-[11px] text-neutral-400 tabular-nums">Verified internally {s.verifiedOn}</p>
+              <p className="mt-3 text-[11px] text-neutral-500 tabular-nums">Verified internally {s.verifiedOn}</p>
             </Card>
           ))}
         </div>
 
-        <p className="mt-6 text-center text-xs leading-relaxed text-neutral-400">
+        <p className="mt-6 text-center text-xs leading-relaxed text-neutral-500">
           The above are records from the operator&apos;s own internal testing, not customer testimonials.
         </p>
       </div>

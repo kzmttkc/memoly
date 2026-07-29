@@ -90,14 +90,14 @@ export default function CompareToggleEn() {
               Your company <span className="font-semibold text-neutral-900">has not filed a 36 Agreement</span>,
               so having staff work overtime as things stand could violate the Labor Standards Act. The
               first step is electing a majority representative and filing the agreement. Want the
-              steps? <span className="text-neutral-400">(General information.)</span>
+              steps? <span className="text-neutral-500">(General information.)</span>
             </div>
           </div>
         </div>
 
         <div className="border-t border-neutral-200 bg-neutral-50/70 px-4 py-2.5">
           <p className={side === 'generic' ? 'flex items-center gap-1.5 text-xs text-neutral-500' : 'hidden'}>
-            <X className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+            <X className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
             Before you get an answer, you go through this back-and-forth every time.
           </p>
           <p className={side === 'banto' ? 'flex items-center gap-1.5 text-xs text-neutral-600' : 'hidden'}>
@@ -107,7 +107,7 @@ export default function CompareToggleEn() {
         </div>
       </div>
 
-      <p className="mt-3 text-center text-xs leading-relaxed text-neutral-400">
+      <p className="mt-3 text-center text-xs leading-relaxed text-neutral-500">
         Both sides are example answers. Banto&apos;s answer is general information, not individualized legal advice.
       </p>
     </div>

@@ -61,20 +61,20 @@ export function HomeEngagement({ companyId }: { companyId: string }) {
   // ---- D17: チェックリストの3ステップ（達成条件は実データで判定） ----
   const steps = [
     {
+      done: status.ruleDocs > 0,
+      label: '就業規則などの規程を番頭に覚えさせる',
+      hint: '貼り付けるだけで、以後の相談が「自社の規程では第◯条に」と条文つきになります',
+      href: `/company/documents?companyId=${companyId}`,
+      cta: '規程を取り込む',
+      icon: BookOpenCheck,
+    },
+    {
       done: status.risk.count > 0,
       label: '労務リスク診断を1回やってみる',
       hint: '5分で自社の現在地がわかります',
       href: `/company/risk?companyId=${companyId}`,
       cta: '診断を始める',
       icon: ShieldCheck,
-    },
-    {
-      done: status.ruleDocs > 0,
-      label: '就業規則などの規程を番頭に覚えさせる',
-      hint: '貼り付けるだけで、以後の相談が自社前提になります',
-      href: `/company/documents?companyId=${companyId}`,
-      cta: '規程を取り込む',
-      icon: BookOpenCheck,
     },
     {
       done: status.consult.userMessageCount >= 3,
