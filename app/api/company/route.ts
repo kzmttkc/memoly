@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, getCurrentUser, listMyCompanies } from '@/lib/company'
-import { canCreateAnotherCompany } from '@/lib/plans'
+import { canCreateAnotherCompany, PLANS } from '@/lib/plans'
 
 // ============================================================================
 // /api/company
@@ -27,8 +27,12 @@ export async function POST(req: NextRequest) {
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return NextResponse.json({ error: '会社名を入力してください' }, { status: 400 })
   }
-  const seatsPurchased =
+  // 新規会社は必ず free プランで作られる（DBデフォルト）。席上限(seats_purchased)を
+  // free の seatCap で丸め、無料プランのまま席を無制限に確保する課金バイパスを塞ぐ。
+  // 席の増枠は課金 webhook がプラン昇格時に seats_purchased を更新して行う。
+  const requestedSeats =
     Number.isInteger(seats) && seats >= 1 ? seats : 1
+  const seatsPurchased = Math.min(requestedSeats, PLANS.free.seatCap)
 
   // 収益ゲート（構造的・BILLING_ENABLED 非依存で常時有効）:
   //   「複数の会社（顧問先）を切り替え・各社記憶分離」は士業¥29,800の看板訴求。
