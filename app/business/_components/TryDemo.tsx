@@ -401,8 +401,8 @@ export default function TryDemo() {
               onClick={() => switchIndustry(i.key)}
               className={
                 i.key === industryKey
-                  ? 'rounded-full bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white'
-                  : 'rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs text-neutral-600 transition-colors hover:border-brand-300 hover:text-brand-700'
+                  ? 'inline-flex min-h-11 items-center rounded-full bg-brand-600 px-3.5 text-xs font-semibold text-white sm:min-h-0 sm:py-1.5'
+                  : 'inline-flex min-h-11 items-center rounded-full border border-neutral-200 bg-white px-3.5 text-xs text-neutral-600 transition-colors hover:border-brand-300 hover:text-brand-700 sm:min-h-0 sm:py-1.5'
               }
             >
               {i.label}

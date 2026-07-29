@@ -655,14 +655,14 @@ export default async function BusinessLandingPage({
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs lg:justify-start">
               <Link
                 href="/tools"
-                className="inline-flex items-center gap-1 font-medium text-brand-700 hover:text-brand-800"
+                className="inline-flex min-h-11 items-center gap-1 font-medium text-brand-700 hover:text-brand-800 sm:min-h-0"
               >
                 <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
                 無料ツールでセルフ点検（登録不要）
               </Link>
               <Link
                 href="/roumu"
-                className="inline-flex items-center gap-1 font-medium text-brand-700 hover:text-brand-800"
+                className="inline-flex min-h-11 items-center gap-1 font-medium text-brand-700 hover:text-brand-800 sm:min-h-0"
               >
                 <FileText className="h-3.5 w-3.5" aria-hidden />
                 労務の記事を読む

@@ -105,8 +105,8 @@ export default function IndustryHeroPreview() {
             onClick={() => select(i.key)}
             className={
               i.key === selected
-                ? 'rounded-full bg-brand-600 px-3 py-1 text-[11px] font-semibold text-white'
-                : 'rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] text-neutral-500 transition-colors hover:border-brand-300 hover:text-brand-700'
+                ? 'inline-flex min-h-11 items-center rounded-full bg-brand-600 px-3 text-[11px] font-semibold text-white sm:min-h-0 sm:py-1'
+                : 'inline-flex min-h-11 items-center rounded-full border border-neutral-200 bg-white px-3 text-[11px] text-neutral-500 transition-colors hover:border-brand-300 hover:text-brand-700 sm:min-h-0 sm:py-1'
             }
           >
             {i.label}
