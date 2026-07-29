@@ -595,15 +595,21 @@ function SignupForm() {
 
         {/* C03: 会社名の統合入力（任意）。入力があれば登録直後に会社を作成して
             5問オンボーディングへ直行し、会社作成画面の1段を削減する。
-            空のままでも従来フロー（/company で入力）で進める＝後方互換。 */}
+            空のままでも従来フロー（/company で入力）で進める＝後方互換。
+            2026-07-29 CTO修正（UX監査Round7#6）: メール・パスワード欄はsr-only
+            <label htmlFor>を持つのに会社名欄はaria-labelのみで非対称だった。
+            同じsr-only labelパターンへ揃える（視覚デザインは不変）。 */}
         <div>
+          <label htmlFor="signup-company" className="sr-only">
+            {isEn ? 'Company name (optional)' : '会社名（任意）'}
+          </label>
           <Input
+            id="signup-company"
             value={companyName}
             onChange={e => setCompanyName(e.target.value)}
             placeholder={isEn ? 'Company name (optional, can add later)' : '会社名（任意・あとでも入力できます）'}
             maxLength={100}
             autoComplete="organization"
-            aria-label={isEn ? 'Company name (optional)' : '会社名（任意）'}
           />
           <p className="mt-1 text-xs text-neutral-500">
             {isEn
