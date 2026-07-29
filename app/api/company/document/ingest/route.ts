@@ -4,7 +4,7 @@ import { getCurrentUser, getMembership } from '@/lib/company'
 import { logCompanyAudit } from '@/lib/audit'
 import { anthropic, MEMORY_MODEL } from '@/lib/claude'
 import { checkAndIncrement } from '@/lib/rate-limit'
-import { resolvePlan } from '@/lib/plans'
+import { resolvePlan, upgradeAvailable } from '@/lib/plans'
 
 // ============================================================================
 // /api/company/document/ingest — F1 規程まるごと取込
@@ -108,6 +108,39 @@ export async function POST(req: NextRequest) {
     .eq('title', cleanTitle)
     .maybeSingle()
   const prevContent = typeof prevDoc?.content === 'string' ? prevDoc.content : null
+
+  // --- プラン上限（documentCap）の強制 ---------------------------------------
+  //   2026-07-30 継続利用監査（B-5）: それまで無料/有料の差は日次の回数上限だけで、
+  //   無料の chat 20回/日は総務1人の実利用では到達せず、アップグレード圧が構造的に
+  //   発生しなかった。番頭の価値は「自社の規程を覚えていること」なので、価値そのもの
+  //   ＝取り込める規程の本数を上限にする。
+  //
+  //   ★既存規程の差替え（＝規程改定）は上限に関係なく必ず通す。改定を止めると
+  //     「古い規程で答え続ける」という最悪の状態を製品側が強制することになる。
+  //     制限するのは **新規の規程を増やすとき** だけ。
+  const planDef = resolvePlan(guard.membership.plan)
+  if (!prevDoc && planDef.documentCap !== null) {
+    const { count: docCount } = await supabase
+      .from('company_documents')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', companyId as string)
+
+    if ((docCount ?? 0) >= planDef.documentCap) {
+      return NextResponse.json(
+        {
+          error:
+            `${planDef.displayName}で取り込める規程は${planDef.documentCap}本までです。` +
+            `新しい規程を追加するには、プランのアップグレードをご検討ください` +
+            `（取込済みの規程の差し替え・改定は上限に関係なく行えます）。`,
+          code: 'DOCUMENT_CAP_REACHED',
+          plan: planDef.id,
+          documentCap: planDef.documentCap,
+          upgradeAvailable: upgradeAvailable(planDef.id),
+        },
+        { status: 403 },
+      )
+    }
+  }
 
   // --- (a) 規程原文を upsert（同じ規程名は差替え＝規程改定時の再取込を自然にする）---
   const now = new Date().toISOString()

@@ -70,6 +70,17 @@ export interface PlanDef {
   priceEnvVarYearly: string | null
   /** このプランで許容する席数の上限（admin が席を増やせる天井）。 */
   seatCap: number
+  /**
+   * 取り込める規程（company_documents）の本数上限。null は無制限。
+   *
+   * 2026-07-30 継続利用監査（B-5）で追加。それまで無料と有料の差は「日次の回数上限」
+   * だけで、無料の chat 20回/日は総務1人の実利用では**到達しない**＝アップグレード圧が
+   * 構造的に発生しない設計だった（429時の導線は実装済みなのに発火しない）。
+   * 番頭の価値は「自社の規程を覚えていること」なので、**価値そのものを上限にする**。
+   * 就業規則1本は無料で丸ごと試せる（アハ体験は削らない）。賃金規程・育児介護規程…と
+   * 会社の実運用に載せる段で有料に上がる、という自然な曲線にする。
+   */
+  documentCap: number | null
   /** 複数顧問先（multi-company admin）を許すか（士業向け）。 */
   multiClient: boolean
   /**
@@ -105,6 +116,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     priceEnvVar: null,
     priceEnvVarYearly: null,
     seatCap: 3,
+    documentCap: 1,
     multiClient: false,
     maxCompanies: 1,
     limits: {
@@ -130,6 +142,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     priceEnvVar: 'STRIPE_PRICE_STARTER',
     priceEnvVarYearly: 'STRIPE_PRICE_STARTER_YEARLY',
     seatCap: 5,
+    documentCap: 5,
     multiClient: false,
     maxCompanies: 1,
     limits: {
@@ -154,6 +167,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     priceEnvVar: 'STRIPE_PRICE_STANDARD',
     priceEnvVarYearly: null,
     seatCap: 20,
+    documentCap: 20,
     multiClient: false,
     maxCompanies: 1,
     limits: {
@@ -178,6 +192,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     priceEnvVar: 'STRIPE_PRICE_SHIGYO',
     priceEnvVarYearly: null,
     seatCap: 50,
+    documentCap: null,
     multiClient: true,
     maxCompanies: 50,
     limits: {
