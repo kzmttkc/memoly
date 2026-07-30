@@ -21,14 +21,27 @@ import { stripe } from '@/lib/stripe'
 //     2. その会社の **admin** のみ（member は 403）
 //     3. companies.stripe_customer_id が無い（＝一度も課金していない）なら 400
 //
-//   ★Takeshi 手番（実装だけでは完結しない）:
-//     Stripe ダッシュボード → Settings → Billing → Customer portal で
-//     「サブスクリプションのキャンセル」を **請求期間の末日で解約（at end of billing
-//     period）** に設定すること。既定の「即時キャンセル」のままだと、/tokushoho の
-//     「請求期間の末日までご利用いただけます」という表記と実挙動が食い違い、
-//     そのまま虚偽表示になる（lib/stripe.ts の cancelSubscription() が即時解約なのと
-//     同じ罠）。プロレーション返金も「返金しない」に倒すこと（返金方針と一致させる）。
+//   ★専用のポータル設定を必ず指定する（2026-07-30 実測で判明・省略禁止）:
+//     Stripe は全製品で1アカウントを共有している（ASSET_REGISTRY.md）。
+//     configuration を省略するとアカウント既定の「デフォルト」設定が使われるが、
+//     その中身を実測したところ **プラン切替が有効で、切替先リストに UITruth の
+//     3プラン（Starter ¥2,980 / Pro ¥9,800 / Agency ¥29,800）だけが入っていた**。
+//     つまり省略すると、番頭の顧客がポータルで「UITruth Agency」へ自分で乗り換えられる。
+//     番頭の席数トリガ(trg_company_seat_limit)も課金UIも全部迂回する経路になる。
+//
+//     そこで番頭専用の設定 BANTO_PORTAL_CONFIGURATION を作った（2026-07-30）:
+//       キャンセル       … 有効・**請求期間の終了時**（/tokushoho の「末日まで利用可」と一致）
+//       決済手段の更新   … 有効（滞納からの自力復帰に必須。既定は無効だった）
+//       請求書の履歴     … 有効（法人顧客の経理用）
+//       プラン切替       … **無効**（上記の理由。プラン変更は番頭自身の課金UIで行う）
+//     プロレーションはプラン切替が無効なので発生しない。
+//
+//     ハードコードにしている理由: env にすると未設定の環境で静かにアカウント既定へ
+//     フォールバックし、上の乗っ取り経路が復活する。IDは秘密ではない（公開の設定ID）。
 // ============================================================================
+
+/** 番頭専用のカスタマーポータル設定（KIZUNA Creation アカウント）。上のコメント参照。 */
+const BANTO_PORTAL_CONFIGURATION = 'bpc_1TysWSJzuwrOe7d1cSx0GFLA'
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser()
@@ -73,6 +86,7 @@ export async function POST(req: NextRequest) {
   try {
     const portal = await stripe.billingPortal.sessions.create({
       customer: customerId,
+      configuration: BANTO_PORTAL_CONFIGURATION,
       return_url: `${appUrl}/company/billing?companyId=${companyId}`,
       locale: 'ja',
     })

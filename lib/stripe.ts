@@ -74,10 +74,18 @@ export interface CreateSeatCheckoutArgs {
 //   そのものであり、自社画面に書いても「最終確認画面での表示」にはならないため。
 //
 //   custom_text.submit … ダッシュボード設定に依存しない。常に付ける。
-//   consent_collection.terms_of_service … **Stripe ダッシュボードに規約URLの登録が
-//     無いとセッション作成自体が失敗する**（同社の別製品で実測済み）。登録前に
-//     有効化すると全ユーザーの決済が落ちるため、既定はオフ。ダッシュボードで
-//     「規約URL」を登録し終えてから env STRIPE_TOS_CONSENT=true で有効化する。
+//   consent_collection.terms_of_service … **既定オフのまま運用する（2026-07-30 実測で確定）。**
+//     この機能が読む規約URLは Stripe の「公開情報（Settings → ビジネスの詳細 →
+//     公開情報）」にあり、**アカウント単位で1つしか持てない**。当社は Stripe を
+//     全製品で共有している（ASSET_REGISTRY.md）ため、ここに banto-roumu.com/terms を
+//     入れると **UITruth や MyTone の決済画面にも番頭の規約が出る**。
+//     実測: 公開情報のビジネスウェブサイトは https://sharoushi-agent.com/、
+//     規約URL・プライバシーURLはどちらも未登録（2026-07-30）。
+//
+//     法定表示そのものは下の custom_text.submit（セッション単位＝製品ごとに出し分け
+//     できる）で満たしている。規約への同意チェックは法令の要求ではないので、
+//     「全製品に他製品の規約を出す」より「出さない」を選ぶ。
+//     env は残す。将来 Stripe アカウントを製品ごとに分けたら true にできる。
 //   文面の出所: /tokushoho（app/tokushoho/page.tsx）の各欄と一字一句の齟齬が
 //     出ないようにすること。片方だけ更新すると表示が食い違う。
 // ============================================================================
@@ -90,7 +98,11 @@ const CHECKOUT_SUBMIT_MESSAGE =
   'お支払い済みの請求期間の末日までご利用でき、日割り返金は行いません。' +
   '当方は適格請求書発行事業者の登録がないため、適格請求書は発行できません。'
 
-/** 規約同意チェックの有効化。Stripe ダッシュボードに規約URLを登録し終えてから true にする。 */
+/**
+ * 規約同意チェックの有効化。**現状は常にオフで運用する**（上の解説参照）。
+ * Stripe の規約URLはアカウント単位で1つしか持てず、当社は全製品で共有しているため、
+ * 有効化すると他製品の決済画面に番頭の規約が出る。製品ごとにアカウントを分けた日に true。
+ */
 export function tosConsentEnabled(): boolean {
   return process.env.STRIPE_TOS_CONSENT === 'true'
 }
