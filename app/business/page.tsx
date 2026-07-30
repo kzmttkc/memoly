@@ -21,6 +21,7 @@ import LeadCapture from './_components/LeadCapture'
 import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
 import { JARGON_TERMS } from '@/lib/faq'
 import { PLANS, billingEnabled } from '@/lib/plans'
+import { PLAN_COPY } from '@/app/pricing/_lib/plan-copy'
 import { USECASE_LIST } from '@/lib/usecase'
 import { TOOL_LIST } from '@/lib/tools'
 
@@ -56,7 +57,18 @@ export const metadata: Metadata = {
   title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
   description:
     '会社の規程をAIが覚えて、労務の疑問に自社の前提で即答します。無料で始められ、有料プランは月額3,980円から。顧問社労士とは別に、日々の細かい確認をその場で済ませたい中小企業の総務・経営者向けです。',
-  alternates: { canonical: '/business' },
+  // 2026-07-30 PMF修理#3: 日英の対応関係(hreflang)がサイト全体で0件だった。
+  //   英語版 /business/en は本文・titleとも英語で配信されているのに、日本語版との
+  //   関係を検索エンジンに一切伝えていない＝英語圏の検索結果に出る根拠が無い状態。
+  //   languages を宣言すると Next が <link rel="alternate" hreflang="..."> を出力する。
+  alternates: {
+    canonical: '/business',
+    languages: {
+      ja: '/business',
+      en: '/business/en',
+      'x-default': '/business',
+    },
+  },
   openGraph: {
     title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
     description:
@@ -266,85 +278,8 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
   },
 ]
 
-// 表示名・価格・主役(featured)・年額は lib/plans.ts（SSOT）から引く。LP固有の訴求コピー
-// （tagline/features/badge）だけをここで持つ。これにより「価格・主役が LP と課金で
-// 食い違う」事故を構造的に防ぐ（2026-06-29 Takeshi承認: Entryが主役・年額¥39,800）。
-// 課金単位の確定表記（SSOT: docs/BANTO_BILLING_GATE.md §4・§5）:
-//   Entry/Standard = 会社単位の月額（プランの上限人数まで追加料金なし）。
-//   士業のみ席（シート）単位 = 事務所の利用メンバー数に応じて課金。
-//   利用回数・上限人数は lib/plans.ts の実装値から直接埋め込む（表示と実装の乖離を構造的に防ぐ）。
-//   anchor（E12・2026-07-23）: 価格アンカーは「自社事実のみ」型（output/0723/banto_pricing_anchor_copy.md 案A）。
-//     外部価格（社労士相談の相場等）は出典を示せず有利誤認リスク＋社労士法27条配慮に反するため
-//     主語にしない。1日あたりの金額は monthlyJpy÷31 の割り算のみ（検証可能・誇張ゼロ）。
-const PLAN_COPY = [
-  {
-    name: PLANS.starter.displayName,
-    price: PLANS.starter.monthlyJpy.toLocaleString(),
-    unit: `/月（1社あたり・${PLANS.starter.seatCap}名まで）`,
-    yearly: PLANS.starter.yearlyJpy,
-    tagline: 'まず使ってみる',
-    badge: 'おすすめ',
-    // 士業のみ CTA に plan=shigyo を載せる（I3・2026-07-24）。他プランは既定の
-    // /signup?next=/company（TrackedCTA の既定 href）を使う。
-    signupHref: undefined as string | undefined,
-    anchor: `1日あたり約${Math.round(PLANS.starter.monthlyJpy / 31)}円で、労務の調べ物と記録をいつでも任せられます。`,
-    // 2026-07-23 B17: CTA文言をプラン別に分化（リンク先・計測locationは不変）。
-    cta: 'Entryで始める',
-    features: [
-      '自社の規程・会社プロファイルの記憶',
-      `AIチャット相談 1日${PLANS.starter.limits.chat}回まで`,
-      `労務リスク・セルフ診断、規程ドラフトの下書き・レビュー 各1日${PLANS.starter.limits.risk_audit}回まで`,
-      '助成金・法改正が自社に関係するかのチェック',
-      `利用メンバー ${PLANS.starter.seatCap}名まで（追加料金なし）`,
-    ],
-    featured: PLANS.starter.featured,
-  },
-  {
-    name: PLANS.standard.displayName,
-    price: PLANS.standard.monthlyJpy.toLocaleString(),
-    unit: `/月（1社あたり・${PLANS.standard.seatCap}名まで）`,
-    yearly: PLANS.standard.yearlyJpy,
-    tagline: 'チームでしっかり使う',
-    badge: null,
-    signupHref: undefined as string | undefined,
-    anchor: '総務担当を1人増やす前に、まず番頭に任せられる範囲を確かめられます。',
-    cta: 'Standardで始める',
-    features: [
-      'Entry のすべての機能',
-      `AIチャット相談 1日${PLANS.standard.limits.chat}回まで（Entryの3倍）`,
-      `診断・書類などの各機能も 1日${PLANS.standard.limits.risk_audit}回まで`,
-      `利用メンバー ${PLANS.standard.seatCap}名まで（追加料金なし）`,
-    ],
-    featured: PLANS.standard.featured,
-  },
-  {
-    name: PLANS.shigyo.displayName,
-    price: PLANS.shigyo.monthlyJpy.toLocaleString(),
-    unit: '/月（1席あたり）',
-    yearly: PLANS.shigyo.yearlyJpy,
-    tagline: '複数の顧問先を管理',
-    badge: '士業向け',
-    // 士業CTAは士業文脈を導線に持たせる（I3・2026-07-24。ゲート本体は別班）。
-    signupHref: '/signup?next=/company&plan=shigyo' as string | undefined,
-    // 士業プランは設計案にアンカー無し（席単位課金で「1日あたり」換算が誤解を生むため付けない）。
-    anchor: null,
-    cta: '士業として顧問先を登録',
-    features: [
-      `Standard のすべて（AIチャット相談 1日${PLANS.shigyo.limits.chat}回まで）`,
-      // 2026-07-28 CTO修正（L2監査#3）: 顧問先の登録上限（50社）が非公開だった。
-      // lib/plans.ts の shigyo.maxCompanies をそのまま開示する。
-      `複数企業（顧問先）の切り替え（最大${PLANS.shigyo.maxCompanies}社まで）`,
-      '企業ごとに記憶・データを分離',
-      '顧問先ごとに覚えた前提で、切り替えてすぐ相談を続けられます',
-      // 2026-07-29 CTO修正（UX監査Round5#4・軽）: 席数の上限（seatCap）が
-      // /tokushoho にのみ記載され、トップページの料金カード・FAQには非開示だった。
-      // lib/plans.ts の shigyo.seatCap をそのまま開示する（顧問先の社数上限=maxCompanies
-      // とは別の数値であり、混同を避けるため両方を明記する）。
-      `席単位の課金。事務所の利用メンバー数に応じて席を追加（最大${PLANS.shigyo.seatCap}席まで）`,
-    ],
-    featured: PLANS.shigyo.featured,
-  },
-]
+// 料金カードの訴求コピーは /pricing と共有する（2026-07-30 PMF修理#1で
+// app/pricing/_lib/plan-copy.ts へ移設。金額・席数は従来どおり lib/plans.ts が正本）。
 
 // ---------------------------------------------------------------------------
 // DataIsolationDiagram — 「会社ごとにデータが分離される」をコードだけで図解。
@@ -549,7 +484,10 @@ export default async function BusinessLandingPage({
           落ちていた。コピー/プレビュー/CTAを3ブロックに分け、モバイルの自然順を
           「H1 → プレビュー → CTA」に変更。lg では従来どおり左=言葉・右=プレビュー
           （プレビューを row-span-2 で右列に固定）。 */}
-      <section className="mx-auto max-w-5xl px-6 pb-16 pt-10 sm:pt-16">
+      {/* 2026-07-30 UX監査 #4/#5: 上下パディングを詰める（1440x900 実測で主CTAが
+          y=920〜970＝フォールドの20px下に落ちていた／375x812 変種Aでは主CTAが
+          top=763 で固定Cookieバナー(top=765)に完全に隠れていた）。 */}
+      <section className="mx-auto max-w-5xl px-6 pb-16 pt-6 sm:pt-10">
         {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: grid の暗黙トラックは
             既定で子要素の min-content 幅を下限にする。H1見出しは「語中改行を防ぐ」ため
             各意味単位を inline-block(=改行不可の1ブロック)にしており、これが
@@ -559,9 +497,16 @@ export default async function BusinessLandingPage({
             scrollWidth が clientWidth を超過）。各グリッド子要素に min-w-0 を付け、
             トラックが利用可能幅まで縮む＝内部でテキストが折り返す（オーバーフローで
             隠れるのではなく見えたまま折り返す）ようにする。見た目は通常倍率で不変。 */}
-        <div className="grid items-center gap-y-8 lg:grid-cols-2 lg:gap-x-10">
-          {/* ブロック1：言葉（ブランド行・アイブロー・H1・サブコピー） */}
-          <div className="min-w-0 text-center lg:text-left">
+        {/* 2026-07-30 UX監査 #4/#5: 従来は左列を「言葉(row1)」と「CTA(row2)」の2セルに
+            割り、右列のプレビューを row-span-2 で跨がせていた。プレビューが約830px
+            あるため、そのはみ出しぶんが両トラックへ分配され、**CTAだけが下へ押し出されて
+            いた**（1440x900 実測 y=920〜970＝フォールド外。1440x760 では更に深い）。
+            言葉とCTAを1つのグリッドセルにまとめ、lg では items-start で上詰めにする
+            （モバイルの自然順「言葉 → CTA → プレビュー」は不変）。 */}
+        <div className="grid items-start gap-y-8 lg:grid-cols-2 lg:gap-x-10">
+          {/* 左列：言葉（ブランド行・アイブロー・H1・サブコピー）＋CTA */}
+          <div className="order-1 min-w-0 lg:order-none lg:col-start-1 lg:row-start-1">
+          <div className="text-center lg:text-left">
             {/* 2026-07-23 A10: ブランド名 BANTO をH1付近でヒーロー級に（テキストのみ。
                 新ロゴ画像は承認待ちのため入れない。A/B共通・変種スロットの外）。 */}
             <p className="mb-4 flex items-baseline justify-center gap-2.5 lg:justify-start">
@@ -583,45 +528,17 @@ export default async function BusinessLandingPage({
             <HeroHeadline variant={variant} />
             {/* H1直下サブコピー＝A/B変種スロット。 */}
             <HeroSubcopy variant={variant} />
-            {/* 2026-07-24 P03(比較検討者): 既存システムとの共存をFV圏内で1行示す。
-                比較来訪者の第一の疑問（また全部入れ直すのか）は従来スクロール後の
-                比較表でしか解けなかった。A/B変種スロット(HeroCopy)の外＝A/B共通で
-                固定。文面は比較表・FAQ「SmartHR…」と同一の事実で、置き換え示唆や
-                誇張はしない（Phase1コンプラ・敬体・強調記号なし）。 */}
-            <p className="mx-auto mt-4 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
-              <Database className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden />
-              <span>
-                SmartHR・freeeなどの既存システムはそのまま。番頭は「自社ルールの相談窓口」を1つ足す使い方です。
-              </span>
-            </p>
-            {/* 2026-07-24 P10(英語選好の外資HR): 番頭のチャットは英語質問に英語で
-                答える（実装済み・実証済み）が、入口が日本語のみでその価値が発見されず
-                離脱する。UIシェルの全訳はせず、「英語で聞けば英語で答える」への控えめな
-                誘導一行のみ。虚偽能力主張なし＝UI全体が英語対応と誤認させない範囲。 */}
-            <p className="mx-auto mt-2 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
-              <Globe className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
-              <span lang="en">Ask in English — Banto answers your labor questions in English.</span>
-            </p>
           </div>
 
-          {/* ブロック2：見て分かる（モバイルではH1直下・lgでは右列に固定）
-              2026-07-23 A14+B13+I01: 業種タブ付きプレビューへ置換（初期表示は
-              従来と同じ製造業＝A/BのFV体験は不変。グロー装飾は撤去しフラット化）。 */}
-          {/* 2026-07-30 UX監査 A-1: モバイルでは order を使って CTA を先に出す。
-              従来は「言葉 → この巨大プレビュー → CTA」の順で、iPhone(390x844)実測で
-              主CTAが y=1793px＝2.1画面ぶんスクロールしないと到達できなかった。
-              FV内にあるのは高さ32pxのヘッダCTAだけという状態。
-              lg 以上は従来どおり右列にプレビューを固定する（デスクトップのレイアウトは不変）。 */}
-          <div className="order-3 min-w-0 lg:order-none lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:pl-4">
-            <IndustryHeroPreview />
-          </div>
-
-          {/* ブロック3：CTA（モバイルではプレビューの後）
-              主CTA=デモ体験（登録不要）へページ内スクロール。冷たい初見客に
+          {/* CTA。主CTA=デモ体験（登録不要）へページ内スクロール。冷たい初見客に
               会社登録を先に迫らず、まず数秒でアハに届ける。純粋な内部アンカー。
               2026-07-23 A04/A05: 主CTAを時間約束型・従CTAを成果型の文言へ変更
-              （リンク先・計測イベント(location="hero")・UTM引き継ぎは不変）。 */}
-          <div className="order-2 min-w-0 lg:order-none lg:col-start-1 lg:row-start-2">
+              （リンク先・計測イベント(location="hero")・UTM引き継ぎは不変）。
+              2026-07-30 UX監査 #5: 補足2行（SmartHR/freee・Ask in English）は
+              CTAの**下**へ移した。375x812 変種Aで主CTAが top=763 ＝ 固定Cookieバナー
+              (top=765) の真下に隠れ、変種A（配信30%）の初回訪問者が登録CTAを
+              一度も見られなかったため。 */}
+          <div className="mt-8">
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <a
                 href="#demo"
@@ -668,6 +585,35 @@ export default async function BusinessLandingPage({
                 労務の記事を読む
               </Link>
             </div>
+            {/* 2026-07-24 P03(比較検討者): 既存システムとの共存をFV圏内で1行示す。
+                比較来訪者の第一の疑問（また全部入れ直すのか）は従来スクロール後の
+                比較表でしか解けなかった。A/B変種スロット(HeroCopy)の外＝A/B共通で
+                固定。文面は比較表・FAQ「SmartHR…」と同一の事実で、置き換え示唆や
+                誇張はしない（Phase1コンプラ・敬体・強調記号なし）。
+                2026-07-30 UX監査 #4/#5 でCTAの下へ移動（文面・リンクは不変）。 */}
+            <p className="mx-auto mt-5 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
+              <Database className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden />
+              <span>
+                SmartHR・freeeなどの既存システムはそのまま。番頭は「自社ルールの相談窓口」を1つ足す使い方です。
+              </span>
+            </p>
+            {/* 2026-07-24 P10(英語選好の外資HR): 番頭のチャットは英語質問に英語で
+                答える（実装済み・実証済み）が、入口が日本語のみでその価値が発見されず
+                離脱する。UIシェルの全訳はせず、「英語で聞けば英語で答える」への控えめな
+                誘導一行のみ。虚偽能力主張なし＝UI全体が英語対応と誤認させない範囲。 */}
+            <p className="mx-auto mt-2 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
+              <Globe className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+              <span lang="en">Ask in English — Banto answers your labor questions in English.</span>
+            </p>
+          </div>
+          </div>
+
+          {/* 右列：見て分かる（モバイルではCTAの後・lgでは右列）
+              2026-07-23 A14+B13+I01: 業種タブ付きプレビューへ置換（初期表示は
+              従来と同じ製造業＝A/BのFV体験は不変。グロー装飾は撤去しフラット化）。
+              2026-07-30 UX監査 A-1: モバイルでは order で CTA を先に出す。 */}
+          <div className="order-2 min-w-0 lg:order-none lg:col-start-2 lg:row-start-1 lg:pl-4">
+            <IndustryHeroPreview />
           </div>
         </div>
       </section>
@@ -1199,6 +1145,23 @@ export default async function BusinessLandingPage({
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">料金</h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
               登録するとまずは無料プランでお使いいただけます。下記は有料プランに切り替えた場合の月額料金です。
+              {/* 2026-07-30 法務監査#5: この節に税込表記が1件も無かった。/tokushoho と
+                  決済直前の表示は「消費税を含むお支払い総額」で確定しているのに、
+                  最も見られる料金表示だけ税の扱いが不明で、総額表示義務（消費税法63条）を
+                  満たしていなかった。数字は動かさず、それが総額であることを明示する。 */}
+              <span className="mt-1 block text-sm text-neutral-500">表示価格はすべて消費税込みの総額です。</span>
+            </p>
+            {/* 2026-07-30 PMF修理#1: 料金の単独ページ /pricing を新設した。このアンカー
+                (#pricing) は既存の内部リンク・計測を壊さないため残し、ここから単独ページへ
+                導線を1本張る（料金だけを見に来た人・共有したい人の着地先を1枚に集める）。 */}
+            <p className="mt-3">
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:text-brand-800"
+              >
+                料金ページで詳しく見る（無料プランの範囲・年払い・解約の条件）
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
             </p>
             {/* 2026-07-25 CTO修正: 課金は既に有効。「予告してから課金開始」ではなく
                 「自分の操作で申し込んだときだけ課金される」という自己サーブの事実を明示する。
@@ -1247,10 +1210,15 @@ export default async function BusinessLandingPage({
                   <span className="text-sm text-neutral-500">{p.unit}</span>
                 </p>
                 {/* 2026-07-23 I02: 「2ヶ月分お得」の根拠（月払い比）を明記し、
-                    年払いの提供範囲は下部の注記でプラン間の表記を統一する。 */}
+                    年払いの提供範囲は下部の注記でプラン間の表記を統一する。
+                    2026-07-30 PMF修理#7: 年額(¥39,800)が12pxのグレー1行で、月額の
+                    1/3のサイズ＝実質見えていなかった。価格そのもの（lib/plans.ts の
+                    yearlyJpy）は一切変えず、文字サイズと配置だけを可読な水準に上げる。
+                    年払いトグルは Stripe の価格を増やす＝Takeshi承認事項のため実装しない。 */}
                 {p.yearly && (
-                  <p className="mt-1 text-xs text-neutral-500 tabular-nums">
-                    年額 &yen;{p.yearly.toLocaleString()}（月払いより2ヶ月分お得）
+                  <p className="mt-2 inline-flex flex-wrap items-baseline gap-1.5 rounded-lg bg-brand-50 px-2.5 py-1.5 text-sm text-brand-800">
+                    <span className="font-semibold tabular-nums">年額 &yen;{p.yearly.toLocaleString()}</span>
+                    <span className="text-xs text-brand-700">（月払いより2ヶ月分お得）</span>
                   </p>
                 )}
                 {/* 2026-07-23 E12: 価格アンカー（自社事実のみ・外部相場は主語にしない）。

@@ -427,7 +427,9 @@ export default function TryDemo() {
               <BantoMark className="h-3 w-3" aria-hidden />
             </span>
             <span className="text-xs font-semibold text-neutral-700">番頭</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500">
+            {/* 2026-07-30 UX監査#9: neutral-100 地に neutral-500 で 4.34:1 ＝ WCAG 1.4.3 AA
+                （4.5:1）未達。10pxの極小文字なので実害が大きい。neutral-700 へ。 */}
+            <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-700">
               サンプル会社（{industry.label}）
             </span>
             <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-medium text-success-700">

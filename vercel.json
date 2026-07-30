@@ -12,6 +12,10 @@
     {
       "path": "/api/send-day2-reminder",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/company/billing/past-due-sweep",
+      "schedule": "0 2 * * *"
     }
   ]
 }

@@ -6,7 +6,9 @@ import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 import { getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
+import LeadCapture from '@/app/business/_components/LeadCapture'
 
 // ============================================================================
 // /roumu/[slug] — 検索意図ランディング（SSG・クローラブル）
@@ -161,20 +163,8 @@ export default async function RoumuUseCasePage({
         />
       )}
 
-      {/* ===== ヘッダ ===== */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
-          <Link href="/business" className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-              <BantoMark className="h-3.5 w-3.5" aria-hidden />
-            </span>
-            <span className="font-semibold tracking-tight text-neutral-900">番頭(Banto)</span>
-          </Link>
-          <Link href="/login?next=/company" className="text-sm text-neutral-500 hover:text-brand-700">
-            ログイン
-          </Link>
-        </div>
-      </header>
+      {/* ===== ヘッダ（2026-07-30 UX監査 #6: 料金・無料登録を常設した共通ヘッダへ） ===== */}
+      <PublicHeader />
 
       {/* ===== パンくず（視覚） ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">
@@ -351,6 +341,15 @@ export default async function RoumuUseCasePage({
           </div>
         </Card>
       </section>
+
+      {/* ===== メール獲得（無料PDF・2026-07-30 PMF修理#2） =====
+          実測: sitemap の51URLのうち索引される42ページ（/roumu 33本を含む）に
+          input[type=email] が1つも無く、メール獲得は /business の1か所だけだった。
+          記事を最後まで読んだ人は、いま最も渡しやすい相手。登録という重い一歩の前に
+          「メアドだけ」の軽い一歩を、読み終わりの位置に置く。
+          既存の signup CTA（直上）は主導線として不変で、これはその下の受け皿。
+          送信先・PDF・honeypot は /business と同一コンポーネント（新経路を増やさない）。 */}
+      <LeadCapture placement="article" context={u.slug} />
 
       {/* ===== 関連LPへの内部リンク（クラスタ内部リンク） ===== */}
       <section className="mx-auto max-w-3xl px-6 pb-16">

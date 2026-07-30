@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import type { DigestPayload, DigestCard } from '@/lib/digest'
 import { getSeasonalReminders, type SeasonalReminder } from '@/lib/email-seasonal'
 import { sendSlackMessage } from '@/lib/slack'
+import { buildUnsubscribeUrls, unsubscribeHeaders } from '@/app/api/unsubscribe/token'
 
 // ============================================================================
 // /api/company/weekly-email — 番頭版 週次リテンションメール（Vercel Cron）
@@ -43,6 +44,20 @@ const MAX_COMPANIES_PER_RUN = 200
 
 // 1通あたりに載せるカード数の上限（メールは要点だけ。全量はアプリで見る導線に倒す）。
 const MAX_CARDS_PER_EMAIL = 5
+
+// Resend への1リクエストの締切（2026-07-30 可用性監査#8）。
+//   従来は締切なしで、Resend が応答を返さないと全社ぶんの送信ループがそこで止まり、
+//   Vercel の関数タイムアウトまで何も進まなかった（残りの会社に1通も届かない）。
+const RESEND_TIMEOUT_MS = 10_000
+
+// 特定電子メール法が求める「送信者の住所」（2026-07-30 法務監査#4）。
+//   従来は「所在地：日本」で、住所の表示になっていなかった。
+//   ★実在の住所を勝手に書かない。env が未設定のあいだは捏造せず、特商法の開示請求
+//     窓口を案内する（Takeshi 手番: SENDER_POSTAL_ADDRESS に実住所を設定すること）。
+//   同じ定数が deadline-reminder / send-day2-reminder にもある（3経路で文言を揃える）。
+const SENDER_ADDRESS =
+  process.env.SENDER_POSTAL_ADDRESS?.trim() ||
+  'ご請求により遅滞なく開示します（support@banto-roumu.com 宛に「運営者情報の開示請求」と明記のうえご連絡ください）'
 
 /** LLM由来テキストをHTMLへ埋める前の必須エスケープ（メール内XSS/構造崩れ防止）。 */
 function escapeHtml(s: string): string {
@@ -95,9 +110,12 @@ function seasonalToText(r: SeasonalReminder, companyId: string): string {
 export async function GET(req: Request) {
   // --- fail-safe: 必須 env が欠けていれば認可より先に「安全に何もしない」を返す ---
   //   （CRON_SECRET 未設定のまま `Bearer undefined` 比較で通す/弾く事故を構造的に防ぐ）
+  // 2026-07-30 可用性監査#8: skipped も HTTP 500 で返す。
+  //   従来は 200 だったため、env の設定漏れで1通も送られていなくても Vercel Cron の
+  //   実行履歴は緑のままで、誰も気づけなかった。**設定漏れは正常ではない**ので赤くする。
   if (!process.env.CRON_SECRET) {
-    console.warn('[banto:weekly-email] CRON_SECRET 未設定のため配信をスキップしました。')
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' })
+    console.error('[banto:weekly-email] CRON_SECRET 未設定のため配信をスキップしました。')
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' }, { status: 500 })
   }
 
   const auth = req.headers.get('authorization')
@@ -106,15 +124,15 @@ export async function GET(req: Request) {
   }
 
   if (!process.env.RESEND_API_KEY) {
-    console.warn('[banto:weekly-email] RESEND_API_KEY 未設定のため配信をスキップしました。')
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'RESEND_API_KEY not set' })
+    console.error('[banto:weekly-email] RESEND_API_KEY 未設定のため配信をスキップしました。')
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'RESEND_API_KEY not set' }, { status: 500 })
   }
   if (!DIGEST_FROM_EMAIL) {
-    console.warn(
+    console.error(
       '[banto:weekly-email] DIGEST_FROM_EMAIL 未設定のため配信をスキップしました。' +
         '独自ドメイン認証後に環境変数 DIGEST_FROM_EMAIL を設定してください。'
     )
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' })
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' }, { status: 500 })
   }
 
   const admin = createClient(
@@ -137,6 +155,8 @@ export async function GET(req: Request) {
     console.error('[banto:weekly-email] company query failed', compErr)
     return NextResponse.json({ error: '対象会社の集計に失敗しました' }, { status: 500 })
   }
+  // 送信失敗の件数（2026-07-30 可用性監査#8）。1件でもあれば最後に HTTP 500 で返す。
+  let failed = 0
 
   const activeIds = new Set((activeConvs ?? []).map(r => r.company_id))
   const companyIds = (allCompanies ?? []).map(c => c.id)
@@ -227,8 +247,13 @@ export async function GET(req: Request) {
         if (!email) continue
         if (authUser?.user?.user_metadata?.digest_unsubscribed) continue
 
+        // 宛先ごとの配信停止URL（署名付き・ログイン不要で止まる）。
+        const unsub = buildUnsubscribeUrls(BANTO_URL, member.user_id, 'digest')
+
         const resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
+          // 締切なしだと Resend の無応答で全社ぶんの配信が止まる（可用性監査#8）。
+          signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
           headers: {
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
             'Content-Type': 'application/json',
@@ -241,11 +266,10 @@ export async function GET(req: Request) {
             subject: isDormant
               ? '就業規則を貼り付けると、自社の条文で答えます｜番頭'
               : '今週の労務ダイジェスト｜番頭',
-            headers: {
-              'List-Unsubscribe': `<${BANTO_URL}/unsubscribe>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            },
-            text: `${companyName}に関係しうる労務の変更点をお届けします。\n\n${cardsText}\n\n※${disclaimer}\n\n→ 番頭で詳しく確認する: ${homeUrl}\n\n配信停止: ${BANTO_URL}/unsubscribe`,
+            // ワンクリック配信停止（RFC 8058）。URL は署名付きで、POST だけで停止する。
+            // 署名鍵が無い環境では unsubscribeHeaders が空を返す（動かない機能を宣言しない）。
+            headers: unsubscribeHeaders(unsub.oneClick),
+            text: `${companyName}に関係しうる労務の変更点をお届けします。\n\n${cardsText}\n\n※${disclaimer}\n\n→ 番頭で詳しく確認する: ${homeUrl}\n\n配信停止: ${unsub.page}`,
             html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
               <h2 style="color:#324a8a;font-size:18px;margin:0 0 4px">今週の労務ダイジェスト</h2>
               <p style="color:#6b7280;font-size:12px;margin:0 0 16px">${escapeHtml(companyName)}に関係しうる変更点をお届けします。</p>
@@ -257,10 +281,10 @@ export async function GET(req: Request) {
                 【送信者情報】<br>
                 サービス名：番頭（banto-roumu.com）<br>
                 運営者：Kazumoto Takeshi<br>
-                所在地：日本<br>
+                所在地：${escapeHtml(SENDER_ADDRESS)}<br>
                 お問い合わせ：support@banto-roumu.com<br><br>
                 このメールは番頭の週次ダイジェストとして送信されています。<br>
-                <a href="${BANTO_URL}/unsubscribe" style="color:#324a8a">配信停止はこちら</a>
+                <a href="${unsub.page}" style="color:#324a8a">配信停止はこちら</a>
               </p>
             </div>`,
           }),
@@ -270,6 +294,9 @@ export async function GET(req: Request) {
           sent++
           companyDelivered = true
         } else {
+          // 失敗を数える。以前はログに書くだけで、最後は常に 200 だった＝不達が
+          // どこにも表面化しなかった（可用性監査#8）。
+          failed++
           console.error(
             `[banto:weekly-email] send failed company=${companyId} status=${resendRes.status}`
           )
@@ -277,10 +304,16 @@ export async function GET(req: Request) {
       }
       if (companyDelivered) companiesSent++
     } catch (e) {
-      // 1社の失敗で全体を止めない（ベストエフォート・既存 /api/digest と同じ）
+      // 1社の失敗で全体を止めない（ベストエフォート・既存 /api/digest と同じ）。
+      // ただし件数には必ず数える（握り潰さない）。
+      failed++
       console.error(`[banto:weekly-email] failed for company ${companyId}:`, e)
     }
   }
 
-  return NextResponse.json({ sent, slackSent, companies: companiesSent, candidates: companyIds.length })
+  // 失敗が1件でもあれば HTTP 500。Vercel Cron の実行履歴が赤くなり、不達に気づける。
+  return NextResponse.json(
+    { sent, failed, slackSent, companies: companiesSent, candidates: companyIds.length },
+    { status: failed > 0 ? 500 : 200 },
+  )
 }

@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/company'
-import { limitFor, PlanId, PlanFeatureLimits } from '@/lib/plans'
+import { limitFor, usageSubjectId, PlanId, PlanFeatureLimits } from '@/lib/plans'
 
 // ============================================================================
 // rate-limit.ts — ユーザー単位・日次・種別(kind)別のLLM系API利用上限ガード。
@@ -58,7 +58,7 @@ function utcDay(): string {
  * DBフォールバック（fail-open）経路でのみ呼ぶバックストップ判定。
  * @returns true=通してよい / false=バックストップ上限超過(429に倒す)
  */
-function failOpenAllow(userId: string, kind: ApiKind, limit: number): boolean {
+function failOpenAllow(subjectId: string, kind: ApiKind, limit: number): boolean {
   const day = utcDay()
 
   // (b) インスタンス全体の日次ハードキャップ
@@ -68,8 +68,8 @@ function failOpenAllow(userId: string, kind: ApiKind, limit: number): boolean {
     return false
   }
 
-  // (a) user×kind の日次上限（plan 上限に等値。0以下でも最低1は通す＝正当ユーザー救済）
-  const key = `${userId}:${kind}`
+  // (a) subject×kind の日次上限（plan 上限に等値。0以下でも最低1は通す＝正当ユーザー救済）
+  const key = `${subjectId}:${kind}`
   const cur = failOpenPerUser.get(key)
   const perCount = cur && cur.day === day ? cur.count : 0
   const perCap = Math.max(1, limit)
@@ -88,6 +88,46 @@ function failOpenAllow(userId: string, kind: ApiKind, limit: number): boolean {
   return true
 }
 
+// ----------------------------------------------------------------------------
+// 課金主体（会社）の解決（2026-07-30 監査 #9）
+//   カウンタの主体をユーザーから会社へ寄せる。会社IDを明示的に渡せない既存の
+//   呼び出し側（chat/insights/risk_audit/document_*）のために、ここで所属から解決する。
+//     - 所属がちょうど1社   → その会社IDを主体にする（席で1社ぶんの枠を分け合う）
+//     - 0社 / 2社以上 / 失敗 → userId のまま（従来挙動＝無退行。士業の複数顧問先は
+//                              どの会社の枠かをここでは決められないため触らない）
+//   会社IDは変わらないので短時間キャッシュしてよい（LLM呼び出しごとのDB往復を避ける）。
+// ----------------------------------------------------------------------------
+const COMPANY_CACHE_TTL_MS = 5 * 60_000
+const soleCompanyCache = new Map<string, { companyId: string | null; expiresAt: number }>()
+
+async function resolveSoleCompanyId(userId: string): Promise<string | null> {
+  const now = Date.now()
+  const hit = soleCompanyCache.get(userId)
+  if (hit && hit.expiresAt > now) return hit.companyId
+
+  let companyId: string | null = null
+  try {
+    const admin = createAdminClient()
+    const { data, error } = await admin
+      .from('company_members')
+      .select('company_id')
+      .eq('user_id', userId)
+      .limit(2)
+    if (!error && data && data.length === 1) {
+      companyId = (data[0] as { company_id: string }).company_id
+    }
+  } catch (e) {
+    // 解決できなくてもサービスは止めない（userId 主体の従来挙動へ倒す）。
+    console.error('[rate-limit] 課金主体の解決に失敗（userId 主体で継続）', {
+      err: (e as Error).message,
+    })
+  }
+
+  if (soleCompanyCache.size > 5000) soleCompanyCache.clear()
+  soleCompanyCache.set(userId, { companyId, expiresAt: now + COMPANY_CACHE_TTL_MS })
+  return companyId
+}
+
 // 後方互換: plan 不明時のフォールバック上限（= free プランの上限）。
 // 旧来 DAILY_LIMITS を参照していた箇所が壊れないよう残す（free 連動に変更）。
 export const DAILY_LIMITS: Record<ApiKind, number> = {
@@ -102,25 +142,34 @@ export const DAILY_LIMITS: Record<ApiKind, number> = {
 /**
  * 当日のユーザー×kindコール数を +1 し、上限内なら true / 超過なら false を返す。
  *
- * @param userId 認証済みユーザーID
- * @param kind   API種別
- * @param planId 会社プラン（未指定は 'free' = 最も絞られた上限。安全側）
- * @returns      true=続行可 / false=上限超過(429)。DBエラー時は fail-open で true。
- *
- * 上限は plan 連動: limitFor(planId, kind)。明示 limit を渡したい高度な用途のため
- * 第4引数 limitOverride も残すが、通常は planId 経由で解決する。
+ * @param userId    認証済みユーザーID（api_v1 では呼び出し側が companyId を渡す）
+ * @param kind      API種別
+ * @param planId    会社プラン（未指定は 'free' = 最も絞られた上限。安全側）
+ * @param limitOverride 明示上限（高度な用途。通常は planId 経由で解決する）
+ * @param companyId 課金主体の会社ID。渡せば LLM系カウンタをその会社の枠で数える
+ *                  （未指定でも所属1社なら自動解決する。監査 #9）
+ * @returns         true=続行可 / false=上限超過(429)。DBエラー時は fail-open で true。
  */
 export async function checkAndIncrement(
   userId: string,
   kind: ApiKind,
   planId: PlanId = 'free',
   limitOverride?: number,
+  companyId?: string | null,
 ): Promise<boolean> {
   const limit = typeof limitOverride === 'number' ? limitOverride : limitFor(planId, kind)
+
+  // 主体の解決（監査 #9）。api_v1 は呼び出し側が既に companyId を第1引数で渡しているため
+  // そのまま使う。LLM系は会社を主体にする（明示指定 → 所属1社の自動解決 → userId）。
+  const subject =
+    kind === 'api_v1'
+      ? userId
+      : usageSubjectId(userId, companyId ?? (await resolveSoleCompanyId(userId)))
+
   try {
     const admin = createAdminClient()
     const { data, error } = await admin.rpc('memoly_increment_api_usage', {
-      p_user_id: userId,
+      p_user_id: subject,
       p_kind: kind,
     })
 
@@ -131,14 +180,14 @@ export async function checkAndIncrement(
         kind,
         err: error.message,
       })
-      return failOpenAllow(userId, kind, limit)
+      return failOpenAllow(subject, kind, limit)
     }
 
     const count = typeof data === 'number' ? data : Number(data)
     if (!Number.isFinite(count)) {
       // 想定外の戻り。カウントできない＝fail-open だがバックストップは通す。
       console.error('[rate-limit] unexpected RPC result (fail-open+backstop)', { kind, data })
-      return failOpenAllow(userId, kind, limit)
+      return failOpenAllow(subject, kind, limit)
     }
 
     return count <= limit
@@ -148,6 +197,6 @@ export async function checkAndIncrement(
       kind,
       err: (e as Error).message,
     })
-    return failOpenAllow(userId, kind, limit)
+    return failOpenAllow(subject, kind, limit)
   }
 }

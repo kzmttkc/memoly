@@ -79,6 +79,12 @@ export const viewport: Viewport = {
 // 抑止効果は同一のため、hidden→clip に変更してsticky破壊を解消する。
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    // 2026-07-30 PMF修理#3のメモ: /business/en /privacy/en /terms/en は本文が全文英語だが、
+    //   <html> を出せるのはこのルートレイアウト1か所だけで、ここを経路に応じて出し分けるには
+    //   headers() を読む必要があり、そうすると全ルート（SSGの42ページ）が動的レンダリングに
+    //   落ちる。恒久対応は複数ルートレイアウト（route group ごとの root layout）への分割で、
+    //   影響が広いため別作業に切り出した。それまでの間、英語版は各ページの最外 div に
+    //   lang="en" を宣言している（HTML仕様上、最も近い祖先の lang が有効になる）。
     <html lang="ja" className={`h-full overflow-x-clip ${geist.variable}`}>
       <head>
         <Script

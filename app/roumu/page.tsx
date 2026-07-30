@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { USECASE_LIST } from '@/lib/usecase'
@@ -85,19 +86,7 @@ export default function RoumuIndexPage() {
       />
 
       {/* ===== ヘッダ ===== */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
-          <Link href="/business" className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-              <BantoMark className="h-3.5 w-3.5" aria-hidden />
-            </span>
-            <span className="font-semibold tracking-tight text-neutral-900">番頭(Banto)</span>
-          </Link>
-          <Link href="/login?next=/company" className="text-sm text-neutral-500 hover:text-brand-700">
-            ログイン
-          </Link>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">

@@ -96,17 +96,20 @@ export function Calculator() {
   return (
     <div className="space-y-6">
       {/* ===== 入力フォーム ===== */}
-      <Card>
+      <Card className="flex flex-col">
         {/* 2026-07-28 CTO修正（L1監査#6）: 専門用語の解説がフォームより下（ページ下部の
             「制度の説明」セクション）にしかなく、入力前に読める位置になかった
-            （ペルソナ1/5指摘）。フォーム冒頭に平易な一言解説を追加する。 */}
-        <p className="mb-5 text-sm leading-relaxed text-neutral-600">
+            （ペルソナ1/5指摘）。フォーム冒頭に平易な一言解説を追加する。
+            2026-07-30 UX監査 #7: この段落だけで 320px 幅では約8行あり、最初の入力欄を
+            フォールドの外へ押し出していた。**モバイルのみ** order でフォームの下へ回す
+            （DOM順・文面は不変。sm以上は従来どおりフォームの前に出る）。 */}
+        <p className="order-2 mt-5 border-t border-neutral-100 pt-5 text-sm leading-relaxed text-neutral-600 sm:order-1 sm:mt-0 sm:mb-5 sm:border-t-0 sm:pt-0">
           残業代は、ざっくり言うと「1時間あたりの賃金 × 割増率 × 働いた時間」で決まります。
           「割増率」は残業・深夜・休日など働き方によって変わる上乗せ分のこと、
           「法定内残業」は自社の所定時間は超えるが法律の1日8時間にはまだ収まっている残業のことです。
           分からない欄は無理に埋めず、分かる範囲だけ入力すれば大丈夫です。
         </p>
-        <form onSubmit={handleCheck} className="space-y-5">
+        <form onSubmit={handleCheck} className="order-1 space-y-5 sm:order-2">
           {/* ===== ブロック1: 1時間あたりの賃金（基礎単価） ===== */}
           <div className="space-y-5 rounded-2xl border border-neutral-200 bg-neutral-50/60 p-4 sm:p-5">
             <div>
@@ -293,7 +296,11 @@ export function Calculator() {
           {error && <p className="text-sm text-danger-600">{error}</p>}
         </form>
 
-        <LocalOnlyNote />
+        {/* order 指定（UX監査 #7）: 兄弟に order を付けた以上、末尾の注記も明示しないと
+            既定の order-0 で先頭へ回ってしまう。 */}
+        <div className="order-3">
+          <LocalOnlyNote />
+        </div>
       </Card>
 
       {/* ===== 結果 ===== */}

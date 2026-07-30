@@ -3,6 +3,7 @@ import { ArrowRight, Check } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 import { buildToolJsonLd, type ToolJsonLdDef } from './meta'
 import { TOOL_LIST } from '@/lib/tools'
 
@@ -64,20 +65,8 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
         />
       ))}
 
-      {/* ===== ヘッダ ===== */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
-          <Link href="/business" className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-              <BantoMark className="h-3.5 w-3.5" aria-hidden />
-            </span>
-            <span className="font-semibold tracking-tight text-neutral-900">番頭(Banto)</span>
-          </Link>
-          <Link href="/login?next=/company" className="text-sm text-neutral-500 hover:text-brand-700">
-            ログイン
-          </Link>
-        </div>
-      </header>
+      {/* ===== ヘッダ（2026-07-30 UX監査 #6: 料金・無料登録を常設した共通ヘッダへ） ===== */}
+      <PublicHeader />
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">
@@ -86,29 +75,41 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
         <span className="text-neutral-600">無料ツール</span>
       </nav>
 
-      {/* ===== ヒーロー ===== */}
-      <section className="mx-auto max-w-3xl px-6 pt-8 pb-8">
-        <Badge tone="brand" className="mb-5">無料セルフ点検ツール</Badge>
-        <h1 className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl">
-          {h1}
-        </h1>
-        <p className="mt-4 text-base leading-relaxed text-neutral-600">
-          {lead}
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
-          <span className="inline-flex items-center gap-1">
-            <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> 登録不要ですぐ使える
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> 会社のデータは保存しない
-          </span>
+      {/* ===== ヒーロー ＋ 計算ツール =====
+          2026-07-30 UX監査 #7（中）: 320x568・375x667 のフォールドに入力欄が1つも
+          入っていなかった（実測: /tools/zangyodai-check の最初の入力欄が y=810〜971
+          ＝1.2〜1.7画面ぶんの解説が先）。「登録不要ですぐ使える」と言いながら、
+          小さい画面では最初の1画面が全部読み物になっていた。
+          モバイルだけ order で「H1 → 入力 → リード/バッジ」に入れ替える。
+          解説は消さず入力欄の下にそのまま残す（DOM順は従来どおり＝SEOの本文順は不変）。
+          sm(640px)以上は従来の見た目のまま。 */}
+      <div className="mx-auto flex max-w-3xl flex-col px-6 pt-8 pb-4">
+        <div className="order-1">
+          <Badge tone="brand" className="mb-5">無料セルフ点検ツール</Badge>
+          <h1 className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl">
+            {h1}
+          </h1>
         </div>
-      </section>
 
-      {/* ===== 計算ツール（クライアント） ===== */}
-      <section className="mx-auto max-w-3xl px-6 pb-4">
-        {children}
-      </section>
+        <div className="order-3 mt-8 sm:order-2 sm:mt-4">
+          <p className="text-base leading-relaxed text-neutral-600">
+            {lead}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
+            <span className="inline-flex items-center gap-1">
+              <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> 登録不要ですぐ使える
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> 会社のデータは保存しない
+            </span>
+          </div>
+        </div>
+
+        {/* 計算ツール（クライアント） */}
+        <div className="order-2 mt-5 sm:order-3 sm:mt-8">
+          {children}
+        </div>
+      </div>
 
       {/* ===== 制度の説明（静的・クローラブル） ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
@@ -132,7 +133,8 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
                     href={s.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline decoration-neutral-300 underline-offset-2 hover:text-brand-700"
+                    // 2026-07-30 UX監査 #8: 高さ36pxで推奨44px未満だった（モバイルのみ是正）。
+                    className="inline-flex min-h-11 items-center underline decoration-neutral-300 underline-offset-2 hover:text-brand-700 sm:min-h-0"
                   >
                     {s.label}
                   </a>
@@ -177,7 +179,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
           <p className="text-xs font-medium text-neutral-400">ほかの無料ツール</p>
           <Link
             href="/tools"
-            className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-800"
+            className="inline-flex min-h-11 items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-800 sm:min-h-0"
           >
             ツール一覧を見る
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -188,7 +190,9 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
             <Link
               key={t.slug}
               href={`/tools/${t.slug}`}
-              className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+              // 2026-07-30 UX監査 #8: 高さ30〜34pxで推奨44px未満だった。
+              //   モバイルだけ 44px に上げる（sm以上は従来の見た目のまま）。
+              className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
             >
               {t.label}
             </Link>
@@ -200,17 +204,20 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
       <footer className="border-t border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-5xl px-6 py-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/business" className="flex items-center gap-2">
+            <Link href="/business" className="flex min-h-11 items-center gap-2 sm:min-h-0">
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
                 <BantoMark className="h-3.5 w-3.5" aria-hidden />
               </span>
               <span className="font-semibold text-neutral-900">番頭(Banto)</span>
             </Link>
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
-              <Link href="/business" className="hover:text-brand-700">サービス概要</Link>
-              <Link href="/login?next=/company" className="hover:text-brand-700">ログイン</Link>
-              <Link href="/terms" className="hover:text-brand-700">利用規約</Link>
-              <Link href="/privacy" className="hover:text-brand-700">プライバシー</Link>
+            {/* 2026-07-30 UX監査 #8: フッタ導線は高さ20pxで推奨44px未満だった。
+                モバイルだけ 44px の当たり判定にする（見た目の文字サイズは不変）。 */}
+            <nav className="flex flex-wrap items-center gap-x-5 text-sm text-neutral-500">
+              <Link href="/business" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">サービス概要</Link>
+              <Link href="/pricing" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">料金</Link>
+              <Link href="/login?next=/company" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">ログイン</Link>
+              <Link href="/terms" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">利用規約</Link>
+              <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">プライバシー</Link>
             </nav>
           </div>
           <p className="mt-6 text-xs leading-relaxed text-neutral-500">

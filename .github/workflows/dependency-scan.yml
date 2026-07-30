@@ -24,6 +24,14 @@ jobs:
       - run: npm ci
       # 本番依存の high 以上で失敗させる（開発依存のノイズで赤くしすぎない）。
       # moderate 以下は継続監視（レポートは下の全体監査で出す）。
+      #
+      # ★このステップに `|| true` を足して緑にしない（2026-07-30 監査#8）。
+      #   2026-07 時点で main の直近15件が全部 failure だった原因は postcss 3件・sharp 1件
+      #   （いずれも next@16.2.12 の推移依存）。package.json の "overrides" で
+      #   postcss ^8.5.18 / sharp ^0.35.0 に引き上げて **実際に解消**した（実測 0件）。
+      #   next のメジャー更新でこれらが不要になったら overrides を外して再確認すること。
+      #   将来どうしても解消できない脆弱性が出たときだけ、理由と再確認予定日を書いた
+      #   許容リスト（--audit-level の引き上げではなく個別の除外）にする。
       - name: Audit production deps (fail on high)
         run: npm audit --omit=dev --audit-level=high
       # 参考情報として全体（dev含む）の監査結果も出す。ここでは失敗させない。

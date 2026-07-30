@@ -2,6 +2,11 @@ import { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { BANTO_PRODUCT } from '@/lib/stripe'
 import { planIdForPriceId, planIdForAmount, PAID_AMOUNTS, PlanId } from '@/lib/plans'
+import {
+  isCheckoutPaid,
+  isPaidPlanId,
+  resolveSubscriptionTransition,
+} from './transition'
 import type Stripe from 'stripe'
 
 // ============================================================================
@@ -9,14 +14,18 @@ import type Stripe from 'stripe'
 // ----------------------------------------------------------------------------
 //   購読すべき Stripe イベント（Takeshi が Stripe ダッシュボードで設定）:
 //     - checkout.session.completed         → plan/seats 付与・customer/sub 保存
+//                                            （payment_status が paid / no_payment_required のときだけ）
 //     - customer.subscription.updated      → active/trialing/past_due(grace) は plan 維持、
-//                                            それ以外(canceled/unpaid等)は free 降格
+//                                            それ以外(canceled/unpaid/請求一時停止)は free 降格
+//     - customer.subscription.paused       → 請求の一時停止。free 降格（監査#4）
 //     - customer.subscription.deleted      → free 降格（席は購入数を1に戻さず保持＝再開容易）
 //     - invoice.payment_failed             → dunning。即 free 降格せず past_due(grace) に。
 //                                            plan は維持し、Stripe の自動リトライ(smart retries)を待つ。
 //     - invoice.payment_succeeded          → past_due からの復帰。status を active に戻す。
-//   ★【要・Stripeダッシュボードで購読追加】invoice.payment_failed / invoice.payment_succeeded を
-//     この webhook エンドポイントの購読イベントに追加する（Takeshi 手動。コードは実装済み）。
+//   ★【要・Stripeダッシュボードで購読追加】invoice.payment_failed / invoice.payment_succeeded /
+//     customer.subscription.paused を、この webhook エンドポイントの購読イベントに追加する
+//     （Takeshi 手動。コードは実装済み）。paused を購読しなくても updated 側で
+//     pause_collection を見て降格するため穴は塞がるが、購読すると反映が早くなる。
 //
 //   dunning 設計（failed由来 vs 自発解約の区別）:
 //     - 支払い失敗(invoice.payment_failed)は「払う意思はあるが決済が通らなかった」状態。
@@ -91,6 +100,35 @@ function warnIfNoMatch(count: number | null, eventType: string, subId: string): 
       '[billing:webhook] 突合0行 — Stripeイベントを受けたが該当会社が存在しない。' +
         '課金が残っている可能性あり。要手動確認',
       { event_type: eventType, stripe_subscription_id: subId },
+    )
+  }
+}
+
+/**
+ * companies.past_due_since を best-effort で更新する（監査#2）。
+ *
+ *   past_due に落ちた「最初の時刻」を記録し、past-due-sweep cron が 21 日で打ち切る。
+ *   - value=ISO文字列 のとき: **まだ NULL の行だけ**を更新する。invoice.payment_failed は
+ *     Stripe のリトライごとに何度も飛ぶため、毎回上書きすると時計が永久にリセットされ
+ *     猶予期限が一生来ない。`.is('past_due_since', null)` で初回だけ刻む。
+ *   - value=null のとき: 復帰(active)なので無条件にクリアする。
+ *
+ *   ★ migration（supabase/billing_past_due_grace.sql）未適用でも本番を壊さない:
+ *     列が無ければ PostgREST がエラーを返すが、ここでは **throw せずログのみ**。
+ *     status の更新は別クエリで先に済ませてあるため、既存挙動は完全に無退行。
+ */
+async function updatePastDueSince(
+  supabase: ServiceClient,
+  match: { column: 'id' | 'stripe_subscription_id'; value: string },
+  value: string | null,
+): Promise<void> {
+  let q = supabase.from('companies').update({ past_due_since: value }).eq(match.column, match.value)
+  if (value !== null) q = q.is('past_due_since', null)
+  const { error } = await q
+  if (error) {
+    console.error(
+      '[billing:webhook] past_due_since の更新に失敗（supabase/billing_past_due_grace.sql 未適用の可能性）',
+      { code: (error as { code?: string }).code, msg: error.message },
     )
   }
 }
@@ -171,16 +209,27 @@ export async function POST(req: NextRequest) {
         return new Response('ignored: not a banto checkout', { status: 200 })
       }
 
+      // ★入金確認（監査#7）: Checkout Session は「完了したが未入金」でも completed が飛ぶ
+      //   （payment_status='unpaid'。遅延決済・支払い方法の確保のみ等）。ここを見ずに
+      //   付与すると、入金されないまま有料プランが立つ。paid / no_payment_required のみ通す。
+      if (!isCheckoutPaid(session.payment_status)) {
+        console.error('[billing:webhook] 未入金の checkout のため付与しません', {
+          session_id: session.id,
+          payment_status: session.payment_status,
+          company_id: companyId ?? null,
+        })
+        return new Response('ignored: checkout not paid', { status: 200 })
+      }
+
       // company_id が無ければ反映先が不明（=自製品でも壊れたイベント）。記録だけして 200。
       if (!companyId) {
         return new Response('ignored: no company_id', { status: 200 })
       }
 
       // 反映する plan: metadata.plan 優先、無ければ price→amount の順で逆引き。
-      const plan: PlanId | null =
-        (md.plan as PlanId | undefined) && ['starter', 'standard', 'shigyo'].includes(md.plan!)
-          ? (md.plan as PlanId)
-          : pricePlan ?? planIdForAmount(session.amount_total)
+      const plan: PlanId | null = isPaidPlanId(md.plan)
+        ? md.plan
+        : pricePlan ?? planIdForAmount(session.amount_total)
 
       if (!plan) {
         // 自製品判定は通ったが plan を確定できない（異常）。free 付与はせず記録のみ 200。
@@ -214,6 +263,8 @@ export async function POST(req: NextRequest) {
         })
         .eq('id', companyId)
       if (error) throw error
+      // 新規課金＝滞納クロックはリセット（best-effort・migration 未適用でも無害）。
+      await updatePastDueSince(supabase, { column: 'id', value: companyId }, null)
     }
 
     // ----------------------------------------------------------------------
@@ -225,7 +276,14 @@ export async function POST(req: NextRequest) {
     //   active/trialing/past_due は plan を維持し、真に終了した状態(canceled/unpaid等)のみ降格。
     //   plan の昇格/降格(プラン変更)も items の price から反映する。
     // ----------------------------------------------------------------------
-    if (event.type === 'customer.subscription.updated') {
+    //   ★2026-07-30 監査で2点を修正:
+    //     #3 plan 解決の最終フォールバックが有料の 'standard' だった。Price ID を差し替えると
+    //        price 逆引きが外れ、metadata も無い正規顧客に ¥9,800 相当が無償で立つ。
+    //        → 解決不能なら **plan を書き換えない**（warnIfNoMatch と同じ「分からないときは
+    //          触らない」流儀）。status だけ反映して console.error を残す。
+    //     #4 pause_collection（支払いの一時停止）は status='active' のまま請求だけ止まる。
+    //        → resolveSubscriptionTransition が keepsPlan から外して free へ降格する。
+    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.paused') {
       const sub = event.data.object as Stripe.Subscription
       const md = sub.metadata ?? {}
       // 自製品判定: metadata.product または price 逆引き。
@@ -234,36 +292,52 @@ export async function POST(req: NextRequest) {
       const isBanto = md.product === BANTO_PRODUCT || pricePlan !== null
       if (!isBanto) return new Response('ignored: not a banto subscription', { status: 200 })
 
-      const active = sub.status === 'active' || sub.status === 'trialing'
-      // past_due は dunning の grace 期間（invoice.payment_failed と表裏一体）。
-      // 「支払い失敗＝即機能停止」を避けるため、active と同じくplanを維持する。
-      // plan=free への降格は、契約が実際に終了した状態（canceled/unpaid/incomplete_expired 等）
-      // に限る。past_due からの最終降格は Stripe のリトライが尽きて customer.subscription.deleted
-      // が届いたとき（別ハンドラ）に行う＝ここでは早期降格しない。
-      const pastDue = sub.status === 'past_due'
-      const keepsPlan = active || pastDue
-      // 現プラン（price 逆引き優先、無ければ metadata.plan）。keepsPlan でなければ free。
-      const plan: PlanId = keepsPlan
-        ? (pricePlan ?? (md.plan as PlanId | undefined) ?? 'standard')
-        : 'free'
-      const status = active ? 'active' : pastDue ? 'past_due' : 'canceled'
+      const t = resolveSubscriptionTransition({
+        status: event.type === 'customer.subscription.paused' ? 'paused' : sub.status,
+        pausedCollection: sub.pause_collection != null,
+        pricePlan,
+        metadataPlan: md.plan,
+      })
 
       const rec = await recordEvent(supabase, {
         event_id: event.id,
         company_id: md.company_id ?? null,
         event_type: event.type,
-        plan,
+        plan: t.plan,
         amount: null,
         stripe_subscription_id: sub.id,
       })
       if (rec.duplicate) return new Response('ok: duplicate', { status: 200 })
 
+      if (t.reason === 'unresolved_plan') {
+        // plan を確定できない。有料へも free へも倒さず、status だけ反映して人へ知らせる。
+        console.error(
+          '[billing:webhook] plan を解決できませんでした（Price ID の差し替え？）。' +
+            'plan は変更せず status のみ反映します。要手動確認',
+          { event_type: event.type, stripe_subscription_id: sub.id, price_id: priceId ?? null },
+        )
+      }
+
+      const patch: { status: string; plan?: PlanId } =
+        t.plan === null ? { status: t.status } : { status: t.status, plan: t.plan }
+
       const { error, count } = await supabase
         .from('companies')
-        .update({ plan, status }, { count: 'exact' })
+        .update(patch, { count: 'exact' })
         .eq('stripe_subscription_id', sub.id)
       if (error) throw error
       warnIfNoMatch(count, event.type, sub.id)
+
+      // 滞納クロック: past_due に入った初回だけ刻み、active へ戻ったらクリアする。
+      if (t.status === 'past_due') {
+        await updatePastDueSince(
+          supabase,
+          { column: 'stripe_subscription_id', value: sub.id },
+          new Date().toISOString(),
+        )
+      } else if (t.status === 'active') {
+        await updatePastDueSince(supabase, { column: 'stripe_subscription_id', value: sub.id }, null)
+      }
     }
 
     // ----------------------------------------------------------------------
@@ -292,6 +366,12 @@ export async function POST(req: NextRequest) {
         .eq('stripe_subscription_id', sub.id)
       if (error) throw error
       warnIfNoMatch(count, event.type, sub.id)
+      // 既に free まで落ちたので滞納クロックは不要。再契約時に誤って掃かれないよう消す。
+      await updatePastDueSince(
+        supabase,
+        { column: 'stripe_subscription_id', value: sub.id },
+        null,
+      )
     }
 
     // ----------------------------------------------------------------------
@@ -327,6 +407,14 @@ export async function POST(req: NextRequest) {
         .update({ status: 'past_due' })
         .eq('id', company.id)
       if (error) throw error
+
+      // 滞納クロックを刻む（初回のみ。リトライごとに上書きすると期限が一生来ない）。
+      // 21 日超過は /api/company/billing/past-due-sweep（日次 cron）が free へ落とす。
+      await updatePastDueSince(
+        supabase,
+        { column: 'id', value: company.id },
+        new Date().toISOString(),
+      )
     }
 
     // ----------------------------------------------------------------------
@@ -362,6 +450,8 @@ export async function POST(req: NextRequest) {
           .eq('id', company.id)
         if (error) throw error
       }
+      // 回収できたので滞納クロックはクリア（active でも残骸があれば消す＝誤降格を防ぐ）。
+      await updatePastDueSince(supabase, { column: 'id', value: company.id }, null)
     }
   } catch (e) {
     // 5xx を返すと Stripe が指数バックオフで再送する（課金済みユーザーの取り残しを防ぐ）。

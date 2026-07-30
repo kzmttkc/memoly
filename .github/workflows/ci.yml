@@ -21,3 +21,42 @@ jobs:
         run: npx tsc --noEmit
       - name: Unit tests (pure functions)
         run: npm run test:unit
+
+      # 2026-07-30 可用性監査#10 の是正。
+      #   従来 CI は tsc と unit のみで lint が入っておらず、ローカルで
+      #   `npm run lint` を打つと 27 errors が放置されたままだった（大半が
+      #   react-hooks/set-state-in-effect ＝ cascading render で、チャット画面と
+      #   課金画面という最も重い2画面に集中していた）。
+      #
+      #   既存の負債を一度に潰すのは別作業なので、まず **新規流入を止める** 形にする:
+      #   下の --ignore-pattern は「2026-07-30 時点で既にエラーを抱えているファイル」の
+      #   固定リスト（負債台帳）。ここに載っていないファイルは全て lint 対象で、
+      #   新しく足したファイルは自動的にゲートを通る。
+      #
+      #   運用ルール:
+      #     - このリストは **減らすだけ**。増やしてはいけない（増やす＝新規負債の追認）。
+      #     - 1件直したらこのリストから1行消す。全部消えたら --ignore-pattern ごと削除する。
+      #     - warning は落とさない（--max-warnings は付けない）。エラーのみをゲートにする。
+      #   なお検証・計測用スクリプト（scripts/ e2e-captures/ 等）は eslint.config.mjs の
+      #   globalIgnores 側で除外している（アプリの実行経路に含まれないため）。
+      - name: Lint (新規エラーの流入を止めるゲート)
+        run: |
+          npx eslint . \
+            --ignore-pattern "app/(app)/company/_components/CommandPalette.tsx" \
+            --ignore-pattern "app/(app)/company/_components/CompanyGuard.tsx" \
+            --ignore-pattern "app/(app)/company/_components/CompanySwitcher.tsx" \
+            --ignore-pattern "app/(app)/company/billing/page.tsx" \
+            --ignore-pattern "app/(app)/company/chat/page.tsx" \
+            --ignore-pattern "app/(app)/company/deadlines/page.tsx" \
+            --ignore-pattern "app/(app)/company/documents/page.tsx" \
+            --ignore-pattern "app/(app)/company/onboarding/page.tsx" \
+            --ignore-pattern "app/(app)/company/risk/page.tsx" \
+            --ignore-pattern "app/(app)/company/rules/page.tsx" \
+            --ignore-pattern "app/api/company/risk-audit/route.ts" \
+            --ignore-pattern "app/business/_components/TryDemo.tsx" \
+            --ignore-pattern "app/business/_components/TryDemoEn.tsx" \
+            --ignore-pattern "components/tools/client.tsx" \
+            --ignore-pattern "components/ui/CookieBanner.tsx" \
+            --ignore-pattern "components/ui/ThemeToggle.tsx" \
+            --ignore-pattern "lib/company.ts" \
+            --ignore-pattern "lib/theme.tsx"

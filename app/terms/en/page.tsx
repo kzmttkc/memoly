@@ -11,12 +11,26 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Terms of Service | Banto',
   description: 'Terms of Service for Banto (English).',
-  alternates: { canonical: '/terms/en' },
+  // 2026-07-30 PMF fix #3: pair this page with the Japanese original via hreflang
+  //   (site-wide there were 0 hreflang tags and no /en URL in sitemap.xml).
+  //   The reciprocal declaration on /terms (Japanese) is owned by another team
+  //   this session and is filed as a work order.
+  alternates: {
+    canonical: '/terms/en',
+    languages: {
+      ja: '/terms',
+      en: '/terms/en',
+      'x-default': '/terms',
+    },
+  },
 }
 
 export default function TermsEnglishPage() {
   return (
-    <div className="company-light min-h-screen bg-white">
+    // lang on the subtree root: app/layout.tsx renders the only <html> element
+    // and emits lang="ja" for every route (see app/business/en/page.tsx for why
+    // it is not path-aware). The nearest ancestor lang wins per the HTML spec.
+    <div lang="en" className="company-light min-h-screen bg-white">
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
           <Link href="/business/en" className="text-sm text-neutral-500 hover:text-neutral-700">

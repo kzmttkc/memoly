@@ -1,3 +1,4 @@
+import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { anthropic, CHAT_MODEL } from '@/lib/claude'
 import { buildCompanySystemPrompt } from '@/lib/prompts'
@@ -33,6 +34,18 @@ import { buildRecalledMemory, serializeRecalledMemory } from '@/lib/recall'
 // ============================================================================
 
 const MAX_MEMORIES = 10
+
+// 関数側の実行上限（秒）。2026-07-30 可用性監査#9 の是正の後半。
+//
+// lib/claude.ts に 60秒の締切を入れたが、**関数側の上限がそれより短いと意味が無い**。
+// Vercel の既定は数十秒で、超えるとプラットフォームが関数ごと殺す。そのとき
+// 下の catch は走らない＝利用者には無言でストリームが途切れる（原因も分からない）。
+//
+// 順序を「自分の締切 < 関数の上限」に固定する:
+//   60秒（下の stream で maxRetries: 0 を明示）< 90秒（ここ）
+// 明示しないと lib/claude.ts の maxRetries: 1 が効いて最長120秒になり、
+// 90秒で先に殺されて元の無言死に戻る。ここと下はセットで動く。
+export const maxDuration = 90
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser()
@@ -185,12 +198,20 @@ export async function POST(req: NextRequest) {
   //   製品で最も叩かれるルートなので、接続段でも必ず日本語で理由が返るようにする。
   let stream: ReturnType<typeof anthropic.messages.stream>
   try {
-    stream = anthropic.messages.stream({
-      model: CHAT_MODEL,
-      max_tokens: 2048,
-      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-      messages: sanitizedMessages,
-    })
+    stream = anthropic.messages.stream(
+      {
+        model: CHAT_MODEL,
+        max_tokens: 2048,
+        system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+        messages: sanitizedMessages,
+      },
+      // maxRetries を 0 で上書きする（lib/claude.ts の既定は 1）。
+      // ストリーミングのチャットで 60秒待たせた後の自動リトライは価値が無く、
+      // 上限120秒が上の maxDuration=90 を超えて「プラットフォームに殺される＝
+      // 無言で途切れる」に戻ってしまう。1回きりにして、締切超過は必ず
+      // 下の catch で日本語の理由に変える。
+      { maxRetries: 0 },
+    )
   } catch (e) {
     console.error('[company:chat] anthropic stream の開始に失敗', e)
     return NextResponse.json(
@@ -214,8 +235,21 @@ export async function POST(req: NextRequest) {
             controller.enqueue(new TextEncoder().encode(chunk.delta.text))
           }
         }
-      } catch {
-        controller.enqueue(new TextEncoder().encode('\n\n[エラーが発生しました。もう一度お試しください]'))
+      } catch (e) {
+        // 締切超過（lib/claude.ts の 60秒）と、それ以外の障害を書き分ける。
+        // 一律「エラーが発生しました」だと、利用者は「質問が悪いのか・待てば直るのか」
+        // が分からず、同じ長い質問を投げ直して同じ60秒を溶かす。
+        const timedOut =
+          e instanceof Anthropic.APIConnectionTimeoutError ||
+          (e instanceof Error && /timeout|aborted/i.test(e.message))
+        console.error('[company:chat] ストリーム中に失敗', { timedOut, error: e })
+        controller.enqueue(
+          new TextEncoder().encode(
+            timedOut
+              ? '\n\n[時間内に回答を作れませんでした。質問を短く区切ってもう一度お試しください]'
+              : '\n\n[エラーが発生しました。もう一度お試しください]',
+          ),
+        )
       } finally {
         // assistant 応答を保存（ベストエフォート・失敗してもストリームは閉じる）
         if (full) {

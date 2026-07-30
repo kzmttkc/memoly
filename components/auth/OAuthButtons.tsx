@@ -12,12 +12,19 @@ import { buttonClass } from '@/components/ui/Button'
 // 2026-07-28 CTO修正（L2監査#5）: isEn=true(/signup?lang=en, /login?lang=en)でも
 //   ボタン文言・エラー文言が日本語のままだった（ペルソナ6指摘・部分翻訳）。
 //   ロジック・呼び出し方は完全に不変、表示文言だけを言語で出し分ける。
+// 2026-07-30 PMF修理#6: 新規登録画面の「GitHubで続ける」は、番頭のICP（中小企業の
+//   総務担当・経営者）にはまったく縁のないサービス名で、「これは開発者向けの製品では」
+//   という違和感＝離脱理由になっていた。既存のGitHub連携アカウントを締め出さないため
+//   /login では従来どおり出し続け、新規登録の日本語画面でだけ隠す
+//   （showGithub の既定は true ＝ 呼び出し側を書き換えない限り挙動は不変）。
 export function OAuthButtons({
   next = '/company',
   isEn = false,
+  showGithub = true,
 }: {
   next?: string
   isEn?: boolean
+  showGithub?: boolean
 }) {
   const [loadingProvider, setLoadingProvider] = useState<'google' | 'github' | null>(null)
   const [error, setError] = useState('')
@@ -55,15 +62,17 @@ export function OAuthButtons({
         <GoogleMark />
         {isEn ? 'Continue with Google' : 'Googleで続ける'}
       </button>
-      <button
-        type="button"
-        onClick={() => signInWithProvider('github')}
-        disabled={loadingProvider !== null}
-        className={buttonClass({ variant: 'secondary', size: 'lg', className: 'w-full' })}
-      >
-        <GitHubMark />
-        {isEn ? 'Continue with GitHub' : 'GitHubで続ける'}
-      </button>
+      {showGithub && (
+        <button
+          type="button"
+          onClick={() => signInWithProvider('github')}
+          disabled={loadingProvider !== null}
+          className={buttonClass({ variant: 'secondary', size: 'lg', className: 'w-full' })}
+        >
+          <GitHubMark />
+          {isEn ? 'Continue with GitHub' : 'GitHubで続ける'}
+        </button>
+      )}
       {error && <p className="text-sm text-danger-600">{error}</p>}
     </div>
   )

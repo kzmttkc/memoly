@@ -9,12 +9,26 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Privacy Policy | Banto',
   description: 'Privacy Policy for Banto (English).',
-  alternates: { canonical: '/privacy/en' },
+  // 2026-07-30 PMF fix #3: pair this page with the Japanese original via hreflang
+  //   (site-wide there were 0 hreflang tags and no /en URL in sitemap.xml).
+  //   The reciprocal declaration on /privacy (Japanese) is owned by another team
+  //   this session and is filed as a work order.
+  alternates: {
+    canonical: '/privacy/en',
+    languages: {
+      ja: '/privacy',
+      en: '/privacy/en',
+      'x-default': '/privacy',
+    },
+  },
 }
 
 export default function PrivacyEnglishPage() {
   return (
-    <div className="company-light min-h-screen bg-white">
+    // lang on the subtree root: app/layout.tsx renders the only <html> element
+    // and emits lang="ja" for every route (see app/business/en/page.tsx for why
+    // it is not path-aware). The nearest ancestor lang wins per the HTML spec.
+    <div lang="en" className="company-light min-h-screen bg-white">
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
           <Link href="/business/en" className="text-sm text-neutral-500 hover:text-neutral-700">

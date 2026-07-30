@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
@@ -82,8 +82,12 @@ export function preHydrationValue(id: string, fallback = ''): string {
  */
 export function ToolSubmitButton({ children }: { children: React.ReactNode }) {
   const hydrated = useHydrated()
+  const ref = useRef<HTMLButtonElement>(null)
+  // 所属 <form> の制約検証メッセージを日本語化する（2026-07-30 UX監査 #3）。
+  useJapaneseValidationMessages(ref)
   return (
     <button
+      ref={ref}
       type={hydrated ? 'submit' : 'button'}
       disabled={!hydrated}
       aria-busy={!hydrated}
@@ -91,13 +95,91 @@ export function ToolSubmitButton({ children }: { children: React.ReactNode }) {
       className={buttonClass({
         variant: 'primary',
         size: 'lg',
-        className: hydrated ? 'w-full' : 'w-full cursor-wait',
+        // 2026-07-30 UX監査 #1: base の whitespace-nowrap のままだと 320px 幅で
+        //   「読み込み中です。少しお待ちください」がカード外へはみ出す。
+        className: hydrated
+          ? 'w-full whitespace-normal text-center'
+          : 'w-full whitespace-normal text-center cursor-wait',
       })}
     >
       {!hydrated && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
       {hydrated ? children : '読み込み中です。少しお待ちください'}
     </button>
   )
+}
+
+// ============================================================================
+// 制約検証メッセージの日本語化（2026-07-30 UX監査 #3）
+//   実測: 空のまま「点検する」を押すと、日本語ページの上に Chrome 既定の
+//   "Please fill out this field." が出ていた（/signup は日本語化済みで、
+//   無料ツール6本だけが取り残されていた）。
+//
+//   方針: noValidate にして自前エラーを描くと、ネイティブが無料でやっている
+//   「最初の不正入力へフォーカス＋スクロール」を全ツールぶん再実装することになる。
+//   ネイティブ検証は残したまま setCustomValidity でメッセージだけ日本語に差し替える。
+//
+//   実装上の注意:
+//     - invalid イベントはバブルしない。フォームに **capture** で付けて子孫を拾う。
+//     - customValidity を立てたままだと、値を直しても customError で不正のままに
+//       なる。input / change で必ず空に戻す。
+//     - メッセージ生成の冒頭でも一度空に戻してから validity を読む（customError に
+//         隠れた本当の違反理由—valueMissing か rangeOverflow か—を判別するため）。
+// ============================================================================
+
+type ValidatableElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+
+function isValidatable(el: EventTarget | null): el is ValidatableElement {
+  return !!el && typeof (el as ValidatableElement).setCustomValidity === 'function'
+}
+
+function japaneseValidationMessage(el: ValidatableElement): string {
+  el.setCustomValidity('')
+  const v = el.validity
+  const isSelect = el.tagName === 'SELECT'
+  const type = isSelect ? 'select' : (el as HTMLInputElement).type
+
+  if (v.valueMissing) {
+    if (type === 'select' || type === 'radio' || type === 'checkbox') return '選択してください。'
+    if (type === 'date') return '日付を入力してください。'
+    if (type === 'number') return '数値を入力してください。'
+    return 'この項目を入力してください。'
+  }
+  if (v.badInput || v.typeMismatch) {
+    if (type === 'date') return '日付を「年/月/日」の形式で入力してください。'
+    return '数値で入力してください。'
+  }
+  if (v.rangeUnderflow) return `${(el as HTMLInputElement).min}以上の値を入力してください。`
+  if (v.rangeOverflow) return `${(el as HTMLInputElement).max}以下の値を入力してください。`
+  if (v.stepMismatch) return '入力できる刻みに合っていません。'
+  if (v.tooShort || v.tooLong || v.patternMismatch) return '入力内容の形式をご確認ください。'
+  return '入力内容をご確認ください。'
+}
+
+/**
+ * 送信ボタンの ref から所属 <form> を辿り、その配下すべての入力の検証メッセージを
+ * 日本語にする。全ツールが 1フォーム1 ToolSubmitButton の構成（実測で確認）のため、
+ * 各 Calculator.tsx に手を入れずに6ツール一括で効く。
+ */
+export function useJapaneseValidationMessages(ref: React.RefObject<HTMLButtonElement | null>) {
+  useEffect(() => {
+    const form = ref.current?.form
+    if (!form) return
+    const onInvalid = (e: Event) => {
+      if (!isValidatable(e.target)) return
+      e.target.setCustomValidity(japaneseValidationMessage(e.target))
+    }
+    const clear = (e: Event) => {
+      if (isValidatable(e.target)) e.target.setCustomValidity('')
+    }
+    form.addEventListener('invalid', onInvalid, true)
+    form.addEventListener('input', clear)
+    form.addEventListener('change', clear)
+    return () => {
+      form.removeEventListener('invalid', onInvalid, true)
+      form.removeEventListener('input', clear)
+      form.removeEventListener('change', clear)
+    }
+  }, [ref])
 }
 
 /** 入力フォーム末尾の共通注記（ブラウザ内計算・非送信）。 */
@@ -150,7 +232,16 @@ export function ToolSignupCta({
         <Link
           href={href}
           onClick={() => track('signup_cta_clicked', { location, status })}
-          className={buttonClass({ variant: 'primary', size: 'lg', className: 'mt-4' })}
+          // 2026-07-30 UX監査 #1（致命）: base の whitespace-nowrap のまま幅指定が
+          //   なかったため、長いラベル（「この結果を自社の記録として保存（無料）」）で
+          //   実測 right=394px（ビューポート375・親カード右端330）＝画面外へはみ出し、
+          //   html.overflow-x-clip で横スクロールも出ず**押せない**状態だった（6ツール全部）。
+          //   LP側CTAと同じ whitespace-normal text-center を当て、w-full で親カードに収める。
+          className={buttonClass({
+            variant: 'primary',
+            size: 'lg',
+            className: 'mt-4 w-full whitespace-normal text-center',
+          })}
         >
           {label}
           <ArrowRight className="h-4 w-4" aria-hidden />

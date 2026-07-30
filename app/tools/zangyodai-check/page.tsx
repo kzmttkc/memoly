@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { buildToolMetadata, type ToolFaq } from '@/components/tools/meta'
 import { ToolPageShell } from '@/components/tools/ToolPageShell'
 import { Calculator } from './Calculator'
+import LeadCapture from '@/app/business/_components/LeadCapture'
 
 // ============================================================================
 // /tools/zangyodai-check — 残業代 それ合ってる？セルフ点検（無料・登録不要）
@@ -113,6 +114,15 @@ export default function ZangyodaiCheckToolPage() {
       }}
     >
       <Calculator />
+      {/* メール獲得（無料PDF・2026-07-30 PMF修理#2）。
+          実測: 索引される42ページ（/tools 6本を含む）に input[type=email] が0個で、
+          メール獲得は /business の1か所だけだった。点検結果を見た直後＝いちばん
+          関心が高い位置に、登録より軽い一歩（メアドだけ）を置く。
+          ※本来は解説の末尾に置きたいが、解説〜FAQ〜関連記事は共通シャーシ
+            components/tools/ToolPageShell.tsx（並行作業中の別班の持ち場）にあり、
+            このページから差し込めるのは children のみ。差し込み位置の変更は
+            シャーシに afterExplain スロットを足す別作業として依頼済み。 */}
+      <LeadCapture placement="tool" context="zangyodai-check" />
     </ToolPageShell>
   )
 }

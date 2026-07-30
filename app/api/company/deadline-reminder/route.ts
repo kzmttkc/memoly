@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendSlackMessage } from '@/lib/slack'
+import { buildUnsubscribeUrls, unsubscribeHeaders } from '@/app/api/unsubscribe/token'
 
 // ============================================================================
 // /api/company/deadline-reminder — F4 期限リマインド（Vercel Cron）
@@ -42,6 +43,16 @@ const MAX_COMPANIES_PER_RUN = 200
 
 // 1通あたりに載せる期限件数の上限（メールは要点だけ）。
 const MAX_ITEMS_PER_EMAIL = 8
+
+// Resend への1リクエストの締切（2026-07-30 可用性監査#8・weekly-email と同値）。
+const RESEND_TIMEOUT_MS = 10_000
+
+// 特定電子メール法が求める「送信者の住所」（2026-07-30 法務監査#4）。
+//   実住所を捏造しない。env 未設定のあいだは特商法の開示請求窓口を案内する。
+//   ★Takeshi 手番: SENDER_POSTAL_ADDRESS に実住所を設定すること。
+const SENDER_ADDRESS =
+  process.env.SENDER_POSTAL_ADDRESS?.trim() ||
+  'ご請求により遅滞なく開示します（support@banto-roumu.com 宛に「運営者情報の開示請求」と明記のうえご連絡ください）'
 
 // 固定の免責文（★LLM生成しない・全経路でこの文字列を使う）。断定/命令をしない中立文。
 const DISCLAIMER =
@@ -113,9 +124,11 @@ function itemToHtml(row: DeadlineRow, du: number): string {
 // Vercel Cron から呼ばれる（vercel.json: 毎日 23:00 UTC = 8:00 JST）。
 export async function GET(req: Request) {
   // --- fail-safe: 必須 env が欠けていれば認可より先に「安全に何もしない」を返す ---
+  // 2026-07-30 可用性監査#8: 設定漏れは正常ではないので HTTP 500 にする
+  //   （200 のままだと Vercel Cron の履歴が緑で、1通も送っていないことに気づけない）。
   if (!process.env.CRON_SECRET) {
-    console.warn('[banto:deadline-reminder] CRON_SECRET 未設定のため配信をスキップしました。')
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' })
+    console.error('[banto:deadline-reminder] CRON_SECRET 未設定のため配信をスキップしました。')
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' }, { status: 500 })
   }
 
   const auth = req.headers.get('authorization')
@@ -124,15 +137,15 @@ export async function GET(req: Request) {
   }
 
   if (!process.env.RESEND_API_KEY) {
-    console.warn('[banto:deadline-reminder] RESEND_API_KEY 未設定のため配信をスキップしました。')
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'RESEND_API_KEY not set' })
+    console.error('[banto:deadline-reminder] RESEND_API_KEY 未設定のため配信をスキップしました。')
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'RESEND_API_KEY not set' }, { status: 500 })
   }
   if (!DIGEST_FROM_EMAIL) {
-    console.warn(
+    console.error(
       '[banto:deadline-reminder] DIGEST_FROM_EMAIL 未設定のため配信をスキップしました。' +
         '独自ドメイン認証後に環境変数 DIGEST_FROM_EMAIL を設定してください。'
     )
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' })
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' }, { status: 500 })
   }
 
   const admin = createClient(
@@ -155,10 +168,17 @@ export async function GET(req: Request) {
     .lte('due_on', maxStr)
     .order('due_on', { ascending: true })
   if (rowErr) {
-    // テーブル未適用（migration前）でも cron を落とさない: sent 0 で正常終了する。
-    console.error('[banto:deadline-reminder] deadline query failed (non-fatal)', rowErr.message)
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'deadlines table not ready' })
+    // 2026-07-30 可用性監査#8: ここも 200 ではなく 500。テーブルが引けない＝期限通知が
+    //   1件も出せない状態であり、「正常終了」ではない。緑のままだと恒久的に無音になる。
+    console.error('[banto:deadline-reminder] deadline query failed', rowErr.message)
+    return NextResponse.json(
+      { sent: 0, skipped: true, reason: 'deadlines table not ready' },
+      { status: 500 },
+    )
   }
+
+  // 送信失敗の件数（可用性監査#8）。1件でもあれば最後に HTTP 500 で返す。
+  let failed = 0
 
   // --- 送信対象の絞り込み: 二重送信防止（matchedOffset と last_notified の突き合わせ） ---
   const due: { row: DeadlineRow; du: number; offset: number }[] = []
@@ -252,9 +272,18 @@ export async function GET(req: Request) {
         //   opt-in と同一フラグで殺すと、メール登録ユーザーには期限通知が1通も届かない
         //   （再訪の最強トリガーを既定で失っていた）。
         //   なお解除手段はメール内の配信停止リンクで別途提供する（下の unsubscribe 導線）。
+        //   2026-07-30 法務監査#4: その「別途の解除手段」が実際には機能していなかった
+        //   （URL が要ログインの画面で、ワンクリックのAPIは401）。scope='deadline' の
+        //   署名付きトークンで、この通知だけを認証なしで止められるようにする。
+        //   止めた人には deadline_unsubscribed が立つので、次回以降ここで除外される。
+        if (authUser?.user?.user_metadata?.deadline_unsubscribed) continue
+
+        const unsub = buildUnsubscribeUrls(BANTO_URL, member.user_id, 'deadline')
 
         const resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
+          // 締切なしだと Resend の無応答で全社ぶんの配信が止まる（可用性監査#8）。
+          signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
           headers: {
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
             'Content-Type': 'application/json',
@@ -263,11 +292,9 @@ export async function GET(req: Request) {
             from: DIGEST_FROM_EMAIL,
             to: email,
             subject: '労務の期限が近づいています｜番頭',
-            headers: {
-              'List-Unsubscribe': `<${BANTO_URL}/unsubscribe>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            },
-            text: `${companyName}で登録済みの期限が近づいています。\n\n${itemsText}\n\n※${DISCLAIMER}\n\n→ 番頭で確認する: ${homeUrl}\n\n配信停止: ${BANTO_URL}/unsubscribe`,
+            // ワンクリック配信停止（RFC 8058）。署名付きURLへ POST するだけで止まる。
+            headers: unsubscribeHeaders(unsub.oneClick),
+            text: `${companyName}で登録済みの期限が近づいています。\n\n${itemsText}\n\n※${DISCLAIMER}\n\n→ 番頭で確認する: ${homeUrl}\n\n配信停止: ${unsub.page}`,
             html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
               <h2 style="color:#324a8a;font-size:18px;margin:0 0 4px">労務の期限が近づいています</h2>
               <p style="color:#6b7280;font-size:12px;margin:0 0 16px">${escapeHtml(companyName)}で登録済みの期限をお知らせします。</p>
@@ -279,10 +306,10 @@ export async function GET(req: Request) {
                 【送信者情報】<br>
                 サービス名：番頭（banto-roumu.com）<br>
                 運営者：Kazumoto Takeshi<br>
-                所在地：日本<br>
+                所在地：${escapeHtml(SENDER_ADDRESS)}<br>
                 お問い合わせ：support@banto-roumu.com<br><br>
                 このメールは番頭に登録された期限の備忘として送信されています。<br>
-                <a href="${BANTO_URL}/unsubscribe" style="color:#324a8a">配信停止はこちら</a>
+                <a href="${unsub.page}" style="color:#324a8a">配信停止はこちら</a>
               </p>
             </div>`,
           }),
@@ -292,6 +319,8 @@ export async function GET(req: Request) {
           sent++
           companyDelivered = true
         } else {
+          // 失敗を数える（可用性監査#8）。従来はログのみで最後は常に 200 だった。
+          failed++
           console.error(
             `[banto:deadline-reminder] send failed company=${companyId} status=${resendRes.status}`
           )
@@ -321,10 +350,16 @@ export async function GET(req: Request) {
         }
       }
     } catch (e) {
-      // 1社の失敗で全体を止めない（ベストエフォート・weekly-email と同じ）
+      // 1社の失敗で全体を止めない（ベストエフォート・weekly-email と同じ）。
+      // ただし件数には必ず数える（握り潰さない）。
+      failed++
       console.error(`[banto:deadline-reminder] failed for company ${companyId}:`, e)
     }
   }
 
-  return NextResponse.json({ sent, slackSent, companies: companiesSent, candidates: companyIds.length })
+  // 失敗が1件でもあれば HTTP 500（Vercel Cron の履歴を赤くして不達に気づけるように）。
+  return NextResponse.json(
+    { sent, failed, slackSent, companies: companiesSent, candidates: companyIds.length },
+    { status: failed > 0 ? 500 : 200 },
+  )
 }

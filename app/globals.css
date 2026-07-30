@@ -351,7 +351,9 @@ body {
 }
 .fv-divider {
   text-align: center;
-  color: #8a8578;
+  /* 2026-07-30 UX監査 #9: 旧 #8a8578 は白地(.fv-chat の背景)で 3.68:1 ＝ WCAG AA
+     （4.5:1）未達だった。同系統のまま濃くして 5.07:1 にする。 */
+  color: #736e63;
   font-size: 15px;
   font-weight: 300;
   margin: 6px 0;

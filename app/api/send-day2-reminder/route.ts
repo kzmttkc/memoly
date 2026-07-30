@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { buildUnsubscribeUrls, unsubscribeHeaders } from '@/app/api/unsubscribe/token'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://banto-roumu.com'
 // 番頭の対外ドメイン（メール内リンク・配信停止・送信者情報で使用）。
 const BANTO_URL = 'https://banto-roumu.com'
+
+// Resend への1リクエストの締切（2026-07-30 可用性監査#8・他2経路と同値）。
+const RESEND_TIMEOUT_MS = 10_000
+
+// 特定電子メール法が求める「送信者の住所」（2026-07-30 法務監査#4）。
+//   実住所を捏造しない。env 未設定のあいだは特商法の開示請求窓口を案内する。
+//   ★Takeshi 手番: SENDER_POSTAL_ADDRESS に実住所を設定すること。
+const SENDER_ADDRESS =
+  process.env.SENDER_POSTAL_ADDRESS?.trim() ||
+  'ご請求により遅滞なく開示します（support@banto-roumu.com 宛に「運営者情報の開示請求」と明記のうえご連絡ください）'
 
 // 送信元アドレス（digest と共通）。独自ドメイン認証後に DIGEST_FROM_EMAIL を設定する。
 // 未設定時はメール送信をスキップ（resend.devサンドボックスへフォールバックしない）。
@@ -17,9 +27,11 @@ const DIGEST_FROM_EMAIL = process.env.DIGEST_FROM_EMAIL
 
 export async function GET(req: Request) {
   // fail-safe: CRON_SECRET 未設定時は「Bearer undefined」一致で認可が通るため、認可より先に安全に停止
+  // 2026-07-30 可用性監査#8: 設定漏れは正常ではないので HTTP 500（従来は 200 で、
+  //   1通も送っていなくても Vercel Cron の履歴は緑のままだった）。
   if (!process.env.CRON_SECRET) {
-    console.warn('[send-day2-reminder] CRON_SECRET 未設定のため配信をスキップしました。')
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' })
+    console.error('[send-day2-reminder] CRON_SECRET 未設定のため配信をスキップしました。')
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' }, { status: 500 })
   }
 
   const auth = req.headers.get('authorization')
@@ -29,10 +41,14 @@ export async function GET(req: Request) {
 
   // 送信元が未設定なら配信しない（サンドボックス送信元で本番に出さない安全動作）
   if (!DIGEST_FROM_EMAIL) {
-    console.warn(
+    console.error(
       '[memoly:day2] DIGEST_FROM_EMAIL 未設定のため Day2 リマインド配信をスキップしました。'
     )
-    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' })
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'DIGEST_FROM_EMAIL not set' }, { status: 500 })
+  }
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[memoly:day2] RESEND_API_KEY 未設定のため配信をスキップしました。')
+    return NextResponse.json({ sent: 0, skipped: true, reason: 'RESEND_API_KEY not set' }, { status: 500 })
   }
 
   const admin = createClient(
@@ -108,6 +124,10 @@ export async function GET(req: Request) {
   }
 
   let sent = 0
+  // 2026-07-30 可用性監査#8: errors[] には「配信停止」「送信済み」など**正常な除外**も
+  //   混ざるため、これを異常検知に使うと毎日赤くなって意味を失う。実際の失敗
+  //   （Resend 非200・例外・フラグ更新失敗）だけを failed で数え、これで 500 を出す。
+  let failed = 0
   const errors: string[] = []
 
   for (const user of targetUsers) {
@@ -119,6 +139,8 @@ export async function GET(req: Request) {
         email = authUser?.user?.email ?? null
       }
       if (!email) {
+        // 宛先が無いのは送信不能＝異常（登録経路の破損を疑う）。失敗として数える。
+        failed++
         errors.push(`${user.id}: no email`)
         continue
       }
@@ -145,9 +167,14 @@ export async function GET(req: Request) {
         `以降は「自社の規程では第◯条にこう定めています」と、一般論ではなく御社の条文を引いて答えます。\n\n` +
         `貼り付けは3分ほどで終わります。ファイルの添付には未対応のため、本文をテキストでお願いします。`
 
+      // 宛先ごとの配信停止URL（署名付き・ログイン不要で止まる。法務監査#4）。
+      const unsub = buildUnsubscribeUrls(BANTO_URL, user.id, 'digest')
+
       // Resendでメール送信（差出人・リンク・送信者情報はすべて番頭に統一）
       const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
+        // 締切なしだと Resend の無応答で以降の宛先の配信が止まる（可用性監査#8）。
+        signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
         headers: {
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
           'Content-Type': 'application/json',
@@ -156,11 +183,9 @@ export async function GET(req: Request) {
           from: DIGEST_FROM_EMAIL,
           to: email,
           subject: '就業規則を貼り付けると、明日から自社の条文で答えます｜番頭',
-          headers: {
-            'List-Unsubscribe': `<${BANTO_URL}/unsubscribe>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          },
-          text: `${bodyText}\n\n→ 就業規則を貼り付ける: ${BANTO_URL}/company/documents\n\n配信停止: ${BANTO_URL}/unsubscribe`,
+          // ワンクリック配信停止（RFC 8058）。署名付きURLへ POST するだけで止まる。
+          headers: unsubscribeHeaders(unsub.oneClick),
+          text: `${bodyText}\n\n→ 就業規則を貼り付ける: ${BANTO_URL}/company/documents\n\n配信停止: ${unsub.page}`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
             <h2 style="color:#324a8a;font-size:18px;margin:0 0 12px">就業規則を貼り付けると、自社の条文で答えます</h2>
             <p style="color:#374151;line-height:1.8;font-size:14px">番頭にご登録いただき、ありがとうございます。</p>
@@ -173,10 +198,10 @@ export async function GET(req: Request) {
               【送信者情報】<br>
               サービス名：番頭（banto-roumu.com）<br>
               運営者：Kazumoto Takeshi<br>
-              所在地：日本<br>
+              所在地：${SENDER_ADDRESS}<br>
               お問い合わせ：support@banto-roumu.com<br><br>
               このメールは番頭の初回フォローとして1回のみ送信されます。<br>
-              <a href="${BANTO_URL}/unsubscribe" style="color:#324a8a">配信停止はこちら</a>
+              <a href="${unsub.page}" style="color:#324a8a">配信停止はこちら</a>
             </p>
           </div>`,
         }),
@@ -184,6 +209,7 @@ export async function GET(req: Request) {
 
       if (!resendRes.ok) {
         const errBody = await resendRes.text()
+        failed++
         errors.push(`${user.id}: Resend ${resendRes.status} ${errBody}`)
         continue
       }
@@ -200,20 +226,28 @@ export async function GET(req: Request) {
 
       if (updateErr) {
         console.error(`Day2 reminder: failed to update flag for ${user.id}`, updateErr)
-        // フラグ更新失敗でもメール送信済みなので errors に含めない（次回Cron実行で再送されるリスクあり）
+        // メールは送信済みだが重複防止フラグが立っていない＝翌日再送されうる。
+        // 利用者に二重で届く事故なので、これは異常として数える（可用性監査#8）。
+        failed++
         errors.push(`${user.id}: flag update failed (email sent) - ${updateErr.message}`)
       } else {
         sent++
       }
     } catch (e) {
+      failed++
       console.error(`Day2 reminder failed for ${user.id}:`, e)
       errors.push(`${user.id}: ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
-  return NextResponse.json({
-    sent,
-    total: targetUsers.length,
-    errors: errors.length ? errors : undefined,
-  })
+  // 失敗が1件でもあれば HTTP 500（Vercel Cron の履歴を赤くして不達に気づけるように）。
+  return NextResponse.json(
+    {
+      sent,
+      failed,
+      total: targetUsers.length,
+      errors: errors.length ? errors : undefined,
+    },
+    { status: failed > 0 ? 500 : 200 },
+  )
 }

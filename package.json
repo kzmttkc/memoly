@@ -9,6 +9,10 @@
     "lint": "eslint",
     "test:unit": "node --test tests/unit/*.test.ts"
   },
+  "overrides": {
+    "postcss": "^8.5.18",
+    "sharp": "^0.35.0"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
     "@supabase/ssr": "^0.12.0",

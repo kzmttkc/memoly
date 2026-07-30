@@ -14,7 +14,7 @@ import { track, trackThenNavigate, markSignupCompletedAt } from '@/lib/analytics
 import { Input } from '@/components/ui/Input'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
-import { PAID_PLAN_IDS, type PlanId } from '@/lib/plans'
+import { PAID_PLAN_IDS, PLANS, type PlanId } from '@/lib/plans'
 
 export default function SignupPage() {
   return (
@@ -482,6 +482,37 @@ function SignupForm() {
           指摘：「plan=shigyo導線がsignup画面に反映されない」）。士業プランでの
           登録であることをその場で明示する（実挙動＝登録後にonboardingへ
           plan=shigyoが引き継がれる、の範囲のみを伝える）。 */}
+      {/* 2026-07-30 PMF修理#4: 士業のためだけに作った plan= の受け皿が、Entry/Standard には
+          配線されていなかった（LP側の signupHref が undefined ＝ 既定の /signup?next=/company に
+          落ち、「Entryで始める」「Standardで始める」を押した意思が1つも残らなかった）。
+          LP側に plan=starter / plan=standard を載せたので、ここで受けて画面に出す。
+          文言は実挙動の範囲だけを言う（登録時点ではまだ無料プランで作られ、有料への
+          切り替えはご自身の操作でのみ課金される。この画面ではカード情報を集めない）。 */}
+      {(planParam === 'starter' || planParam === 'standard') && (
+        <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-sm leading-relaxed text-neutral-700">
+          <p>
+            {isEn
+              ? `Signing up with the ${PLANS[planParam].displayName} plan (¥${PLANS[planParam].monthlyJpy.toLocaleString()}/month, up to ${PLANS[planParam].seatCap} members per company) in mind. Your account starts on the free plan — you are only charged if you switch to a paid plan yourself.`
+              : `${PLANS[planParam].displayName}プラン（¥${PLANS[planParam].monthlyJpy.toLocaleString()}/月・1社${PLANS[planParam].seatCap}名まで）で進みます。まず無料プランで作成され、切り替えはご自身の操作でのみ課金されます。`}
+          </p>
+          <p className="mt-1 text-neutral-600">
+            {isEn ? (
+              <>
+                See the{' '}
+                <Link href="/pricing" className="underline hover:text-neutral-800">pricing page</Link>{' '}
+                for what each plan includes.
+              </>
+            ) : (
+              <>
+                各プランに含まれる範囲は
+                <Link href="/pricing" className="underline hover:text-neutral-800">料金ページ</Link>
+                で確認できます。
+              </>
+            )}
+          </p>
+        </div>
+      )}
+
       {planParam === 'shigyo' && (
         <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-sm leading-relaxed text-neutral-700">
           <p>
@@ -533,11 +564,15 @@ function SignupForm() {
           Supabase側のプロバイダ設定は有効を実測確認済み（/auth/v1/authorize が302）。
           2026-07-28 CTO修正（L2監査#5）: OAuthボタンの文言が?lang=enでも日本語の
           ままだった（ペルソナ6指摘・部分翻訳）。isEnを渡して英語化する。 */}
-      <OAuthButtons next={nextDest} isEn={isEn} />
+      {/* 2026-07-30 PMF修理#6: 日本語の新規登録画面ではGitHubを出さない（ICPである
+          中小企業の総務担当にGitHubは無縁で、「開発者向け製品では」という違和感を生む）。
+          英語圏（?lang=en / /business/en 経由）の流入にだけ従来どおり出す。
+          既存のGitHub連携アカウントは /login で従来どおりログインできる（そちらは不変）。 */}
+      <OAuthButtons next={nextDest} isEn={isEn} showGithub={isEn} />
       <p className="mt-2 text-center text-xs text-neutral-500">
         {isEn
           ? 'Signing up with GitHub or Google is also treated as confirming business use (18+).'
-          : 'GitHub・Googleでの登録も、事業者としてのご利用（18歳以上）とみなします。'}
+          : 'Googleでの登録も、事業者としてのご利用（18歳以上）とみなします。'}
       </p>
 
       <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
@@ -767,6 +802,26 @@ function SignupForm() {
           <>
             すでにアカウントをお持ちの方は{' '}
             <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">ログイン</Link>
+          </>
+        )}
+      </p>
+
+      {/* 2026-07-30 PMF修理#6: この画面にはヘッダが無く、料金・サービス概要への導線が
+          1本も無かった（ロゴ→/business は (auth)/layout.tsx に既存）。登録の直前で
+          「いくらかかるのか」を確かめたくなった人が、戻る手段を持たず離脱していた。
+          広告・過剰な情報は足さず、料金と概要への細いリンクを1行だけ置く。 */}
+      <p className="mt-2 text-center text-xs text-neutral-400">
+        {isEn ? (
+          <>
+            <Link href="/pricing" className="underline underline-offset-2 hover:text-neutral-600">Check pricing</Link>
+            <span className="mx-2">·</span>
+            <Link href="/business/en" className="underline underline-offset-2 hover:text-neutral-600">What Banto does</Link>
+          </>
+        ) : (
+          <>
+            <Link href="/pricing" className="underline underline-offset-2 hover:text-neutral-600">料金を確認する</Link>
+            <span className="mx-2">·</span>
+            <Link href="/business" className="underline underline-offset-2 hover:text-neutral-600">サービス概要に戻る</Link>
           </>
         )}
       </p>

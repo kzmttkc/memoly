@@ -41,7 +41,9 @@ export function MobileNav() {
         aria-label={open ? 'メニューを閉じる' : 'メニューを開く'}
         aria-expanded={open}
         onClick={() => setOpen(v => !v)}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        // 2026-07-30 UX監査 #8: 32x32 しかなく、モバイルの主要ナビ入口が最も押しにくい
+        //   要素だった（推奨44px）。この親は sm:hidden＝モバイル専用なので常に 44px。
+        className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
       >
         {open ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
       </button>

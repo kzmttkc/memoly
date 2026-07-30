@@ -28,6 +28,14 @@ export const runtime = 'nodejs'
 const ALLOWED_SOURCES = new Set([
   'checklist_dl',   // 就業規則チェックリストDL
   'risk_diagnosis', // 労務リスク3分診断
+  // 2026-07-30 PMF監査: 索引される42ページ（記事33本・ツール6本）に
+  // メール獲得が1つも無く、company_leads が0行だった。配線は健全で、
+  // 置き場所が /business の1箇所だけだったのが原因。記事末尾とツールの
+  // 結果直後に同じ LeadCapture を差し込んだので、経路を区別できるようにする。
+  // 許可リストに無い値は 'unknown' に丸められるため、ここを足さないと
+  // どこから来たリードかが永久に分からない。
+  'article_dl',     // 記事末尾（/roumu/*）
+  'tool_dl',        // 無料ツールの結果直後（/tools/*）
   'unknown',
 ])
 

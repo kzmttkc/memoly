@@ -49,9 +49,16 @@ export interface PlanDef {
   id: PlanId
   /** LP/UI の表示名（Entry/Standard/士業/無料モニター）。 */
   displayName: string
-  /** 月額（円・税抜想定）。free は 0。表示は `¥${monthlyJpy.toLocaleString()}`。 */
+  /**
+   * 月額（円・**消費税込みの支払総額**）。free は 0。表示は `¥${monthlyJpy.toLocaleString()}`。
+   *
+   * 2026-07-30 法務監査: ここは「税抜想定」と書かれていたが、/tokushoho と
+   * Stripe の決済直前表示はどちらも「消費税を含むお支払い総額」で確定している。
+   * この1行が税抜のままだと、将来の実装者が Stripe 側で税を上乗せする実装を入れ、
+   * 表示額と請求額が食い違う（景表法の有利誤認）。数字は動かさず定義を実態に合わせる。
+   */
   monthlyJpy: number
-  /** 年額（円）。年額を提供するプランのみ。提供しないプランは null。 */
+  /** 年額（円・**消費税込み**）。年額を提供するプランのみ。提供しないプランは null。 */
   yearlyJpy: number | null
   /**
    * 料金表示で主役（強調枠・primary CTA）にするか。
@@ -297,6 +304,23 @@ export function canCreateAnotherCompany(plans: (string | null | undefined)[]): b
 // Stripeキー/Price ID をTakeshiが env に入れた後、この1フラグで課金を解禁できる。
 export function billingEnabled(): boolean {
   return process.env.BILLING_ENABLED === 'true'
+}
+
+/**
+ * LLM系の利用量カウンタを「誰の枠」として数えるかを決める（2026-07-30 監査 #9）。
+ *
+ * 課金の主体は**会社**であって個人ではない。上限(limits)も会社の plan で決まる。
+ * にもかかわらずカウンタの主体がユーザーだと、席を増やすほど無料枠が線形に増える
+ *   free(chat 20/日) × seatCap 3 = 実質 60/日
+ * という状態になり、しかも autoconfirm 登録でアカウントは何個でも作れるため、
+ * 「会社を作るたびに free 枠の LLM が新しく手に入る」構造的な費用リークになる。
+ * 会社が特定できるときは会社IDを主体にし、1社ぶんの枠を席で分け合う形に寄せる。
+ *
+ * @param userId    認証済みユーザーID（会社が特定できないときのフォールバック）
+ * @param companyId 課金主体の会社ID。null/undefined なら userId に倒す（安全側・無退行）
+ */
+export function usageSubjectId(userId: string, companyId?: string | null): string {
+  return companyId && companyId.length > 0 ? companyId : userId
 }
 
 /**

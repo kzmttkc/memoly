@@ -42,7 +42,20 @@ export const metadata: Metadata = {
   title: 'Banto — A labor-compliance AI that remembers your company | For Japan HR & operators',
   description:
     'Banto remembers your company\'s work rules and past decisions in Japan, so you don\'t have to re-explain them every time you ask about Japanese labor law. Free to start.',
-  alternates: { canonical: '/business/en' },
+  // 2026-07-30 PMF fix #3: hreflang was absent site-wide (0 occurrences), and
+  //   none of the /en pages were listed in sitemap.xml — an English page nobody
+  //   could find. Declaring languages makes Next emit
+  //   <link rel="alternate" hreflang="ja|en|x-default">, pairing this page with
+  //   the Japanese original. x-default points at the Japanese page (the product
+  //   is sold in Japan; the English page is the secondary entry point).
+  alternates: {
+    canonical: '/business/en',
+    languages: {
+      ja: '/business',
+      en: '/business/en',
+      'x-default': '/business',
+    },
+  },
   openGraph: {
     title: 'Banto — A labor-compliance AI that remembers your company',
     description:
@@ -111,7 +124,16 @@ export default function BusinessEnglishPage() {
   // of sync with the actual flag.
   const paidSignupOpen = billingEnabled()
   return (
-    <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
+    // 2026-07-30 PMF fix #3: this page is served with <html lang="ja"> because
+    // app/layout.tsx is the only place that renders <html> and Next.js allows a
+    // single root layout unless the whole app is restructured into route groups
+    // with multiple root layouts (making it path-aware would require headers()
+    // in the root layout, which opts all 42 statically generated pages out of
+    // static rendering). Declaring lang on the subtree root is the correct
+    // standards-compliant fallback: per HTML spec the nearest ancestor lang wins,
+    // so screen readers, translation tools and search engines read this page as
+    // English. The <html lang> switch is filed as a separate work order.
+    <div lang="en" className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
       {/* ===== Header ===== */}
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">

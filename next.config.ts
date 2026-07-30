@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+// 2026-07-30 UX監査 #2（重大）: 料金を探す来訪者が素朴に叩くURLが全部404だった
+//   （実測: /pricing /plans /price /ryokin いずれも404・出口は「トップへ戻る」1本）。
+//   別名3本を単独の料金ページへ 308（恒久・メソッド保持）で寄せる。
+//
+//   ★ /pricing 自体はここに書かない。next.config の redirects はファイルシステムの
+//     ルートより**先に**評価されるため、/pricing を source に書くと
+//     app/pricing/page.tsx（別班が新設・実測200）が永久に到達不能になる。
+//     万一 /pricing ページを廃止するときは、この定数を "/business#pricing" に
+//     戻したうえで /pricing の 308 をここへ足すこと。
+const PRICING_DESTINATION = "/pricing";
+
 const nextConfig: NextConfig = {
   // $HOME直下の迷子package-lock.jsonをワークスペースルートと誤検出し
   // dev(Turbopack)がモジュール解決に失敗するため明示
@@ -27,6 +38,10 @@ const nextConfig: NextConfig = {
       //   AppShell 配下の /company/account へ寄せる。認証状態に依存する薄い利便リダイレクト
       //   のため 307（一時）にする（将来 URL 構成を変えても取り消せる）。
       { source: "/account", destination: "/company/account", statusCode: 307 },
+      // 料金URLの取りこぼし回収（2026-07-30 UX監査 #2）。
+      { source: "/plans", destination: PRICING_DESTINATION, statusCode: 308 },
+      { source: "/price", destination: PRICING_DESTINATION, statusCode: 308 },
+      { source: "/ryokin", destination: PRICING_DESTINATION, statusCode: 308 },
     ];
   },
   async headers() {

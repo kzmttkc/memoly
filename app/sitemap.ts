@@ -28,11 +28,17 @@ const REVISED = {
   tokushoho: '2026-07-20', // 特定商取引法に基づく表記を新設
   blog: '2026-07-22', // /blog 新設(規程管理・組織の記憶テーマ、初回3記事)
   faq: '2026-07-22', // /faq 独立FAQページ新設
+  pricing: '2026-07-30', // /pricing 単独の料金ページ新設(PMF修理#1・購買意欲クエリの着地先)
+  en: '2026-07-30', // 英語版3ページ(/business/en /privacy/en /terms/en)をsitemapへ収録(PMF修理#3)
 } as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${BASE}/business`, lastModified: REVISED.business, changeFrequency: 'weekly', priority: 1.0 },
+    // 料金（単独ページ・2026-07-30 PMF修理#1）。「番頭 料金」「労務AI 料金 比較」等の
+    //   購買意欲クエリの着地先。以前は /business#pricing のアンカーしか無く、
+    //   /pricing /plans /price /ryokin はすべて404で、検索結果に出る料金ページが存在しなかった。
+    { url: `${BASE}/pricing`, lastModified: REVISED.pricing, changeFrequency: 'monthly', priority: 0.9 },
     // 無料ツール一覧（ハブ）＋各ツール（SSOT: lib/tools.ts から全列挙）
     { url: `${BASE}/tools`, lastModified: REVISED.tools, changeFrequency: 'monthly', priority: 0.8 },
     ...TOOL_SLUGS.map((slug) => ({
@@ -62,5 +68,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/privacy`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/terms`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/tokushoho`, lastModified: REVISED.tokushoho, changeFrequency: 'yearly', priority: 0.3 },
+    // 英語版（2026-07-30 PMF修理#3）。本文は全文英語・<title>も英語で本番配信されている
+    //   のに sitemap に1件も載っておらず、hreflang も0件だった＝英語圏からは存在しない
+    //   ページと同じだった。日英の対応関係は各ページの metadata.alternates.languages で宣言する。
+    { url: `${BASE}/business/en`, lastModified: REVISED.en, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE}/privacy/en`, lastModified: REVISED.en, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${BASE}/terms/en`, lastModified: REVISED.en, changeFrequency: 'yearly', priority: 0.2 },
   ]
 }

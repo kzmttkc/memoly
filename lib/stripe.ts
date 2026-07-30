@@ -62,6 +62,39 @@ export interface CreateSeatCheckoutArgs {
  *   metadata は session と subscription の両方に載せる
  *   （subscription.updated/deleted は session metadata を持たないため）。
  */
+// ============================================================================
+// 決済直前の法定表示（2026-07-30 法務監査#1 の是正・特定商取引法12条の6）
+// ----------------------------------------------------------------------------
+//   実測された欠陥: /company/billing にも Checkout にも「自動更新／解約条件／返金／
+//   税込」の表示が1件も無く、LPフッターの /tokushoho を能動的に開いた人以外は、
+//   自動更新にも返金不可にも一度も触れずに決済完了まで到達できた。
+//   特商法12条の6（申込み最終確認画面の表示義務）に真正面から抵触する。
+//
+//   直し方は Checkout 側に寄せる。理由: 申込みの最終確認画面は Stripe Checkout
+//   そのものであり、自社画面に書いても「最終確認画面での表示」にはならないため。
+//
+//   custom_text.submit … ダッシュボード設定に依存しない。常に付ける。
+//   consent_collection.terms_of_service … **Stripe ダッシュボードに規約URLの登録が
+//     無いとセッション作成自体が失敗する**（同社の別製品で実測済み）。登録前に
+//     有効化すると全ユーザーの決済が落ちるため、既定はオフ。ダッシュボードで
+//     「規約URL」を登録し終えてから env STRIPE_TOS_CONSENT=true で有効化する。
+//   文面の出所: /tokushoho（app/tokushoho/page.tsx）の各欄と一字一句の齟齬が
+//     出ないようにすること。片方だけ更新すると表示が食い違う。
+// ============================================================================
+
+/** 決済ボタン直上に常時出す法定表示（自動更新・総額・解約・返金・インボイス）。 */
+const CHECKOUT_SUBMIT_MESSAGE =
+  '本プランは自動更新の継続課金です。月額は1か月ごと、年額は1年ごとに、解約のお申し出がない限り同一条件で自動更新されます。' +
+  '表示価格は消費税を含むお支払い総額で、追加料金はかかりません。' +
+  '解約は support@banto-roumu.com へご契約中のメールアドレスからご連絡ください（原則3営業日以内に処理）。' +
+  'お支払い済みの請求期間の末日までご利用でき、日割り返金は行いません。' +
+  '当方は適格請求書発行事業者の登録がないため、適格請求書は発行できません。'
+
+/** 規約同意チェックの有効化。Stripe ダッシュボードに規約URLを登録し終えてから true にする。 */
+export function tosConsentEnabled(): boolean {
+  return process.env.STRIPE_TOS_CONSENT === 'true'
+}
+
 export async function createSeatCheckoutSession(
   args: CreateSeatCheckoutArgs,
 ): Promise<{ url: string | null } | { error: string }> {
@@ -91,6 +124,22 @@ export async function createSeatCheckoutSession(
   //   両方から継続的に再発検知する（lib/checkout-url.ts のコメント参照）。
   const { successUrl, cancelUrl } = buildBillingReturnUrls(args.returnUrl)
 
+  // 規約同意チェック（ダッシュボードに規約URL登録済みのときだけ env で有効化）。
+  //   terms_of_service_acceptance の custom_text は consent_collection とセットでないと
+  //   Stripe に拒否されるため、必ず同じ条件でまとめて付ける。
+  const consent = tosConsentEnabled()
+    ? {
+        consent_collection: { terms_of_service: 'required' as const },
+        termsCustomText: {
+          terms_of_service_acceptance: {
+            message:
+              '[利用規約](https://banto-roumu.com/terms)および' +
+              '[特定商取引法に基づく表記](https://banto-roumu.com/tokushoho)に同意します。',
+          },
+        },
+      }
+    : { consent_collection: undefined, termsCustomText: {} }
+
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     // 請求数量: 会社単位プラン(Entry/Standard)は 1、席課金(士業)は席数。
@@ -99,6 +148,16 @@ export async function createSeatCheckoutSession(
     cancel_url: cancelUrl,
     metadata,
     allow_promotion_codes: true,
+    // 決済画面を日本語に固定（法定表示を日本語で読ませるため）。
+    locale: 'ja',
+    ...(consent.consent_collection
+      ? { consent_collection: consent.consent_collection }
+      : {}),
+    custom_text: {
+      ...consent.termsCustomText,
+      // 特商法12条の6: 申込み最終確認画面での自動更新・総額・解約・返金の表示。
+      submit: { message: CHECKOUT_SUBMIT_MESSAGE },
+    },
     // 既存顧客があれば再利用（再課金時の重複顧客作成を防ぐ）。
     ...(args.customerId ? { customer: args.customerId } : {}),
     subscription_data: { metadata },

@@ -211,16 +211,18 @@ export function Calculator() {
   return (
     <div className="space-y-6">
       {/* ===== 入力フォーム ===== */}
-      <Card>
+      <Card className="flex flex-col">
         {/* 2026-07-28 CTO修正（L1監査#6）: 「36協定」「特別条項」の意味そのものの解説が
             フォームより下（ページ下部）にしかなく、入力前に読める位置になかった
-            （ペルソナ1/5指摘）。フォーム冒頭に平易な一言解説を追加する。 */}
-        <p className="mb-5 text-sm leading-relaxed text-neutral-600">
+            （ペルソナ1/5指摘）。フォーム冒頭に平易な一言解説を追加する。
+            2026-07-30 UX監査 #7: **モバイルのみ** order でフォームの下へ回す
+            （DOM順・文面は不変。sm以上は従来どおりフォームの前に出る）。 */}
+        <p className="order-2 mt-5 border-t border-neutral-100 pt-5 text-sm leading-relaxed text-neutral-600 sm:order-1 sm:mt-0 sm:mb-5 sm:border-t-0 sm:pt-0">
           「36協定（サブロク協定）」は、残業や休日出勤をさせる前に会社と労働者代表が結んで届け出る約束ごとです。
           これが無いと、残業させること自体が法律違反になりえます。「特別条項」は、繁忙期など特に忙しい時期だけ、
           原則の上限（月45時間・年360時間）を超えて残業できるようにする追加の取り決めです。
         </p>
-        <form onSubmit={handleCheck} className="space-y-5">
+        <form onSubmit={handleCheck} className="order-1 space-y-5 sm:order-2">
           <p className="text-sm leading-relaxed text-neutral-600">
             分かる範囲で入力してください。分からない欄は空欄のままで構いません。入力した項目だけを、それぞれの上限の目安に照らして整理します。
           </p>
@@ -355,7 +357,11 @@ export function Calculator() {
           {error && <p className="text-sm text-danger-600">{error}</p>}
         </form>
 
-        <LocalOnlyNote />
+        {/* order 指定（UX監査 #7）: 兄弟に order を付けた以上、末尾の注記も明示しないと
+            既定の order-0 で先頭へ回ってしまう。 */}
+        <div className="order-3">
+          <LocalOnlyNote />
+        </div>
       </Card>
 
       {/* ===== 結果 ===== */}

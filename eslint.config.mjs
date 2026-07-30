@@ -66,6 +66,18 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 2026-07-30 可用性監査#10: 検証・計測用の使い捨てスクリプトと生成物を除外する。
+    //   これらはアプリの実行経路に含まれず（バンドルされず）、Next/React のルールを
+    //   当てても意味が無い一方、lint の出力を埋めて本当の指摘を見えなくしていた。
+    //   ※ tests/ は除外しない（回帰検知の本体なので lint の対象に残す）。
+    "_uxaudit_tmp/**",
+    "e2e-captures/**",
+    "scripts/**",
+    "supabase/**",
+    "backups/**",
+    "public/**",
+    // リポジトリ直下の一回きりの検証スクリプト（measure-ux.mjs / lifecycle_e2e.mjs 等）。
+    "*.mjs",
   ]),
 ]);
 

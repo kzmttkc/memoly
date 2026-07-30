@@ -76,6 +76,10 @@ export default function PrivacyPage() {
               <li><strong className="text-neutral-800">Dify</strong>：法令ナレッジベースへの照会（米国）。相談内容のうち法令に関する質問テキストを送信する場合があります。</li>
               <li><strong className="text-neutral-800">OpenAI</strong>：記憶の意味検索用のベクトル化（米国）。記憶の要約テキストを送信します。APIで送信されたデータは既定でAIモデルの学習に使用されません。<a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">OpenAIのAPIデータ利用ポリシー</a></li>
               <li><strong className="text-neutral-800">Stripe</strong>：有料プランの決済処理（米国）。カード情報はStripeが直接取り扱い、番頭のサーバーには保存されません。<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripeのプライバシーポリシー</a></li>
+              {/* 2026-07-30 法務追加（法務監査#6）: weekly-email / deadline-reminder が
+                  lib/slack.ts 経由で hooks.slack.com へ本文を送っているのに、本一覧にも
+                  /terms 5.3 にも Slack が無かった。実際に外部へ出る経路は必ず書く。 */}
+              <li><strong className="text-neutral-800">Slack（米国）</strong>：お客様（会社）が管理画面で Incoming Webhook を設定した場合に限り、週次ダイジェストおよび期限リマインドの本文（会社名および労務の要点の要約を含みます）を、お客様が指定した Slack ワークスペースへ送信します。設定を解除すればいつでも停止できます。送信先はお客様がご指定になるため、当該ワークスペースにおける取扱いはお客様の管理下にあります。</li>
             </ul>
             <p className="mt-2 text-neutral-500">これらの第三者への情報提供は本サービス提供に必要な範囲に限定されます。EU/EEA在住の方：上記の第三国移転はGDPR第46条に基づく標準契約条項（SCC）に準拠します。</p>
             {/* 2026-07-28 CTO修正（L1監査#9）: 日本の個人情報保護法が求める外国第三者提供の

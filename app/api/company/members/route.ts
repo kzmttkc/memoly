@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createAdminClient, getCurrentUser, getMembership } from '@/lib/company'
 import { logCompanyAudit } from '@/lib/audit'
+import { isInvitableUser } from './invite-guard'
 
 // ============================================================================
 // /api/company/members
@@ -11,6 +12,10 @@ import { logCompanyAudit } from '@/lib/audit'
 //          company_members(member) に追加。席数超過は trg_company_seat_limit が弾く。
 //          → そのエラーを 409 で返し「席数上限」を明示する（トリガ実証点）。
 //   最小実装: 招待レコード方式ではなく「既存ユーザーのメール解決」方式。
+//   ★席を入れるのは **メール確認済み(email_confirmed_at)のアカウントだけ**（2026-07-30 監査）。
+//     autoconfirm=True 下ではメールを所有しない第三者が先にそのアドレスで登録でき、
+//     招待がその攻撃者の席になる（メール先取りによる席乗っ取り）。判定と恒久解は
+//     ./invite-guard.ts を参照。
 //   ★メール存在オラクル緩和（CTO P2-1）: 「未登録404 / 既存は追加成功」の応答差で
 //     任意メールの登録有無が判定できてしまうため、未登録・既存（既メンバー含む）の
 //     いずれも同一文言の 200 で返す。既存ユーザーの即時追加という実機能は従来どおり
@@ -69,6 +74,20 @@ export async function POST(req: NextRequest) {
   // 未登録でもエラーにせず統一文言で返す（存在オラクル緩和。登録済みなら下で即追加）。
   const target = await findUserByEmail(admin, String(email).toLowerCase())
   if (!target) {
+    return NextResponse.json({ ok: true, message: INVITE_ACCEPTED_MESSAGE })
+  }
+
+  // ★メール未確認アカウントには席を入れない（2026-07-30 監査・重大／暫定対処）。
+  //   autoconfirm=True 下では誰でも任意アドレスでアカウントを先取りでき、そこへ席が
+  //   入ると就業規則の原文と労務相談履歴を第三者に丸ごと渡すことになる。
+  //   恒久解は招待トークン方式（招待メールを受信できた本人だけが席を得る）。
+  //   詳細な攻撃シナリオと恒久解の設計は ./invite-guard.ts のヘッダに記載。
+  //   応答は未登録・既メンバーと同一文言の 200（存在オラクルを作らない）。
+  if (!isInvitableUser(target)) {
+    console.warn('[company:invite] 未確認メールのため席を付与しませんでした', {
+      company_id: companyId,
+      target_user_id: target.id,
+    })
     return NextResponse.json({ ok: true, message: INVITE_ACCEPTED_MESSAGE })
   }
 

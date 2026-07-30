@@ -93,7 +93,10 @@ export function CookieBanner() {
         </p>
         <button
           onClick={accept}
-          className="shrink-0 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+          // 2026-07-30 UX監査 #8: 28x41 で推奨44px未満だった。バナーは全ページの
+          //   最下部に常駐し、これを押さない限り画面下端が塞がったままになるため、
+          //   「押しにくい閉じるボタン」の実害が最も大きい。モバイルのみ44x44にする。
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 sm:min-h-0 sm:min-w-0"
         >
           OK
         </button>

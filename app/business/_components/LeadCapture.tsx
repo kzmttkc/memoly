@@ -29,10 +29,77 @@ import { trackV as track } from '../_lib/variant'
 //         honeypot(website)でボットを弾く（人間には不可視・サーバ側でドロップ）。
 // ============================================================================
 
-const SOURCE = 'checklist_dl' // /api/company/leads の許可リスト内の値（DB集計キー）
+// 面ごとの DB 集計キー。/api/company/leads の ALLOWED_SOURCES と一致させること
+// （一致しないと 'unknown' に丸められ、経路が分からなくなる）。
+const SOURCE_BY_PLACEMENT: Record<LeadCapturePlacement, string> = {
+  lp: 'checklist_dl',
+  article: 'article_dl',
+  tool: 'tool_dl',
+}
 const PDF_URL = '/downloads/banto-hikitsugi-checklist.pdf'
 
-export default function LeadCapture() {
+// ----------------------------------------------------------------------------
+// placement — この獲得枠がどの面に置かれているか（2026-07-30 PMF修理#2）。
+//   実測: sitemap の51URLのうち索引される42ページ（/roumu 33・/tools 6・/blog 3）に
+//   input[type=email] が1個も無く、メール獲得は /business の1か所のみだった
+//   （モバイルで y=8,690 / 全長21,278px = 41%地点）。配線は健全（PDFは200・
+//   713,648 bytes、anon INSERT ポリシーもある）で、company_leads 0行は
+//   壊れているのではなく「置き場所が悪い」状態。読み終わった直後という、
+//   いちばん受け取ってもらえる位置に同じ枠を置く。
+//
+//   面ごとに違うのは見出し・説明・ボタンの文言と余白だけで、送信先・honeypot・
+//   PDF・DB source は完全に同一（新しい経路を増やさない＝壊れる箇所を増やさない）。
+//
+//   DB source は面ごとに分ける（2026-07-30 統括が API 側の許可リストを解禁）。
+//   実測: supabase/company_leads.sql:47-48 の CHECK は char_length 1..64 のみで
+//   値の許可リストは持たない。制約は app/api/company/leads/route.ts の
+//   ALLOWED_SOURCES 側だけにあり、そこへ 'article_dl' / 'tool_dl' を足した。
+//   許可リストに無い値は 'unknown' に丸められる仕様なので、足さないまま送ると
+//   「どこから来たリードか永久に分からない」になっていた。
+//   meta.placement と Plausible の lead_captured{placement} は引き続き併用する
+//   （DBが落ちても計測が残る／計測が落ちてもDBが残る、の二重化）。
+// ----------------------------------------------------------------------------
+export type LeadCapturePlacement = 'lp' | 'article' | 'tool'
+
+const COPY: Record<
+  LeadCapturePlacement,
+  { heading: string; body: string; submit: string }
+> = {
+  lp: {
+    heading: '労務引き継ぎチェックシート（無料PDF）',
+    body:
+      '総務・労務の担当が替わるとき、引き継ぎで漏れやすい項目をA4の2ページにまとめた点検用チェックシートです。メールアドレスのご登録だけで、その場でダウンロードできます。',
+    submit: '登録してダウンロード',
+  },
+  article: {
+    heading: '読んで終わりにしない。担当が替わる日のためのチェックシート（無料PDF・A4 2ページ）',
+    body:
+      '引き継ぎで漏れやすい項目を、A4の2ページにまとめた点検用のチェックシートです。いま読んだ内容を自社で確かめるところまで持っていけます。メールアドレスのご登録だけで、その場でダウンロードできます。',
+    submit: 'メールアドレスだけで受け取る',
+  },
+  tool: {
+    heading: '点検した内容を、担当が替わっても引き継げる形に（無料PDF・A4 2ページ）',
+    body:
+      'いまの点検結果を含め、総務・労務の引き継ぎで漏れやすい項目をA4の2ページにまとめた点検用チェックシートです。メールアドレスのご登録だけで、その場でダウンロードできます。',
+    submit: 'メールアドレスだけで受け取る',
+  },
+}
+
+const WRAPPER: Record<LeadCapturePlacement, string> = {
+  lp: 'mx-auto max-w-5xl px-6 py-20',
+  article: 'mx-auto max-w-3xl px-6 py-12',
+  tool: 'mx-auto max-w-3xl pt-8',
+}
+
+export default function LeadCapture({
+  placement = 'lp',
+  /** 記事/ツールのslug等（低カーディナリティの非個人メタ。どの面が効いたかの集計用）。 */
+  context,
+}: {
+  placement?: LeadCapturePlacement
+  context?: string
+} = {}) {
+  const copy = COPY[placement]
   const [email, setEmail] = useState('')
   const [website, setWebsite] = useState('') // honeypot（人間は触らない）
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
@@ -53,7 +120,14 @@ export default function LeadCapture() {
       const res = await fetch('/api/company/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmed, source: SOURCE, website }),
+        body: JSON.stringify({
+          email: trimmed,
+          source: SOURCE_BY_PLACEMENT[placement],
+          website,
+          // 獲得経路の内訳（PIIなし・低カーディナリティ）。DB側 source は
+          // 許可リストの 'checklist_dl' のままで、面の違いはここで残す。
+          meta: context ? { placement, context } : { placement },
+        }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -61,7 +135,7 @@ export default function LeadCapture() {
         setErrorMsg(data?.error ?? '送信に失敗しました。時間をおいて再度お試しください。')
         return
       }
-      track('lead_captured', { source: 'lead_magnet' })
+      track('lead_captured', { source: 'lead_magnet', placement })
       setState('done')
     } catch {
       setState('error')
@@ -70,7 +144,7 @@ export default function LeadCapture() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-20">
+    <section className={WRAPPER[placement]}>
       <Card className="mx-auto max-w-2xl border-brand-200 ring-1 ring-brand-100">
         <div className="flex flex-col items-center text-center">
           <span className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
@@ -89,7 +163,7 @@ export default function LeadCapture() {
                 href={PDF_URL}
                 target="_blank"
                 rel="noopener"
-                onClick={() => track('lead_captured', { source: 'lead_magnet_download' })}
+                onClick={() => track('lead_captured', { source: 'lead_magnet_download', placement })}
                 className={buttonClass({ variant: 'primary', className: 'mt-6' })}
               >
                 <Download className="h-4 w-4" aria-hidden />
@@ -102,11 +176,16 @@ export default function LeadCapture() {
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
-                労務引き継ぎチェックシート（無料PDF）
+              <h2
+                className={
+                  'font-bold tracking-tight text-neutral-900 ' +
+                  (placement === 'lp' ? 'text-2xl' : 'text-xl leading-snug')
+                }
+              >
+                {copy.heading}
               </h2>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
-                総務・労務の担当が替わるとき、引き継ぎで漏れやすい項目をA4の2ページにまとめた点検用チェックシートです。メールアドレスのご登録だけで、その場でダウンロードできます。
+                {copy.body}
               </p>
 
               <form onSubmit={onSubmit} className="mt-7 w-full max-w-md">
@@ -156,7 +235,7 @@ export default function LeadCapture() {
                       </>
                     ) : (
                       <>
-                        登録してダウンロード
+                        {copy.submit}
                         <ArrowRight className="h-4 w-4" aria-hidden />
                       </>
                     )}
