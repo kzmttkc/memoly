@@ -10,7 +10,7 @@ jobs:
   typecheck-and-unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           # Node 24: TypeScript の型ストリップが既定で有効（node --test で .ts を直接実行）。
