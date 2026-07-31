@@ -49,3 +49,18 @@ e2e-captures/
 
 # ローカル論理バックアップ（顧客データ・絶対にコミットしない）
 backups/
+
+# === Kizuna Creation 標準セキュリティ除外（全リポジトリ共通） ===
+# .env* は既にignore済みだが env.txt はどのパターンにも一致しない穴だったため追加
+env.txt
+secrets.json
+credentials.json
+config/x_keys.json
+# 署名鍵・証明書・パスワードファイル
+*.keystore
+*.jks
+*.key
+keystore.properties
+# ビルド成果物
+*.aab
+*.apk
