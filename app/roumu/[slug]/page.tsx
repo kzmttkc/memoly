@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 import { getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
 import LeadCapture from '@/app/business/_components/LeadCapture'
+import KasuharaSelfCheck from './_components/KasuharaSelfCheck'
 
 // ============================================================================
 // /roumu/[slug] — 検索意図ランディング（SSG・クローラブル）
@@ -185,6 +186,9 @@ export default async function RoumuUseCasePage({
         {u.updatedAt && (
           <p className="mt-3 text-xs text-neutral-400">更新日：{u.updatedAt}</p>
         )}
+        {/* ===== 登録不要の軽量導線（2026-08-03・直帰98%対策・重いCTAより上に配置） =====
+            対象は kasuhara-gimuka-2026 のみ。他LPの構造は変えない。 */}
+        {u.slug === 'kasuhara-gimuka-2026' && <KasuharaSelfCheck />}
         <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link
             href={signupHref}
