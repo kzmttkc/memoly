@@ -142,12 +142,24 @@ const ckEvent = ({ id, amount, companyId, plan, seats, cust, sub, banto = true, 
     customer_details: { email: 'e2e@banto.test' },
   } },
 })
-const subEvent = (type, { id, sub, companyId, plan, status }) => ({
+// 2026-08-05 敵対的再監査（billing_lifecycle_e2e.mjsのpayment_status欠落と同種の欠陥が
+// 他イベント種別にも無いかの全種チェック）: 本番のStripe subscriptionオブジェクトは
+// pause_collectionフィールドを常に持つ（null=通常課金中／オブジェクト=請求一時停止中）。
+// webhook route.ts は `pausedCollection: sub.pause_collection != null` でこれを判定するが、
+// このモックはpause_collectionを一切設定しておらず既定でundefinedだった。webhook route.ts の
+// customer.subscription.paused 分岐と、customer.subscription.updated に pause_collection が
+// 付くケース（Stripeの実際の到達順）の両方が、このE2Eで一度も検証されないまま6日間
+// green表示になっていた（tests/unit/billing-webhook.test.tsの純関数テストは通っているが、
+// それは resolveSubscriptionTransition 単体の検証であり、webhook route.ts が実際に
+// sub.pause_collection を正しく読んでいるかの統合検証ではない）。既定はnull（通常課金中）、
+// pausedCollection=trueのときだけオブジェクトを入れる。
+const subEvent = (type, { id, sub, companyId, plan, status, pausedCollection = false }) => ({
   id, object: 'event', type, created: Math.floor(Date.now() / 1000), livemode: false,
   data: { object: {
     object: 'subscription', id: sub, status: status ?? 'active',
     customer: 'cus_e2e_x', items: { data: [{ price: { id: 'price_e2e_unknown' } }] },
     metadata: { product: 'banto', company_id: companyId, plan },
+    pause_collection: pausedCollection ? { behavior: 'mark_uncollectible' } : null,
   } },
 })
 const invEvent = (type, { id, sub }) => ({
@@ -350,6 +362,33 @@ try {
   row = await getCompany(c4)
   A('付与: 士業¥29,800×3席→plan=shigyo/seats=3', gsh.status === 200 && row?.plan === 'shigyo' && row?.seats_purchased === 3, `plan=${row?.plan} seats=${row?.seats_purchased}`)
 
+  // --- 4b. 請求一時停止（pause_collection）→ free降格（監査#4の再発検知・2026-08-05追加）
+  //     実測される2つの到達経路をどちらもE2Eで固定する:
+  //       (a) event.type='customer.subscription.paused' 単体で status='paused' が来る
+  //       (b) event.type='customer.subscription.updated' で status='active' のまま
+  //           pause_collection だけが立つ（Stripeでは請求停止時にstatusは変わらない）
+  //     どちらも「有料機能を無償で使い続けられる穴」の再発検知点であり、
+  //     tests/unit/billing-webhook.test.tsの純関数テストとは別に、webhook route.tsが
+  //     実際にpause_collectionを読んでDBへ反映するところまでを実サーバ・実DBで検証する。
+  const c4b = await createCompany('pause_collection'); created.push(c4b)
+  const sub4b = 'sub_e2e_pause_' + Date.now()
+  const g4b = await postEv(ckEvent({ id: evId('g4b'), amount: 3980, companyId: c4b, plan: 'starter', seats: 1, cust: 'cus_e2e_pause', sub: sub4b }))
+  row = await getCompany(c4b)
+  A('準備: pause_collectionテスト用に付与済み(plan=starter)', g4b.status === 200 && row?.plan === 'starter', `plan=${row?.plan}`)
+
+  const pausedType = await postEv(subEvent('customer.subscription.paused', { id: evId('paused_type'), sub: sub4b, companyId: c4b, plan: 'starter' }))
+  row = await getCompany(c4b)
+  A('請求停止(a): customer.subscription.paused→plan=free/status=canceled', pausedType.status === 200 && row?.plan === 'free' && row?.status === 'canceled', `plan=${row?.plan} status=${row?.status}`)
+
+  // 復帰させてから(b)経路も独立に検証する
+  const un4b = await postEv(subEvent('customer.subscription.updated', { id: evId('un4b'), sub: sub4b, companyId: c4b, plan: 'starter', status: 'active' }))
+  row = await getCompany(c4b)
+  A('準備: pause_collection(b)テスト用に再度active化', un4b.status === 200 && row?.plan === 'starter' && row?.status === 'active', `plan=${row?.plan} status=${row?.status}`)
+
+  const pausedFlag = await postEv(subEvent('customer.subscription.updated', { id: evId('paused_flag'), sub: sub4b, companyId: c4b, plan: 'starter', status: 'active', pausedCollection: true }))
+  row = await getCompany(c4b)
+  A('請求停止(b): updated(status=active but pause_collectionあり)→plan=free/status=canceled', pausedFlag.status === 200 && row?.plan === 'free' && row?.status === 'canceled', `plan=${row?.plan} status=${row?.status}`)
+
   // --- 5. クロス配信ガード（他製品の決済を付与しない） ---
   const f1 = await postEv(ckEvent({ id: evId('fk'), amount: 680, companyId: c4, plan: 'starter', seats: 1, cust: 'cus_foreign_f', sub: 'sub_f', banto: false }))
   A('クロスガード: fukuai¥680（metadata無）→ignored', f1.status === 200 && /ignored/.test(f1.body), f1.body.slice(0, 45))
@@ -358,10 +397,10 @@ try {
   A('クロスガード: sharoushi¥2,980→ignored・既存planを汚さない', f2.status === 200 && /ignored/.test(f2.body) && row?.plan === 'shigyo')
 
   // --- 6. 監査ログ（company_billing_events）に処理イベントが過不足なく記録されている ---
-  //   記録されるのは実処理した9件（grant/su_pd/pf/ps/up/del/gy/gs/gsh）。
+  //   記録されるのは実処理した13件（grant/su_pd/pf/ps/up/del/gy/gs/gsh/g4b/paused_type/un4b/paused_flag）。
   //   冪等再送(dup)は既処理スキップ・クロス配信2件は record 前に ignore ＝ 記録されないのが正。
   const { data: evRows } = await admin.from('company_billing_events').select('event_id, event_type').in('company_id', created)
-  A('監査ログ: 処理9件のみ記録（重複・他製品は記録なし）', (evRows ?? []).length === 9, `rows=${(evRows ?? []).length}`)
+  A('監査ログ: 処理13件のみ記録（重複・他製品は記録なし）', (evRows ?? []).length === 13, `rows=${(evRows ?? []).length}`)
 } catch (e) {
   console.error('\nハーネス実行エラー:', e.message)
   fail++
