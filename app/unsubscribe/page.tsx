@@ -12,14 +12,24 @@ import { createClient } from '@/lib/supabase'
 //   token が無い場合だけ、従来どおりログイン状態で自分の配信を止める。
 //   ※ useSearchParams ではなく window.location から読む（Suspense 境界を増やさず、
 //     この画面が静的に描画できる状態を保つため）。
+//
+//   2026-08-05 敵対的再監査で追加: token生成失敗時（署名鍵未設定）は
+//   token.ts buildUnsubscribeUrls が `?scope=deadline` 等を付けた token無しURLに
+//   フォールバックする。scope を読み取って POST /api/unsubscribe に転送し、
+//   ログイン誘導時も同じ scope を維持したまま /login → /unsubscribe に戻す
+//   （途中で失うと deadline を止めたい人が digest しか止められない事故に戻る）。
 // ============================================================================
 
 export default function UnsubscribePage() {
   const [status, setStatus] = useState<'loading' | 'done' | 'login' | 'error'>('loading')
+  const [scope, setScope] = useState<string | null>(null)
 
   useEffect(() => {
     async function unsubscribe() {
-      const token = new URLSearchParams(window.location.search).get('token')
+      const params = new URLSearchParams(window.location.search)
+      const token = params.get('token')
+      const scopeParam = params.get('scope')
+      setScope(scopeParam)
 
       if (token) {
         // 認証不要の経路。ログインしていなくても確実に止まる。
@@ -37,11 +47,14 @@ export default function UnsubscribePage() {
         setStatus('login')
         return
       }
-      const res = await fetch('/api/unsubscribe', { method: 'POST' })
+      const qs = scopeParam ? `?scope=${encodeURIComponent(scopeParam)}` : ''
+      const res = await fetch(`/api/unsubscribe${qs}`, { method: 'POST' })
       setStatus(res.ok ? 'done' : 'error')
     }
     unsubscribe()
   }, [])
+
+  const loginNext = `/unsubscribe${scope ? `?scope=${encodeURIComponent(scope)}` : ''}`
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
@@ -62,7 +75,7 @@ export default function UnsubscribePage() {
             <p className="text-2xl mb-4">🔑</p>
             <h1 className="text-xl font-bold text-white mb-2">ログインが必要です</h1>
             <p className="text-gray-400 text-sm">配信停止を完了するには、ログインしてからこのページを開いてください。お手元のメールに記載の「配信停止はこちら」から開くと、ログインなしで停止できます。</p>
-            <Link href="/login?next=/unsubscribe" className="mt-6 inline-block text-gray-300 hover:text-white underline text-sm">
+            <Link href={`/login?next=${encodeURIComponent(loginNext)}`} className="mt-6 inline-block text-gray-300 hover:text-white underline text-sm">
               ログイン →
             </Link>
           </>

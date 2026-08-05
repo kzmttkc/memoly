@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createClient } from '@supabase/supabase-js'
-import { SCOPE_FLAGS, verifyUnsubscribeToken, type UnsubscribeScope } from './token'
+import { SCOPE_FLAGS, isValidScope, verifyUnsubscribeToken, type UnsubscribeScope } from './token'
 
 // ============================================================================
 // /api/unsubscribe — 配信停止
@@ -14,6 +14,10 @@ import { SCOPE_FLAGS, verifyUnsubscribeToken, type UnsubscribeScope } from './to
 //        署名（HMAC）で本人の宛先だと確認できるため、認証の代わりになる。
 //     B. token 無し（**従来どおり要ログイン**）
 //        画面から自分で止める場合。挙動を変えないために残す。
+//        2026-08-05 敵対的再監査で追加: token生成失敗時のフォールバック（token.ts
+//        buildUnsubscribeUrls）はこの経路に落ちる。従来は scope 情報が失われ常に
+//        'digest' で止まっていたため、deadline 通知の停止が静かに効かないルートが
+//        あった。?scope= を任意で受け取り、あればそのスコープを止める。
 //
 //   トークンで出来ることは「自分宛の配信を止める」だけ。読み出しも他の変更もしない。
 // ============================================================================
@@ -69,9 +73,12 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // 画面から止めた場合は「お知らせ系」を止める（従来の digest_unsubscribed 相当）。
-  const ok = await setUnsubscribed(adminClient(), user.id, 'digest')
+  // scope クエリがあればそれを止める（token生成失敗時のフォールバック経路を正しく
+  // 動かすため。上のコメント参照）。無ければ従来どおり「お知らせ系(digest)」を止める。
+  const scopeParam = req.nextUrl.searchParams.get('scope')
+  const scope: UnsubscribeScope = scopeParam && isValidScope(scopeParam) ? scopeParam : 'digest'
+  const ok = await setUnsubscribed(adminClient(), user.id, scope)
   if (!ok) return NextResponse.json({ error: 'failed' }, { status: 500 })
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, scope })
 }

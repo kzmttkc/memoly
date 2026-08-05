@@ -48,7 +48,8 @@ function sign(payload: string, key: string): string {
   return createHmac('sha256', key).update(payload).digest('hex').slice(0, SIG_LENGTH)
 }
 
-function isValidScope(s: string): s is UnsubscribeScope {
+/** scope 文字列が有効な UnsubscribeScope か（route.ts の scope クエリ検証でも使う）。 */
+export function isValidScope(s: string): s is UnsubscribeScope {
   return s === 'digest' || s === 'deadline'
 }
 
@@ -112,7 +113,17 @@ export function buildUnsubscribeUrls(
   scope: UnsubscribeScope,
 ): { oneClick: string | null; page: string } {
   const token = signUnsubscribeToken(userId, scope)
-  if (!token) return { oneClick: null, page: `${baseUrl}/unsubscribe` }
+  if (!token) {
+    // 2026-08-05 敵対的再監査で発見: 鍵未設定でトークンが作れない環境では、従来
+    // `${baseUrl}/unsubscribe`（scope情報なし）にフォールバックしていた。/unsubscribe の
+    // token無し経路（画面から自分でログインして止める場合）は POST /api/unsubscribe に
+    // scope を渡す手段がなく、常に 'digest' 固定で停止していた（route.ts参照）。
+    // つまり deadline 通知の配信停止リンクがこの経路に落ちると、ユーザーには
+    // 「配信停止しました」と表示されるのに deadline は実際には止まっていない
+    // ＝サイレントに失敗して停止できたと誤認させるルートになっていた。
+    // scope をクエリへ載せて、フォールバック時も正しいスコープを止められるようにする。
+    return { oneClick: null, page: `${baseUrl}/unsubscribe?scope=${scope}` }
+  }
   const q = encodeURIComponent(token)
   return {
     oneClick: `${baseUrl}/api/unsubscribe?token=${q}`,
