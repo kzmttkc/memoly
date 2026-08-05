@@ -122,12 +122,22 @@ const postEv = async (ev, badSig = false) => {
 const evId = p => `evt_e2e_${p}_${crypto.randomBytes(6).toString('hex')}`
 
 // モックイベント生成
-const ckEvent = ({ id, amount, companyId, plan, seats, cust, sub, banto = true }) => ({
+//
+// 2026-08-05 障害対応で追記: 実際の Stripe の checkout.session は payment_status を
+// 必ず持つフィールドだが（'paid' / 'unpaid' / 'no_payment_required'）、このモックは
+// d528615（2026-07-30・#7入金確認ガード追加）まで payment_status を一切設定しておらず
+// undefined だった。isCheckoutPaid(undefined) は false のため、そのコミット以降
+// billing_lifecycle_e2e が全チェックアウトを「未入金」として弾く状態で6日間 FAIL し続けた
+// （state/decisions/2026-08.md 参照）。実際の本番Webhookコード・isCheckoutPaid自体は
+// tests/unit/billing-webhook.test.ts で正しく検証済みで、壊れていたのはこのテスト側の
+// モックだけだった。既定を 'paid'（実際の正常完了時の値）にし、明示的に上書きできるように
+// paymentStatus を引数へ追加する。
+const ckEvent = ({ id, amount, companyId, plan, seats, cust, sub, banto = true, paymentStatus = 'paid' }) => ({
   id, object: 'event', type: 'checkout.session.completed', api_version: '2025-06-30',
   created: Math.floor(Date.now() / 1000), livemode: false,
   data: { object: {
     object: 'checkout.session', id: 'cs_e2e_' + crypto.randomBytes(6).toString('hex'),
-    amount_total: amount, customer: cust, subscription: sub,
+    amount_total: amount, customer: cust, subscription: sub, payment_status: paymentStatus,
     metadata: banto ? { product: 'banto', company_id: companyId, plan, seats: String(seats) } : {},
     customer_details: { email: 'e2e@banto.test' },
   } },
@@ -263,6 +273,21 @@ try {
   // --- 0. 署名不正は 400 ---
   const bad = await postEv(ckEvent({ id: evId('bad'), amount: 3980, companyId: 'x', plan: 'starter', seats: 1, cust: 'cus_x', sub: 'sub_x' }), true)
   A('署名ガード: 不正署名は 400', bad.status === 400, `http=${bad.status}`)
+
+  // --- 0b. 未入金checkout(payment_status='unpaid')は付与しない（監査#7・2026-08-05に
+  //     このガード自体のE2Eモックがpayment_statusを一切設定しておらず、正常な支払い済み
+  //     checkoutまで「未入金」扱いされ6日間全FAILした事故があった。以後、正常系(payment_status
+  //     未指定=既定'paid')と異常系(明示的に'unpaid')の両方をE2Eで固定する）。
+  const c0b = await createCompany('unpaid_checkout'); created.push(c0b)
+  const unpaidId = evId('unpaid')
+  const unpaidRes = await postEv(ckEvent({
+    id: unpaidId, amount: 3980, companyId: c0b, plan: 'starter', seats: 1,
+    cust: 'cus_e2e_unpaid', sub: 'sub_e2e_unpaid', paymentStatus: 'unpaid',
+  }))
+  const rowUnpaid = await getCompany(c0b)
+  A('入金確認: payment_status=unpaidのcheckoutは付与しない（plan=free維持）',
+    unpaidRes.status === 200 && rowUnpaid?.plan === 'free' && rowUnpaid?.stripe_customer_id === null,
+    `http=${unpaidRes.status} plan=${rowUnpaid?.plan} body=${unpaidRes.body}`)
 
   // --- 1. Entry 月額 ¥3,980 付与 → 全ライフサイクル ---
   const c1 = await createCompany('entry_monthly'); created.push(c1)
