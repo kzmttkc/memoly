@@ -228,7 +228,7 @@ export function Calculator() {
 
       {/* ===== 結果 ===== */}
       {result && (
-        <Card ref={resultRef} className="scroll-mt-4">
+        <Card ref={resultRef} role="status" aria-live="polite" className="scroll-mt-4">
           {result.status === 'taisho' ? (
             <div className="flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-5 w-5 flex-none text-warning-700" aria-hidden />

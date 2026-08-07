@@ -322,7 +322,7 @@ export function Calculator() {
       {measureResult && childResult && (
         <>
           {/* ---- 結果1: 自社の措置は義務(2つ以上)を満たしているか ---- */}
-          <Card ref={resultRef} className="scroll-mt-4">
+          <Card ref={resultRef} role="status" aria-live="polite" className="scroll-mt-4">
             <div className="flex items-start gap-2">
               {measureResult.meetsObligation ? (
                 <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-success-700" aria-hidden />

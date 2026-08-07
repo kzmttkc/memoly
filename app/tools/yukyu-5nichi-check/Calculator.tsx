@@ -98,6 +98,10 @@ export function Calculator() {
       setError('取得済みの日数は0〜40の範囲で入力してください。')
       return
     }
+    if (t > g) {
+      setError('取得済みの日数が付与日数を超えています。入力内容をご確認ください。')
+      return
+    }
 
     const eligible = g >= 10
     const deadline = addOneYear(base)
@@ -216,7 +220,7 @@ export function Calculator() {
 
       {/* ===== 結果 ===== */}
       {result && (
-        <Card ref={resultRef} className="scroll-mt-4">
+        <Card ref={resultRef} role="status" aria-live="polite" className="scroll-mt-4">
           {!result.eligible ? (
             <div className="space-y-3">
               <div className="flex items-start gap-2">

@@ -207,7 +207,7 @@ export function Calculator() {
 
       {/* ===== 結果 ===== */}
       {result && (
-        <Card ref={resultRef} className="scroll-mt-4">
+        <Card ref={resultRef} role="status" aria-live="polite" className="scroll-mt-4">
           {result.meets ? (
             <div className="space-y-3">
               <div className="flex items-start gap-2">

@@ -366,7 +366,7 @@ export function Calculator() {
 
       {/* ===== 結果 ===== */}
       {result && (
-        <Card ref={resultRef} className="scroll-mt-4">
+        <Card ref={resultRef} role="status" aria-live="polite" className="scroll-mt-4">
           {result.flaggedCount === 0 ? (
             <div className="flex items-start gap-2">
               <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-success-700" aria-hidden />
