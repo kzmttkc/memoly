@@ -396,6 +396,7 @@ export default async function RoumuUseCasePage({
             </Link>
             <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
               <Link href="/business" className="hover:text-brand-700">サービス概要</Link>
+              <Link href="/contact" className="hover:text-brand-700">お問い合わせ</Link>
               <Link href="/login?next=/company" className="hover:text-brand-700">ログイン</Link>
               <Link href="/terms" className="hover:text-brand-700">利用規約</Link>
               <Link href="/privacy" className="hover:text-brand-700">プライバシー</Link>

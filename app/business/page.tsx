@@ -1576,6 +1576,9 @@ export default async function BusinessLandingPage({
               <Link href="/faq" className="hover:text-brand-700">
                 よくある質問
               </Link>
+              <Link href="/contact" className="hover:text-brand-700">
+                お問い合わせ
+              </Link>
               <Link href="/login?next=/company" className="hover:text-brand-700">
                 ログイン
               </Link>

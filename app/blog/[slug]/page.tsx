@@ -273,6 +273,7 @@ export default async function BlogPostPage({
               <Link href="/business" className="hover:text-brand-700">サービス概要</Link>
               <Link href="/roumu" className="hover:text-brand-700">使い方一覧</Link>
               <Link href="/faq" className="hover:text-brand-700">よくある質問</Link>
+              <Link href="/contact" className="hover:text-brand-700">お問い合わせ</Link>
               <Link href="/login?next=/company" className="hover:text-brand-700">ログイン</Link>
               <Link href="/terms" className="hover:text-brand-700">利用規約</Link>
               <Link href="/privacy" className="hover:text-brand-700">プライバシー</Link>
