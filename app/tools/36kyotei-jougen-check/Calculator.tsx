@@ -222,7 +222,9 @@ export function Calculator() {
           これが無いと、残業させること自体が法律違反になりえます。「特別条項」は、繁忙期など特に忙しい時期だけ、
           原則の上限（月45時間・年360時間）を超えて残業できるようにする追加の取り決めです。
         </p>
-        <form onSubmit={handleCheck} className="order-1 space-y-5 sm:order-2">
+        {/* noValidate: ネイティブmin/max検証がhandleCheck()より先に送信をブロックし、
+            範囲外入力時にJS側の「大きすぎるようです」等の案内が一切出ず無反応になるのを防ぐ */}
+        <form onSubmit={handleCheck} className="order-1 space-y-5 sm:order-2" noValidate>
           <p className="text-sm leading-relaxed text-neutral-600">
             分かる範囲で入力してください。分からない欄は空欄のままで構いません。入力した項目だけを、それぞれの上限の目安に照らして整理します。
           </p>

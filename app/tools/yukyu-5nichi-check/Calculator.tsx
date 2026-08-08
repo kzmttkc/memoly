@@ -138,7 +138,10 @@ export function Calculator() {
     <div className="space-y-6">
       {/* ===== 入力フォーム ===== */}
       <Card>
-        <form onSubmit={handleCheck} className="space-y-5">
+        {/* noValidate: ネイティブmin/max検証がhandleCheck()より先に送信をブロックし、
+            範囲外入力時にJS側の「0〜40の範囲で」等の案内が一切出ず無反応になるのを防ぐ
+            （2026-08-09 UXペルソナ監査L2で発見） */}
+        <form onSubmit={handleCheck} className="space-y-5" noValidate>
           <div>
             <label
               htmlFor="kijunbi"

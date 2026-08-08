@@ -109,7 +109,7 @@ export function Calculator() {
           「法定内残業」は自社の所定時間は超えるが法律の1日8時間にはまだ収まっている残業のことです。
           分からない欄は無理に埋めず、分かる範囲だけ入力すれば大丈夫です。
         </p>
-        <form onSubmit={handleCheck} className="order-1 space-y-5 sm:order-2">
+        <form onSubmit={handleCheck} className="order-1 space-y-5 sm:order-2" noValidate>
           {/* ===== ブロック1: 1時間あたりの賃金（基礎単価） ===== */}
           <div className="space-y-5 rounded-2xl border border-neutral-200 bg-neutral-50/60 p-4 sm:p-5">
             <div>

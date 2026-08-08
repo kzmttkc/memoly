@@ -145,7 +145,7 @@ export function Calculator() {
     <div className="space-y-6">
       {/* ===== 入力フォーム ===== */}
       <Card>
-        <form onSubmit={handleCheck} className="space-y-5">
+        <form onSubmit={handleCheck} className="space-y-5" noValidate>
           <div>
             <label
               htmlFor="pref"

@@ -100,7 +100,7 @@ export function Calculator() {
     <div className="space-y-6">
       {/* ===== 入力フォーム ===== */}
       <Card>
-        <form onSubmit={handleCheck} className="space-y-5">
+        <form onSubmit={handleCheck} className="space-y-5" noValidate>
           {/* ===== ブロック1: いつの時点で点検するか ===== */}
           <div className="space-y-5 rounded-2xl border border-neutral-200 bg-neutral-50/60 p-4 sm:p-5">
             <div>
