@@ -354,7 +354,7 @@ export function Calculator() {
 
           <ToolSubmitButton>点検する</ToolSubmitButton>
 
-          {error && <p className="text-sm text-danger-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-danger-600">{error}</p>}
         </form>
 
         {/* order 指定（UX監査 #7）: 兄弟に order を付けた以上、末尾の注記も明示しないと

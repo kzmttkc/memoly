@@ -199,7 +199,7 @@ export function Calculator() {
 
           <ToolSubmitButton>最低賃金を下回っていないか点検する</ToolSubmitButton>
 
-          {error && <p className="text-sm text-danger-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-danger-600">{error}</p>}
         </form>
 
         <LocalOnlyNote />

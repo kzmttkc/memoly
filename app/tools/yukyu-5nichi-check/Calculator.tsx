@@ -212,7 +212,7 @@ export function Calculator() {
 
           <ToolSubmitButton>点検する</ToolSubmitButton>
 
-          {error && <p className="text-sm text-danger-600">{error}</p>}
+          {error && <p role="alert" className="text-sm text-danger-600">{error}</p>}
         </form>
 
         <LocalOnlyNote />
