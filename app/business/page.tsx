@@ -158,6 +158,15 @@ const FAQ = [
   },
 ]
 
+// 「今日やることは、3つだけ」セクション（下部・オンボーディング手順）と
+//   HowTo構造化データで共用するSSOT（2026-08-09 SEO/AEO監査で追加。可視本文と
+//   JSON-LDの内容を必ず一致させる＝他の構造化データと同じ方針）。
+const ONBOARDING_STEPS = [
+  { step: '1', title: '無料で会社を登録', body: 'メールアドレスだけで始められます。クレジットカードは不要です。' },
+  { step: '2', title: '気になる質問を5つ', body: '残業・有給・規程など、いつも調べていたことをそのまま聞いてみてください。' },
+  { step: '3', title: '重い悩みを1件相談', body: 'いちばん気がかりな1件を相談。明日の番頭は、今日の続きを覚えています。' },
+]
+
 // 専門用語の簡潔な補足（2026-07-29 CTO・L3監査#7）: FAQ・体験デモ・比較表などの
 //   本文中に前提知識として出てくる労務用語を、初めて読む方（学生インターン等）
 //   向けに1箇所にまとめて簡潔に補足する。個々の本文（FAQ回答・デモの回答文言）は
@@ -1429,6 +1438,25 @@ export default async function BusinessLandingPage({
           }),
         }}
       />
+      {/* 2026-08-09 SEO/AEO監査で追加: 下部「今日やることは、3つだけ」は
+          登録→利用開始の実際の手順であり、HowTo構造化データが未使用だった。
+          ONBOARDING_STEPS（可視本文と共用）をそのままstepへ変換する。 */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'HowTo',
+            name: '番頭を今日から使い始める3つのステップ',
+            step: ONBOARDING_STEPS.map((s) => ({
+              '@type': 'HowToStep',
+              position: Number(s.step),
+              name: s.title,
+              text: s.body,
+            })),
+          }),
+        }}
+      />
 
       {/* ===== 今日やることチェックリスト（B11・2026-07-23） =====
           最終CTAの直前で「登録→5問→1相談」の最初の一歩を具体化し、
@@ -1439,11 +1467,7 @@ export default async function BusinessLandingPage({
             今日やることは、3つだけ
           </h2>
           <ol className="mt-6 grid min-w-0 gap-4 sm:grid-cols-3">
-            {[
-              { step: '1', title: '無料で会社を登録', body: 'メールアドレスだけで始められます。クレジットカードは不要です。' },
-              { step: '2', title: '気になる質問を5つ', body: '残業・有給・規程など、いつも調べていたことをそのまま聞いてみてください。' },
-              { step: '3', title: '重い悩みを1件相談', body: 'いちばん気がかりな1件を相談。明日の番頭は、今日の続きを覚えています。' },
-            ].map(item => (
+            {ONBOARDING_STEPS.map(item => (
               <li key={item.step} className="flex flex-col items-center text-center">
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white tabular-nums">
                   {item.step}

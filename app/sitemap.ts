@@ -30,6 +30,7 @@ const REVISED = {
   faq: '2026-07-22', // /faq 独立FAQページ新設
   pricing: '2026-07-30', // /pricing 単独の料金ページ新設(PMF修理#1・購買意欲クエリの着地先)
   en: '2026-07-30', // 英語版3ページ(/business/en /privacy/en /terms/en)をsitemapへ収録(PMF修理#3)
+  contact: '2026-08-08', // /contact 新設(問い合わせ導線404の修理)。2026-08-09 SEO監査でsitemap未収録を発見し追加
 } as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -64,6 +65,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     })),
     { url: `${BASE}/faq`, lastModified: REVISED.faq, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE}/contact`, lastModified: REVISED.contact, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/security`, lastModified: REVISED.security, changeFrequency: 'yearly', priority: 0.4 },
     { url: `${BASE}/privacy`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/terms`, lastModified: REVISED.legal, changeFrequency: 'yearly', priority: 0.3 },

@@ -117,6 +117,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
+        {/* 2026-08-09 SEO/AEO/LLMO監査: WebSiteエンティティがサイト全体で0件だった
+            （SoftwareApplication/Organizationはあったが、検索エンジンがサイト単位で
+            紐付ける入口となるWebSiteが無かった）。全ページ共通のルートlayoutに
+            1つだけ置き、サイト全体で単一のエンティティにする。 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "番頭(Banto)",
+              url: APP_URL,
+              inLanguage: "ja",
+              publisher: { "@type": "Organization", name: "KIZUNA Creation" },
+            }),
+          }}
+        />
       </head>
       <body className="font-sans bg-gray-950 text-gray-100 min-h-screen overflow-x-clip">
         {children}
