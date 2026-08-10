@@ -169,7 +169,7 @@ export default async function RoumuUseCasePage({
       <PublicHeader />
 
       {/* ===== パンくず（視覚） ===== */}
-      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">
+      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
         <Link href="/business" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <Link href="/roumu" className="hover:text-brand-700">労務AIの使い方</Link>
@@ -185,7 +185,7 @@ export default async function RoumuUseCasePage({
         </h1>
         <p className="mt-4 text-base leading-relaxed text-neutral-700">{u.lead}</p>
         {u.updatedAt && (
-          <p className="mt-3 text-xs text-neutral-400">更新日：{u.updatedAt}</p>
+          <p className="mt-3 text-xs text-neutral-500">更新日：{u.updatedAt}</p>
         )}
         {/* ===== 登録不要の軽量導線（2026-08-03・直帰98%対策・重いCTAより上に配置） =====
             対象は kasuhara-gimuka-2026 のみ。他LPの構造は変えない。 */}
@@ -365,7 +365,7 @@ export default async function RoumuUseCasePage({
 
       {/* ===== 関連LPへの内部リンク（クラスタ内部リンク） ===== */}
       <section className="mx-auto max-w-3xl px-6 pb-16">
-        <p className="mb-4 text-center text-xs font-medium text-neutral-400">
+        <p className="mb-4 text-center text-xs font-medium text-neutral-500">
           ほかの使い方も見る
         </p>
         <div className="flex flex-wrap justify-center gap-2">
@@ -414,7 +414,7 @@ export default async function RoumuUseCasePage({
             番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
-          <p className="mt-2 text-xs text-neutral-400">運営：KIZUNA Creation</p>
+          <p className="mt-2 text-xs text-neutral-500">運営：KIZUNA Creation</p>
         </div>
       </footer>
     </div>

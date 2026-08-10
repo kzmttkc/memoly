@@ -5,7 +5,8 @@
 //   これは root layout（<html>/<body>）を置き換えて描画されるため、自前で
 //   <html>/<body> を持つ必要がある。CSS パイプラインが壊れていても必ず読める
 //   よう、Tailwind クラスに依存せずインラインスタイルだけで組む（依存ゼロ）。
-//   ブランド色（--color-brand-600 = #324a8a）を直値で当て、番頭の面と揃える。
+//   ブランド色（--color-brand-600 = #243b6e・2026-07-23 G05で藍へ再アンカー）を
+//   直値で当て、番頭の面と揃える（2026-08-11 UI監査: 旧藍 #324a8a の残存を是正）。
 // ============================================================================
 
 export default function GlobalError({
@@ -53,8 +54,8 @@ export default function GlobalError({
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: '0.75rem',
-              background: '#eef2fb',
-              color: '#324a8a',
+              background: '#eef1f8',
+              color: '#243b6e',
               fontSize: '22px',
               fontWeight: 700,
             }}
@@ -90,7 +91,7 @@ export default function GlobalError({
                 padding: '0 1rem',
                 borderRadius: '0.75rem',
                 border: 'none',
-                background: '#324a8a',
+                background: '#243b6e',
                 color: '#ffffff',
                 fontSize: '0.875rem',
                 fontWeight: 500,
@@ -119,7 +120,7 @@ export default function GlobalError({
             </a>
           </div>
           {error?.digest && (
-            <p style={{ marginTop: '1.25rem', fontSize: '0.75rem', color: '#94a3b8' }}>
+            <p style={{ marginTop: '1.25rem', fontSize: '0.75rem', color: '#64748b' }}>
               エラーID: {error.digest}
             </p>
           )}

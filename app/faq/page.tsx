@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Disclosure } from '@/components/ui/Disclosure'
@@ -66,23 +67,13 @@ export default function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
-      {/* ===== ヘッダ ===== */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
-          <Link href="/business" className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-              <BantoMark className="h-3.5 w-3.5" aria-hidden />
-            </span>
-            <span className="font-semibold tracking-tight text-neutral-900">番頭(Banto)</span>
-          </Link>
-          <Link href="/login?next=/company" className="text-sm text-neutral-500 hover:text-brand-700">
-            ログイン
-          </Link>
-        </div>
-      </header>
+      {/* ===== ヘッダ（2026-08-11 UI監査: 独自ヘッダ（ログインのみ・CTA/料金導線なし）を
+          /tools /roumu と同じ PublicHeader へ統一。検索・GEO経由の初見客がこのページに
+          直接着地しても、料金と無料登録にヘッダから到達できるようにする） ===== */}
+      <PublicHeader />
 
       {/* ===== パンくず ===== */}
-      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">
+      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
         <Link href="/business" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">よくある質問</span>
@@ -107,7 +98,9 @@ export default function FaqPage() {
           <div className="space-y-3">
             {FAQ_ITEMS.filter((f) => f.category === cat).map((f) => (
               <Card key={f.q} padded>
-                <h3 className="text-sm font-semibold text-neutral-900">{f.q}</h3>
+                {/* 2026-08-11 UI監査: 質問見出しは /pricing /roumu のFAQと同じ text-base に統一
+                    （このページだけ text-sm で本文と同サイズ＝階層が消えていた）。 */}
+                <h3 className="text-base font-semibold text-neutral-900">{f.q}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600">{f.a}</p>
               </Card>
             ))}
@@ -128,7 +121,7 @@ export default function FaqPage() {
             <>
               はじめて読む方へ — よく出てくる労務用語の補足
               <ChevronDown
-                className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-data-[state=open]:rotate-180"
+                className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-data-[state=open]:rotate-180"
                 aria-hidden
               />
             </>
@@ -201,7 +194,7 @@ export default function FaqPage() {
             番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
-          <p className="mt-2 text-xs text-neutral-400">運営：KIZUNA Creation</p>
+          <p className="mt-2 text-xs text-neutral-500">運営：KIZUNA Creation</p>
         </div>
       </footer>
     </div>

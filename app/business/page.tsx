@@ -970,7 +970,8 @@ export default async function BusinessLandingPage({
           2026-07-23 B16: 商家の帳場格子を思わせる縦縞をCSSだけで極薄に敷く
           （画像なし・藍系#243B6Eトーン・「名前は番頭から」の物語と響き合う場所に限定）。 */}
       <section className="border-t border-neutral-200 bg-neutral-50 bg-[repeating-linear-gradient(90deg,rgba(36,59,110,0.03)_0,rgba(36,59,110,0.03)_1px,transparent_1px,transparent_32px)]">
-        <div className="mx-auto max-w-5xl px-6 py-16">
+        {/* 2026-08-11 UI監査: 本LPの他セクション（py-20 ×8）とリズムを揃える（唯一のpy-16だった）。 */}
+        <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="grid min-w-0 gap-4 sm:grid-cols-2">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">

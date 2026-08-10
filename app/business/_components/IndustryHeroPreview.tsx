@@ -164,7 +164,7 @@ export default function IndustryHeroPreview() {
                   className="fv-anim flex items-center gap-2 rounded-lg bg-neutral-50 px-2.5 py-1.5"
                 >
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-600" aria-hidden />
-                  <span className="truncate text-[12px] text-neutral-700">{row.label}</span>
+                  <span className="truncate text-xs text-neutral-700">{row.label}</span>
                   <span className="ml-auto shrink-0 text-[10px] text-neutral-500">{row.kind}</span>
                 </li>
               ))}

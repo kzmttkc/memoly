@@ -108,7 +108,7 @@ export default function ToolsIndexPage() {
       <PublicHeader />
 
       {/* ===== パンくず ===== */}
-      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">
+      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
         <Link href="/business" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">無料ツール</span>
@@ -214,7 +214,7 @@ export default function ToolsIndexPage() {
             番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
-          <p className="mt-2 text-xs text-neutral-400">運営：KIZUNA Creation</p>
+          <p className="mt-2 text-xs text-neutral-500">運営：KIZUNA Creation</p>
         </div>
       </footer>
     </div>

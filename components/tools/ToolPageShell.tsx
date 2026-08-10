@@ -69,7 +69,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
       <PublicHeader />
 
       {/* ===== パンくず ===== */}
-      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">
+      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
         <Link href="/business" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">無料ツール</span>
@@ -151,7 +151,8 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
         <div className="mt-5 space-y-4">
           {faqs.map((f) => (
             <Card key={f.q} padded>
-              <h3 className="text-sm font-semibold text-neutral-900">{f.q}</h3>
+              {/* 2026-08-11 UI監査: 質問見出しは /pricing /roumu のFAQと同じ text-base に統一。 */}
+              <h3 className="text-base font-semibold text-neutral-900">{f.q}</h3>
               <p className="mt-2 text-sm leading-relaxed text-neutral-600">{f.a}</p>
             </Card>
           ))}
@@ -176,7 +177,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
       {/* ===== ほかの無料ツール（ツール相互リンク＋一覧ハブへの戻り） ===== */}
       <section className="mx-auto max-w-3xl px-6 pb-16">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-medium text-neutral-400">ほかの無料ツール</p>
+          <p className="text-xs font-medium text-neutral-500">ほかの無料ツール</p>
           <Link
             href="/tools"
             className="inline-flex min-h-11 items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-800 sm:min-h-0"
@@ -224,7 +225,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
             番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
-          <p className="mt-2 text-xs text-neutral-400">運営：KIZUNA Creation</p>
+          <p className="mt-2 text-xs text-neutral-500">運営：KIZUNA Creation</p>
         </div>
       </footer>
     </div>

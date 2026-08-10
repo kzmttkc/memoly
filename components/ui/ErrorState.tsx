@@ -52,7 +52,7 @@ export function ErrorState({
           </a>
         </div>
         {digest && (
-          <p className="mt-5 text-xs text-neutral-400">エラーID: {digest}</p>
+          <p className="mt-5 text-xs text-neutral-500">エラーID: {digest}</p>
         )}
       </Card>
     </div>

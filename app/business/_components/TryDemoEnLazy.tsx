@@ -36,7 +36,7 @@ const TryDemoEn = dynamic(() => import('./TryDemoEn'), {
           {EN_INDUSTRIES.map(i => (
             <span
               key={i.key}
-              className="rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs text-neutral-300 motion-safe:animate-pulse"
+              className="rounded-full border border-neutral-200 bg-white px-3.5 py-1.5 text-xs text-neutral-500 motion-safe:animate-pulse"
             >
               {i.label}
             </span>

@@ -394,7 +394,7 @@ export function Calculator() {
 
           {/* ===== A5 結果保存CTA（結果末尾に1本・痛点別に出し分け） ===== */}
           <SaveResultCta result={result} input={input} />
-          <p className="mt-2 text-xs text-neutral-400">
+          <p className="mt-2 text-xs text-neutral-500">
             登録・会社作成・この保存は、すべて無料です。
           </p>
         </Card>

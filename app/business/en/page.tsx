@@ -142,7 +142,7 @@ export default function BusinessEnglishPage() {
               <BantoMark className="h-4 w-4" aria-hidden />
             </span>
             <span className="text-lg font-bold tracking-tight text-neutral-900">
-              番頭<span className="ml-1 text-sm font-medium text-neutral-400">Banto</span>
+              番頭<span className="ml-1 text-sm font-medium text-neutral-500">Banto</span>
             </span>
           </Link>
           <nav className="flex items-center gap-2">
@@ -241,7 +241,8 @@ export default function BusinessEnglishPage() {
 
       {/* ===== The core difference: "does it remember?" — 2026-07-29 CTO, L3 audit #1 ===== */}
       <section className="border-y border-neutral-200 bg-neutral-50">
-        <div className="mx-auto max-w-5xl px-6 py-20">
+        {/* 2026-08-11 UI監査: 本ENページの他セクション（py-16 ×4）とリズムを揃える（唯一のpy-20だった）。 */}
+        <div className="mx-auto max-w-5xl px-6 py-16">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
               The difference is whether it remembers
@@ -397,7 +398,7 @@ export default function BusinessEnglishPage() {
             Banto provides general information, not individualized legal advice or filing
             representation. Please consult a licensed professional for final legal decisions.
           </p>
-          <p className="mt-2 text-xs text-neutral-400">© {new Date().getFullYear()} 番頭(Banto) (KIZUNA Creation)</p>
+          <p className="mt-2 text-xs text-neutral-500">© {new Date().getFullYear()} 番頭(Banto) (KIZUNA Creation)</p>
         </div>
       </footer>
     </div>
