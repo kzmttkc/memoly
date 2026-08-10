@@ -62,7 +62,10 @@ export default function IndustryHeroPreview() {
           }
         }
       },
-      { threshold: 0.4 },
+      // 2026-08-11 UI監査#9: threshold 0.4 だと 768px 等でプレビュー枠が「4割見えるまで」
+      // 全メッセージ opacity:0 ＝空白の白箱として表示されていた。視認開始（15%）で
+      // 発火させ、空白箱の露出をなくす（承認済みFV01のstagger演出自体は不変）。
+      { threshold: 0.15 },
     )
     targets.forEach(el => io.observe(el))
     return () => io.disconnect()

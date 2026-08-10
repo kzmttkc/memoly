@@ -142,10 +142,12 @@ export default function ToolsIndexPage() {
             const frequent = FREQUENT_SLUGS.has(t.slug)
             return (
               <li key={t.slug}>
+                {/* 2026-08-11 UI監査#7: ring-brand-100(#d8dfee)は白地でほぼ不可視だった。
+                    ring-brand-200 に上げて「よくある確認」の強調を視認可能にする。 */}
                 <Card
                   interactive
                   padded={false}
-                  className={frequent ? 'border-brand-200 ring-1 ring-brand-100' : undefined}
+                  className={frequent ? 'border-brand-200 ring-1 ring-brand-200' : undefined}
                 >
                   <Link href={`/tools/${t.slug}`} className="block p-5 sm:p-6">
                     <p className="flex items-center gap-2 text-xs font-medium text-brand-700">

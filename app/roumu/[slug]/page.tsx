@@ -227,7 +227,9 @@ export default async function RoumuUseCasePage({
         <div className="article-prose space-y-10">
           {u.sections.map((sec) => (
             <div key={sec.heading}>
-              <h2 className="text-lg font-bold tracking-tight text-neutral-900">{sec.heading}</h2>
+              {/* 2026-08-11 UI監査#8: 本文が16px(.article-prose)に対しh2が18pxで2px差しか
+                  なく階層が読めなかった。text-xl(20px)へ（下位のh2も同時に統一）。 */}
+              <h2 className="text-xl font-bold tracking-tight text-neutral-900">{sec.heading}</h2>
               <div className="mt-3 space-y-3">
                 {sec.body.map((p, i) => (
                   <p key={i} className="leading-relaxed">{p}</p>
@@ -285,7 +287,7 @@ export default async function RoumuUseCasePage({
 
       {/* ===== 番頭がどう答えるか（具体例） ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
-        <h2 className="text-lg font-bold tracking-tight text-neutral-900">番頭はこう答えます</h2>
+        <h2 className="text-xl font-bold tracking-tight text-neutral-900">番頭はこう答えます</h2>
         <p className="mt-2 text-xs text-neutral-500">
           サンプルの会社情報を覚えた状態での、回答のイメージです。数値や規程の内容は説明用の例です。
           番頭の答えは一般的な情報の整理であり、個別の法的助言ではありません。
@@ -314,7 +316,7 @@ export default async function RoumuUseCasePage({
 
       {/* ===== FAQ（本文＝FAQPage構造化と一致） ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12 border-t border-neutral-200">
-        <h2 className="text-lg font-bold tracking-tight text-neutral-900">よくある質問</h2>
+        <h2 className="text-xl font-bold tracking-tight text-neutral-900">よくある質問</h2>
         <div className="mt-5 space-y-4">
           {u.faqs.map((f) => (
             <Card key={f.q} padded>
@@ -373,7 +375,7 @@ export default async function RoumuUseCasePage({
             <Link
               key={o.slug}
               href={`/roumu/${o.slug}`}
-              className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+              className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
             >
               {o.ogCategory}
             </Link>

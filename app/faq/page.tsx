@@ -157,13 +157,13 @@ export default function FaqPage() {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Link
             href="/blog"
-            className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+            className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
           >
             規程管理・組織の記憶ブログを読む
           </Link>
           <Link
             href="/roumu"
-            className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+            className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
           >
             目的別の使い方一覧を見る
           </Link>

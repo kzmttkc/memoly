@@ -393,20 +393,27 @@ export default async function BusinessLandingPage({
             発生したときはヘッダ自体の高さが伸びて後続セクションを押し下げる（＝重ならない）
             ようにする。通常倍率では1行に収まるため見た目は不変。 */}
         <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-x-2 px-6 py-2">
-          <Link href="/business" className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-white">
-              <BantoMark className="h-4 w-4" aria-hidden />
+          {/* 2026-08-11 UI監査#5: ロゴ寸法を PublicHeader / 他ページ（h-6 w-6 rounded-md +
+              text-base）と統一（本ページだけ h-7/text-lg で揺れていた）。
+              2026-08-11 UI監査#1: 副題「Banto」は sm 未満で畳む（PublicHeaderの「(Banto)」を
+              畳む既存作法と同じ）。375px でナビが2行に折り返しヘッダが113pxを常時占有して
+              いたため、ロゴ側を縮めて1行に収める（文言・リンクは不変）。 */}
+          <Link href="/business" className="flex min-h-11 shrink-0 items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
+              <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
-            <span className="text-lg font-bold tracking-tight text-neutral-900">
+            <span className="text-base font-semibold tracking-tight text-neutral-900">
               番頭
-              <span className="ml-1 text-sm font-medium text-neutral-500">Banto</span>
+              <span className="ml-1 hidden text-sm font-medium text-neutral-500 sm:inline">Banto</span>
             </span>
           </Link>
           {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: 極端に狭い実効幅（高倍率
               ズーム時）でナビ項目(ハンバーガー/ログイン/CTA)が1行に収まりきらず、
               ページ全体の横スクロールに寄与していた。flex-wrap で折り返し可能にする
               （通常倍率では1行に収まるため見た目は不変）。 */}
-          <nav className="flex flex-wrap items-center justify-end gap-2">
+          {/* 2026-08-11 UI監査#1: モバイルは gap-1 に詰めて1行維持（sm以上は従来の gap-2）。
+              flex-wrap 自体は200%ズーム安全網として残す。 */}
+          <nav className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
             {/* 2026-07-24 P02(発見性): モバイル(sm未満)はデスクトップの
                 無料ツール/労務記事リンクが hidden sm:inline-flex で畳まれ、ヘッダから
                 主要導線へ届かなかった。ハンバーガーでその2導線だけを補う（sm以上では
@@ -475,9 +482,20 @@ export default async function BusinessLandingPage({
           Disclosureコンポーネントへ統一（詳細は同コンポーネントのコメント参照）。 */}
       <section className="border-b border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-5xl px-6 py-2.5">
+          {/* 2026-08-11 UI監査#6: このDisclosureだけ開閉インジケータ（chevron）が無く、
+              開けることに気づけなかった。他のDisclosureと同じChevronDownを付ける。 */}
           <Disclosure
-            summaryClassName="block w-full cursor-pointer select-none text-center text-xs font-medium text-neutral-500 hover:text-neutral-700 sm:text-left"
-            summary="番頭(Banto)とは — 30秒でわかる概要"
+            className="group"
+            summaryClassName="flex w-full cursor-pointer select-none items-center justify-center gap-1 text-xs font-medium text-neutral-500 hover:text-neutral-700 sm:justify-start"
+            summary={
+              <>
+                番頭(Banto)とは — 30秒でわかる概要
+                <ChevronDown
+                  className="h-3.5 w-3.5 shrink-0 transition-transform group-data-[state=open]:rotate-180"
+                  aria-hidden
+                />
+              </>
+            }
           >
             <p className="mt-2 pb-1 text-center text-sm leading-relaxed text-neutral-600 sm:text-left">
               番頭(Banto)は、中小企業の総務・経営者向けの労務記憶AIです。就業規則・36協定・有給休暇管理などの自社規程をAIに覚えさせておき、労務の疑問に自社の前提で即答します。汎用AIのように、聞くたびに社内規程や過去の運用を説明し直す必要がありません。企業ごとにデータを分離して保管し、無料で試せます。
@@ -637,20 +655,23 @@ export default async function BusinessLandingPage({
             - 「作り手が自分の会社で使う」= 下部・信頼シグナル節と同一の事実。 */}
       <section className="border-y border-neutral-200 bg-neutral-50">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-6 py-3">
-          <p className="flex items-center gap-1.5 text-xs text-neutral-600">
+          {/* 2026-08-11 UI監査#2: 375pxで「就業規|則」のような語中改行が起きていた。
+              語単位を whitespace-nowrap で括り、折り返しは語境界でのみ起こす（文言不変）。 */}
+          <p className="flex flex-wrap items-center justify-center gap-1.5 text-xs text-neutral-600">
             <FileText className="h-3.5 w-3.5 text-brand-600" aria-hidden />
-            就業規則・
+            <span className="whitespace-nowrap">就業規則・</span>
             {/* 2026-07-29 CTO修正（UX監査Round6#5・軽微）: 「36協定」の初出（ヒーロー
                 直下のこの社会的証明バー）に用語解説（lib/faq.ts JARGON_TERMSと同一の
                 文言）へのtitle属性ツールチップを追加。詳しい解説はFAQ末尾の用語集
                 （すぐ下にリンク）にある。 */}
             <span
               title="残業や休日出勤をさせる前に、会社と労働者の代表が結んで労働基準監督署へ届け出る労使協定です。これが無いと、原則として残業をさせること自体が労働基準法違反になります。"
-              className="underline decoration-dotted decoration-neutral-400 underline-offset-2"
+              className="whitespace-nowrap underline decoration-dotted decoration-neutral-400 underline-offset-2"
             >
               36協定
             </span>
-            ・賃金規程・労働条件通知書の下書きに対応
+            <span className="whitespace-nowrap">・賃金規程・</span>
+            <span className="whitespace-nowrap">労働条件通知書の下書きに対応</span>
           </p>
           <p className="flex items-center gap-1.5 text-xs text-neutral-600">
             <ShieldCheck className="h-3.5 w-3.5 text-brand-600" aria-hidden />
@@ -1028,7 +1049,19 @@ export default async function BusinessLandingPage({
               それぞれに得意分野があります。番頭が担うのは「会社を覚えて、相談に自社前提で答える」の部分です。
             </p>
           </div>
-          <div className="overflow-x-auto rounded-2xl border border-neutral-200">
+          {/* 2026-08-11 UI監査#3: min-w-[860px] の表がモバイルで「残り3列ある」ことに
+              気づけなかった（スクロールバー非表示環境では手がかりゼロ）。右端フェードと
+              案内1行（UIラベル）を sm 未満のみ表示する。フェードは pointer-events-none で
+              操作を妨げない。 */}
+          <p className="mb-2 text-center text-xs text-neutral-500 sm:hidden">
+            表は横にスクロールできます
+          </p>
+          <div className="relative">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 rounded-r-2xl bg-gradient-to-l from-white to-transparent sm:hidden"
+            />
+            <div className="overflow-x-auto rounded-2xl border border-neutral-200">
             <table className="w-full min-w-[860px] border-collapse bg-white text-left text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50">
@@ -1081,6 +1114,7 @@ export default async function BusinessLandingPage({
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
           <p className="mt-4 text-center text-xs leading-relaxed text-neutral-500">
             2026年7月時点の各社公開情報にもとづく一般的な整理です。正確な機能・料金は各サービスの公式サイトをご確認ください。
@@ -1523,14 +1557,14 @@ export default async function BusinessLandingPage({
             <Link
               key={u.slug}
               href={`/roumu/${u.slug}`}
-              className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+              className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
             >
               {u.ogCategory}
             </Link>
           ))}
           <Link
             href="/roumu"
-            className="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300"
+            className="inline-flex min-h-11 items-center rounded-full border border-brand-200 bg-brand-50 px-4 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300 sm:min-h-0 sm:py-2"
           >
             使い方の一覧をすべて見る
           </Link>
@@ -1552,14 +1586,14 @@ export default async function BusinessLandingPage({
             <Link
               key={t.slug}
               href={`/tools/${t.slug}`}
-              className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+              className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
             >
               {t.label}
             </Link>
           ))}
           <Link
             href="/tools"
-            className="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300"
+            className="inline-flex min-h-11 items-center rounded-full border border-brand-200 bg-brand-50 px-4 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300 sm:min-h-0 sm:py-2"
           >
             ツール一覧を見る
           </Link>
@@ -1571,13 +1605,13 @@ export default async function BusinessLandingPage({
         <div className="flex flex-wrap justify-center gap-2">
           <Link
             href="/blog"
-            className="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300"
+            className="inline-flex min-h-11 items-center rounded-full border border-brand-200 bg-brand-50 px-4 text-xs font-medium text-brand-700 transition-colors hover:border-brand-300 sm:min-h-0 sm:py-2"
           >
             規程管理・組織の記憶ブログを読む
           </Link>
           <Link
             href="/faq"
-            className="rounded-full border border-neutral-200 px-4 py-2 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+            className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
           >
             よくある質問を見る
           </Link>
@@ -1595,28 +1629,28 @@ export default async function BusinessLandingPage({
               <span className="font-semibold text-neutral-900">番頭(Banto)</span>
             </div>
             <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
-              <Link href="/blog" className="hover:text-brand-700">
+              <Link href="/blog" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 ブログ
               </Link>
-              <Link href="/faq" className="hover:text-brand-700">
+              <Link href="/faq" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 よくある質問
               </Link>
-              <Link href="/contact" className="hover:text-brand-700">
+              <Link href="/contact" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 お問い合わせ
               </Link>
-              <Link href="/login?next=/company" className="hover:text-brand-700">
+              <Link href="/login?next=/company" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 ログイン
               </Link>
-              <TrackedCTA location="footer" className="hover:text-brand-700">
+              <TrackedCTA location="footer" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 無料で始める
               </TrackedCTA>
-              <Link href="/terms" className="hover:text-brand-700">
+              <Link href="/terms" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 利用規約
               </Link>
-              <Link href="/privacy" className="hover:text-brand-700">
+              <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 プライバシー
               </Link>
-              <Link href="/tokushoho" className="hover:text-brand-700">
+              <Link href="/tokushoho" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 特定商取引法に基づく表記
               </Link>
             </nav>
