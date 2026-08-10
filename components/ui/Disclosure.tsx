@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 
 // ============================================================================
 // Disclosure — 開閉トリガー(<details>/<summary>相当の見た目・挙動)。
@@ -39,6 +39,7 @@ import { useId, useState, type ReactNode } from 'react'
 // ============================================================================
 
 export function Disclosure({
+  id,
   summary,
   children,
   className,
@@ -46,6 +47,15 @@ export function Disclosure({
   contentClassName,
   defaultOpen = false,
 }: {
+  /**
+   * 2026-08-11 UI監査#1（a11y）: ページ内アンカーの着地点にする場合に指定する。
+   * 指定すると、URLハッシュがこのidと一致した状態で読み込まれた／ハッシュが
+   * このidへ変化したときに自動で開く。アンカーで飛んできた読者が「閉じた
+   * 見出し」に着地して、目的の本文にもう1タップ必要になるのを防ぐ。
+   * 既に #id にいる状態で自分で閉じ、同じリンクをもう一度踏んだ場合は
+   * hashchange が発火しないため開かない（この経路は既に本文の直上にいるため実害なし）。
+   */
+  id?: string
   summary: ReactNode
   children: ReactNode
   className?: string
@@ -56,8 +66,18 @@ export function Disclosure({
   const [open, setOpen] = useState(defaultOpen)
   const contentId = useId()
 
+  useEffect(() => {
+    if (!id) return
+    const syncFromHash = () => {
+      if (window.location.hash === `#${id}`) setOpen(true)
+    }
+    syncFromHash()
+    window.addEventListener('hashchange', syncFromHash)
+    return () => window.removeEventListener('hashchange', syncFromHash)
+  }, [id])
+
   return (
-    <div className={className} data-state={open ? 'open' : 'closed'}>
+    <div id={id} className={className} data-state={open ? 'open' : 'closed'}>
       <button
         type="button"
         aria-expanded={open}

@@ -16,6 +16,7 @@ import IndustryHeroPreview from './_components/IndustryHeroPreview'
 import CompareToggle from './_components/CompareToggle'
 import ScenarioSection from './_components/ScenarioSection'
 import ScrollProgress from './_components/ScrollProgress'
+import BackToTop from './_components/BackToTop'
 import ForcePaidVariant from './_components/ForcePaidVariant'
 import LeadCapture from './_components/LeadCapture'
 import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
@@ -382,6 +383,9 @@ export default async function BusinessLandingPage({
     <div className="company-light min-h-[100dvh] bg-white font-sans text-neutral-900">
       {/* B19: 読了位置プログレスバー（装飾・compositor安全） */}
       <ScrollProgress />
+      {/* 2026-08-11 UI監査#2: 375pxで21,296px（約26画面分）ある長尺LPの戻る手段。
+          一定量スクロールしてから出現し、prefers-reduced-motion を尊重する。 */}
+      <BackToTop />
       {/* I11: 広告着地時のみ、cookie/計測の変種を SSR 表示（B固定）と同期 */}
       {isPaidLanding && <ForcePaidVariant />}
       {/* ===== ヘッダ ===== */}
@@ -398,7 +402,13 @@ export default async function BusinessLandingPage({
               2026-08-11 UI監査#1: 副題「Banto」は sm 未満で畳む（PublicHeaderの「(Banto)」を
               畳む既存作法と同じ）。375px でナビが2行に折り返しヘッダが113pxを常時占有して
               いたため、ロゴ側を縮めて1行に収める（文言・リンクは不変）。 */}
-          <Link href="/business" className="flex min-h-11 shrink-0 items-center gap-2">
+          {/* 2026-08-11 UI監査#2: id="page-top" は BackToTop がクリック後にフォーカスを
+              戻す先（キーボード利用者のタブ順をページ先頭へ連れ戻す）。文言・リンク不変。 */}
+          <Link
+            id="page-top"
+            href="/business"
+            className="flex min-h-11 shrink-0 items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
               <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
@@ -661,15 +671,20 @@ export default async function BusinessLandingPage({
             <FileText className="h-3.5 w-3.5 text-brand-600" aria-hidden />
             <span className="whitespace-nowrap">就業規則・</span>
             {/* 2026-07-29 CTO修正（UX監査Round6#5・軽微）: 「36協定」の初出（ヒーロー
-                直下のこの社会的証明バー）に用語解説（lib/faq.ts JARGON_TERMSと同一の
-                文言）へのtitle属性ツールチップを追加。詳しい解説はFAQ末尾の用語集
-                （すぐ下にリンク）にある。 */}
-            <span
-              title="残業や休日出勤をさせる前に、会社と労働者の代表が結んで労働基準監督署へ届け出る労使協定です。これが無いと、原則として残業をさせること自体が労働基準法違反になります。"
-              className="whitespace-nowrap underline decoration-dotted decoration-neutral-400 underline-offset-2"
+                直下のこの社会的証明バー）に用語解説へのtitle属性ツールチップを追加。
+                2026-08-11 UI監査#1（a11y）: title属性はタッチ端末では表示されず（hoverが
+                無い）、スクリーンリーダーへも確実には届かない＝解説が実質7割の来訪者に
+                到達していなかった。同ページ下部に既にある用語集（#yougo・JARGON_TERMS＝
+                title属性と全く同一の文言のSSOT）へのアンカーリンクへ置き換える。これなら
+                全端末・全支援技術で確実に届き、解説文言も新規に書かない。リンク先の
+                Disclosureはハッシュ一致で自動的に開く（components/ui/Disclosure.tsx）。 */}
+            <a
+              href="#yougo"
+              className="whitespace-nowrap rounded-sm underline decoration-dotted decoration-neutral-400 underline-offset-2 hover:decoration-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               36協定
-            </span>
+              <span className="sr-only">の用語解説を読む</span>
+            </a>
             <span className="whitespace-nowrap">・賃金規程・</span>
             <span className="whitespace-nowrap">労働条件通知書の下書きに対応</span>
           </p>
@@ -1395,9 +1410,14 @@ export default async function BusinessLandingPage({
               出てくる労務用語を、初めて読む方向けに簡潔に補足する（軽い段階的開示・
               アコーディオンで畳み、情報密度を上げすぎない）。
               2026-07-29 CTO修正（UX監査Round4#10）: Disclosureへ置き換え、
-              キーボード操作（Tab+Enter/Space）を明示的に保証する。 */}
+              キーボード操作（Tab+Enter/Space）を明示的に保証する。
+              2026-08-11 UI監査#1（a11y）: 社会的証明バーの「36協定」からのアンカー
+              着地点にする（id="yougo"）。ハッシュ一致で自動的に開くため、飛んできた
+              読者は追加操作なしで解説本文を読める。scroll-mt はスティッキーヘッダ
+              (min-h-16)ぶんのオフセット。 */}
           <Disclosure
-            className="group mt-8 rounded-2xl border border-neutral-200 bg-white"
+            id="yougo"
+            className="group mt-8 scroll-mt-20 rounded-2xl border border-neutral-200 bg-white"
             summaryClassName="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-5 text-sm font-semibold text-neutral-700"
             summary={
               <>
