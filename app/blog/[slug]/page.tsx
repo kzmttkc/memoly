@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { BLOG_POSTS, BLOG_SLUGS, getBlogPost } from '@/lib/blog'
 import { getUseCase } from '@/lib/usecase'
+import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 
 // ============================================================================
 // /blog/[slug] — ブログ記事詳細（SSG・クローラブル）。2026-07-22 新設。
@@ -229,10 +230,16 @@ export default async function BlogPostPage({
             会社を登録して、最初の相談を投げてみてください。今日話したことを、番頭は明日も覚えています。無料で試せます。
           </p>
           <div className="mt-6 flex justify-center">
-            <Link href={SIGNUP_HREF} className={buttonClass({ variant: 'secondary', size: 'lg' })}>
+            {/* 2026-08-10 計測是正: 素の<Link>でsignup_cta_clickedが未計測だった
+                （/roumu/[slug] と同じ欠落。/business の TrackedCTA に揃える）。 */}
+            <TrackedCTA
+              location="blog_article_bottom"
+              href={SIGNUP_HREF}
+              className={buttonClass({ variant: 'secondary', size: 'lg' })}
+            >
               無料で会社を登録して試す
               <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
+            </TrackedCTA>
           </div>
         </Card>
       </section>

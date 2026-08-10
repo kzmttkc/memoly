@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 import { getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
 import LeadCapture from '@/app/business/_components/LeadCapture'
+import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 import KasuharaSelfCheck from './_components/KasuharaSelfCheck'
 
 // ============================================================================
@@ -190,13 +191,18 @@ export default async function RoumuUseCasePage({
             対象は kasuhara-gimuka-2026 のみ。他LPの構造は変えない。 */}
         {u.slug === 'kasuhara-gimuka-2026' && <KasuharaSelfCheck />}
         <div className="mt-7 flex flex-wrap items-center gap-3">
-          <Link
+          {/* 2026-08-10 計測是正: 従来は素の<Link>でsignup_cta_clickedが未計測だった
+              （/roumu は本サイト最大の流入面なのに、この記事CTAだけ「クリックされずに
+              signupへ着地した」形になり、signup_cta_clicked=0 と signup_started>0の
+              矛盾の主因だった）。/business と同じ TrackedCTA に揃える（href/見た目は不変）。 */}
+          <TrackedCTA
+            location="roumu_article_top"
             href={signupHref}
             className={buttonClass({ variant: 'primary', size: 'lg' })}
           >
             無料で会社を登録して試す
             <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          </TrackedCTA>
           <Link
             href="/business"
             className={buttonClass({ variant: 'secondary', size: 'lg' })}
@@ -335,13 +341,15 @@ export default async function RoumuUseCasePage({
             ]}
           </p>
           <div className="mt-6 flex justify-center">
-            <Link
+            {/* 2026-08-10 計測是正: 記事末尾CTAも同様に未計測だった（上記コメント参照）。 */}
+            <TrackedCTA
+              location="roumu_article_bottom"
               href={signupHref}
               className={buttonClass({ variant: 'secondary', size: 'lg' })}
             >
               無料で会社を登録して試す
               <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
+            </TrackedCTA>
           </div>
         </Card>
       </section>
