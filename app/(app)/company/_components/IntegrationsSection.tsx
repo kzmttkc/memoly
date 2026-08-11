@@ -211,7 +211,7 @@ export function IntegrationsSection({
               value={slackUrl}
               onChange={e => setSlackUrl(e.target.value)}
               placeholder="https://hooks.slack.com/services/…"
-              className="h-9 w-full max-w-sm rounded-lg border border-neutral-200 bg-white px-2 font-mono text-xs text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="h-9 w-full max-w-sm rounded-lg border border-neutral-500 bg-white px-2 font-mono text-xs text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               aria-label="Slack Incoming Webhook URL"
             />
             <Button
@@ -268,7 +268,7 @@ export function IntegrationsSection({
               value={keyName}
               onChange={e => setKeyName(e.target.value)}
               placeholder="キーの用途（例: 社内ダッシュボード）"
-              className="h-9 w-full max-w-sm rounded-lg border border-neutral-200 bg-white px-2 text-xs text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="h-9 w-full max-w-sm rounded-lg border border-neutral-500 bg-white px-2 text-xs text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               aria-label="APIキーの名前"
             />
             <Button variant="secondary" disabled={keyBusy} onClick={createKey}>

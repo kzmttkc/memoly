@@ -39,7 +39,7 @@ export default function CompareToggle() {
       <div
         role="tablist"
         aria-label="同じ質問への回答を比べる"
-        className="mx-auto mb-4 flex w-fit rounded-full border border-neutral-200 bg-white p-1 shadow-sm"
+        className="mx-auto mb-4 flex w-fit rounded-full border border-neutral-500 bg-white p-1 shadow-sm"
       >
         <button
           type="button"
@@ -111,11 +111,11 @@ export default function CompareToggle() {
           <p
             className={
               side === 'generic'
-                ? 'flex items-center gap-1.5 text-xs text-neutral-500'
+                ? 'flex items-center gap-1.5 text-xs text-neutral-600'
                 : 'hidden'
             }
           >
-            <X className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
+            <X className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
             答えの前に、毎回この聞き返しに答える往復が入ります。
           </p>
           <p
@@ -131,7 +131,7 @@ export default function CompareToggle() {
         </div>
       </div>
 
-      <p className="mt-3 text-center text-xs leading-relaxed text-neutral-500">
+      <p className="mt-3 text-center text-xs leading-relaxed text-neutral-600">
         どちらも回答の一例です。番頭の回答は一般的な情報提供であり、個別の法的助言ではありません。
       </p>
     </div>

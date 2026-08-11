@@ -31,7 +31,7 @@ export default function CompareToggleEn() {
       <div
         role="tablist"
         aria-label="Compare answers to the same question"
-        className="mx-auto mb-4 flex w-fit rounded-full border border-neutral-200 bg-white p-1 shadow-sm"
+        className="mx-auto mb-4 flex w-fit rounded-full border border-neutral-500 bg-white p-1 shadow-sm"
       >
         <button
           type="button"
@@ -96,8 +96,8 @@ export default function CompareToggleEn() {
         </div>
 
         <div className="border-t border-neutral-200 bg-neutral-50/70 px-4 py-2.5">
-          <p className={side === 'generic' ? 'flex items-center gap-1.5 text-xs text-neutral-500' : 'hidden'}>
-            <X className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
+          <p className={side === 'generic' ? 'flex items-center gap-1.5 text-xs text-neutral-600' : 'hidden'}>
+            <X className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
             Before you get an answer, you go through this back-and-forth every time.
           </p>
           <p className={side === 'banto' ? 'flex items-center gap-1.5 text-xs text-neutral-600' : 'hidden'}>
@@ -107,7 +107,7 @@ export default function CompareToggleEn() {
         </div>
       </div>
 
-      <p className="mt-3 text-center text-xs leading-relaxed text-neutral-500">
+      <p className="mt-3 text-center text-xs leading-relaxed text-neutral-600">
         Both sides are example answers. Banto&apos;s answer is general information, not individualized legal advice.
       </p>
     </div>

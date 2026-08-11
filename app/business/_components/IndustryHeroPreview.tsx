@@ -109,7 +109,7 @@ export default function IndustryHeroPreview() {
             className={
               i.key === selected
                 ? 'inline-flex min-h-11 items-center rounded-full bg-brand-600 px-3 text-[11px] font-semibold text-white sm:min-h-0 sm:py-1'
-                : 'inline-flex min-h-11 items-center rounded-full border border-neutral-200 bg-white px-3 text-[11px] text-neutral-500 transition-colors hover:border-brand-300 hover:text-brand-700 sm:min-h-0 sm:py-1'
+                : 'inline-flex min-h-11 items-center rounded-full border border-neutral-500 bg-white px-3 text-[11px] text-neutral-500 transition-colors hover:border-brand-500 hover:text-brand-700 sm:min-h-0 sm:py-1'
             }
           >
             {i.label}
@@ -168,7 +168,7 @@ export default function IndustryHeroPreview() {
                 >
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-600" aria-hidden />
                   <span className="truncate text-xs text-neutral-700">{row.label}</span>
-                  <span className="ml-auto shrink-0 text-[10px] text-neutral-500">{row.kind}</span>
+                  <span className="ml-auto shrink-0 text-[10px] text-neutral-600">{row.kind}</span>
                 </li>
               ))}
             </ul>
@@ -212,7 +212,7 @@ function IndustryPanel({ industry }: { industry: IndustryKey }) {
       <div className="space-y-3 px-4 py-4">
         {/* 覚えている会社プロファイル */}
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
             <Building2 className="h-3.5 w-3.5" aria-hidden />
             覚えている自社プロファイル
           </p>

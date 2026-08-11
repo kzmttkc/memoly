@@ -328,7 +328,7 @@ function DocumentsInner() {
                 id="doc-type"
                 value={docType}
                 onChange={e => setDocType(e.target.value)}
-                className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+                className="w-full rounded-xl border border-neutral-500 bg-white px-3.5 py-2.5 text-sm text-neutral-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
               >
                 {DOCUMENT_TYPES.map(t => (
                   <option key={t} value={t}>
@@ -457,7 +457,7 @@ function DocumentsInner() {
                               onChange={() =>
                                 setFactChecked(prev => prev.map((c, j) => (j === i ? !c : c)))
                               }
-                              className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                              className="mt-0.5 h-4 w-4 rounded border-neutral-500 text-brand-600 focus:ring-brand-500"
                             />
                             <span className="min-w-0">
                               <span className="font-medium text-brand-700">{f.key}</span>

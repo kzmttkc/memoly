@@ -322,7 +322,7 @@ function DeadlinesInner() {
                   id="d-rec"
                   value={newRecurrence}
                   onChange={e => setNewRecurrence(e.target.value as 'none' | 'yearly')}
-                  className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+                  className="w-full rounded-xl border border-neutral-500 bg-white px-3.5 py-2.5 text-sm text-neutral-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
                 >
                   <option value="yearly">毎年</option>
                   <option value="none">一度きり</option>
@@ -402,7 +402,7 @@ function DeadlinesInner() {
                         lang="ja"
                         defaultValue={d.due_on}
                         onChange={e => updateDue(d, e.target.value)}
-                        className="ml-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+                        className="ml-1 rounded-lg border border-neutral-500 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
                       />
                     </label>
                     <Button size="sm" variant="secondary" onClick={() => markDone(d)}>

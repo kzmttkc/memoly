@@ -373,7 +373,7 @@ function BillingInner() {
                               ),
                             }))
                           }
-                          className="h-9 w-20 rounded-lg border border-neutral-200 bg-white px-2 text-right text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                          className="h-9 w-20 rounded-lg border border-neutral-500 bg-white px-2 text-right text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                           aria-label={`${p.displayName} の席数`}
                         />
                       </label>

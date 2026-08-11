@@ -492,7 +492,7 @@ export default async function BusinessLandingPage({
               開けることに気づけなかった。他のDisclosureと同じChevronDownを付ける。 */}
           <Disclosure
             className="group"
-            summaryClassName="flex w-full cursor-pointer select-none items-center justify-center gap-1 text-xs font-medium text-neutral-500 hover:text-neutral-700 sm:justify-start"
+            summaryClassName="flex w-full cursor-pointer select-none items-center justify-center gap-1 text-xs font-medium text-neutral-600 hover:text-neutral-700 sm:justify-start"
             summary={
               <>
                 番頭(Banto)とは — 30秒でわかる概要
@@ -750,7 +750,7 @@ export default async function BusinessLandingPage({
         {/* B04: Before/After を具体シーンで対比 */}
         <div className="mb-4 grid min-w-0 gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5 sm:p-6">
-            <p className="flex items-center gap-2 text-sm font-semibold text-neutral-500">
+            <p className="flex items-center gap-2 text-sm font-semibold text-neutral-600">
               <MessageSquareText className="h-4 w-4" aria-hidden />
               いままで（汎用AIと自力の調べ物）
             </p>
@@ -877,7 +877,7 @@ export default async function BusinessLandingPage({
                     </li>
                   ))}
                 </ul>
-                <p className="flex items-center gap-1.5 border-t border-neutral-200 bg-neutral-50/70 px-4 py-2.5 text-[11px] text-neutral-500">
+                <p className="flex items-center gap-1.5 border-t border-neutral-200 bg-neutral-50/70 px-4 py-2.5 text-[11px] text-neutral-600">
                   <Copy className="h-3 w-3" aria-hidden />
                   ワンクリックでコピーして、そのまま渡せます
                 </p>
@@ -1076,7 +1076,7 @@ export default async function BusinessLandingPage({
             <table className="w-full min-w-[860px] border-collapse bg-white text-left text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 bg-neutral-50">
-                  <th scope="col" className="p-4 text-xs font-semibold text-neutral-500">
+                  <th scope="col" className="p-4 text-xs font-semibold text-neutral-600">
                     観点
                   </th>
                   {COMPARISON_HEADERS.map((name, i) => (
@@ -1099,7 +1099,7 @@ export default async function BusinessLandingPage({
                   <tr key={row.label} className="border-b border-neutral-100 last:border-b-0">
                     <th
                       scope="row"
-                      className="p-4 align-top text-xs font-semibold text-neutral-500"
+                      className="p-4 align-top text-xs font-semibold text-neutral-600"
                     >
                       {row.label}
                     </th>
@@ -1360,7 +1360,7 @@ export default async function BusinessLandingPage({
 
             <Disclosure
               className="group"
-              summaryClassName="flex w-full cursor-pointer select-none items-center justify-center gap-1.5 rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+              summaryClassName="flex w-full cursor-pointer select-none items-center justify-center gap-1.5 rounded-full border border-neutral-500 bg-white px-5 py-2.5 text-sm font-medium text-neutral-600 transition-colors hover:border-neutral-600 hover:text-neutral-900"
               summary={
                 <>
                   すべての質問を見る（あと{FAQ.length - 3}問）
@@ -1573,7 +1573,7 @@ export default async function BusinessLandingPage({
             <Link
               key={u.slug}
               href={`/roumu/${u.slug}`}
-              className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
+              className="inline-flex min-h-11 items-center rounded-full border border-neutral-500 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-600 hover:text-neutral-900 sm:min-h-0 sm:py-2"
             >
               {u.ogCategory}
             </Link>
@@ -1602,7 +1602,7 @@ export default async function BusinessLandingPage({
             <Link
               key={t.slug}
               href={`/tools/${t.slug}`}
-              className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
+              className="inline-flex min-h-11 items-center rounded-full border border-neutral-500 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-600 hover:text-neutral-900 sm:min-h-0 sm:py-2"
             >
               {t.label}
             </Link>
@@ -1627,7 +1627,7 @@ export default async function BusinessLandingPage({
           </Link>
           <Link
             href="/faq"
-            className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
+            className="inline-flex min-h-11 items-center rounded-full border border-neutral-500 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-600 hover:text-neutral-900 sm:min-h-0 sm:py-2"
           >
             よくある質問を見る
           </Link>
@@ -1644,7 +1644,7 @@ export default async function BusinessLandingPage({
               </span>
               <span className="font-semibold text-neutral-900">番頭(Banto)</span>
             </div>
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
+            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-600">
               <Link href="/blog" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
                 ブログ
               </Link>
@@ -1671,11 +1671,11 @@ export default async function BusinessLandingPage({
               </Link>
             </nav>
           </div>
-          <p className="mt-6 text-xs leading-relaxed text-neutral-500">
+          <p className="mt-6 text-xs leading-relaxed text-neutral-600">
             番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
             最終的な判断は、必要に応じて専門家にご確認ください。
           </p>
-          <p className="mt-2 text-xs text-neutral-500">
+          <p className="mt-2 text-xs text-neutral-600">
             © {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）
           </p>
         </div>

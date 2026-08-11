@@ -99,7 +99,7 @@ export default function BackToTop() {
       onClick={handleClick}
       aria-label="ページの先頭へ戻る"
       style={{ bottom: BASE_GAP_PX + bottomChrome }}
-      className="fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-brand-700 shadow-md backdrop-blur transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:right-6"
+      className="fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-neutral-500 bg-white/95 text-brand-700 shadow-md backdrop-blur transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:right-6"
     >
       <ArrowUp className="h-5 w-5" aria-hidden />
     </button>

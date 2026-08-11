@@ -810,7 +810,7 @@ function CompanyChat() {
         {messages.length > 1 && !loading && (
           <button
             onClick={startNewConversation}
-            className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs text-neutral-600 transition-colors hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="inline-flex items-center gap-1 rounded-lg border border-neutral-500 bg-white px-2.5 py-1 text-xs text-neutral-600 transition-colors hover:border-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           >
             <MessageSquarePlus className="h-3.5 w-3.5" aria-hidden />
             新しい相談を始める
@@ -982,7 +982,7 @@ function CompanyChat() {
               <button
                 key={prompt}
                 onClick={() => sendMessage(prompt)}
-                className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="rounded-xl border border-neutral-500 bg-neutral-50 px-3 py-2 text-xs text-neutral-700 transition-colors hover:border-neutral-600 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
                 {prompt}
               </button>
@@ -1120,7 +1120,7 @@ function CompanyChat() {
           placeholder={t(locale, '自社の労務について相談', "Ask about your company's labor rules")}
           rows={1}
           aria-label={t(locale, 'メッセージを入力', 'Type a message')}
-          className="flex-1 resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="flex-1 resize-none rounded-xl border border-neutral-500 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />
         <Button
           size="lg"

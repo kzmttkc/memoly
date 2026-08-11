@@ -112,7 +112,7 @@ export function CompanySwitcher({ companyId, variant }: Props) {
         value={companyId}
         onChange={e => handleChange(e.target.value)}
         aria-label="対象の顧問先を切り替える"
-        className="max-w-[60%] truncate rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+        className="max-w-[60%] truncate rounded-lg border border-neutral-500 bg-white px-3 py-1.5 text-sm text-neutral-900 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
       >
         {companies.map(c => (
           <option key={c.companyId} value={c.companyId}>

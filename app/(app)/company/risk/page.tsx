@@ -895,7 +895,7 @@ function RiskInner() {
                                   setDueInputs(prev => ({ ...prev, [dl.title]: e.target.value }))
                                 }
                                 aria-label={`${dl.title}の期日`}
-                                className="ml-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+                                className="ml-1 rounded-lg border border-neutral-500 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
                               />
                             </label>
                             <Button
@@ -994,7 +994,7 @@ function RiskInner() {
                               setDueInputs(prev => ({ ...prev, [s.title]: e.target.value }))
                             }
                             aria-label={`${s.title}の期日`}
-                            className="ml-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+                            className="ml-1 rounded-lg border border-neutral-500 bg-white px-2 py-1 text-xs text-neutral-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
                           />
                         </label>
                         <Button

@@ -311,7 +311,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => window.dispatchEvent(new Event('banto-open-command-palette'))}
               aria-label={t(locale, 'コマンドパレットを開く', 'Open command palette')}
               title={t(locale, 'コマンドパレット', 'Command palette')}
-              className="hidden items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-500 transition-colors duration-150 hover:border-neutral-300 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:flex"
+              className="hidden items-center gap-2 rounded-lg border border-neutral-500 bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-500 transition-colors duration-150 hover:border-neutral-600 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:flex"
             >
               <Search className="h-3.5 w-3.5" aria-hidden />
               <span>{t(locale, '検索・操作', 'Search & actions')}</span>

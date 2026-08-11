@@ -286,7 +286,7 @@ export function MemoryTimeline() {
                   'rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
                   subjectFilter === null
                     ? 'border-brand-600 bg-brand-600 text-white'
-                    : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900',
+                    : 'border-neutral-500 bg-white text-neutral-600 hover:border-neutral-600 hover:text-neutral-900',
                 )}
               >
                 すべて
@@ -301,7 +301,7 @@ export function MemoryTimeline() {
                     'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
                     subjectFilter === s
                       ? 'border-brand-600 bg-brand-600 text-white'
-                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900',
+                      : 'border-neutral-500 bg-white text-neutral-600 hover:border-neutral-600 hover:text-neutral-900',
                   )}
                 >
                   <User className="h-3 w-3" aria-hidden />

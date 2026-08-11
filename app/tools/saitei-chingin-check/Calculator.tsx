@@ -157,7 +157,7 @@ export function Calculator() {
               id="pref"
               value={prefName}
               onChange={e => setPrefName(e.target.value)}
-              className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              className="w-full rounded-xl border border-neutral-500 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
               required
             >
               <option value="">選択してください</option>

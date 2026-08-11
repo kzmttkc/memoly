@@ -130,7 +130,7 @@ export default function LeadCaptureEn() {
                         setEmail(e.target.value)
                         if (state === 'error') setState('idle')
                       }}
-                      className="w-full rounded-lg border border-neutral-300 bg-white py-2.5 pl-9 pr-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                      className="w-full rounded-lg border border-neutral-500 bg-white py-2.5 pl-9 pr-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                     />
                   </div>
                   <button

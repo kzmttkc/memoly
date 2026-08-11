@@ -661,7 +661,7 @@ function SignupForm() {
             type="checkbox"
             checked={ageOk}
             onChange={e => setAgeOk(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/30"
+            className="mt-0.5 h-4 w-4 rounded border-neutral-500 text-brand-600 focus:ring-brand-500/30"
             aria-required="true"
           />
           <span className="text-xs text-neutral-600">
@@ -679,7 +679,7 @@ function SignupForm() {
             type="checkbox"
             checked={consentOk}
             onChange={e => setConsentOk(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/30"
+            className="mt-0.5 h-4 w-4 rounded border-neutral-500 text-brand-600 focus:ring-brand-500/30"
             aria-required="true"
           />
           <span className="text-xs text-neutral-600">

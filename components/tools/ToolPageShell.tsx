@@ -193,7 +193,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
               href={`/tools/${t.slug}`}
               // 2026-07-30 UX監査 #8: 高さ30〜34pxで推奨44px未満だった。
               //   モバイルだけ 44px に上げる（sm以上は従来の見た目のまま）。
-              className="inline-flex min-h-11 items-center rounded-full border border-neutral-200 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900 sm:min-h-0 sm:py-2"
+              className="inline-flex min-h-11 items-center rounded-full border border-neutral-500 px-4 text-xs text-neutral-600 transition-colors hover:border-neutral-600 hover:text-neutral-900 sm:min-h-0 sm:py-2"
             >
               {t.label}
             </Link>

@@ -402,7 +402,7 @@ export default function TryDemo() {
               className={
                 i.key === industryKey
                   ? 'inline-flex min-h-11 items-center rounded-full bg-brand-600 px-3.5 text-xs font-semibold text-white sm:min-h-0 sm:py-1.5'
-                  : 'inline-flex min-h-11 items-center rounded-full border border-neutral-200 bg-white px-3.5 text-xs text-neutral-600 transition-colors hover:border-brand-300 hover:text-brand-700 sm:min-h-0 sm:py-1.5'
+                  : 'inline-flex min-h-11 items-center rounded-full border border-neutral-500 bg-white px-3.5 text-xs text-neutral-600 transition-colors hover:border-brand-500 hover:text-brand-700 sm:min-h-0 sm:py-1.5'
               }
             >
               {i.label}
@@ -441,7 +441,7 @@ export default function TryDemo() {
           {/* 覚えているサンプル会社プロファイル */}
           <div className="border-b border-neutral-200 px-4 py-4">
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
                 <Building2 className="h-3.5 w-3.5" aria-hidden />
                 覚えているサンプル会社プロファイル
               </p>
@@ -513,7 +513,7 @@ export default function TryDemo() {
 
           {/* 誠実性ラベル: このデモの回答が「用意されたサンプル応答」であることと、
               登録後は自社の記憶に基づく個別回答になることを常時明示する（過大表現の回避）。 */}
-          <p className="border-t border-neutral-200 bg-neutral-50/70 px-4 py-2 text-[11px] leading-relaxed text-neutral-500">
+          <p className="border-t border-neutral-200 bg-neutral-50/70 px-4 py-2 text-[11px] leading-relaxed text-neutral-600">
             ※これはサンプル応答です。登録後は、自社の記憶（規程・過去の判断など）に基づいた自社専用の回答になります。
           </p>
 
@@ -525,7 +525,7 @@ export default function TryDemo() {
               aria-busy＋淡色化し「回答表示中…」の明示ラベルを出す。クリック自体は
               従来どおり無効化しない（disabled属性は使わない）。 */}
           <div className="border-t border-neutral-200 bg-neutral-50 px-4 py-4">
-            <p className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+            <p className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
               <MessageSquareText className="h-3.5 w-3.5" aria-hidden />
               質問を選んで試す
               {isBusy && (
@@ -553,7 +553,7 @@ export default function TryDemo() {
                     (isBusy ? 'cursor-wait ' : '') +
                     (pending?.qIndex === i
                       ? 'border-brand-300 bg-brand-50 text-brand-700'
-                      : 'border-neutral-200 bg-white text-neutral-700')
+                      : 'border-neutral-500 bg-white text-neutral-700')
                   }
                 >
                   <MessageSquareText className="h-3.5 w-3.5 text-brand-600" aria-hidden />

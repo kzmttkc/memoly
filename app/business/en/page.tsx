@@ -386,7 +386,7 @@ export default function BusinessEnglishPage() {
               </span>
               <span className="font-semibold text-neutral-900">番頭(Banto)</span>
             </div>
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
+            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-600">
               <Link href="/business" className="hover:text-brand-700">日本語サイト</Link>
               <Link href="/login?next=/company&lang=en" className="hover:text-brand-700">Log in</Link>
               <Link href="/terms/en" className="hover:text-brand-700">Terms (English)</Link>
@@ -394,11 +394,11 @@ export default function BusinessEnglishPage() {
               <Link href="/tokushoho" className="hover:text-brand-700">特定商取引法に基づく表記</Link>
             </nav>
           </div>
-          <p className="mt-6 text-xs leading-relaxed text-neutral-500">
+          <p className="mt-6 text-xs leading-relaxed text-neutral-600">
             Banto provides general information, not individualized legal advice or filing
             representation. Please consult a licensed professional for final legal decisions.
           </p>
-          <p className="mt-2 text-xs text-neutral-500">© {new Date().getFullYear()} 番頭(Banto) (KIZUNA Creation)</p>
+          <p className="mt-2 text-xs text-neutral-600">© {new Date().getFullYear()} 番頭(Banto) (KIZUNA Creation)</p>
         </div>
       </footer>
     </div>

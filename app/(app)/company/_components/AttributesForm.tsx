@@ -90,7 +90,7 @@ export function AttributesForm({
           id="af-industry"
           value={industry}
           onChange={e => setIndustry(e.target.value)}
-          className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="w-full rounded-xl border border-neutral-500 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         >
           <option value="">選択してください</option>
           {INDUSTRY_MAJORS.map(i => (
@@ -109,7 +109,7 @@ export function AttributesForm({
           id="af-band"
           value={band}
           onChange={e => setBand(e.target.value)}
-          className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="w-full rounded-xl border border-neutral-500 bg-white px-3.5 py-2.5 text-sm text-neutral-900 transition-colors duration-150 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         >
           <option value="">選択してください</option>
           {EMPLOYEE_BANDS.map(b => (
@@ -141,7 +141,7 @@ export function AttributesForm({
                   className={
                     active
                       ? 'flex-1 rounded-xl border border-brand-500 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
-                      : 'flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
+                      : 'flex-1 rounded-xl border border-neutral-500 bg-white px-3 py-2 text-sm text-neutral-700 transition-colors hover:border-neutral-600 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
                   }
                 >
                   {lbl}

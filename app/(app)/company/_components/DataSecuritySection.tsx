@@ -207,7 +207,7 @@ export function DataSecuritySection({
                   value={confirmText}
                   onChange={e => setConfirmText(e.target.value)}
                   placeholder="削除"
-                  className="h-9 w-32 rounded-lg border border-neutral-200 bg-white px-2 text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning-500"
+                  className="h-9 w-32 rounded-lg border border-neutral-500 bg-white px-2 text-sm text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning-500"
                   aria-label="削除の確認入力"
                 />
                 <Button

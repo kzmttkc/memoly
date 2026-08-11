@@ -81,7 +81,7 @@ export default function KasuharaSelfCheck() {
                 type="checkbox"
                 checked={checked[i]}
                 onChange={() => toggle(i)}
-                className="mt-0.5 h-5 w-5 flex-none rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                className="mt-0.5 h-5 w-5 flex-none rounded border-neutral-500 text-brand-600 focus:ring-brand-500"
               />
               <span className="text-sm leading-relaxed text-neutral-700">{item}</span>
             </label>

@@ -23,8 +23,8 @@ const variants: Record<Variant, string> = {
   primary:
     'bg-brand-600 text-white hover:bg-brand-700 focus-visible:ring-brand-500 shadow-sm',
   secondary:
-    'bg-white text-neutral-800 border border-neutral-200 hover:bg-neutral-50 ' +
-    'hover:border-neutral-300 focus-visible:ring-brand-500',
+    'bg-white text-neutral-800 border border-neutral-500 hover:bg-neutral-50 ' +
+    'hover:border-neutral-600 focus-visible:ring-brand-500',
   ghost:
     'bg-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 ' +
     'focus-visible:ring-brand-500',

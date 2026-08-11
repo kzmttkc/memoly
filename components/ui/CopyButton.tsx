@@ -81,8 +81,8 @@ export function CopyButton({
       aria-live="polite"
       className={cn(
         'inline-flex items-center justify-center gap-1.5 rounded-xl font-medium select-none whitespace-nowrap',
-        'border border-neutral-200 bg-white text-neutral-800',
-        'transition-colors duration-150 hover:bg-neutral-50 hover:border-neutral-300',
+        'border border-neutral-500 bg-white text-neutral-800',
+        'transition-colors duration-150 hover:bg-neutral-50 hover:border-neutral-600',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:ring-brand-500',
         sizes,
         className,
