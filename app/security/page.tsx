@@ -107,8 +107,11 @@ export default function SecurityPage() {
               <li><span className="font-medium text-neutral-800">Stripe</span>（米国）：決済（有料プラン利用時。カード番号は番頭のサーバーを通りません）</li>
               <li><span className="font-medium text-neutral-800">Plausible Analytics</span>（EU）：匿名のアクセス解析（Cookie不使用）</li>
             </ul>
+            {/* 2026-08-12 法務追加（越境移転レビュー E）: 本ページの所在国表記は実測と一致
+                しており（Plausible は EU）修正不要。ただし移転先国の制度・運営者の措置・
+                ご本人への情報提供窓口は /privacy に新設した節にしか無いので導線を張る。 */}
             <p className="mt-2 text-neutral-500">
-              詳細は<Link href="/privacy" className="text-brand-600 underline">プライバシーポリシー</Link>をご覧ください。
+              詳細は<Link href="/privacy" className="text-brand-600 underline">プライバシーポリシー</Link>をご覧ください。上記のうち米国所在の各社への個人データの移転については、<Link href="/privacy#cross-border" className="text-brand-600 underline">「外国にある第三者への提供（越境移転）について」</Link>をご覧ください。
             </p>
           </section>
 

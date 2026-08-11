@@ -96,6 +96,32 @@ export default function TermsEnglishPage() {
             </p>
           </section>
 
+          {/* 2026-08-12 法務追加（越境移転レビュー C の派生）: 日英突合の結果、日本語版
+              /terms の第5条「個人データの取扱い（お客様の従業員等の情報の委託）」が
+              この英語版には丸ごと存在せず、第5条以降の節番号も1つずれていることが判明した
+              （2026-07-30 に日本語版へ追加した際、英訳が同期されなかった）。
+              第5条の全文英訳は法務の別タスクとし、ここでは越境移転に関する導線だけを
+              先に張って、英語読者が委託・再委託の条件に到達できない状態を解消する。
+              節番号は、既存の英語版の連番を維持する（振り直すと外部リンクが壊れるため）。 */}
+          <section>
+            <p className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-neutral-600">
+              <span className="font-medium text-neutral-800">Note on personal data of your employees.</span>{' '}
+              The Japanese version of these Terms contains an additional Section 5
+              (&quot;Handling of personal data — entrustment of information on your employees and
+              related persons&quot;), which governs our role as a processor, the sub-processors we
+              use, security measures, and handling on termination. That section has not yet been
+              translated; the{' '}
+              <Link href="/terms" className="text-brand-600 underline">Japanese version</Link>{' '}
+              is the governing text. For the countries our sub-processors are located in, the data
+              protection regime of those countries, and the measures we take, see{' '}
+              <Link href="/privacy/en#cross-border" className="text-brand-600 underline">
+                Privacy Policy, &quot;Cross-border provision to third parties outside Japan&quot;
+              </Link>
+              . The numbering of the sections below differs from the Japanese version for this
+              reason.
+            </p>
+          </section>
+
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">5. Prohibited conduct</h2>
             <ul className="list-inside list-disc space-y-1 text-neutral-600">
