@@ -55,25 +55,24 @@
 | Slack | `lib/slack.ts` ← `weekly-email`・`deadline-reminder`・`integrations`・`billing/past-due-sweep` | 会社名＋労務の要点の要約 |
 | Plausible | 解析 | 匿名統計（Cookie不使用・個人を特定しない） |
 
-## 要対応（Takeshi 手番・2026-08-12 起票）
+## 見送り（Takeshi 裁定・2026-08-12。詳細は `.company/decisions/2026-08.md` 08-12）
 
 ### 1. Dify の DPA が未締結
 
 9社中ここだけ、手続をしなければ DPA が発効しない。`https://dify.ai/assets/legal/data-protection-agreement.pdf` の
-Exhibit B（data exporter 欄）に記入・署名し `privacy@dify.ai` へ送付。Dify 側が受領した時点で発効
+Exhibit B（data exporter 欄）に記入・署名し `privacy@dify.ai` へ送付すれば発効する
 （"Upon receipt of the validly completed Addendum … this DPA will become legally binding."）。
-
-**契約の締結にあたるため Takeshi の承認・署名が必要。** 企業顧客（とくに GDPR 適用先）が付く前に処理する。
+**記入済みPDFを用意しTakeshiへ提示したが、対応不要と裁定。** 未締結のまま据え置く。
 
 ### 2. Vercel の DPA がプラン条件を満たしていない疑い
 
 Vercel の DPA は適用対象を "Enterprise and Pro plans" に限定している。番頭のホスティングは
 Vercel チーム `gokaku`（`team_VKQ7PD4HfY6FO09VktnrXgBA`）配下で、`ASSET_REGISTRY.md` の
 2026-07-23 実測では **Hobby（無料）**。Hobby では自動組込みが効かない可能性がある。
-
-選択肢は (a) Vercel Pro への移行（**有料課金＝Takeshi 承認必須**）、(b) Vercel へ個別に照会して
-Hobby での DPA 適用可否を書面で得る、(c) 有料顧客を取る前に (a) を実施する。
-Vercel は全リクエストが通過する経路であり、影響範囲は Dify より大きい。
+Vercel サポートAIへの照会では「書面確認が要るなら `privacy@vercel.com` へ直接メールを」との回答。
+**照会文面を用意しTakeshiへ提示したが、対応不要と裁定。** Vercel Pro移行・照会とも保留。
+Vercel は全リクエストが通過する経路であり、影響範囲は Dify より大きい点は変わらないため、
+企業顧客の商談が動くなど状況が変われば再検討する。
 
 ### 3. Slack は番頭の再委託先ではない（対応不要・記録のため）
 
