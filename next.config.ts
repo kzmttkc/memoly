@@ -86,6 +86,29 @@ const nextConfig: NextConfig = {
     //     - upgrade-insecure-requests: 混在コンテンツを https へ昇格。
     //   'unsafe-inline' の完全撤去は、Next が静的ページの inline script hash 出力を
     //   標準サポートするか、動的化の意思決定をした時点で再評価する。
+    //
+    // ★2026-08-13 実測（推測ではなく実験した。同じ検討を繰り返さないために残す）:
+    //   前提の訂正: 「report-only を7日運用して violation 0 なら enforce へ昇格」という
+    //   移行計画は**成立しない**。下の report-only は 2026-07-10 から本番で34日走っていて、
+    //   Playwright で実測した違反数は 0 ではなく **/ 54件・/faq 23件・/security 16件・
+    //   /login 8件（すべて script-src-elem の inline）**。正体は Next の RSC ペイロード
+    //   (`self.__next_f.push(...)`) で、これは待っても消えない。時間の問題ではない。
+    //
+    //   nonce + strict-dynamic を worktree で実装して本番相当ビルドを起動し、
+    //   ヘッダの nonce と HTML の nonce を同一レスポンス内で突き合わせた結果:
+    //     動的レンダリング  /business(inline 60/nonce 54) /pricing(24/20) /company(10/8) … 一致
+    //     静的プリレンダ    /faq(27/0) /security(18/0) /privacy(19/0) /roumu(38/0) … **不一致**
+    //       （x-nextjs-cache: HIT ＝ ビルド時のHTMLをそのまま返すため nonce が入らない）
+    //   つまり撤去には全ページの動的化が要る。番頭の最大の資産は /roumu 33本ほかの
+    //   検索面（GSC 週418表示）で、これを毎リクエストSSRへ落とす代償は +2点に見合わない。
+    //   ハッシュ列挙も検討したが、ページ×ビルドごとに変わる 18〜38 本を経路別ヘッダで
+    //   配るのは「静かに壊れる」経路を新設するだけなので採らない。
+    //
+    //   **撤去の条件（これが満たされたら再評価する）**:
+    //     (a) Next が静的プリレンダHTMLの inline script ハッシュを標準出力するようになる、
+    //     (b) または /roumu・/blog を含む検索面の動的化を経営判断として受け入れる。
+    //   それまでは 'unsafe-inline' を残す。tests/unit/csp-policy.test.ts が、
+    //   nonce の配線が無いまま enforce から 'unsafe-inline' を外すことを機械で止める。
     const enforced = [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline' ${scriptHosts}`,

@@ -5,6 +5,7 @@ import { Download, ScrollText, ShieldCheck, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { BillingPortalCard } from './BillingPortalCard'
 
 // ============================================================================
 // DataSecuritySection — 設定画面(/company/billing)の「データとセキュリティ」
@@ -165,6 +166,23 @@ export function DataSecuritySection({
                 ))}
               </ul>
             )}
+          </Card>
+        )}
+
+        {/* ===== お支払い・解約（admin のみ・API側でも403）=====
+            2026-08-13: UX 2-11「この画面でできる唯一の操作が退会＝全データ削除」の是正。
+            契約をやめたい人に、データを消さない選択肢（解約）を先に見せる。 */}
+        {isAdmin && companyId && <BillingPortalCard companyId={companyId} />}
+
+        {/* ===== member 向けの説明（2026-08-13 UX 2-11）=====
+            admin 限定の機能（エクスポート・監査ログ・お支払い）を非表示にすると、
+            member にはこの画面が「削除ボタン1個」に見えていた。何が管理者側にあるかを書く。 */}
+        {!isAdmin && (
+          <Card>
+            <p className="text-sm font-medium text-neutral-900">管理者が行える操作</p>
+            <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+              データの一括エクスポート・操作の監査ログ・お支払いと解約は、この会社の管理者が行えます。必要な場合は社内の管理者へご依頼ください。
+            </p>
           </Card>
         )}
 

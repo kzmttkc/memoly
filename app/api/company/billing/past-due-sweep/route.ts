@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendSlackMessage } from '@/lib/slack'
 import { PAST_DUE_GRACE_DAYS, pastDueExpired } from '../webhook/transition'
+import { verifyCronBearer } from '@/lib/cron-auth'
 
 // ============================================================================
 // /api/company/billing/past-due-sweep — 滞納(past_due)の時間上限を機械的に打ち切る
@@ -38,11 +39,13 @@ const MAX_DEMOTIONS_PER_RUN = 50
 
 export async function GET(req: Request) {
   // --- fail-safe: CRON_SECRET 未設定なら認可より先に「安全に何もしない」 ---
-  if (!process.env.CRON_SECRET) {
+  // 2026-08-13: 照合は lib/cron-auth.ts の定数時間比較に統一。
+  const cronAuth = verifyCronBearer(req.headers.get('authorization'))
+  if (cronAuth === 'not-configured') {
     console.warn('[billing:past-due-sweep] CRON_SECRET 未設定のためスキップしました。')
     return NextResponse.json({ demoted: 0, skipped: true, reason: 'CRON_SECRET not set' })
   }
-  if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (cronAuth !== 'ok') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

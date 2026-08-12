@@ -1,73 +1,95 @@
-# 番頭 手動マイグレーション適用手順（Takeshi 作業）
+# 番頭 手動マイグレーション適用台帳
 
-本番 Supabase プロジェクト（専用: `hsyalzzcemtewmtorwkn`）へ、SQL を Takeshi が手動適用するタスクの台帳です。
-コードは適用前でも壊れないよう「テーブルが無ければ記録しないだけ」のベストエフォートで書いてあります。適用すると機能が有効化されます。
+本番 Supabase プロジェクト（専用: `hsyalzzcemtewmtorwkn`）へ手動適用する SQL の台帳です。
+コードは適用前でも壊れないよう「テーブルが無ければ記録しないだけ」のベストエフォートで書いてあり、
+適用すると機能が有効化されます。
 
 適用方法（共通）:
-1. Supabase ダッシュボード → 対象プロジェクト → SQL Editor を開く
-2. 該当 SQL ファイルの中身を貼り付けて実行（`IF NOT EXISTS` 等で冪等・再実行安全）
-3. 成功後、下の「適用後の確認」を実施
+1. `python3 ~/Takeshi_Automation/scripts/supabase_sql.py banto --file supabase/<file>.sql`（Management API）
+2. または Supabase ダッシュボード → SQL Editor に貼り付けて実行（`IF NOT EXISTS` 等で冪等・再実行安全）
+
+## この台帳の使い方（★2026-08-13 に機械化した）
+
+**`npm run verify:prod` が台帳と本番の両方を見る。** 手で更新し忘れても検出される。
+
+- `[C]` … `supabase/*.sql` のうち**この台帳にファイル名が出てこないもの**を落とす。
+  台帳が4本しか載せていなかったため、GRANT 系4本の適用有無が誰にも追えなくなっていた
+  （2026-08-12 セキュリティ採点 −4 の中身）。**新しい .sql を足したらこの表に1行足す。**
+- `[B]` … `.sql` が宣言する CREATE TABLE / ADD COLUMN / CREATE FUNCTION を本番の PostgREST
+  スキーマと突き合わせる。**GRANT/REVOKE は何も作らないので [B] では絶対に検出できない。**
+- `[D]` … その盲点を埋める。使い捨ての `@example.test` ユーザーを作って `authenticated` の
+  JWT を取り、**1行も一致しない条件**で UPDATE を投げて権限だけを引き出す（42501 か 2xx か）。
+  行は一切変更されない。ユーザーは finally で必ず削除する。
 
 ---
 
-## ① 監査ログ基盤（company_audit_logs）✅ 適用済み（2026-07-10）
+## 本番の実測状態（2026-08-13 実測・`information_schema` を直接照会）
 
-- 適用方法: Supabase Management API（`POST /v1/projects/hsyalzzcemtewmtorwkn/database/query`）で CTO が適用。HTTP 201。
-- 確認済み: `relrowsecurity=t`、ポリシー2本（admin_select / member_insert）、service role REST で SELECT 200。
-- ファイル: `supabase/company_audit_logs.sql`
-- 目的: 規程削除・自社ルール変更・メンバー追加・記憶(rule候補)削除など重要操作の追記専用ログ。
-- 依存: 既存の `is_company_member(uuid)` / `is_company_admin(uuid)`（company_schema.sql で作成済）。
-- 特性: 追記専用（UPDATE/DELETE ポリシー無し＝改竄不可）。参照は admin のみ。書込みは
-  anon(=ユーザーJWT) で `actor_user_id = auth.uid()` を強制（なりすまし記録防止）。
-
-適用後の確認（SQL Editor で実行）:
 ```sql
--- テーブルとRLSが有効か
-select relrowsecurity from pg_class where relname = 'company_audit_logs';   -- => t
--- ポリシーが2本あるか（admin_select / member_insert）
-select policyname from pg_policies where tablename = 'company_audit_logs';
+-- 列粒度 GRANT（この2行だけであること）
+select table_name, grantee, privilege_type, column_name
+  from information_schema.role_column_grants
+ where table_schema='public' and grantee in ('anon','authenticated') and privilege_type='UPDATE';
 ```
-配線済みの操作（適用後に自動で記録され始める）:
-- `profile.delete` / `profile.update` … 自社ルールの削除・変更（/api/company/profile）
-- `document.delete` … 取込規程の削除（/api/company/document/ingest）
-- `member.invite` … 席の追加（/api/company/members）
-- `memory.rule.delete` … 記憶(rule候補)の削除（/api/company/memory ?action=approve の片付け）
+実測結果:
+
+| table | grantee | UPDATE 可能な列 |
+|---|---|---|
+| `companies` | authenticated | **`name` のみ** |
+| `company_members` | authenticated | **`role` のみ** |
+| （anon） | — | **0件** |
+
+```sql
+-- SECURITY DEFINER 関数の search_path と EXECUTE 権限
+select p.proname, p.prosecdef, p.proconfig from pg_proc p
+  join pg_namespace n on n.oid=p.pronamespace where n.nspname='public';
+```
+実測結果: `banto_cohort_stats` は `prosecdef=true` / `search_path=public` /
+EXECUTE は **`postgres, service_role` のみ**（anon・authenticated から剥奪済み）。
+anon で `POST /rest/v1/rpc/banto_cohort_stats` を叩くと
+`42501 permission denied for function banto_cohort_stats` が返ることも実測済み。
+
+**結論: 2026-08-12 に「未適用なら生きたまま」と書かれた2つの実害
+（誰でも全社の経営指標を読める／admin が席の user_id を任意ユーザーへ付け替えられる）は、
+本番では成立しない。**
 
 ---
 
-## ② micro-CV リード捕捉（company_leads）✅ 適用済み（2026-07-10）
+## 全 SQL の適用状態
 
-- ファイル: `supabase/company_leads.sql`（ファイル冒頭コメントは旧共有プロジェクト言及だが、実適用先は専用 `hsyalzzcemtewmtorwkn`）
-- 適用方法: 同上（Management API、HTTP 201）。
-- 確認済み: RLS 有効、ポリシー1本（anon_insert）、service role REST で SELECT 200。
+「実測」列は 2026-08-13 に本番へ問い合わせた結果。**判定根拠**の列に、何を見て適用済みと言ったかを書く。
+
+| ファイル | 内容 | 実測 | 判定根拠 |
+|---|---|---|---|
+| `schema.sql` | pgvector 有効化・旧個人版 `memoly_*` 基盤 | ✅ | `memoly_users` 他が本番に実在 |
+| `company_schema.sql` | 会社版の中核（`companies` / `company_members` / `company_profiles` ほか） | ✅ | 本番に実在 |
+| `company_audit_logs.sql` | 重要操作の追記専用ログ（改竄不可・参照は admin） | ✅ 2026-07-10 | RLS 有効・ポリシー2本を適用時に確認 |
+| `company_leads.sql` | micro-CV のリード捕捉 | ✅ 2026-07-10 | RLS 有効・ポリシー1本（anon_insert） |
+| `company_memory_semantic.sql` | pgvector 記憶（`match_company_memories`・HNSW索引） | ✅ 2026-07-10 | RPC が `prosecdef=false`（SECURITY INVOKER＝RLSが効く）で実在 |
+| `company_integrations.sql` | Slack Webhook / 公開API キー（どちらも admin のみ） | ✅ 2026-07-23 | 両テーブル `relrowsecurity=t` |
+| `company_documents.sql` | 取込規程の本文 | ✅ | `company_documents` が本番に実在 |
+| `company_deadlines.sql` | 期限リマインドの登録 | ✅ | 本番に実在 |
+| `company_digests.sql` | 週次ダイジェストの配信記録 | ✅ | 本番に実在 |
+| `company_memory_depth.sql` | `company_memories` へ `topic` / `subject` 等を後付け | ✅ | `[B]` の ADD COLUMN 照合で不足0 |
+| `collective_intelligence.sql` | `company_attributes` / `company_risk_scores` | ✅ | 両テーブルが本番に実在 |
+| `billing_subscriptions.sql` | `company_billing_events`（webhook の冪等台帳） | ✅ | 本番に実在 |
+| `billing_past_due_grace.sql` | `companies.past_due_since`（滞納の21日打ち切り） | ✅ | 列が本番に実在 |
+| `plan_ssot_migration.sql` | 旧 plan enum（trial/pro）を SSOT へ寄せるデータ移行 | ✅ | `companies.plan` の CHECK 制約が現行 enum |
+| **`high1_companies_column_grant.sql`** | **`companies` の UPDATE を `name` 列だけに剥奪（課金バイパス封鎖）** | ✅ | 上表のとおり `name` のみ。`plan`/`status` は 42501 |
+| **`company_members_column_grant.sql`** | **`company_members` の UPDATE を `role` 列だけに剥奪（席乗っ取り封鎖）** | ✅ | 上表のとおり `role` のみ。`user_id` は 42501 |
+| **`high2_rpc_grant_and_search_path.sql`** | **`banto_cohort_stats()` の EXECUTE 剥奪＋`search_path` 固定** | ✅ | executors が `postgres,service_role` のみ・anon は 42501 |
+| `api_usage.sql` | 旧個人版 `memoly_api_usage` | ✅ | 本番に実在（会社版は `lib/rate-limit.ts` 側） |
+| `extraction_logs.sql` | 旧個人版 `memoly_extraction_logs` | ✅ | 本番に実在 |
+| `day2_reminder_migration.sql` | 旧個人版 `memoly_users.day2_sent_at` | ⚠️ 死蔵 | 列は実在するが、Day2 リマインドは 2026-07-30 に `companies` ベースへ移した。この .sql は歴史的経緯 |
+| `reports_table.sql` | 旧個人版 `memoly_reports`（App Store 審査対応） | ✅ | 本番に実在 |
+| `banto_cohort_stats.sql` | コホート集計関数の本体 | ✅ | service role で 200 応答 |
+| `cleanup_orphan_companies.sql` | **一度きりの掃除スクリプト**（退会で孤児化した会社を消す） | 適用対象外 | 冪等な定義ではなく手動運用。実行の要否はその都度判断 |
 
 ---
 
-## ③ セマンティック記憶（company_memory_semantic / pgvector）✅ SQL適用済み（2026-07-10）
+## 残タスク（Takeshi 手番）
 
-- ファイル: `supabase/company_memory_semantic.sql`
-- 適用方法: 同上（Management API、HTTP 201）。`CREATE EXTENSION vector` はそのまま通過。
-- 確認済み: `pg_extension` に vector、`company_memories.embedding vector(1536)` 列、HNSW索引、
-  RPC `match_company_memories`（prosecdef=false=SECURITY INVOKER）が REST 経由で 200 応答。
-- ★残タスク（Takeshi 手動）: `OPENAI_API_KEY` の Vercel env 投入 → `scripts/backfill_memory_embeddings.mjs` 実行。
-  キー未投入の間は embedding 生成が不活性（graceful degrade）で既存機能に影響なし。
-
----
-
-## ④ 外部連携基盤（company_integrations / company_api_keys）✅ 適用済み（2026-07-23）
-
-- ファイル: `supabase/company_integrations.sql`
-- 適用方法: Supabase Management API（`scripts/supabase_sql.py banto --file ...`）で CTO が適用。HTTP 200。
-- 確認済み: 両テーブル `relrowsecurity=t`、ポリシー各1本（admin_all）。
-- 目的: E08 Slack連携（Incoming Webhook URL・秘匿）と公開API v1 のAPIキー（SHA-256ハッシュ保存）。
-- 特性: どちらも admin のみ読み書き可。cron / v1 認証は service role で読む。
-  Webhook URL とキーのハッシュは /api/company/export のエクスポート対象外（export側は列挙制）。
-
----
-
-## 既出の手動タスク（参考・本書の管轄外）
-
-- pgvector 本番有効化 … SQL 側は上記③で適用済み。残りは OpenAI APIキー投入＋backfill のみ。
+- `OPENAI_API_KEY` の Vercel env 投入 → `scripts/backfill_memory_embeddings.mjs` 実行。
+  未投入の間は embedding 生成が不活性（graceful degrade）で既存機能に影響なし。
 - 課金解禁（Stripe キー / Price ID / BILLING_ENABLED）… `docs/BANTO_BILLING_UNLOCK_RUNBOOK.md`。
-  - Entry 年額を売る場合は、Stripe で年額 Price（¥39,800）を作成し
-    `STRIPE_PRICE_STARTER_YEARLY` を env に投入する（コードは結線済み。下記参照）。
+  Entry 年額を売る場合は Stripe で年額 Price（¥39,800）を作り `STRIPE_PRICE_STARTER_YEARLY` を投入する。

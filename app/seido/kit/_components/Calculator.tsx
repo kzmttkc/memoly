@@ -144,7 +144,7 @@ export function Calculator() {
               <button
                 type="button"
                 onClick={() => setSuppliers((rows) => rows.filter((_, j) => j !== i))}
-                className="flex-none rounded-lg border border-neutral-200 p-2 text-neutral-500 hover:border-neutral-400 hover:text-neutral-900"
+                className="flex-none rounded-lg border border-neutral-500 p-2 text-neutral-500 hover:border-neutral-400 hover:text-neutral-900"
                 aria-label={`行${i + 1}を削除`}
               >
                 <Trash2 className="h-4 w-4" aria-hidden />

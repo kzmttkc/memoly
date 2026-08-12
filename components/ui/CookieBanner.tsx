@@ -91,7 +91,15 @@ export function CookieBanner() {
     <div
       ref={ref}
       style={{ bottom: tabbarOffset }}
-      className="fixed left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-[0_-1px_3px_rgba(0,0,0,0.04)] px-4 py-2"
+      // 2026-08-13 UXペルソナ監査 1-5 の是正。
+      //   監査は「常時61px（667px画面の19%を常時占有）」としていたが、375x667 の
+      //   本番実測では **61px＝9.1%**、かつ同意後は DOM ごと消えて body の
+      //   padding-bottom も 0 に戻る（＝「常時」ではない）。数字と常時性は誤りだった。
+      //   ただし初回訪問者の第1画面を 9.1% 削っているのは事実なので、44px の
+      //   タップ標的（WCAG 2.5.5）を保ったまま器の縦paddingだけを詰める。
+      //   py-2(8px×2) → py-0.5(2px×2) で 61px → 49px（7.3%）。
+      //   タップ標的を縮めて数字を作らないこと（ボタンの min-h-11 は触らない）。
+      className="fixed left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-[0_-1px_3px_rgba(0,0,0,0.04)] px-4 py-0.5"
       role="banner"
       aria-label="Cookie使用の通知"
     >

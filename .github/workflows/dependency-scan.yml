@@ -34,7 +34,14 @@ jobs:
       #   許容リスト（--audit-level の引き上げではなく個別の除外）にする。
       - name: Audit production deps (fail on high)
         run: npm audit --omit=dev --audit-level=high
-      # 参考情報として全体（dev含む）の監査結果も出す。ここでは失敗させない。
-      - name: Full audit (report only)
+      # 開発依存を含む全体でも high 以上を落とす（2026-08-13）。
+      #   従来ここは `|| true` の参考情報だったため、high 3件（brace-expansion /
+      #   js-yaml / nanoid・いずれも fixAvailable:true）が**誰にも止められずに**
+      #   放置され、セキュリティ採点で -2 になった。開発依存であっても、
+      #   ビルド機と開発機で実行されるコードであり供給網攻撃の入口になる。
+      #   3件は 2026-08-13 に npm audit fix（package-lock のみ更新）で 0 件にした。
+      #   ★`|| true` を戻さない。解消できない件が出たときは、理由と再確認予定日を
+      #     書いたうえで個別に除外する（--audit-level の引き上げで丸ごと甘くしない）。
+      - name: Audit all deps incl. dev (fail on high)
         if: always()
-        run: npm audit || true
+        run: npm audit --audit-level=high

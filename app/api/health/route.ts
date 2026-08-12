@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { dbFailureDetail } from '@/lib/health-detail'
 
 // ============================================================================
 // /api/health — 外形監視・稼働確認用の軽量ヘルスチェック（P1）
@@ -51,9 +52,9 @@ export async function GET() {
       const supabase = createClient(url, anon, { auth: { persistSession: false } })
       // head+count は本文を返さず、テーブルの往復のみ。RLSで0件でも error にはならない。
       const { error } = await supabase.from('companies').select('id', { head: true, count: 'exact' }).limit(1)
-      checks.db = error ? { ok: false, detail: error.message } : { ok: true }
+      checks.db = error ? { ok: false, detail: dbFailureDetail(error.message) } : { ok: true }
     } catch (e) {
-      checks.db = { ok: false, detail: (e as Error)?.message ?? 'db ping failed' }
+      checks.db = { ok: false, detail: dbFailureDetail((e as Error)?.message) }
     }
   } else {
     checks.db = { ok: false, detail: 'supabase env missing' }

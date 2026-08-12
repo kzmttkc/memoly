@@ -84,6 +84,33 @@ export async function POST(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin
 
   try {
+    // ★公開表記との整合を実行時に強制する（2026-08-13）。
+    //   /tokushoho・/pricing・FAQ は「解約後もお支払い済みの請求期間の末日まで
+    //   ご利用いただけます」と書いている。これが真であるためには、ポータルの
+    //   キャンセルが **期間末（at_period_end）** でなければならない。設定は
+    //   Stripe ダッシュボード側で誰でも変えられ、変えても番頭のコードは何も
+    //   気づかない＝その瞬間に公開表記が虚偽表示になる。
+    //   そこでセッションを作る前に設定の実値を取りに行き、期間末でなければ
+    //   **ポータルを開かない**。「開くが表記と違う」より「開かない」を選ぶ。
+    const config = await stripe.billingPortal.configurations.retrieve(
+      BANTO_PORTAL_CONFIGURATION,
+    )
+    const cancelMode = config.features?.subscription_cancel?.mode
+    if (config.features?.subscription_cancel?.enabled !== true || cancelMode !== 'at_period_end') {
+      console.error(
+        '[billing:portal] ポータル設定が公開表記と一致しないため開きませんでした',
+        { enabled: config.features?.subscription_cancel?.enabled, mode: cancelMode },
+      )
+      return NextResponse.json(
+        {
+          error: 'PORTAL_MISCONFIGURED',
+          message:
+            'お支払い情報の管理画面を開けませんでした。お手数ですが support@banto-roumu.com までご連絡ください。',
+        },
+        { status: 503 },
+      )
+    }
+
     const portal = await stripe.billingPortal.sessions.create({
       customer: customerId,
       configuration: BANTO_PORTAL_CONFIGURATION,

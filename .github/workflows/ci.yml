@@ -57,6 +57,5 @@ jobs:
             --ignore-pattern "app/business/_components/TryDemoEn.tsx" \
             --ignore-pattern "components/tools/client.tsx" \
             --ignore-pattern "components/ui/CookieBanner.tsx" \
-            --ignore-pattern "components/ui/ThemeToggle.tsx" \
             --ignore-pattern "lib/company.ts" \
             --ignore-pattern "lib/theme.tsx"

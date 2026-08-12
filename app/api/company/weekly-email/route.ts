@@ -4,6 +4,7 @@ import type { DigestPayload, DigestCard } from '@/lib/digest'
 import { getSeasonalReminders, type SeasonalReminder } from '@/lib/email-seasonal'
 import { sendSlackMessage } from '@/lib/slack'
 import { buildUnsubscribeUrls, unsubscribeHeaders } from '@/app/api/unsubscribe/token'
+import { verifyCronBearer } from '@/lib/cron-auth'
 
 // ============================================================================
 // /api/company/weekly-email — 番頭版 週次リテンションメール（Vercel Cron）
@@ -113,13 +114,13 @@ export async function GET(req: Request) {
   // 2026-07-30 可用性監査#8: skipped も HTTP 500 で返す。
   //   従来は 200 だったため、env の設定漏れで1通も送られていなくても Vercel Cron の
   //   実行履歴は緑のままで、誰も気づけなかった。**設定漏れは正常ではない**ので赤くする。
-  if (!process.env.CRON_SECRET) {
+  // 2026-08-13: 照合は lib/cron-auth.ts の定数時間比較に統一。
+  const cronAuth = verifyCronBearer(req.headers.get('authorization'))
+  if (cronAuth === 'not-configured') {
     console.error('[banto:weekly-email] CRON_SECRET 未設定のため配信をスキップしました。')
     return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' }, { status: 500 })
   }
-
-  const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (cronAuth !== 'ok') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

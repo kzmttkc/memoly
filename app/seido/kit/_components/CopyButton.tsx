@@ -21,7 +21,7 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
     <button
       type="button"
       onClick={copy}
-      className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
+      className="inline-flex items-center gap-1 rounded-lg border border-neutral-500 px-2.5 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:border-neutral-400 hover:text-neutral-900"
       aria-label={`${label}をコピー`}
     >
       {copied ? <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}

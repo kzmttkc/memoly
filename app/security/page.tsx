@@ -121,8 +121,21 @@ export default function SecurityPage() {
             </p>
           </section>
 
+          {/* 2026-08-13 UXペルソナ監査 2-5 の是正:
+              このページには「第三者の監査を受けているのか」に答える記述が1件も無く、
+              導入検討者から見ると触れていないこと自体が隠しているように読める
+              （grep 実測: 該当語 0件）。取得の有無ではなく **この記述の根拠** を
+              明示する形で答える。ブランド規定（brand.md）により、運営者自身の
+              資格・監修・登録状態には肯定形でも否定形でも触れない。 */}
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">9. 脆弱性のご報告・お問い合わせ</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">9. この記載の根拠について</h2>
+            <p>
+              本ページの内容は、いずれも当社が実装済みの内容を自ら記載したものです。外部機関による監査・認証を受けたものではありません。記載の裏付けが必要な場合は、下記の窓口へご照会ください。実装が変わった際は本ページも更新します。
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">10. 脆弱性のご報告・お問い合わせ</h2>
             <p>
               セキュリティ上の問題を発見された場合や、データの取り扱いについてのご質問は <a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">support@banto-roumu.com</a> までご連絡ください。確認のうえ誠実に対応します。
             </p>

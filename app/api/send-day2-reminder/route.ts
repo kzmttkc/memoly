@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { buildUnsubscribeUrls, unsubscribeHeaders } from '@/app/api/unsubscribe/token'
+import { verifyCronBearer } from '@/lib/cron-auth'
 
 // 番頭の対外ドメイン（メール内リンク・配信停止・送信者情報で使用）。
 const BANTO_URL = 'https://banto-roumu.com'
@@ -29,13 +30,14 @@ export async function GET(req: Request) {
   // fail-safe: CRON_SECRET 未設定時は「Bearer undefined」一致で認可が通るため、認可より先に安全に停止
   // 2026-07-30 可用性監査#8: 設定漏れは正常ではないので HTTP 500（従来は 200 で、
   //   1通も送っていなくても Vercel Cron の履歴は緑のままだった）。
-  if (!process.env.CRON_SECRET) {
+  // 2026-08-13: 照合は lib/cron-auth.ts の定数時間比較に統一（短絡評価で秘密の
+  //   前方一致長が応答時間に乗るのを防ぐ）。未設定/不一致の扱いは従来どおり。
+  const cronAuth = verifyCronBearer(req.headers.get('authorization'))
+  if (cronAuth === 'not-configured') {
     console.error('[send-day2-reminder] CRON_SECRET 未設定のため配信をスキップしました。')
     return NextResponse.json({ sent: 0, skipped: true, reason: 'CRON_SECRET not set' }, { status: 500 })
   }
-
-  const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (cronAuth !== 'ok') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
