@@ -115,7 +115,7 @@ function LoginForm() {
         </Button>
       </form>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
+      <div className="my-6 flex items-center gap-3 text-xs text-neutral-500">
         <div className="h-px flex-1 bg-neutral-200" />
         {isEn ? 'or' : 'または'}
         <div className="h-px flex-1 bg-neutral-200" />

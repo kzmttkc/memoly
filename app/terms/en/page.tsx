@@ -38,7 +38,7 @@ export default function TermsEnglishPage() {
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">Terms of Service</h1>
           <p className="mt-1 text-sm text-neutral-500">Last updated: July 28, 2026</p>
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs text-neutral-500">
             English translation for reference. The <Link href="/terms" className="underline">Japanese version</Link> is the governing text in case of any discrepancy.
           </p>
         </div>

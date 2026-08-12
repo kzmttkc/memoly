@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check, ShieldCheck, Trash2 } from 'lucide-react'
-import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -9,6 +8,8 @@ import { PLANS, billingEnabled } from '@/lib/plans'
 import { FAQ_ITEMS } from '@/lib/faq'
 import { PLAN_COPY } from './_lib/plan-copy'
 import { TrackedCTA } from '../business/_components/TrackedCTA'
+import { PublicFooter } from '@/components/ui/PublicFooter'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 
 // ============================================================================
 // /pricing — 料金の単独ページ（2026-07-30 PMF修理#1・新設）
@@ -103,28 +104,7 @@ export default function PricingPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
-      {/* ===== ヘッダ ===== */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-6 py-3.5">
-          <Link href="/business" className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-              <BantoMark className="h-3.5 w-3.5" aria-hidden />
-            </span>
-            <span className="font-semibold tracking-tight text-neutral-900">番頭(Banto)</span>
-          </Link>
-          <nav className="flex items-center gap-3">
-            <Link href="/login?next=/company" className="inline-flex min-h-11 items-center px-1 text-sm text-neutral-500 hover:text-brand-700">
-              ログイン
-            </Link>
-            <TrackedCTA
-              location="pricing_page_header"
-              className={buttonClass({ variant: 'primary', size: 'sm', className: 'whitespace-normal text-center' })}
-            >
-              無料で始める
-            </TrackedCTA>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader ctaLocation="pricing_page_header" showPricingLink={false} />
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
@@ -241,8 +221,11 @@ export default function PricingPage() {
                 確定文言に一致させる。ここだけ独自に言い換えると表示が食い違う。 */}
             表示価格はいずれも消費税を含むお支払い総額で、表示価格以外の追加料金はかかりません。
             お支払いはクレジットカード（決済代行：Stripe）で、月額プランは初回決済日を基準に1か月ごとの自動更新です。
+            {/* 2026-08-12 UXペルソナ監査 R-7: /tokushoho にある「次回請求日の7日前まで」が
+                この面だけ落ちており、期限を知らずに直前に申し出た利用者が次期分を課金される。
+                正典（/tokushoho の解約欄）と同じ条件をここにも書く。 */}
             解約に最低利用期間の縛りはありません。現在、管理画面上でご自身が解約手続きを完了する機能は提供しておらず、
-            お問い合わせ窓口へメールでお申し出いただき当方が処理します（お支払い済みの請求期間の末日まではご利用いただけます）。
+            お問い合わせ窓口へメールでお申し出いただき当方が処理します（原則3営業日以内。処理に日数を要するため、次回の請求日の7日前までにご連絡ください。お支払い済みの請求期間の末日まではご利用いただけます）。
             詳しい条件は
             <Link href="/tokushoho" className="underline underline-offset-2 hover:text-brand-700">特定商取引法に基づく表記</Link>
             をご覧ください。
@@ -323,32 +306,7 @@ export default function PricingPage() {
         </Card>
       </section>
 
-      {/* ===== フッタ ===== */}
-      <footer className="border-t border-neutral-200 bg-neutral-50">
-        <div className="mx-auto max-w-5xl px-6 py-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/business" className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-                <BantoMark className="h-3.5 w-3.5" aria-hidden />
-              </span>
-              <span className="font-semibold text-neutral-900">番頭(Banto)</span>
-            </Link>
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
-              <Link href="/business" className="hover:text-brand-700">サービス概要</Link>
-              <Link href="/faq" className="hover:text-brand-700">よくある質問</Link>
-              <Link href="/contact" className="hover:text-brand-700">お問い合わせ</Link>
-              <Link href="/tokushoho" className="hover:text-brand-700">特定商取引法に基づく表記</Link>
-              <Link href="/terms" className="hover:text-brand-700">利用規約</Link>
-              <Link href="/privacy" className="hover:text-brand-700">プライバシー</Link>
-            </nav>
-          </div>
-          <p className="mt-6 text-xs leading-relaxed text-neutral-500">
-            番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
-            最終的な判断は、必要に応じて専門家にご確認ください。
-          </p>
-          <p className="mt-2 text-xs text-neutral-500">© {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }

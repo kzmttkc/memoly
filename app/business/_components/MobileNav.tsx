@@ -21,8 +21,25 @@ import { Menu, X, Globe } from 'lucide-react'
 const LINKS = [
   { href: '/tools', label: '無料ツール' },
   { href: '/roumu', label: '労務の記事' },
+] as const
+
+// 2026-08-12 UXペルソナ監査 R-12（イライラ級）: /business は 375px で 21,466px あり、
+//   H2「実際の使われ方」(y=3,632) と H2「汎用AIとの違い」(y=7,702) のあいだが
+//   4,070px（6画面分）見出し無しで続く。ここを下降中の読者は「今どこか／あと何個か」を
+//   完全に失う。「先頭へ戻る」(BackToTop) は戻る手段であって現在地の地図ではない。
+//   ハンバーガーは既にモバイルの唯一のナビ入口なので、そこにページ内目次を足す
+//   （新しいUIを増やさない）。id は page.tsx / ScenarioSection.tsx の各 section に付与。
+const SECTIONS = [
+  { href: '#demo', label: 'サンプル会社で試す' },
+  { href: '#cases', label: '実際の使われ方' },
+  { href: '#vs-ai', label: '汎用AIとの違い' },
+  { href: '#features', label: 'できること' },
+  { href: '#handover', label: '社労士に渡すメモ' },
+  { href: '#security-info', label: 'セキュリティ' },
+  { href: '#compare', label: '他システムとの違い' },
   // 2026-07-28 CTO修正（L1監査#5）: モバイルもハンバーガーから料金へ直接届くようにする。
   { href: '#pricing', label: '料金' },
+  { href: '#faq', label: 'よくある質問' },
 ] as const
 
 // 2026-07-29 CTO修正（UX監査Round4#6・重大）: デスクトップ版EN/JPトグル
@@ -57,8 +74,24 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-40 cursor-default bg-transparent"
           />
-          <div className="absolute inset-x-0 top-16 z-50 border-b border-neutral-200 bg-white shadow-sm">
+          <div className="absolute inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-neutral-200 bg-white shadow-sm">
             <nav className="mx-auto flex max-w-5xl flex-col px-6 py-2">
+              <p className="px-2 pt-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                このページの中身
+              </p>
+              {SECTIONS.map(l => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg px-2 py-3 text-sm text-neutral-700 hover:bg-neutral-50"
+                >
+                  {l.label}
+                </a>
+              ))}
+              <p className="mt-2 border-t border-neutral-200 px-2 pt-3 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                ほかのページ
+              </p>
               {LINKS.map(l => (
                 <Link
                   key={l.href}

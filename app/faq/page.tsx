@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, ChevronDown } from 'lucide-react'
-import { BantoMark } from '@/components/ui/BantoMark'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Disclosure } from '@/components/ui/Disclosure'
 import { FAQ_CATEGORIES, FAQ_ITEMS, JARGON_TERMS } from '@/lib/faq'
+import { PublicFooter } from '@/components/ui/PublicFooter'
+import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
+import BackToTop from '@/components/ui/BackToTop'
 
 // ============================================================================
 // /faq — 独立FAQページ（SSG・クローラブル）。2026-07-22 新設。
@@ -70,6 +72,9 @@ export default function FaqPage() {
       {/* ===== ヘッダ（2026-08-11 UI監査: 独自ヘッダ（ログインのみ・CTA/料金導線なし）を
           /tools /roumu と同じ PublicHeader へ統一。検索・GEO経由の初見客がこのページに
           直接着地しても、料金と無料登録にヘッダから到達できるようにする） ===== */}
+      {/* 2026-08-12 UXペルソナ監査 R-13: /faq は 375px で 6,056px あるのに
+          「先頭へ戻る」が /business にしか付いていなかった（検索着地の主戦場はこちら）。 */}
+      <BackToTop />
       <PublicHeader />
 
       {/* ===== パンくず ===== */}
@@ -89,11 +94,26 @@ export default function FaqPage() {
           料金、セキュリティ、製品の仕組み、規程管理、導入にかかる時間まで、検討時によくいただく質問をまとめました。
           個別の状況に応じた判断が必要な場合は、必要に応じて専門家にご確認ください。
         </p>
+
+        {/* 2026-08-12 UXペルソナ監査 R-12: 375px で 6,056px あるのに現在地も残量も
+            分からず、「今どこを読んでいるか」を見失った読者が閉じていた。
+            カテゴリ数は5つと少ないので、目次はアンカーの並びだけで足りる。 */}
+        <nav aria-label="このページの目次" className="mt-6 flex flex-wrap gap-2">
+          {FAQ_CATEGORIES.map((cat, i) => (
+            <a
+              key={cat}
+              href={`#faq-${i}`}
+              className="inline-flex min-h-11 items-center rounded-full border border-neutral-300 px-4 text-xs text-neutral-700 transition-colors hover:border-brand-300 hover:text-brand-700 sm:min-h-0 sm:py-2"
+            >
+              {cat}
+            </a>
+          ))}
+        </nav>
       </section>
 
       {/* ===== カテゴリ別FAQ ===== */}
-      {FAQ_CATEGORIES.map((cat) => (
-        <section key={cat} className="mx-auto max-w-3xl px-6 pb-4">
+      {FAQ_CATEGORIES.map((cat, i) => (
+        <section key={cat} id={`faq-${i}`} className="mx-auto max-w-3xl px-6 pb-4 scroll-mt-20">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-brand-700">{cat}</h2>
           <div className="space-y-3">
             {FAQ_ITEMS.filter((f) => f.category === cat).map((f) => (
@@ -147,10 +167,25 @@ export default function FaqPage() {
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
             会社を登録すれば、自社の規程や過去のやり取りを踏まえて番頭に続けて相談できます。無料で試せます。
           </p>
-          <div className="mt-6 flex justify-center">
-            <Link href="/business" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
-              番頭の全体像を見る
+          {/* 2026-08-12 UXペルソナ監査 R-5（離脱級）: 「無料で試せます」という見出しの
+              直下に置かれていた3つのボタンが /business・/blog・/roumu の回遊リンクだけで、
+              このページ本文に /signup が1本も無かった（本文リンク17本中0本）。
+              検索から /faq に直接着地した検討者は、疑問が解けた瞬間に次の行動を
+              取れずページ内を回遊させられていた。主ボタンを登録に差し替え、
+              /business は副次リンクへ降格する（見出し・説明文は変更しない）。 */}
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <TrackedCTA
+              location="faq_footer"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50"
+            >
+              無料で会社を登録して試す
               <ArrowRight className="h-4 w-4" aria-hidden />
+            </TrackedCTA>
+            <Link
+              href="/business"
+              className="inline-flex min-h-11 items-center text-sm text-brand-100 underline underline-offset-4 hover:text-white"
+            >
+              先に番頭の全体像を見る
             </Link>
           </div>
         </Card>
@@ -170,33 +205,7 @@ export default function FaqPage() {
         </div>
       </section>
 
-      {/* ===== フッタ ===== */}
-      <footer className="border-t border-neutral-200 bg-neutral-50">
-        <div className="mx-auto max-w-5xl px-6 py-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/business" className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-                <BantoMark className="h-3.5 w-3.5" aria-hidden />
-              </span>
-              <span className="font-semibold text-neutral-900">番頭(Banto)</span>
-            </Link>
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
-              <Link href="/business" className="hover:text-brand-700">サービス概要</Link>
-              <Link href="/blog" className="hover:text-brand-700">ブログ</Link>
-              <Link href="/roumu" className="hover:text-brand-700">使い方一覧</Link>
-              <Link href="/contact" className="hover:text-brand-700">お問い合わせ</Link>
-              <Link href="/login?next=/company" className="hover:text-brand-700">ログイン</Link>
-              <Link href="/terms" className="hover:text-brand-700">利用規約</Link>
-              <Link href="/privacy" className="hover:text-brand-700">プライバシー</Link>
-            </nav>
-          </div>
-          <p className="mt-6 text-xs leading-relaxed text-neutral-500">
-            番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
-            最終的な判断は、必要に応じて専門家にご確認ください。
-          </p>
-          <p className="mt-2 text-xs text-neutral-500">© {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }

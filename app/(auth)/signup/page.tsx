@@ -575,7 +575,7 @@ function SignupForm() {
           : 'Googleでの登録も、事業者としてのご利用（18歳以上）とみなします。'}
       </p>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-neutral-400">
+      <div className="my-6 flex items-center gap-3 text-xs text-neutral-500">
         <div className="h-px flex-1 bg-neutral-200" />
         {isEn ? 'or sign up with email' : 'またはメールアドレスで登録'}
         <div className="h-px flex-1 bg-neutral-200" />
@@ -810,7 +810,7 @@ function SignupForm() {
           1本も無かった（ロゴ→/business は (auth)/layout.tsx に既存）。登録の直前で
           「いくらかかるのか」を確かめたくなった人が、戻る手段を持たず離脱していた。
           広告・過剰な情報は足さず、料金と概要への細いリンクを1行だけ置く。 */}
-      <p className="mt-2 text-center text-xs text-neutral-400">
+      <p className="mt-2 text-center text-xs text-neutral-500">
         {isEn ? (
           <>
             <Link href="/pricing" className="underline underline-offset-2 hover:text-neutral-600">Check pricing</Link>

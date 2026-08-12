@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
-import { BantoMark } from '@/components/ui/BantoMark'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 import { buildToolJsonLd, type ToolJsonLdDef } from './meta'
 import { TOOL_LIST } from '@/lib/tools'
+import { PublicFooter } from '@/components/ui/PublicFooter'
 
 // ============================================================================
 // 無料セルフ点検ツール 共通シャーシ（ページ骨格部・Server Component）
@@ -41,13 +41,21 @@ export type ToolPageShellProps = {
   related: ToolRelatedArticle
   /** 一次情報の出典と確認日（計算を伴うツールでは明記必須・任意） */
   sources?: { checkedOn: string; items: { label: string; href: string }[] }
+  // 2026-08-12 UXペルソナ監査 R-14（イライラ級）: 検索から着地した現場担当が
+  //   本当に知りたいこと（例:「バイトも対象なのか」）の答えが、入力フォームと
+  //   メール獲得フォームを越えた「制度の説明」節の中にしか無かった。数字を
+  //   持っていない来訪者はフォームで詰まり、答えに辿り着く前に離脱する。
+  //   フォームより上に結論だけを先出しする枠。**文言は explain の段落から採り、
+  //   新しい主張を書き足さない**（同じ事実を2箇所に別の言い方で置かない）。
+  /** フォームより上に出す「まず結論」。設問と答えは explain の記述と一致させる。 */
+  quickAnswer?: { question: string; answer: string }
   /** 計算ツール（クライアントコンポーネント）を差し込む */
   children: React.ReactNode
 }
 
 type ToolFaqList = { q: string; a: string }[]
 
-export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, sources, children }: ToolPageShellProps) {
+export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, sources, quickAnswer, children }: ToolPageShellProps) {
   const jsonLdBlocks = buildToolJsonLd(jsonLd)
 
   // ほかの無料ツールへの相互リンク（クロール経路の確立）。
@@ -72,7 +80,10 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
         <Link href="/business" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
-        <span className="text-neutral-600">無料ツール</span>
+        {/* 2026-08-12 UXペルソナ監査 R-17: 「無料ツール」がただの span で、ツールページ
+            から一覧へ戻るには最下部まで下るしかなかった（他のツールを試したい人が
+            4,102px を下る）。パンくずの慣習どおりリンクにする。 */}
+        <Link href="/tools" className="text-neutral-600 hover:text-brand-700">無料ツール</Link>
       </nav>
 
       {/* ===== ヒーロー ＋ 計算ツール =====
@@ -89,6 +100,14 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
           <h1 className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl">
             {h1}
           </h1>
+          {/* 2026-08-12 UXペルソナ監査 R-14: 数字を持たずに来た人が、入力を求められる
+              前に自分の疑問の答えを受け取れるようにする（詳細は下の解説節に据え置き）。 */}
+          {quickAnswer && (
+            <div className="mt-5 rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3.5">
+              <p className="text-sm font-semibold text-neutral-900">{quickAnswer.question}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-neutral-700">{quickAnswer.answer}</p>
+            </div>
+          )}
         </div>
 
         <div className="order-3 mt-8 sm:order-2 sm:mt-4">
@@ -201,33 +220,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
         </div>
       </section>
 
-      {/* ===== フッタ ===== */}
-      <footer className="border-t border-neutral-200 bg-neutral-50">
-        <div className="mx-auto max-w-5xl px-6 py-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/business" className="flex min-h-11 items-center gap-2 sm:min-h-0">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-                <BantoMark className="h-3.5 w-3.5" aria-hidden />
-              </span>
-              <span className="font-semibold text-neutral-900">番頭(Banto)</span>
-            </Link>
-            {/* 2026-07-30 UX監査 #8: フッタ導線は高さ20pxで推奨44px未満だった。
-                モバイルだけ 44px の当たり判定にする（見た目の文字サイズは不変）。 */}
-            <nav className="flex flex-wrap items-center gap-x-5 text-sm text-neutral-500">
-              <Link href="/business" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">サービス概要</Link>
-              <Link href="/pricing" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">料金</Link>
-              <Link href="/login?next=/company" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">ログイン</Link>
-              <Link href="/terms" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">利用規約</Link>
-              <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">プライバシー</Link>
-            </nav>
-          </div>
-          <p className="mt-6 text-xs leading-relaxed text-neutral-500">
-            番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
-            最終的な判断は、必要に応じて専門家にご確認ください。
-          </p>
-          <p className="mt-2 text-xs text-neutral-500">© {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }

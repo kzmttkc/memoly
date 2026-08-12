@@ -69,7 +69,7 @@ export function RiskMeterHero({
         <span className={cn('text-6xl font-extrabold leading-none tabular-nums', b.text)}>
           {score}
         </span>
-        <span className="mb-1.5 text-lg text-neutral-400">/ 100</span>
+        <span className="mb-1.5 text-lg text-neutral-500">/ 100</span>
         <span
           className={cn(
             'mb-2 ml-auto inline-flex items-center rounded-full border px-2.5 py-0.5 ' +
@@ -100,7 +100,7 @@ export function RiskMeterBar({
         <span className="text-xs text-neutral-700">{name}</span>
         <span className="flex items-center gap-1.5">
           <span className={cn('text-xs font-semibold tabular-nums', b.text)}>{score}</span>
-          <span className="text-[10px] text-neutral-400">{b.label}</span>
+          <span className="text-[10px] text-neutral-500">{b.label}</span>
         </span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200">

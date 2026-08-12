@@ -75,6 +75,11 @@ export default function YukyuCheckToolPage() {
         ],
       }}
       faqs={FAQS}
+      quickAnswer={{
+        question: 'パート・アルバイトも対象ですか？',
+        answer:
+          '対象は正社員だけではありません。所定労働日数や勤続年数の条件を満たして年10日以上が付与されるなら、パートやアルバイトの社員も含まれます。管理監督者も対象です。',
+      }}
       related={{
         href: '/roumu/yukyu-5nichi-gimu',
         title: '年5日の有給休暇取得義務に中小企業が対応する',

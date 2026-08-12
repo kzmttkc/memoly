@@ -490,7 +490,7 @@ export default function TryDemo() {
               <div className="flex justify-center pt-1">
                 <Link
                   href="/signup?next=/company"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-[13px] font-medium text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-4 text-[13px] font-medium text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 sm:min-h-0 sm:py-2"
                   onClick={e => {
                     track('signup_cta_clicked', {
                       location: 'trydemo',
@@ -546,7 +546,9 @@ export default function TryDemo() {
                   onClick={() => ask(qa, i)}
                   aria-pressed={pending?.qIndex === i}
                   className={
-                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] shadow-sm ' +
+                    // 2026-08-12 UXペルソナ監査 R-8: 実測 h:34 で推奨44px未満だった（LP最大の
+                    //   インタラクション地点なのにタップ目標が最小）。モバイルのみ44pxへ。
+                    'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-[13px] shadow-sm sm:min-h-0 sm:py-1.5 ' +
                     'transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 ' +
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ' +
                     'focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-50 ' +

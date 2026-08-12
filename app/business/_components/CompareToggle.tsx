@@ -48,8 +48,8 @@ export default function CompareToggle() {
           onClick={() => select('generic')}
           className={
             side === 'generic'
-              ? 'flex items-center gap-1.5 rounded-full bg-neutral-800 px-4 py-1.5 text-sm font-semibold text-white'
-              : 'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm text-neutral-500 hover:text-neutral-800'
+              ? 'flex min-h-11 items-center gap-1.5 rounded-full bg-neutral-800 px-4 text-sm font-semibold text-white sm:min-h-0 sm:py-1.5'
+              : 'flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm text-neutral-600 hover:text-neutral-800 sm:min-h-0 sm:py-1.5'
           }
         >
           <MessageSquareText className="h-4 w-4" aria-hidden />
@@ -62,8 +62,8 @@ export default function CompareToggle() {
           onClick={() => select('banto')}
           className={
             side === 'banto'
-              ? 'flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white'
-              : 'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm text-neutral-500 hover:text-brand-700'
+              ? 'flex min-h-11 items-center gap-1.5 rounded-full bg-brand-600 px-4 text-sm font-semibold text-white sm:min-h-0 sm:py-1.5'
+              : 'flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm text-neutral-600 hover:text-brand-700 sm:min-h-0 sm:py-1.5'
           }
         >
           <BantoMark className="h-4 w-4" aria-hidden />

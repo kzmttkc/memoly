@@ -1,8 +1,14 @@
 import Link from 'next/link'
+import { PublicFooter } from '@/components/ui/PublicFooter'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 
 export default function PrivacyPage() {
   return (
     <div className="company-light min-h-screen bg-white">
+      {/* 2026-08-12 UXペルソナ監査 R-1/R-2: 規約・セキュリティ系のページだけ
+          ヘッダが無く、ここへ着地した稟議担当が料金にも登録にも進めない
+          行き止まりだった。公開面と同じ PublicHeader を置く。 */}
+      <PublicHeader />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
           <Link href="/business" className="text-sm text-neutral-500 hover:text-neutral-700">
@@ -206,6 +212,7 @@ export default function PrivacyPage() {
           </section>
         </div>
       </div>
+      <PublicFooter />
     </div>
   )
 }

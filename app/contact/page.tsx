@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { PublicFooter } from '@/components/ui/PublicFooter'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 
 // 2026-08-08 UXペルソナ監査で発見: サイト内にナビ・フッターから辿れる問い合わせ導線が
 // 存在せず、/contact は404だった（サポート窓口はtokushoho.tsxの中にしか記載が無かった）。
@@ -41,6 +43,10 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="company-light min-h-screen bg-white">
+      {/* 2026-08-12 UXペルソナ監査 R-1/R-2: 規約・セキュリティ系のページだけ
+          ヘッダが無く、ここへ着地した稟議担当が料金にも登録にも進めない
+          行き止まりだった。公開面と同じ PublicHeader を置く。 */}
+      <PublicHeader />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
           <Link href="/business" className="text-sm text-neutral-500 hover:text-neutral-700">
@@ -65,6 +71,7 @@ export default function ContactPage() {
           をご確認ください。
         </p>
       </div>
+      <PublicFooter />
     </div>
   )
 }

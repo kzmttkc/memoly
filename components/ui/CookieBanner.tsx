@@ -98,6 +98,10 @@ export function CookieBanner() {
       <div className="max-w-3xl mx-auto flex flex-row items-center justify-between gap-3">
         <p className="text-[11px] text-neutral-600 leading-snug">
           ログイン維持にCookieを使用します（解析はCookie不使用の匿名計測です）。
+          {/* 2026-08-12 UXペルソナ監査 R-8 で「h:14 で44px未満」と挙がったが、これは
+              文中のインラインリンクで WCAG 2.5.8 の Inline 例外に当たる。ここを44pxにすると
+              1行バナーの行ボックスが崩れ、R-16（バナーの占有を減らす）とも逆行するため
+              意図的に据え置く。 */}
           <Link href="/privacy" className="text-brand-600 underline ml-1">詳細</Link>
         </p>
         <button

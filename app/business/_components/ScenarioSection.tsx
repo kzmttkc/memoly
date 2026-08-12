@@ -18,7 +18,7 @@ export default function ScenarioSection() {
   if (SCENARIOS.length === 0) return null
 
   return (
-    <section className="border-t border-neutral-200 bg-white">
+    <section id="cases" className="scroll-mt-20 border-t border-neutral-200 bg-white">
       <div className="mx-auto max-w-5xl px-6 py-20">
         <div className="mx-auto mb-10 max-w-2xl text-center">
           <Badge tone="neutral" className="mb-3">

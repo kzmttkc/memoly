@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { PLANS, PAID_PLAN_IDS, billingEnabled } from '@/lib/plans'
+import { PublicFooter } from '@/components/ui/PublicFooter'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 
 // ============================================================================
 // 特定商取引法に基づく表記 — 8/5 課金解禁前の法的必須ページ（W3.5a-1）
@@ -54,6 +56,10 @@ export default function TokushohoPage() {
   const paidSignupOpen = billingEnabled()
   return (
     <div className="company-light min-h-screen bg-white">
+      {/* 2026-08-12 UXペルソナ監査 R-1/R-2: 規約・セキュリティ系のページだけ
+          ヘッダが無く、ここへ着地した稟議担当が料金にも登録にも進めない
+          行き止まりだった。公開面と同じ PublicHeader を置く。 */}
+      <PublicHeader />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
           <Link href="/business" className="text-sm text-neutral-500 hover:text-neutral-700">
@@ -253,6 +259,7 @@ export default function TokushohoPage() {
           までお寄せください。
         </p>
       </div>
+      <PublicFooter />
     </div>
   )
 }

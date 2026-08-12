@@ -16,7 +16,7 @@ import IndustryHeroPreview from './_components/IndustryHeroPreview'
 import CompareToggle from './_components/CompareToggle'
 import ScenarioSection from './_components/ScenarioSection'
 import ScrollProgress from './_components/ScrollProgress'
-import BackToTop from './_components/BackToTop'
+import BackToTop from '@/components/ui/BackToTop'
 import ForcePaidVariant from './_components/ForcePaidVariant'
 import LeadCapture from './_components/LeadCapture'
 import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
@@ -25,6 +25,7 @@ import { PLANS, billingEnabled } from '@/lib/plans'
 import { PLAN_COPY } from '@/app/pricing/_lib/plan-copy'
 import { USECASE_LIST } from '@/lib/usecase'
 import { TOOL_LIST } from '@/lib/tools'
+import { PublicFooter } from '@/components/ui/PublicFooter'
 
 // ============================================================================
 // /business — 番頭(Banto) 公開ランディングページ（認証不要・公開ルート）
@@ -712,7 +713,7 @@ export default async function BusinessLandingPage({
       {/* ===== 核の主張：汎用AI vs 番頭（ここで一度だけ強く言う） =====
           2026-07-23 B05: 静的な箇条書き2カードを、同じ質問への回答差をトグルで
           見せるインタラクティブ比較（CompareToggle）へ置換。主張でなく挙動で示す。 */}
-      <section className="border-y border-neutral-200 bg-neutral-50">
+      <section id="vs-ai" className="scroll-mt-20 border-y border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
@@ -737,7 +738,7 @@ export default async function BusinessLandingPage({
           旧「業務効率化」(4カード+概念バー)と旧「機能4軸」(4カード+スコアカード)の
           2セクションを1つに統合し、中盤を約50%短縮。冒頭に Before/After の具体
           シーン（貼り付け回数・調べ物の分数）を置き、抽象論の前に場面で見せる。 */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
+      <section id="features" className="scroll-mt-20 mx-auto max-w-5xl px-6 py-20">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
             覚える・答える・つくる・気づく
@@ -828,7 +829,7 @@ export default async function BusinessLandingPage({
           基本情報・整備済みの規程・近い期限・会社で決めた運用に相談論点を添えて
           1枚のメモへ整理し、コピーして渡せる（app/(app)/company/reports/page.tsx・
           lib/report.ts で実装確認済み。実装されていない能力は書かない）。 */}
-      <section className="border-y border-neutral-200 bg-neutral-50">
+      <section id="handover" className="scroll-mt-20 border-y border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div className="text-center lg:text-left">
@@ -926,7 +927,7 @@ export default async function BusinessLandingPage({
       </section>
 
       {/* ===== セキュリティ・プライバシー（機密の労務データを預けて大丈夫か、に答える） ===== */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
+      <section id="security-info" className="scroll-mt-20 mx-auto max-w-5xl px-6 py-20">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
             機密の労務データを、安心して預けられる設計
@@ -962,6 +963,15 @@ export default async function BusinessLandingPage({
               <h3 className="font-semibold text-neutral-900">通信・保管の暗号化</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
                 やり取りは暗号化された通信（HTTPS/TLS）で守られます。データの保管も、暗号化に対応した管理されたクラウド基盤（Supabase）で行います。
+                {/* 2026-08-12 UXペルソナ監査 R-3（離脱級・稟議ブロッカー）: この節が
+                    保管先の所在国に一切触れておらず、/security と /privacy にだけ
+                    「（米国）」と書かれていた。LPだけを見て稟議を通した担当者が、
+                    後から越境移転を知って差し戻される。既に他ページに書いてある
+                    事実をLPが落としているだけなので、事実をそのまま補う。 */}
+                保管先の Supabase をはじめ、AI回答の生成・ホスティング・決済などの委託先は米国に所在します。
+                移転先の一覧と、講じている保護措置は
+                <Link href="/security" className="underline hover:text-brand-700">セキュリティとデータ保護</Link>
+                に記載しています。
               </p>
             </div>
           </Card>
@@ -995,6 +1005,18 @@ export default async function BusinessLandingPage({
               </p>
             </div>
           </Card>
+        </div>
+        {/* 2026-08-12 UXペルソナ監査 R-2（離脱級）: 最も説得力のある /security へのリンクが
+            日本語の検討導線に0本だった（英語版LP app/business/en/page.tsx:294 にはある）。
+            稟議担当が到達できるよう、セキュリティ節の直後に明示の導線を置く。 */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/security"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-neutral-300 px-5 text-sm font-medium text-neutral-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+          >
+            セキュリティとデータ保護の詳細を見る
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
         </div>
       </section>
 
@@ -1050,7 +1072,7 @@ export default async function BusinessLandingPage({
       {/* ===== 比較表（B18・2026-07-23） =====
           「正直な土俵」: 相手の強みも番頭の非対応も同じ表で明記する（データは
           COMPARISON_ROWS を参照。断定・誹謗・優良誤認を避ける方針もそこに記載）。 */}
-      <section className="border-t border-neutral-200 bg-white">
+      <section id="compare" className="scroll-mt-20 border-t border-neutral-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
@@ -1321,7 +1343,7 @@ export default async function BusinessLandingPage({
       </section>
 
       {/* ===== よくある質問（FAQ）===== */}
-      <section className="border-t border-neutral-200 bg-neutral-50">
+      <section id="faq" className="scroll-mt-20 border-t border-neutral-200 bg-neutral-50">
         <div className="mx-auto max-w-3xl px-6 py-20">
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
@@ -1634,52 +1656,7 @@ export default async function BusinessLandingPage({
         </div>
       </section>
 
-      {/* ===== フッタ ===== */}
-      <footer className="border-t border-neutral-200 bg-neutral-50">
-        <div className="mx-auto max-w-5xl px-6 py-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-                <BantoMark className="h-3.5 w-3.5" aria-hidden />
-              </span>
-              <span className="font-semibold text-neutral-900">番頭(Banto)</span>
-            </div>
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-600">
-              <Link href="/blog" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
-                ブログ
-              </Link>
-              <Link href="/faq" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
-                よくある質問
-              </Link>
-              <Link href="/contact" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
-                お問い合わせ
-              </Link>
-              <Link href="/login?next=/company" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
-                ログイン
-              </Link>
-              <TrackedCTA location="footer" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
-                無料で始める
-              </TrackedCTA>
-              <Link href="/terms" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
-                利用規約
-              </Link>
-              <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
-                プライバシー
-              </Link>
-              <Link href="/tokushoho" className="inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0">
-                特定商取引法に基づく表記
-              </Link>
-            </nav>
-          </div>
-          <p className="mt-6 text-xs leading-relaxed text-neutral-600">
-            番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
-            最終的な判断は、必要に応じて専門家にご確認ください。
-          </p>
-          <p className="mt-2 text-xs text-neutral-600">
-            © {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）
-          </p>
-        </div>
-      </footer>
+      <PublicFooter ctaLocation="footer" />
     </div>
   )
 }

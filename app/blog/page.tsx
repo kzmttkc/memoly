@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
-import { BantoMark } from '@/components/ui/BantoMark'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { BLOG_POSTS } from '@/lib/blog'
+import { PublicFooter } from '@/components/ui/PublicFooter'
+import { PublicHeader } from '@/components/ui/PublicHeader'
 
 // ============================================================================
 // /blog — 番頭のブログ一覧（SSG・クローラブル）。2026-07-22 新設。
@@ -70,23 +71,10 @@ export default function BlogIndexPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }} />
 
-      {/* ===== ヘッダ ===== */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
-          <Link href="/business" className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-              <BantoMark className="h-3.5 w-3.5" aria-hidden />
-            </span>
-            <span className="font-semibold tracking-tight text-neutral-900">番頭(Banto)</span>
-          </Link>
-          <Link href="/login?next=/company" className="text-sm text-neutral-500 hover:text-brand-700">
-            ログイン
-          </Link>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* ===== パンくず ===== */}
-      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-400">
+      <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
         <Link href="/business" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">ブログ</span>
@@ -122,7 +110,7 @@ export default function BlogIndexPage() {
                   <p className="text-xs font-medium text-brand-700">{p.category}</p>
                   <p className="mt-1 text-base font-semibold text-neutral-900">{p.title}</p>
                   <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{p.description}</p>
-                  <div className="mt-2.5 flex items-center gap-3 text-xs text-neutral-400">
+                  <div className="mt-2.5 flex items-center gap-3 text-xs text-neutral-500">
                     <time dateTime={p.publishedAt}>{p.publishedAt}</time>
                     <span>読了目安 {p.readingMinutes}分</span>
                   </div>
@@ -155,33 +143,7 @@ export default function BlogIndexPage() {
         </Card>
       </section>
 
-      {/* ===== フッタ ===== */}
-      <footer className="border-t border-neutral-200 bg-neutral-50">
-        <div className="mx-auto max-w-5xl px-6 py-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/business" className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
-                <BantoMark className="h-3.5 w-3.5" aria-hidden />
-              </span>
-              <span className="font-semibold text-neutral-900">番頭(Banto)</span>
-            </Link>
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-500">
-              <Link href="/business" className="hover:text-brand-700">サービス概要</Link>
-              <Link href="/roumu" className="hover:text-brand-700">使い方一覧</Link>
-              <Link href="/faq" className="hover:text-brand-700">よくある質問</Link>
-              <Link href="/contact" className="hover:text-brand-700">お問い合わせ</Link>
-              <Link href="/login?next=/company" className="hover:text-brand-700">ログイン</Link>
-              <Link href="/terms" className="hover:text-brand-700">利用規約</Link>
-              <Link href="/privacy" className="hover:text-brand-700">プライバシー</Link>
-            </nav>
-          </div>
-          <p className="mt-6 text-xs leading-relaxed text-neutral-500">
-            番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
-            最終的な判断は、必要に応じて専門家にご確認ください。
-          </p>
-          <p className="mt-2 text-xs text-neutral-400">© {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }
