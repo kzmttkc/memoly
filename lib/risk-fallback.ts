@@ -30,6 +30,35 @@ import type { EmployeeBand } from './company-attributes'
 export const RISK_AUDIT_DISCLAIMER =
   '一般的な参考情報です。正確な診断は専門家にご確認ください。スコアはあくまで目安です。'
 
+// ----------------------------------------------------------------------------
+// 診断結果の「出所」の開示（2026-08-12 機能品質監査・中）
+//   API は LLM 失敗時に本モジュールの決定的スコアへ落として fallback:true を返すが、
+//   画面はそれを計測プロパティにしか渡しておらず、利用者は「AIが読んだ結果」と
+//   「ルールベースの結果」を区別できなかった。出所を画面に出す。
+//   語彙は既存の開示（速報バナーの「自動計算」）に揃える＝新しい訴求文言を作らない。
+// ----------------------------------------------------------------------------
+
+/** 診断結果の出所。sample/provisional は既に専用の開示バナーを持つ経路。 */
+export type RiskResultOrigin = 'sample' | 'provisional' | 'fallback' | 'ai'
+
+/** 表示中の結果がどの経路で出たかを一意に決める（開示バナーの出し分けの単一の判断）。 */
+export function riskResultOrigin(state: {
+  sampleMode: boolean
+  provisional: boolean
+  fallback?: boolean
+}): RiskResultOrigin {
+  // 架空データである事実が最も重いので最優先。次に「精査待ち」、最後に「精査できなかった」。
+  if (state.sampleMode) return 'sample'
+  if (state.provisional) return 'provisional'
+  return state.fallback ? 'fallback' : 'ai'
+}
+
+/** LLM 精査に失敗し、決定的な自動計算へ切り替わったときの開示（事実表示のみ）。 */
+export const RISK_FALLBACK_NOTICE = {
+  title: 'AIによる精査ができなかったため、自動計算の結果を表示しています',
+  body: '登録内容から算出した目安です。時間をおいてもう一度診断すると、AIが精査した結果になることがあります。',
+}
+
 // 判定に使う正規化属性（company_attributes の該当列。null=未回答=要確認）。
 export interface RiskFallbackAttributes {
   industry_major: string | null

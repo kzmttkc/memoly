@@ -6,6 +6,12 @@ import { Card } from '@/components/ui/Card'
 import { inputClass } from '@/components/ui/Input'
 import { track } from '@/lib/analytics'
 import { useToolOpen, LocalOnlyNote, ResultDisclaimer, ToolSignupCta, ToolSubmitButton, preHydrationValue } from '@/components/tools/client'
+import {
+  parseDateOnly,
+  fulfillmentDeadline,
+  nextKijunbi as nextKijunbiOf,
+  formatJp,
+} from './calc'
 
 // ============================================================================
 // 年5日 有給取得義務 セルフ点検ツール（クライアント計算・会社データ非保存）
@@ -35,29 +41,12 @@ type Result = {
   taken: number
   /** あと何日取得させる必要があるか（0以上） */
   remaining: number
-  /** 期限（基準日+1年） */
+  /** 履行期間の終期＝年5日を取らせる期限（基準日から1年以内の最終日・労基法39条7項） */
   deadline: Date
   /** 期限までの残り日数（負なら期限超過） */
   daysToDeadline: number
-  /** 次の基準日（基準日+1年） */
+  /** 次の基準日＝次の1年間の初日（期限の翌日） */
   nextKijunbi: Date
-}
-
-function parseDateOnly(v: string): Date | null {
-  // <input type="date"> は 'YYYY-MM-DD'。ローカル正午で構築し timezone ずれを避ける。
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null
-  const [y, m, d] = v.split('-').map(Number)
-  const dt = new Date(y, m - 1, d, 12, 0, 0, 0)
-  return Number.isNaN(dt.getTime()) ? null : dt
-}
-
-function addOneYear(d: Date): Date {
-  // 基準日から1年後（同月同日）。2/29など存在しない日付は月末側へ自然に丸められる。
-  return new Date(d.getFullYear() + 1, d.getMonth(), d.getDate(), 12, 0, 0, 0)
-}
-
-function formatJp(d: Date): string {
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
 }
 
 const MS_PER_DAY = 86_400_000
@@ -104,8 +93,10 @@ export function Calculator() {
     }
 
     const eligible = g >= 10
-    const deadline = addOneYear(base)
-    const nextKijunbi = addOneYear(base)
+    // 期限と次の基準日は別物（1日ずれる）。同じ式で出すと2つの履行期間が同じ日を共有し、
+    // 義務未達側に猶予を1日多く見せてしまう（2026-08-12 是正・根拠は ./calc.ts 冒頭）。
+    const deadline = fulfillmentDeadline(base)
+    const nextKijunbi = nextKijunbiOf(base)
     // 「本日」もローカル正午に正規化して日数差を安定させる。
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0)

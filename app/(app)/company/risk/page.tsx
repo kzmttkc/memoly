@@ -11,6 +11,7 @@ import {
   Plus,
   FlaskConical,
   Loader2,
+  AlertTriangle,
 } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button, buttonClass } from '@/components/ui/Button'
@@ -24,7 +25,9 @@ import { localizeError } from '../_components/errors'
 import { track } from '@/lib/analytics'
 import {
   computeFallbackRiskAudit,
+  riskResultOrigin,
   RISK_AUDIT_DISCLAIMER,
+  RISK_FALLBACK_NOTICE,
   type RiskFallbackAttributes,
 } from '@/lib/risk-fallback'
 import { suggestDeadlines } from '@/lib/deadlines'
@@ -57,6 +60,11 @@ interface RiskResult {
   topRisks: TopRisk[]
   summary: string
   disclaimer: string
+  // API が LLM 精査に失敗し、決定的な自動計算へ落として返した結果か（/api/company/risk-audit）。
+  //   2026-08-12: 従来は計測プロパティにしか渡しておらず画面に出ていなかった。
+  //   localStorage の復元結果にもそのまま載る（過去にフォールバックで出た結果は、
+  //   復元後もフォールバックである事実を失わない）。
+  fallback?: boolean
 }
 
 // 年間手続きカレンダー（S1）: /api/company/deadlines?suggest=1 が返す候補の型
@@ -687,6 +695,28 @@ function RiskInner() {
                   </p>
                   <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
                     登録内容から即時に算出した目安です。AIがさらに精査しており、数値が変わることがあります。
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* ============ フォールバック開示（2026-08-12 機能品質監査・中） ============
+              API が LLM 精査に失敗し、決定的な自動計算へ落として返した結果であることを画面に出す。
+              従来は fallback フラグを Plausible の計測プロパティにしか渡しておらず、利用者は
+              「AIが読んだ結果」と「ルールベースの結果」を区別できなかった。
+              サンプル・速報は自前の開示を持つ経路なので、ここでは出さない（riskResultOrigin）。 */}
+          {riskResultOrigin({ sampleMode, provisional, fallback: result.fallback }) ===
+            'fallback' && (
+            <Card className="border-warning-500/40 bg-warning-50">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning-600" aria-hidden />
+                <div>
+                  <p className="text-sm font-semibold text-neutral-900">
+                    {RISK_FALLBACK_NOTICE.title}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+                    {RISK_FALLBACK_NOTICE.body}
                   </p>
                 </div>
               </div>
