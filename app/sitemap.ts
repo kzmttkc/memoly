@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { USECASE_SLUGS } from '@/lib/usecase'
 import { TOOL_SLUGS } from '@/lib/tools'
 import { BLOG_SLUGS } from '@/lib/blog'
+import { SEIDO_SLUGS } from '@/lib/seido'
 
 // ============================================================================
 // sitemap.xml — クローラに「index対象の公開URL」を明示する。
@@ -31,6 +32,7 @@ const REVISED = {
   pricing: '2026-07-30', // /pricing 単独の料金ページ新設(PMF修理#1・購買意欲クエリの着地先)
   en: '2026-07-30', // 英語版3ページ(/business/en /privacy/en /terms/en)をsitemapへ収録(PMF修理#3)
   contact: '2026-08-08', // /contact 新設(問い合わせ導線404の修理)。2026-08-09 SEO監査でsitemap未収録を発見し追加
+  seido: '2026-08-13', // /seido 制度対応シリーズ新設(第1弾: インボイス2026年10月改正・訂正型3本+チェックリストLP)
 } as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -64,6 +66,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),
+    // 制度対応シリーズ（ハブ＋各記事＋チェックリストLP。/seido/checklist/zenbun は
+    //   登録特典本体のため noindex・sitemap 非収録）
+    { url: `${BASE}/seido`, lastModified: REVISED.seido, changeFrequency: 'weekly', priority: 0.9 },
+    ...SEIDO_SLUGS.map((slug) => ({
+      url: `${BASE}/seido/${slug}`,
+      lastModified: REVISED.seido,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    })),
+    { url: `${BASE}/seido/checklist`, lastModified: REVISED.seido, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/faq`, lastModified: REVISED.faq, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE}/contact`, lastModified: REVISED.contact, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/security`, lastModified: REVISED.security, changeFrequency: 'yearly', priority: 0.4 },

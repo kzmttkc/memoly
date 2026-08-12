@@ -29,6 +29,7 @@ const SERVICE_LINKS: { href: string; label: string }[] = [
   { href: '/faq', label: 'よくある質問' },
   { href: '/roumu', label: '使い方一覧' },
   { href: '/tools', label: '無料ツール' },
+  { href: '/seido', label: '制度対応' },
   { href: '/blog', label: 'ブログ' },
   { href: '/contact', label: 'お問い合わせ' },
   { href: '/login?next=/company', label: 'ログイン' },
