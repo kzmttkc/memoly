@@ -76,6 +76,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     })),
     { url: `${BASE}/seido/checklist`, lastModified: REVISED.seido, changeFrequency: 'monthly', priority: 0.7 },
+    // 有料キット販売LP（AQ-023承認・2026-08-13）。uketori/honbun は noindex・非収録
+    { url: `${BASE}/seido/kit`, lastModified: REVISED.seido, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/faq`, lastModified: REVISED.faq, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE}/contact`, lastModified: REVISED.contact, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/security`, lastModified: REVISED.security, changeFrequency: 'yearly', priority: 0.4 },

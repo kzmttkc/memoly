@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { PLANS, PAID_PLAN_IDS, billingEnabled } from '@/lib/plans'
+import { SEIDO_KIT_NAME, SEIDO_KIT_PRICE_JPY } from '@/lib/seido-kit'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 
@@ -90,6 +91,7 @@ export default function TokushohoPage() {
                 現在お申し込みの受付を一時的に停止しています。有料プランのお申し込み手続き
                 （クレジットカード情報の入力を含むStripe決済画面での操作）を実際に完了した場合にのみ課金が発生する仕組みで、
                 お申し込みの操作をしない限り課金が発生することはありません。受付を再開する際は、このページと料金ページでお知らせします。
+                なお、買い切りのデジタルコンテンツ（インボイス対応キット等）はこの受付停止の対象外で、引き続きご購入いただけます。
               </>
             )}
           </p>
@@ -144,6 +146,15 @@ export default function TokushohoPage() {
                 )
               })}
             </ul>
+            {/* 2026-08-13 制度対応部（AQ-023承認）: 買い切りデジタルコンテンツの追加。
+                価格の SSOT は lib/seido-kit.ts（プラン価格の lib/plans.ts と同じ構造）。 */}
+            <p className="mt-3 font-medium text-neutral-900">買い切りのデジタルコンテンツ</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              <li>
+                {SEIDO_KIT_NAME}：&yen;{SEIDO_KIT_PRICE_JPY.toLocaleString()}（税込・買い切り。
+                再交渉文面ひな形・影響額計算ツール・実務チェックリストをサイト上で提供）
+              </li>
+            </ul>
             <p className="mt-2">
               表示価格はいずれも消費税を含むお支払い総額です。表示価格以外の追加料金はかかりません。
               オンラインサービスのため送料はかかりません。
@@ -174,6 +185,7 @@ export default function TokushohoPage() {
             初回はお申し込み手続（クレジットカード決済）の完了時にお支払いいただきます。
             2回目以降は、月額プランは初回決済日を基準として1か月ごと、
             年額プランは1年ごとに、ご登録のクレジットカードへ自動的に請求されます（自動更新）。
+            買い切りのデジタルコンテンツは、ご購入手続の完了時に1回のみお支払いいただきます（継続課金はありません）。
           </Row>
 
           <Row label="サービスの提供時期">
@@ -181,9 +193,10 @@ export default function TokushohoPage() {
           </Row>
 
           <Row label="契約期間・自動更新（継続課金の条件）">
-            本サービスは継続課金型（サブスクリプション）です。
+            本サービスの有料プランは継続課金型（サブスクリプション）です。
             契約期間は月額プランが1か月、年額プランが1年で、
             解約のお手続きがない限り同一条件で自動更新されます。
+            買い切りのデジタルコンテンツに契約期間・自動更新はありません（1回のご購入で継続してご利用いただけます）。
           </Row>
 
           {/* 2026-07-30 法務修正（法務監査 軸E）: 解約手段の実態が書かれていなかった。

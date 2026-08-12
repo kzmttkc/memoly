@@ -156,6 +156,25 @@ export default function SeidoChecklistPage() {
         </Card>
       </section>
 
+      {/* ===== 有料キットへの導線（AQ-023承認・2026-08-13） ===== */}
+      <section className="mx-auto max-w-3xl px-6 pb-8">
+        <Card interactive padded={false}>
+          <Link href="/seido/kit" className="block p-5 sm:p-6">
+            <p className="text-xs font-medium text-brand-700">さらに実務手順・文面まで必要な方へ</p>
+            <p className="mt-1 text-sm font-semibold text-neutral-900">
+              完全キット（¥2,980・買い切り）: 再交渉文面5通＋計算ツール＋39項目版
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+              このチェックリストの完全版（手順つき39項目）に加えて、取引先との価格協議にそのまま使える文面セットと影響額計算ツールが付きます。
+            </p>
+            <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+              キットの内容を見る
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </span>
+          </Link>
+        </Card>
+      </section>
+
       {/* ===== 免責 ===== */}
       <section className="mx-auto max-w-3xl px-6 pb-16">
         <p className="rounded-xl bg-neutral-50 p-4 text-xs leading-relaxed text-neutral-500">

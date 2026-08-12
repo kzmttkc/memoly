@@ -161,6 +161,25 @@ export default function SeidoIndexPage() {
         </Card>
       </section>
 
+      {/* ===== 有料キット（AQ-023承認・2026-08-13） ===== */}
+      <section className="mx-auto max-w-3xl px-6 pb-8">
+        <Card interactive padded={false}>
+          <Link href="/seido/kit" className="block p-5 sm:p-6">
+            <p className="text-xs font-medium text-brand-700">実務で手を動かす段階の方へ</p>
+            <p className="mt-1 text-base font-semibold text-neutral-900">
+              インボイス2026年10月対応 完全キット（¥2,980・買い切り）
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+              取引先との価格協議にそのまま使える再交渉文面5通（買手用・売手用）、影響額計算ツール、39項目の実務チェックリスト。文面は公正取引委員会等Q&amp;Aの枠組みに沿って設計しています。
+            </p>
+            <span className="mt-2.5 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+              キットの内容を見る
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </span>
+          </Link>
+        </Card>
+      </section>
+
       {/* ===== 免責 ===== */}
       <section className="mx-auto max-w-3xl px-6 pb-4">
         <p className="rounded-xl bg-neutral-50 p-4 text-xs leading-relaxed text-neutral-500">
