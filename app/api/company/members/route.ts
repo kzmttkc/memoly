@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createAdminClient, getCurrentUser, getMembership } from '@/lib/company'
 import { logCompanyAudit } from '@/lib/audit'
-import { isInvitableUser } from './invite-guard'
+import {
+  isInvitableUser,
+  emailConfirmationProvesOwnership,
+  MAILER_AUTOCONFIRM_IN_PRODUCTION,
+} from './invite-guard'
 
 // ============================================================================
 // /api/company/members
@@ -12,10 +16,13 @@ import { isInvitableUser } from './invite-guard'
 //          company_members(member) に追加。席数超過は trg_company_seat_limit が弾く。
 //          → そのエラーを 409 で返し「席数上限」を明示する（トリガ実証点）。
 //   最小実装: 招待レコード方式ではなく「既存ユーザーのメール解決」方式。
-//   ★席を入れるのは **メール確認済み(email_confirmed_at)のアカウントだけ**（2026-07-30 監査）。
-//     autoconfirm=True 下ではメールを所有しない第三者が先にそのアドレスで登録でき、
-//     招待がその攻撃者の席になる（メール先取りによる席乗っ取り）。判定と恒久解は
-//     ./invite-guard.ts を参照。
+//   ★2026-08-12 訂正: 旧ガード「email_confirmed_at のあるアカウントだけ席を入れる」は
+//     本番の mailer_autoconfirm=true（実測済み）の下では **1人も落とさない no-op** だった。
+//     登録した瞬間に全アカウントが confirmed になるため、先取り登録した攻撃者も通る。
+//     よって autoconfirm が有効な間は席招待そのものを fail-closed で断る。
+//     本番実測（2026-08-12）で招待による席付与は一度も成立しておらず、止まる正規フローは無い。
+//     背景・恒久解（招待トークン方式）・本番設定を false にするだけでは直らない理由は
+//     ./invite-guard.ts のヘッダに全て記載。
 //   ★メール存在オラクル緩和（CTO P2-1）: 「未登録404 / 既存は追加成功」の応答差で
 //     任意メールの登録有無が判定できてしまうため、未登録・既存（既メンバー含む）の
 //     いずれも同一文言の 200 で返す。既存ユーザーの即時追加という実機能は従来どおり
@@ -65,6 +72,28 @@ export async function POST(req: NextRequest) {
   const membership = await getMembership(companyId)
   if (!membership || membership.role !== 'admin') {
     return NextResponse.json({ error: '管理者のみ席を招待できます' }, { status: 403 })
+  }
+
+  // ★席招待の fail-closed ゲート（2026-08-12）。
+  //   autoconfirm が有効な間は email_confirmed_at がメール所有を証明しないため、
+  //   「そのメールの持ち主に席を入れている」と言える根拠が無い。根拠が無いまま
+  //   席を入れると就業規則の原文と労務相談履歴を第三者へ渡しうるので、入れない。
+  //   ここは **メール解決より前** に置く: 判定が email に一切依存しないので、
+  //   応答から対象メールの登録有無を推測できない（存在オラクルにならない）。
+  //   admin 本人には黙って落とさず明示的に理由を返す（メール非依存の文言＝漏れない）。
+  if (!emailConfirmationProvesOwnership(MAILER_AUTOCONFIRM_IN_PRODUCTION)) {
+    console.warn('[company:invite] autoconfirm 有効のため席招待を停止中', {
+      company_id: companyId,
+      actor_user_id: user.id,
+    })
+    return NextResponse.json(
+      {
+        error:
+          '席の招待は現在ご利用いただけません。安全な招待手順（ご本人宛の招待リンク）へ切り替え中です。お手数ですがサポートへご連絡ください。',
+        code: 'INVITE_DISABLED',
+      },
+      { status: 503 }
+    )
   }
 
   const inviteRole = role === 'admin' ? 'admin' : 'member'
