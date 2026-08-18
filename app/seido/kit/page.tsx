@@ -162,7 +162,11 @@ export default function SeidoKitPage() {
         <h2 className="text-lg font-bold tracking-tight text-neutral-900">文面の冒頭サンプル（売手用 文面A）</h2>
         <div className="mt-3 rounded-xl bg-neutral-50 p-4 text-sm leading-relaxed text-neutral-600">
           <p>まず制度の前提として、2026年10月1日以後も、貴社は当社からの仕入について消費税額の70%を控除できると理解しております（変更されるのは80%から70%への10ポイント分で、当初予定の50%への引き下げは令和8年度税制改正で緩和されています）。</p>
-          <p className="mt-2 text-xs text-neutral-400">（続きと残り4通は購入後にすべて読めます）</p>
+          {/* 2026-08-19 UXペルソナ監査 I-4: text-neutral-400 (#94a3b8) on bg-neutral-50
+              (#f8fafc) はコントラスト比 約2.45:1 で WCAG AA(通常テキスト4.5:1)未達を実測で確認
+              （前回R-9と同型の再発）。R-9と同じ是正基準の text-neutral-500 (#64748b) に置換
+              （同背景で約4.55:1・AA適合）。 */}
+          <p className="mt-2 text-xs text-neutral-500">（続きと残り4通は購入後にすべて読めます）</p>
         </div>
       </section>
 
