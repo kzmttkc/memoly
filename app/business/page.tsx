@@ -386,7 +386,16 @@ export default async function BusinessLandingPage({
       {/* I11: 広告着地時のみ、cookie/計測の変種を SSR 表示（B固定）と同期 */}
       {isPaidLanding && <ForcePaidVariant />}
       {/* ===== ヘッダ ===== */}
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/90 backdrop-blur">
+      {/* 2026-08-19 UXペルソナ監査 I-3: 独自ヘッダを維持する理由を確認した（2026-08-12
+          コミット e27705b の記述）——このヘッダはページ内アンカー・EN切替・ハンバーガー
+          （ページ内目次を含む）・A12動的CTAという単一ページ専用要素を5つ持つため、
+          PublicHeaderへの統合は見送られている。5機能を壊さないためリンク構成・
+          表示条件（sm:hidden等）には触れず、見た目の差異のうち安全なものだけ揃える:
+          背景の不透明度を PublicHeader と同じ bg-white/80 に統一（従来 /90）。
+          高さ(min-h-16)は200%ズーム対応の意図的な設計（2026-07-29 CTO修正）のため維持。
+          モバイルでの「料金」非表示は、同じくモバイル唯一のナビ入口であるハンバーガーの
+          ページ内目次（#pricing）から既に到達可能（2026-07-28 L1監査#5）なので機能追加はしない。 */}
+      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/80 backdrop-blur">
         {/* 2026-07-29 CTO修正（L3監査#4・200%ズーム対応）: この行が固定高さ h-16 だと、
             極端に狭い実効幅で右側nav（flex-wrap）が2行に折り返したとき、はみ出した
             2行目がボックスの外側（＝直下のサブナビ帯＝冒頭サマリー欄）に重なって見えた
