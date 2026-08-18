@@ -109,8 +109,20 @@ export function CookieBanner() {
           {/* 2026-08-12 UXペルソナ監査 R-8 で「h:14 で44px未満」と挙がったが、これは
               文中のインラインリンクで WCAG 2.5.8 の Inline 例外に当たる。ここを44pxにすると
               1行バナーの行ボックスが崩れ、R-16（バナーの占有を減らす）とも逆行するため
-              意図的に据え置く。 */}
-          <Link href="/privacy" className="text-brand-600 underline ml-1">詳細</Link>
+              意図的に据え置く。
+              2026-08-19 UXペルソナ監査 I-2 再指摘への対応: 上記の判断（見た目の1行を
+              崩さない）は維持しつつ、::beforeで不可視のタップ領域だけ広げる。このバナーの
+              行はモバイルではOKボタンのmin-h-11(44px)で高さが44pxに決まっており、14pxの
+              このリンクは既にその中で上下センタリングされている＝上下15pxずつは
+              バナー自体の外へはみ出さない範囲。右は隣のOKボタンまでgap-3(12px)あるため
+              6pxまでに抑え、左は隣接する非リンクの文中テキストへ4pxだけ広げる
+              （そちらにも他のリンクは無い）。 */}
+          <Link
+            href="/privacy"
+            className="relative text-brand-600 underline ml-1 before:absolute before:-top-[15px] before:-bottom-[15px] before:-left-1 before:-right-1.5 before:content-['']"
+          >
+            詳細
+          </Link>
         </p>
         <button
           ref={acceptRef}

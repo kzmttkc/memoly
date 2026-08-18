@@ -675,9 +675,16 @@ export default async function BusinessLandingPage({
                 title属性と全く同一の文言のSSOT）へのアンカーリンクへ置き換える。これなら
                 全端末・全支援技術で確実に届き、解説文言も新規に書かない。リンク先の
                 Disclosureはハッシュ一致で自動的に開く（components/ui/Disclosure.tsx）。 */}
+            {/* 2026-08-19 UXペルソナ監査 I-2: 実測h:16px（44px未満）。この文字自体を
+                44pxに広げると周囲の文中テキスト（就業規則・/・賃金規程・…）の行間を壊す
+                （このpは既にflex-wrap gap-1.5で2行に折り返しており、視覚サイズはそのまま
+                行送りに直結する）。見た目のサイズは変えず、::beforeで上下14px（=44px相当）の
+                不可視ヒットエリアだけを広げる。左右は隣接する非リンクテキストの上へ
+                わずかに広がるだけで、他の操作要素と重ならない（この段落内のリンクは
+                これ1つのみ・実測で確認済み）。 */}
             <a
               href="#yougo"
-              className="whitespace-nowrap rounded-sm underline decoration-dotted decoration-neutral-400 underline-offset-2 hover:decoration-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="relative whitespace-nowrap rounded-sm underline decoration-dotted decoration-neutral-400 underline-offset-2 hover:decoration-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 before:absolute before:-top-3.5 before:-bottom-3.5 before:inset-x-0 before:content-['']"
             >
               36協定
               <span className="sr-only">の用語解説を読む</span>
