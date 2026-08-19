@@ -52,6 +52,19 @@ export function PublicFooter({ ctaLocation }: { ctaLocation?: string }) {
   return (
     <footer className="border-t border-neutral-200 bg-neutral-50">
       <div className="mx-auto max-w-5xl px-6 py-10">
+        {/* 2026-08-20 常設クロス送客枠（同じ運営のUITruthへ）。utm_source=banto で効果測定。 */}
+        <div className="mb-8 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm leading-relaxed text-neutral-600">
+          ChatGPTはあなたの会社をどう紹介していますか？ 登録不要・無料で計測できます。{' '}
+          <a
+            href="https://uitruth.app/?utm_source=banto&utm_medium=referral&utm_campaign=footer_perm"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center font-semibold text-neutral-700 underline underline-offset-2 hover:text-brand-700 sm:min-h-0"
+          >
+            uitruth.app で計測する →
+          </a>
+          <span className="ml-1 text-xs text-neutral-400">（同じ運営のサービス）</span>
+        </div>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <Link href="/business" className="flex min-h-11 shrink-0 items-center gap-2 sm:min-h-0">
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
