@@ -174,7 +174,7 @@ export default function SeidoKitPage() {
       <section className="mx-auto max-w-3xl px-6 pb-8">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            {PRICE}（税込）・買い切り
+            {PRICE}・買い切り
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
             クレジットカード決済（Stripe）。決済完了後、すぐにすべての内容をご利用いただけます。

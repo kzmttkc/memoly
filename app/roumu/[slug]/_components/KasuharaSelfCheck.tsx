@@ -43,7 +43,7 @@ const ITEMS = [
 const PACK_HREF =
   'https://sharoushi-agent.com/kasuhara-pack.html?utm_source=banto&utm_medium=referral&utm_campaign=kasuhara_pack'
 const PACK_COPY =
-  '10の措置のうち自社に足りないものを特定して期限までに揃えるなら、書式一式（19,800円・税込）があります'
+  '10の措置のうち自社に足りないものを特定して期限までに揃えるなら、書式一式（19,800円）があります'
 
 export default function KasuharaSelfCheck() {
   useToolOpen('kasuhara_selfcheck')

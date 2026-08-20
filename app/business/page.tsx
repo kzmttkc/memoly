@@ -1238,11 +1238,12 @@ export default async function BusinessLandingPage({
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">料金</h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
               登録するとまずは無料プランでお使いいただけます。下記は有料プランに切り替えた場合の月額料金です。
-              {/* 2026-07-30 法務監査#5: この節に税込表記が1件も無かった。/tokushoho と
-                  決済直前の表示は「消費税を含むお支払い総額」で確定しているのに、
-                  最も見られる料金表示だけ税の扱いが不明で、総額表示義務（消費税法63条）を
-                  満たしていなかった。数字は動かさず、それが総額であることを明示する。 */}
-              <span className="mt-1 block text-sm text-neutral-500">表示価格はすべて消費税込みの総額です。</span>
+              {/* 2026-08-20 正典整合（business-facts.md 2026-07-30 Takeshi確定）: 当社は消費税の
+                  免税事業者のため、価格の表示に消費税区分を名乗らない。2026-07-30 に総額表示の
+                  明示として入れた一文が、免税事業者では言えない区分を名乗っていた。数字は
+                  動かさず、区分を指す語だけを外す。追加料金が無い（＝表示額がそのまま支払額）
+                  という事実は変えずに残す。判定は scripts/business_facts_gate.py が機械で行う。 */}
+              <span className="mt-1 block text-sm text-neutral-500">表示価格はすべてお支払い総額です。</span>
             </p>
             {/* 2026-07-30 PMF修理#1: 料金の単独ページ /pricing を新設した。このアンカー
                 (#pricing) は既存の内部リンク・計測を壊さないため残し、ここから単独ページへ

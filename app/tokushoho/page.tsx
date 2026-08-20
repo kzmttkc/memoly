@@ -151,12 +151,15 @@ export default function TokushohoPage() {
             <p className="mt-3 font-medium text-neutral-900">買い切りのデジタルコンテンツ</p>
             <ul className="mt-1 list-disc space-y-1 pl-5">
               <li>
-                {SEIDO_KIT_NAME}：&yen;{SEIDO_KIT_PRICE_JPY.toLocaleString()}（税込・買い切り。
+                {SEIDO_KIT_NAME}：&yen;{SEIDO_KIT_PRICE_JPY.toLocaleString()}（買い切り。
                 再交渉文面ひな形・影響額計算ツール・実務チェックリストをサイト上で提供）
               </li>
             </ul>
             <p className="mt-2">
-              表示価格はいずれも消費税を含むお支払い総額です。表示価格以外の追加料金はかかりません。
+              {/* 2026-08-20 正典整合（business-facts.md 2026-07-30 Takeshi確定）: 免税事業者のため
+                  価格の表示に消費税区分を名乗らない。支払総額（追加料金なし）である事実は不変。
+                  税の扱いは下の「適格請求書（インボイス）の発行」欄が開示する。 */}
+              表示価格はいずれもお支払い総額です。表示価格以外の追加料金はかかりません。
               オンラインサービスのため送料はかかりません。
             </p>
           </Row>
