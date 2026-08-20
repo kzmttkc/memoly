@@ -185,6 +185,14 @@ export default function SeidoKitPage() {
           </div>
           <p className="mx-auto mt-4 max-w-xl text-xs leading-relaxed text-brand-100">
             デジタルコンテンツの性質上、決済完了後の返金には応じられません。
+            {/* 2026-08-20 正典整合（business-facts.md 2026-07-30 Takeshi確定）:
+                「適格請求書を発行できない旨を購入前に明記する」。ここは価格と購入ボタンを
+                持つ販売面なのにその開示が無く、機械ゲート（scripts/business_facts_gate.py）が
+                本番で検出した。本商品はインボイス制度対応キットで購入者が税務に敏感なため
+                特に重要。文面は /tokushoho の適格請求書欄と sharoushi の販売ページにある
+                既存の確定文言から同趣旨で流用する（新規の創作をしない）。 */}
+            当方は消費税の免税事業者で、適格請求書発行事業者の登録がないため、適格請求書（インボイス）を発行できません。
+            仕入税額控除を受ける必要がある場合は、この点をご確認のうえご判断ください。
             販売条件の詳細は<Link href="/tokushoho" className="underline hover:text-white">特定商取引法に基づく表記</Link>をご確認ください。
           </p>
           <p className="mt-2 text-xs text-brand-100">
