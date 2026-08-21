@@ -9,6 +9,7 @@ import { BantoMark } from '@/components/ui/BantoMark'
 import { Toast } from '@/components/ui/Toast'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { MarkdownMessage } from '@/components/ui/MarkdownMessage'
+import { AnswerSourcesPanel, splitAnswerSources } from '@/components/ui/AnswerSources'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { detectDecisionSignal } from '@/lib/decision-detect'
@@ -896,7 +897,17 @@ function CompanyChat() {
                   ) : msg.role === 'assistant' ? (
                     // D04: assistant 回答は Markdown レンダラで描画（プロンプト抑制が
                     // 漏れた **太字**・##見出し・表も正しく整形。raw HTML は無効＝XSS安全）。
-                    <MarkdownMessage content={msg.content} />
+                    // Trust Stack v2 #4: サーバが末尾に追記した「参照した法令・指針」
+                    // トレーラは本文から切り出し、構造化パネル（リンク付き）で描画する。
+                    (() => {
+                      const { body, trailer } = splitAnswerSources(msg.content)
+                      return (
+                        <>
+                          <MarkdownMessage content={body} />
+                          {trailer && <AnswerSourcesPanel trailer={trailer} />}
+                        </>
+                      )
+                    })()
                   ) : (
                     msg.content
                   )}
