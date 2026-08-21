@@ -24,6 +24,63 @@ export function isPaidPlanId(v: unknown): v is PlanId {
 }
 
 /**
+ * 自製品(番頭)の刻印。checkout が session/subscription の metadata に載せる値
+ * （lib/stripe.ts の BANTO_PRODUCT と同一。ここは SDK 非依存に保つため再定義）。
+ */
+export const BANTO_PRODUCT_STAMP = 'banto'
+
+export type CheckoutRefusalReason = 'foreign_product' | 'no_matching_price'
+
+export type CheckoutProductResolution =
+  | { granted: true; plan: PlanId }
+  | { granted: false; reason: CheckoutRefusalReason }
+
+/**
+ * この checkout が番頭の決済かを判定する（クロス配信ガード・2026-08-21 横断監査）。
+ *
+ * なぜ作り直したか:
+ *   LIVE の Stripe アカウントは9製品で共有していて、Stripe は1イベントを
+ *   「その種別を購読している全ての有効エンドポイント」へ配信する。他製品の
+ *   checkout.session.completed は番頭の webhook にも届き、署名検証を通過する
+ *   （署名はアカウント単位の秘密で、製品は何も保証しない）。
+ *
+ *   旧実装は route.ts に
+ *       if (!isBanto && !priceMatch && !amountMatch) → 無視
+ *   と書かれていた。コメントは「三重ガード」と称していたが、これは
+ *   **3つのうち1つでも当たれば通る OR** で、AND ではない。しかも金額は製品を
+ *   またいで衝突する（実測: ¥9,800 = 番頭 Standard / sharoushi Business /
+ *   UITruth Pro、¥29,800 = 番頭 士業 / sharoushi 年払い / UITruth Starter年、
+ *   ¥39,800 = 番頭 Entry年 / Agentrix Agency月）。つまり amount 一致は
+ *   「他製品でない」ことを1ミリも保証しない。
+ *
+ *   実害が出ていなかったのは metadata.company_id を他製品が偶然使っていない
+ *   おかげで、ガードの強さではなかった。
+ *
+ * 判定順:
+ *   1. metadata.product が他製品を名乗る → price が偶然一致しても拒否。
+ *      名乗りと price が食い違う決済は異常系であり、「付与しない」側に倒す
+ *      （誤付与は返金では取り戻せない）。
+ *   2. price が番頭のものに解決できる → そのプランを付与。
+ *   3. それ以外は拒否。metadata.plan は根拠にしない——'standard' は番頭にも
+ *      UITruth にも実在する。
+ *
+ * 呼び出し側の責務: pricePlan は planIdForPriceId(line item の price) の結果を渡す。
+ * **line items を引けなかったときは pricePlan=null で呼ばず、5xx を返して Stripe に
+ * 再送させること**（一時障害で正規顧客が無付与のまま確定するのを防ぐ）。
+ */
+export function resolveCheckoutProduct(input: {
+  metadata: Record<string, string> | null | undefined
+  pricePlan: PlanId | null
+}): CheckoutProductResolution {
+  const product = input.metadata?.product?.trim()
+  if (product && product !== BANTO_PRODUCT_STAMP) {
+    return { granted: false, reason: 'foreign_product' }
+  }
+  if (input.pricePlan) return { granted: true, plan: input.pricePlan }
+  return { granted: false, reason: 'no_matching_price' }
+}
+
+/**
  * checkout.session.completed で実際に入金されたか。
  *   Stripe の Checkout Session は「完了したが未入金」でも completed が飛ぶ
  *   （payment_status='unpaid'。銀行振込等の遅延決済や、支払い方法の確保のみのケース）。

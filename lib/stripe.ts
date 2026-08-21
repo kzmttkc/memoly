@@ -19,8 +19,11 @@ import { buildBillingReturnUrls } from '@/lib/checkout-url'
 //   - masked鍵: Vercel/Netlify の env は管理画面で値がマスクされ読み戻せない。
 //     検証は env を CLI で set → 実トランザクションで確認する（自己申告にしない）。
 //   - env反映ラグ: env 変更後デプロイが要る。set 直後の関数はまだ旧値を見ることがある。
-//   - 共有Stripeアカウントのクロス配信: sharoushi/fukuai/gokaku と同居しうる。
-//     metadata.product='banto' + price一致 + amount一致 の三重ガードで自製品のみ付与。
+//   - 共有Stripeアカウントのクロス配信: LIVE は9製品で共有しており、Stripe は1イベントを
+//     購読中の全エンドポイントへ配信する。付与は **price 一致**で決め、metadata.product が
+//     他製品を名乗るイベントは拒否する（webhook/transition.ts の resolveCheckoutProduct）。
+//     amount は判定に使わない——製品間で衝突する（¥9,800 = 番頭 Standard /
+//     sharoushi Business / UITruth Pro 等・2026-08-21 実測）。
 // ============================================================================
 
 // 'sk_test_placeholder' はビルド専用ダミー。実 checkout では env の実鍵が要る。

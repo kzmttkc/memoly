@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { BANTO_PRODUCT } from '@/lib/stripe'
-import { planIdForPriceId, planIdForAmount, PAID_AMOUNTS, PlanId } from '@/lib/plans'
+import { planIdForPriceId, PlanId } from '@/lib/plans'
 import {
   isCheckoutPaid,
-  isPaidPlanId,
+  resolveCheckoutProduct,
   resolveSubscriptionTransition,
 } from './transition'
 import type Stripe from 'stripe'
@@ -40,9 +40,18 @@ import type Stripe from 'stripe'
 //        生body（req.text()）で検証する（JSONパース後では署名が合わない）。
 //     2. **冪等**: Stripe は同一イベントを再送しうる（at-least-once）。
 //        company_billing_events に event_id(PK) を記録し、既処理なら即 200。
-//     3. **クロス配信ガード（3重）**: 共有 Stripe アカウントに sharoushi/fukuai/gokaku の
-//        webhook も同居しうる。(a)metadata.product==='banto' (b)price が番頭のもの
-//        (c)amount が番頭の既知額。いずれも満たさない他製品決済は 200 で無視。
+//     3. **クロス配信ガード**: LIVE の Stripe アカウントは9製品で共有していて、
+//        Stripe は1イベントを購読中の全エンドポイントへ配信する。他製品の決済も
+//        ここへ届き、署名検証を通過する（署名はアカウント単位の秘密で、製品は
+//        何も保証しない）。判定は **price 一致**で行い、metadata.product が
+//        他製品を名乗るイベントは price が偶然一致しても拒否する
+//        （transition.ts の resolveCheckoutProduct）。
+//        ★2026-08-21 に作り直した。旧実装はここに「三重ガード」と書きながら
+//        `if (!isBanto && !priceMatch && !amountMatch)` という **OR**（1つでも
+//        当たれば通る）で、しかも amount は製品間で衝突する（¥9,800 = 番頭
+//        Standard / sharoushi Business / UITruth Pro 等）。実害が出ていなかったのは
+//        metadata.company_id を他製品が偶然使っていないおかげで、ガードの強さでは
+//        なかった。この記述を手本として引用した Agentrix まで巻き込む誤りだった。
 //     4. **DB更新失敗は 5xx**: 課金済みなのに plan が free に取り残される事故を防ぐため、
 //        DB 反映に失敗したら非2xx を返し Stripe に再送(指数バックオフ)させる。
 //
@@ -50,8 +59,8 @@ import type Stripe from 'stripe'
 //         全て env のみ（git不可・.env* は .gitignore 済）。
 //
 //   [[project_billing_lifecycle_state]] 既知失敗モードのガード:
-//     - amount0（トライアル0円）: 番頭はトライアル無し。0 は PAID_AMOUNTS に含めない＝
-//       0円 checkout は付与対象にならない（誤付与防止）。将来トライアル導入時は要見直し。
+//     - amount0（トライアル0円）: 番頭はトライアル無し。付与は price 一致でのみ決まり、
+//       未入金の checkout は isCheckoutPaid で弾く。将来トライアル導入時は要見直し。
 //     - masked鍵/env反映ラグ: 鍵は env を CLI set → デプロイ → 実トランザクションで検証。
 //     - service role: webhook は cookie 無しのため anon ではなく service role で DB 更新。
 // ============================================================================
@@ -188,25 +197,39 @@ export async function POST(req: NextRequest) {
       const md = session.metadata ?? {}
       const companyId = md.company_id
 
-      // クロス配信ガード(3重): 自製品(banto)の決済か判定。1つも満たさなければ無視。
-      const isBanto = md.product === BANTO_PRODUCT
-      let priceMatch = false
+      // クロス配信ガード（2026-08-21 に作り直し）。判定は transition.ts の
+      // resolveCheckoutProduct が持つ。旧実装はここに
+      //     if (!isBanto && !priceMatch && !amountMatch)
+      // と書かれていて、コメントは「三重ガード」と称していたが実体は
+      // **1つでも当たれば通る OR** だった。しかも金額は製品をまたいで衝突する
+      // （¥9,800 = 番頭 Standard / sharoushi Business / UITruth Pro など）ので、
+      // amount 一致は「他製品でない」ことを保証しない。判定は price 一致中心にし、
+      // 他製品を名乗るイベントは price が偶然一致しても拒否する。
       let pricePlan: PlanId | null = null
       try {
         const items = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 })
-        const priceId = items.data[0]?.price?.id
-        pricePlan = planIdForPriceId(priceId)
-        priceMatch = pricePlan !== null
-      } catch {
-        priceMatch = false
+        pricePlan = planIdForPriceId(items.data[0]?.price?.id)
+      } catch (e) {
+        // line item を引けないと自製品判定ができない。ここで 200 を返すと、
+        // Stripe API の一時障害だけで正規顧客が無付与のまま確定する（再送も来ない）。
+        // 5xx で再送させる。
+        console.error(
+          '[billing:webhook] line items を取得できず製品判定不能。再送させます',
+          { session_id: session.id, msg: (e as Error).message },
+        )
+        return new Response('line items unavailable', { status: 500 })
       }
-      const amountMatch =
-        typeof session.amount_total === 'number' &&
-        PAID_AMOUNTS.includes(session.amount_total)
 
-      if (!isBanto && !priceMatch && !amountMatch) {
-        // 他製品(sharoushi/fukuai/gokaku 等)の決済 → 付与せず正常終了（再送させない）。
-        return new Response('ignored: not a banto checkout', { status: 200 })
+      const product = resolveCheckoutProduct({ metadata: md, pricePlan })
+      if (!product.granted) {
+        // 他製品の決済 → 付与せず正常終了（再送させない）。ただし無言にはしない。
+        console.warn('[billing:webhook] ignored checkout', {
+          reason: product.reason,
+          session_id: session.id,
+          metadata_product: md.product ?? null,
+          metadata_plan: md.plan ?? null,
+        })
+        return new Response(`ignored: ${product.reason}`, { status: 200 })
       }
 
       // ★入金確認（監査#7）: Checkout Session は「完了したが未入金」でも completed が飛ぶ
@@ -226,15 +249,9 @@ export async function POST(req: NextRequest) {
         return new Response('ignored: no company_id', { status: 200 })
       }
 
-      // 反映する plan: metadata.plan 優先、無ければ price→amount の順で逆引き。
-      const plan: PlanId | null = isPaidPlanId(md.plan)
-        ? md.plan
-        : pricePlan ?? planIdForAmount(session.amount_total)
-
-      if (!plan) {
-        // 自製品判定は通ったが plan を確定できない（異常）。free 付与はせず記録のみ 200。
-        return new Response('ignored: plan unresolved', { status: 200 })
-      }
+      // 反映する plan は price から確定したものを使う。metadata.plan は根拠にしない
+      // （'standard' は番頭にも UITruth にも実在し、amount も製品間で衝突する）。
+      const plan: PlanId = product.plan
 
       // 席数: metadata.seats（checkout 作成時に quantity と同値で載せている）。
       const seats = Number.parseInt(md.seats ?? '', 10)
