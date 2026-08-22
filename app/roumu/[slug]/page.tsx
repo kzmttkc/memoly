@@ -12,6 +12,8 @@ import LeadCapture from '@/app/business/_components/LeadCapture'
 import { OFFER } from '@/lib/offer'
 import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 import KasuharaSelfCheck from './_components/KasuharaSelfCheck'
+import KabauPackCta from './_components/KabauPackCta'
+import { isKasuharaUseCase } from '@/lib/kabau-pack'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 
 // ============================================================================
@@ -326,6 +328,13 @@ export default async function RoumuUseCasePage({
           ))}
         </div>
       </section>
+
+      {/* ===== カスハラ関連記事の末尾: Kabau 実務パック導線（1箇所）=====
+          (WORK_ORDERS.md Trust Stack v2 #3 番頭側・2026-08-21)
+          出し分けは lib/kabau-pack.ts isKasuharaUseCase（slug＋h1）。文言は Kabau側の
+          既存 pack CTA 文を流用。セット割引・同梱課金は作らない。
+          計測は kabau_pack_cta_click { source:'roumu_article', slug }。 */}
+      {isKasuharaUseCase(u) && <KabauPackCta slug={u.slug} />}
 
       {/* ===== 末尾CTA =====
           サブコピーは3バリアントを掲載順の輪番で決定的に選ぶ（全LP同一文の反復を避ける。

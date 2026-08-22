@@ -21,6 +21,7 @@ import { citationFromContext, formatAnswerCitation } from '@/lib/answer-citation
 import { selectFactsForQuery } from '@/lib/legal-facts'
 import { formatKabauFactsBlock, loadKabauLedger } from '@/lib/kabau-ledger'
 import { FILE_FIRST_CODE, FILE_FIRST_MESSAGE, isChatAllowed } from '@/lib/file-first'
+import { buildAnswerSources, formatSourcesTrailer } from '@/lib/law-citations'
 
 // ============================================================================
 // /api/company/chat — 会社スコープのチャット
@@ -121,6 +122,12 @@ export async function POST(req: NextRequest) {
   //   recency+キーワードで優先選択する（縦深: 過去の自社判断・人ごとの状況を含む）。
   //   loadRelevantRuleExcerpts は F1 規程まるごと取込: 取込済み規程（就業規則等）から
   //   関連条文の原文抜粋を引く（未取込/テーブル未適用なら空＝既存挙動と同一）。
+  // Trust Stack v2 #4: 回答末尾に付ける「参照した法令・指針（一次情報）」を、本文の生成と
+  //   並行して組み立てる（確定ファクト→条番号を e-Gov法令API で実在確認。fail-closed）。
+  //   ここでは await しない（ストリーム完了後に待つ。e-Gov の往復が回答の出だしを遅らせない）。
+  //   例外は投げない設計だが、念のため失敗は null に畳む（出典表示の失敗で回答を壊さない）。
+  const answerSourcesPromise = buildAnswerSources(lastUserMessage).catch(() => null)
+
   const [ctx, ruleExcerpts, difyContext, kabauFacts] = await Promise.all([
     loadCompanyContext(companyId, MAX_MEMORIES, lastUserMessage),
     loadRelevantRuleExcerpts(companyId, lastUserMessage),
@@ -276,6 +283,7 @@ export async function POST(req: NextRequest) {
   const readable = new ReadableStream({
     async start(controller) {
       let full = ''
+      let streamFailed = false
       try {
         for await (const chunk of stream) {
           if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
@@ -284,6 +292,7 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch (e) {
+        streamFailed = true
         // 締切超過（lib/claude.ts の 60秒）と、それ以外の障害を書き分ける。
         // 一律「エラーが発生しました」だと、利用者は「質問が悪いのか・待てば直るのか」
         // が分からず、同じ長い質問を投げ直して同じ60秒を溶かす。
@@ -307,6 +316,21 @@ export async function POST(req: NextRequest) {
             controller.enqueue(new TextEncoder().encode(extra))
           } catch {
             // ストリームが既に閉じている場合は保存だけ残す。
+          }
+        }
+        // Trust Stack v2 #4: 本文が最後まで届いたときだけ、末尾に「参照した法令・指針」を追記する。
+        //   出典が無い回答にも「一般的な情報提供（出典なし）」を必ず明示する（黙って省かない）。
+        //   追記分は保存内容にも含め、履歴の再読込でも同じ表示になるようにする。
+        if (full && !streamFailed) {
+          const sources = await answerSourcesPromise
+          if (sources) {
+            const trailer = formatSourcesTrailer(sources)
+            full += trailer
+            try {
+              controller.enqueue(new TextEncoder().encode(trailer))
+            } catch {
+              // ストリームが既に閉じている場合は保存だけ残す。
+            }
           }
         }
         // assistant 応答を保存（ベストエフォート・失敗してもストリームは閉じる）
