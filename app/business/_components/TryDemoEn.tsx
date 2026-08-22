@@ -85,16 +85,15 @@ function usePrefersReducedMotion(): boolean {
 // keeping lang=en on the destination (audit #2 root cause: lang gets dropped
 // when it's a sibling query param instead of baked into `next`).
 function signupHrefWithAttribution(): string {
-  const base = '/signup?next=/company&lang=en'
+  const base = '/zure?lang=en'
   if (typeof window === 'undefined') return base
   const landing = new URLSearchParams(window.location.search)
-  const qs = new URLSearchParams('next=/company')
-  qs.set('lang', 'en')
+  const qs = new URLSearchParams('lang=en')
   for (const key of ['utm_source', 'utm_campaign', 'utm_medium']) {
     const v = landing.get(key)
     if (v) qs.set(key, v.slice(0, 60))
   }
-  return `/signup?${qs.toString()}`
+  return `/zure?${qs.toString()}`
 }
 
 export default function TryDemoEn() {
@@ -318,15 +317,15 @@ export default function TryDemoEn() {
             </span>
             <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-medium text-success-700">
               <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden />
-              Remembers
+              One-page sheet
             </span>
           </div>
 
           <div className="border-b border-neutral-200 px-4 py-4">
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-600">
                 <Building2 className="h-3.5 w-3.5" aria-hidden />
-                What Banto remembers about the sample company
+                Sample company premises from the file
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {industry.tags.map(tag => (
@@ -361,26 +360,26 @@ export default function TryDemoEn() {
             {showRecalc && !typing && (
               <div className="flex justify-center pt-1">
                 <Link
-                  href="/signup?next=/company&lang=en"
+                  href="/zure?lang=en"
                   className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-[13px] font-medium text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100"
                   onClick={e => {
                     track('signup_cta_clicked', { location: 'trydemo_en', cta: 'recalc', industry: industryKey })
                     const target = signupHrefWithAttribution()
-                    if (target !== '/signup?next=/company&lang=en') {
+                    if (target !== '/zure?lang=en') {
                       e.preventDefault()
                       router.push(target)
                     }
                   }}
                 >
                   <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-                  Re-run this for my own company (free)
+                  Re-run this from a work rules file
                 </Link>
               </div>
             )}
           </div>
 
           <p className="border-t border-neutral-200 bg-neutral-50/70 px-4 py-2 text-[11px] leading-relaxed text-neutral-600">
-            These are sample answers. After you sign up, answers are based on your own company&apos;s memory (your own rules, past decisions).
+            These are sample answers. After you place a work rules file, answers are based on that file.
           </p>
 
           {/* 2026-07-29 CTO修正（UX監査Round6追加報告分）: isBusy中は質問チップ列を
@@ -432,22 +431,22 @@ export default function TryDemoEn() {
             {started ? 'You can get the same kind of answer for your own company.' : 'This is how the sample company gets answered.'}
           </p>
           <p className="mt-1 text-sm leading-relaxed text-neutral-600">
-            Teach Banto your own rules, and answers switch to your company&apos;s premises.
+            Place a work rules file. Chat starts from your one-page sheet.
           </p>
           <div className="mt-4 flex min-w-0 justify-center">
             <Link
-              href="/signup?next=/company&lang=en"
+              href="/zure?lang=en"
               className={buttonClass({ variant: 'primary', className: 'whitespace-normal text-center' })}
               onClick={e => {
                 track('signup_cta_clicked', { location: 'trydemo_en', engaged: started })
                 const target = signupHrefWithAttribution()
-                if (target !== '/signup?next=/company&lang=en') {
+                if (target !== '/zure?lang=en') {
                   e.preventDefault()
                   router.push(target)
                 }
               }}
             >
-              Teach Banto my company, try it for real
+              Place your work rules file
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>

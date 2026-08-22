@@ -24,7 +24,7 @@ export async function middleware(req: NextRequest) {
   //   検索スナップショットを安定させる（cookie は発行しない）。
   const reqHeaders = new Headers(req.headers)
   let lpCookieToSet: LpVariant | null = null
-  if (req.nextUrl.pathname === '/business') {
+  if (req.nextUrl.pathname === '/business' || req.nextUrl.pathname === '/zure') {
     const existing = req.cookies.get(VARIANT_KEY)?.value
     let variant: LpVariant
     if (isLpVariant(existing)) {

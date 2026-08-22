@@ -558,7 +558,7 @@ function RiskInner() {
     ]
     if (top) lines.push(`いちばん気になった点：${top}`)
     lines.push('')
-    lines.push('会社を覚える労務AIで無料セルフ診断 → banto-roumu.com/business')
+    lines.push('番頭で就業規則のファイルを置く → banto-roumu.com/zure')
     lines.push('#労務 #労務リスク診断')
     return lines.join('\n')
   }

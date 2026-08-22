@@ -18,7 +18,7 @@ export default function RootNotFound() {
           { href: '/pricing', label: '料金を見る' },
           { href: '/tools', label: '無料セルフ点検ツール（登録不要）' },
           { href: '/roumu', label: '労務の記事を読む' },
-          { href: '/signup?next=/company', label: '無料で始める', primary: true },
+          { href: '/zure', label: 'ファイルを置く', primary: true },
         ]}
       />
     </div>

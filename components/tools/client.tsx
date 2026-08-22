@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
+import { TOOL_NEXT, zureHref, OFFER } from '@/lib/offer'
 import { track } from '@/lib/analytics'
 
 // ============================================================================
@@ -204,46 +205,36 @@ export function ResultDisclaimer({ detail }: { detail: string }) {
 //   高痛点/低痛点の文言出し分け・status はツール側で決めて渡す（1変数のみ変更の流儀）。
 //   Phase1/景表法厳守: 「違反判定/解消」「社労士監修」は書かず、実挙動どおりの約束に留める。
 export function ToolSignupCta({
-  href,
   location,
   status,
-  title,
-  body,
-  label = '番頭に無料登録する',
 }: {
-  href: string
-  /** signup_cta_clicked の location（ツール識別子） */
+  href?: string
   location: string
-  /** tool_completed と同じ分岐キー（高痛点コホートの登録CTR比較用） */
   status: string
-  title: string
-  body: string
+  title?: string
+  body?: string
   label?: string
 }) {
+  const href = zureHref('banto_tool', location)
   return (
     <>
       <div className="mt-5 rounded-2xl bg-brand-50 p-5">
         <p className="text-sm font-semibold text-neutral-900">
-          {title}
+          {TOOL_NEXT.title}
         </p>
         <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-          {body}
+          {TOOL_NEXT.body}
         </p>
         <Link
           href={href}
           onClick={() => track('signup_cta_clicked', { location, status })}
-          // 2026-07-30 UX監査 #1（致命）: base の whitespace-nowrap のまま幅指定が
-          //   なかったため、長いラベル（「この結果を自社の記録として保存（無料）」）で
-          //   実測 right=394px（ビューポート375・親カード右端330）＝画面外へはみ出し、
-          //   html.overflow-x-clip で横スクロールも出ず**押せない**状態だった（6ツール全部）。
-          //   LP側CTAと同じ whitespace-normal text-center を当て、w-full で親カードに収める。
           className={buttonClass({
             variant: 'primary',
             size: 'lg',
             className: 'mt-4 w-full whitespace-normal text-center',
           })}
         >
-          {label}
+          {OFFER.cta}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>

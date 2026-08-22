@@ -7,6 +7,7 @@ import { Toast } from '@/components/ui/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Textarea } from '@/components/ui/Textarea'
 import { track } from '@/lib/analytics'
 import { cn } from '@/lib/cn'
 import { CompanyGuard } from '../_components/CompanyGuard'
@@ -38,6 +39,8 @@ function ReportsInner() {
   const [generating, setGenerating] = useState(false)
   const [report, setReport] = useState('')
   const [copied, setCopied] = useState(false)
+  const [advisorText, setAdvisorText] = useState('')
+  const [savingAdvisor, setSavingAdvisor] = useState(false)
 
   // mode を切り替えたら前の生成結果を消す（別種のメモが混ざらないように）。
   const switchMode = useCallback((next: ReportMode) => {
@@ -79,6 +82,30 @@ function ReportsInner() {
       setTimeout(() => setCopied(false), 2000)
     } catch {
       showToast('コピーに失敗しました')
+    }
+  }
+
+  async function saveAdvisor() {
+    if (savingAdvisor) return
+    setSavingAdvisor(true)
+    try {
+      const res = await fetch('/api/company/memory?action=advisor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId, text: advisorText }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        showToast(data.error ?? '記録に失敗しました')
+        return
+      }
+      setAdvisorText('')
+      showToast('社労士の返事を外部確定として残しました')
+      track('advisor_writeback_saved')
+    } catch {
+      showToast('記録に失敗しました。通信を確認してください。')
+    } finally {
+      setSavingAdvisor(false)
     }
   }
 
@@ -160,6 +187,24 @@ function ReportsInner() {
           <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-neutral-800">
             {report}
           </pre>
+        </Card>
+      )}
+
+      {isSharoushi && (
+        <Card className="mt-4 space-y-3">
+          <h2 className="text-sm font-semibold text-neutral-900">社労士の返事を台帳へ戻す</h2>
+          <p className="text-sm leading-relaxed text-neutral-600">
+            番頭は助言しません。事務所から返ってきた内容を、会社の「外部確定」として残します。
+          </p>
+          <Textarea
+            value={advisorText}
+            onChange={e => setAdvisorText(e.target.value)}
+            rows={5}
+            placeholder="例：試用期間の延長は就業規則に根拠を入れてから、との返事でした。"
+          />
+          <Button onClick={saveAdvisor} disabled={savingAdvisor || advisorText.trim().length < 8}>
+            {savingAdvisor ? '記録中...' : '外部確定として残す'}
+          </Button>
         </Card>
       )}
 

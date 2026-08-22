@@ -17,8 +17,8 @@ import { Clarity } from "@/components/analytics/Clarity";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://banto-roumu.com'
-const TITLE = '番頭(Banto) — 会社を覚える労務AI'
-const DESC = '会社の規程・労務の判断を、AIが覚えて最適解を提供。汎用AIは毎回説明が必要。番頭は自社の規程を完璧に記憶。企業ごとにデータを完全分離して保管。'
+const TITLE = '番頭(Banto) — 就業規則のファイルを置く'
+const DESC = '就業規則のファイルを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。企業ごとにデータを分けて保管します。'
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

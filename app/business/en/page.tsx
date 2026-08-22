@@ -4,7 +4,6 @@ import { MessageSquareText, FileText, ShieldCheck, Lock, ArrowRight, ArrowDown, 
 import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { PLANS, billingEnabled } from '@/lib/plans'
 import TryDemoEnLazy from '../_components/TryDemoEnLazy'
 import ScenarioSectionEn from '../_components/ScenarioSectionEn'
@@ -39,9 +38,9 @@ import LeadCaptureEn from '../_components/LeadCaptureEn'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: 'Banto — A labor-compliance AI that remembers your company | For Japan HR & operators',
+  title: 'Banto — Place a work rules file | For Japan HR & operators',
   description:
-    'Banto remembers your company\'s work rules and past decisions in Japan, so you don\'t have to re-explain them every time you ask about Japanese labor law. Free to start.',
+    'Place a PDF or Word file of your work rules, or paste the text. You get one page of what is written and what is not. Sign-up comes after. Built for small businesses operating in Japan.',
   // 2026-07-30 PMF fix #3: hreflang was absent site-wide (0 occurrences), and
   //   none of the /en pages were listed in sitemap.xml — an English page nobody
   //   could find. Declaring languages makes Next emit
@@ -57,9 +56,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Banto — A labor-compliance AI that remembers your company',
+    title: 'Banto — Place a work rules file',
     description:
-      'Banto remembers your company\'s work rules and past decisions in Japan, so you don\'t have to re-explain them every time.',
+      'Place a PDF or Word file of your work rules, or paste the text. You get one page of what is written and what is not. Sign-up comes after.',
     url: 'https://banto-roumu.com/business/en',
     siteName: 'Banto',
     locale: 'en_US',
@@ -165,10 +164,10 @@ export default function BusinessEnglishPage() {
               Log in
             </Link>
             <Link
-              href="/signup?next=/company&lang=en"
+              href="/zure?lang=en"
               className={buttonClass({ variant: 'primary', size: 'sm' })}
             >
-              Start free
+              Place a file
             </Link>
           </nav>
         </div>
@@ -176,14 +175,12 @@ export default function BusinessEnglishPage() {
 
       {/* ===== Hero ===== */}
       <section className="mx-auto max-w-3xl px-6 pb-16 pt-10 text-center sm:pt-16">
-        <Badge tone="brand" className="mb-6">A labor-compliance AI that remembers your company</Badge>
         <h1 className="text-4xl font-bold leading-[1.18] tracking-tight text-neutral-900 sm:text-5xl">
-          Stop re-explaining your company&apos;s rules to AI every time.
+          Place a work rules file. You get one page of what is written and what is not.
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg">
-          Banto remembers your work rules, your 36 Agreement status, and past decisions, so a
-          second question starts from where the first one left off. Built for small and
-          mid-size businesses operating in Japan — including the Japan subsidiaries of
+          Sign-up comes after the one-page sheet. Chat opens only after the file. Built for small
+          and mid-size businesses operating in Japan — including the Japan subsidiaries of
           overseas companies.
         </p>
         <p className="mx-auto mt-3 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500">
@@ -191,14 +188,14 @@ export default function BusinessEnglishPage() {
           <span>Ask Banto&apos;s chat in English and it answers in English — this works today, not a roadmap item.</span>
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <a href="#demo" className={buttonClass({ variant: 'primary', size: 'lg' })}>
-            Try it in 30 seconds
-            <ArrowDown className="h-4 w-4" aria-hidden />
-          </a>
-          <Link href="/signup?next=/company&lang=en" className={buttonClass({ variant: 'ghost', size: 'lg' })}>
-            Start free — no credit card
+          <Link href="/zure?lang=en" className={buttonClass({ variant: 'primary', size: 'lg' })}>
+            Place your work rules file
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
+          <a href="#demo" className={buttonClass({ variant: 'ghost', size: 'lg' })}>
+            See a sample in 30 seconds
+            <ArrowDown className="h-4 w-4" aria-hidden />
+          </a>
         </div>
         <p className="mt-3 text-center text-xs text-neutral-500">
           Free to start. No credit card required. You can delete all your data at any time. ·{' '}
@@ -245,11 +242,11 @@ export default function BusinessEnglishPage() {
         <div className="mx-auto max-w-5xl px-6 py-16">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-              The difference is whether it remembers
+              You do not paste the same file again
             </h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
               Switch between the two and compare the same question. One asks you to re-explain
-              your premise; the other already starts from it.
+              your premise; the other starts from the file you placed.
             </p>
           </div>
           <CompareToggleEn />
@@ -332,8 +329,8 @@ export default function BusinessEnglishPage() {
             </Card>
           </div>
           <div className="mt-8 flex justify-center">
-            <Link href="/signup?next=/company&lang=en" className={buttonClass({ variant: 'primary', size: 'lg' })}>
-              Start free
+            <Link href="/zure?lang=en" className={buttonClass({ variant: 'primary', size: 'lg' })}>
+              Place a file
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>

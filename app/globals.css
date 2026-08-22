@@ -406,3 +406,42 @@ body {
     animation: none !important;
   }
 }
+
+.zure-sheet {
+  animation: zureSheetIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes zureSheetIn {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zure-sheet {
+    animation: none;
+  }
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+  header,
+  footer,
+  .zure-drop-chrome {
+    display: none !important;
+  }
+  .zure-sheet {
+    animation: none !important;
+    filter: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}

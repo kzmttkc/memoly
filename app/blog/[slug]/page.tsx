@@ -21,7 +21,7 @@ import { PublicHeader } from '@/components/ui/PublicHeader'
 // ============================================================================
 
 const BASE = 'https://banto-roumu.com'
-const SIGNUP_HREF = '/signup?next=/company'
+const SIGNUP_HREF = '/zure'
 
 export function generateStaticParams() {
   return BLOG_SLUGS.map((slug) => ({ slug }))
@@ -97,7 +97,7 @@ export default async function BlogPostPage({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: 'ブログ', item: `${BASE}/blog` },
       { '@type': 'ListItem', position: 3, name: p.title, item: url },
     ],
@@ -112,7 +112,7 @@ export default async function BlogPostPage({
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <Link href="/blog" className="hover:text-brand-700">ブログ</Link>
         <span className="mx-1.5">/</span>
@@ -213,10 +213,10 @@ export default async function BlogPostPage({
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            自社を覚えるAIを、今日から
+            就業規則のファイルを置く
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録して、最初の相談を投げてみてください。今日話したことを、番頭は明日も覚えています。無料で試せます。
+            就業規則のファイルを置くと、ずれが1枚になります。登録はそのあとです。
           </p>
           <div className="mt-6 flex justify-center">
             {/* 2026-08-10 計測是正: 素の<Link>でsignup_cta_clickedが未計測だった
@@ -226,7 +226,7 @@ export default async function BlogPostPage({
               href={SIGNUP_HREF}
               className={buttonClass({ variant: 'secondary', size: 'lg' })}
             >
-              無料で会社を登録して試す
+              ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </TrackedCTA>
           </div>

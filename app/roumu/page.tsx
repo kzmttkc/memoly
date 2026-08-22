@@ -29,12 +29,12 @@ const URL = `${BASE}/roumu`
 export const metadata: Metadata = {
   title: '労務AIの目的別の使い方一覧｜番頭(Banto)',
   description:
-    '就業規則の運用、労務の引き継ぎ、36協定の上限、有給5日の取得義務、入退社手続き、法改正への対応。中小企業の総務が労務でつまずきやすい論点ごとに、会社を覚えるAI「番頭」がどう役立つかをまとめた一覧です。',
+    '就業規則の運用、労務の引き継ぎ、36協定の上限、有給5日の取得義務、入退社手続き、法改正への対応。中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にする番頭がどう役立つかをまとめた一覧です。',
   alternates: { canonical: URL },
   openGraph: {
     title: '労務AIの目的別の使い方一覧｜番頭(Banto)',
     description:
-      '中小企業の総務が労務でつまずきやすい論点ごとに、会社を覚えるAI「番頭」がどう役立つかをまとめた一覧です。',
+      '中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にする番頭がどう役立つかをまとめた一覧です。',
     url: URL,
     siteName: '番頭(Banto)',
     locale: 'ja_JP',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '労務AIの目的別の使い方一覧｜番頭(Banto)',
     description:
-      '中小企業の総務が労務でつまずきやすい論点ごとに、会社を覚えるAI「番頭」がどう役立つかをまとめた一覧です。',
+      '中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にする番頭がどう役立つかをまとめた一覧です。',
     images: [`${BASE}/og-image.png`],
   },
 }
@@ -56,7 +56,7 @@ export default function RoumuIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '労務AIの使い方', item: URL },
     ],
   }
@@ -90,7 +90,7 @@ export default function RoumuIndexPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">労務AIの使い方</span>
       </nav>
@@ -104,14 +104,14 @@ export default function RoumuIndexPage() {
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
           中小企業の総務が労務でつまずきやすい論点を、目的ごとに整理しました。
           就業規則の運用、労務の引き継ぎ、36協定や有給の管理、法改正への対応まで、
-          会社を覚えるAI「番頭」がそれぞれどう役立つかを、具体例とあわせて読めます。
+          就業規則のファイルからずれを1枚にする番頭が、それぞれどう役立つかを具体例とあわせて読めます。
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
           <span className="inline-flex items-center gap-1">
             <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> 気になる論点から読める
           </span>
           <span className="inline-flex items-center gap-1">
-            <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> 無料で試せる
+            <Check className="h-3.5 w-3.5 text-brand-600" aria-hidden /> ファイルを置いて試せる
           </span>
         </div>
       </section>
@@ -141,14 +141,14 @@ export default function RoumuIndexPage() {
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            気になる論点は、会社を覚えるAIに相談できます
+            気になる論点は、就業規則のファイルから
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録すれば、自社の規程や過去のやり取りを踏まえて番頭に続けて相談できます。二度目からは前提を説明し直さずに話せます。無料で試せます。
+            登録の前に、PDFまたはWordを置くか、本文を貼れます。ずれの1枚のあとで、相談が開きます。
           </p>
           <div className="mt-6 flex justify-center">
-            <Link href="/business" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
-              番頭の全体像を見る
+            <Link href="/zure" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
+              ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>

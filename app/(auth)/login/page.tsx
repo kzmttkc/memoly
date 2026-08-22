@@ -132,10 +132,10 @@ function LoginForm() {
             <>
               Don’t have an account?{' '}
               <Link
-                href={`${next.startsWith('/') && !next.startsWith('//') ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}${langSuffix}`}
+                href="/zure?lang=en"
                 className="font-medium text-brand-600 hover:text-brand-700"
               >
-                Sign up
+                Place a file
               </Link>
             </>
           ) : (
@@ -143,10 +143,10 @@ function LoginForm() {
               アカウントがない方は{' '}
               {/* ログインに ?next= 付きで来た人が新規登録へ流れても行き先を失わないよう引き継ぐ */}
               <Link
-                href={next.startsWith('/') && !next.startsWith('//') ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}
+                href="/zure"
                 className="font-medium text-brand-600 hover:text-brand-700"
               >
-                新規登録
+                ファイルを置いて始める
               </Link>
             </>
           )}

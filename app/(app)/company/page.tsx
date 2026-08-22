@@ -11,6 +11,8 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { StatPill } from '@/components/ui/StatPill'
 import { Badge } from '@/components/ui/Badge'
 import { track } from '@/lib/analytics'
+import { afterCompanyCreateHref } from '@/lib/offer'
+import { ingestPendingZure } from '@/lib/zure-pending'
 import { resolvePlan, PAID_PLAN_IDS, type PlanId } from '@/lib/plans'
 import { localizeError } from './_components/errors'
 
@@ -112,6 +114,13 @@ function CompanyHome() {
         const list: Membership[] = data.companies ?? []
         if (ignore?.()) return
         setCompanies(list)
+        if (list[0]) {
+          const saved = await ingestPendingZure(list[0].companyId)
+          if (saved) {
+            router.push(afterCompanyCreateHref(list[0].companyId))
+            return
+          }
+        }
         // 各社の自社ルール件数を取得（状態サマリ用・ベストエフォート）。
         const entries = await Promise.all(
           list.map(async c => {
@@ -179,11 +188,9 @@ function CompanyHome() {
         // ツール結果の持ち回りがあれば、作った会社の「記憶」へ保存してから進む
         // （保存CTAの約束を実挙動に。失敗しても遷移は止めない）。
         if (prefillNote) await saveToolNote(newId)
-        router.push(
-          prefillPlan
-            ? `/company/onboarding?companyId=${newId}&plan=${prefillPlan}`
-            : `/company/onboarding?companyId=${newId}`,
-        )
+        await ingestPendingZure(newId)
+        const next = afterCompanyCreateHref(newId)
+        router.push(prefillPlan ? `${next}&plan=${prefillPlan}` : next)
         return
       }
       await load()
@@ -204,7 +211,7 @@ function CompanyHome() {
       <div className="mx-auto max-w-xl">
         <PageHeader
           title="会社を作成"
-          description="会社を登録すると、自社の労務ルール（所定労働時間・36協定の状況など）をAIに覚えさせて、自社の前提に沿った相談ができます。毎回の前提説明や調べ物の時間を減らせます。"
+          description="会社名のあとに、就業規則のファイルを置けます。ずれの1枚が出ます。相談はそのあとです。"
         />
         {/* ツール結果の持ち回りがある場合の踏み板: 保存の約束がここで果たされることを明示 */}
         {prefillNote && (
@@ -229,7 +236,7 @@ function CompanyHome() {
             </div>
             {error && <p className="text-sm text-danger-600">{error}</p>}
             <Button type="submit" size="lg" disabled={creating || !name.trim()} className="w-full">
-              {creating ? '作成中...' : '会社を作成して始める'}
+              {creating ? '作成中...' : '会社を作成してファイルを置く'}
             </Button>
           </form>
         </Card>
@@ -246,7 +253,7 @@ function CompanyHome() {
         description={
           multi
             ? `${companies.length}社を管理しています。セキュリティとプライバシーを第一として企業ごとに自社ルールと記憶が分かれているため、顧問先を切り替えても相談内容が混ざりません。`
-            : '会社カードから相談・書類作成・診断に進めます。'
+            : '会社カードから、就業規則のファイルを置けます。'
         }
       />
       {error && <p className="mb-4 text-sm text-danger-600">{error}</p>}
@@ -309,15 +316,16 @@ function CompanyHome() {
                   二次アクションは均等タイルのグリッドで縦横に整列させ視線を直線化する。
                   主要導線は「会社のホーム」＝今週の能動フィード（戻る理由が届く起点）に倒す。 */}
               <Link
-                href={`/company/home?companyId=${c.companyId}`}
+                href={`/company/documents?companyId=${c.companyId}`}
                 className={buttonClass({ variant: 'primary', size: 'lg', className: 'w-full' })}
               >
-                <Home className="h-4 w-4" aria-hidden />
-                会社のホームを開く
+                <FileText className="h-4 w-4" aria-hidden />
+                就業規則のファイルを置く
               </Link>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
-                  { href: '/company/chat', label: 'AIに相談する', icon: MessageSquareText },
+                  { href: '/company/home', label: '会社のホーム', icon: Home },
+                  { href: '/company/chat', label: '相談（ファイルの後）', icon: MessageSquareText },
                   { href: '/company/memory', label: '会社の記憶', icon: History },
                   { href: '/company/documents', label: '書類作成・レビュー', icon: FileText },
                   { href: '/company/risk', label: '労務リスク・セルフ診断', icon: ShieldCheck },
@@ -342,7 +350,7 @@ function CompanyHome() {
 
               {ruleCount === 0 && (
                 <p className="mt-4 rounded-lg border border-warning-500/30 bg-warning-50 px-3 py-2 text-xs text-warning-700">
-                  まだ自社ルールが未登録です。相談の精度を上げるため、まず「自社ルールを編集」から数件登録するのがおすすめです。
+                  相談の前に、就業規則のファイルを書類へ置いてください。
                 </p>
               )}
             </Card>

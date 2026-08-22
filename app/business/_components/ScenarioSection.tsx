@@ -1,4 +1,5 @@
 import { Building2, Clock } from 'lucide-react'
+import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { SCENARIOS } from '../_lib/scenarios'
@@ -25,11 +26,11 @@ export default function ScenarioSection() {
             導入シナリオ（社内検証に基づく利用例）
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-            実際の使われ方を、検証記録から
+            実際の使われ方を、当時の記録から
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-            実在企業の声ではなく、作り手が業種別の会社設定で実際に番頭を使って検証した記録です。
-            引用は検証セッションの内容にもとづきます。
+            いまの入口は、就業規則のファイルを置くことです。以下は、獲得の顔を変える前（2026年7月）の社内検証の当時の記録です。
+            実在企業の声ではなく、作り手が業種別の会社設定で実際に番頭を使って検証した内容です。引用はそのセッションのままです。
           </p>
         </div>
 
@@ -58,7 +59,11 @@ export default function ScenarioSection() {
         </div>
 
         <p className="mt-6 text-center text-xs leading-relaxed text-neutral-500">
-          上記は作り手による社内検証の記録であり、お客様の体験談ではありません。
+          上記は作り手による社内検証の当時の記録であり、お客様の体験談ではありません。
+          {' '}
+          <Link href="/zure" className="underline underline-offset-2 hover:text-brand-700">
+            いま就業規則のファイルを置く
+          </Link>
         </p>
       </div>
     </section>

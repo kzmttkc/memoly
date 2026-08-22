@@ -21,6 +21,13 @@ import { PLANS } from '@/lib/plans'
 //   anchor（E12・2026-07-23）: 価格アンカーは「自社事実のみ」型（output/0723/banto_pricing_anchor_copy.md 案A）。
 //     外部価格（社労士相談の相場等）は出典を示せず有利誤認リスク＋社労士法27条配慮に反するため
 //     主語にしない。1日あたりの金額は monthlyJpy÷31 の割り算のみ（検証可能・誇張ゼロ）。
+//   有料CTAの signupHref（plan=）は購買意思の受け皿なので残す。カード下のファイル導線は
+//   登録の前に入口を試せるようにする（獲得の顔は /zure）。
+export const PLAN_FILE_FIRST = {
+  href: '/zure',
+  label: '先に就業規則のファイルを置く',
+} as const
+
 export const PLAN_COPY = [
   {
     name: PLANS.starter.displayName,
@@ -38,7 +45,7 @@ export const PLAN_COPY = [
     // 2026-07-23 B17: CTA文言をプラン別に分化（リンク先・計測locationは不変）。
     cta: 'Entryで始める',
     features: [
-      '自社の規程・会社プロファイルの記憶',
+      '就業規則のファイルから、ずれを1枚に',
       `AIチャット相談 1日${PLANS.starter.limits.chat}回まで`,
       `労務リスク・セルフ診断、規程ドラフトの下書き・レビュー 各1日${PLANS.starter.limits.risk_audit}回まで`,
       '助成金・法改正が自社に関係するかのチェック',
@@ -82,8 +89,8 @@ export const PLAN_COPY = [
       // 2026-07-28 CTO修正（L2監査#3）: 顧問先の登録上限（50社）が非公開だった。
       // lib/plans.ts の shigyo.maxCompanies をそのまま開示する。
       `複数企業（顧問先）の切り替え（最大${PLANS.shigyo.maxCompanies}社まで）`,
-      '企業ごとに記憶・データを分離',
-      '顧問先ごとに覚えた前提で、切り替えてすぐ相談を続けられます',
+      '企業ごとに書類・データを分離',
+      '顧問先ごとに残した規程で、切り替えて相談できます',
       // 2026-07-29 CTO修正（UX監査Round5#4・軽）: 席数の上限（seatCap）が
       // /tokushoho にのみ記載され、トップページの料金カード・FAQには非開示だった。
       // lib/plans.ts の shigyo.seatCap をそのまま開示する（顧問先の社数上限=maxCompanies

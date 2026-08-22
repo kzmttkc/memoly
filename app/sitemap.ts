@@ -6,8 +6,8 @@ import { SEIDO_SLUGS } from '@/lib/seido'
 
 // ============================================================================
 // sitemap.xml — クローラに「index対象の公開URL」を明示する。
-//   番頭の公開ルートのみ。/（=/businessへredirect）と /company 配下
-//   （middlewareで認証保護＝307）は載せない。canonical は /business に統一。
+//   番頭の公開ルートのみ。/ は /zure へリダイレクト。/company 配下
+//   （middlewareで認証保護＝307）は載せない。獲得の顔の canonical は /zure。
 //   /roumu（ハブ）＋ /roumu/* は検索意図LP（SSG・公開）。SSOT(lib/usecase.ts)から全列挙する。
 //
 //   lastModified の方針（2026-07-14 是正）: 以前は全URLに `new Date()`（ビルド時の現在時刻）を
@@ -21,7 +21,8 @@ const BASE = 'https://banto-roumu.com'
 // 各URL群の「最終の実質改訂日」（プロジェクト履歴の実在する改訂境界）。
 //   内容を実質改訂したらここを上げる。ビルドごとには動かさない＝lastmod をクローラが信頼できる。
 const REVISED = {
-  business: '2026-07-13', // ヒーローH1のA/B・LPコピー反復
+  zure: '2026-08-22',
+  business: '2026-08-21', // 獲得の顔を /zure へ。ここは説明面に降格
   tools: '2026-06-29', // 無料ツールクラスタ整備
   roumu: '2026-07-19', // 底面ファネル語「労務管理システム 費用 比較」LP追加
   legal: '2026-07-23', // privacy(委託先一覧を実態一致: Dify/OpenAI/Stripe追加) / terms
@@ -37,7 +38,8 @@ const REVISED = {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
-    { url: `${BASE}/business`, lastModified: REVISED.business, changeFrequency: 'weekly', priority: 1.0 },
+    { url: `${BASE}/zure`, lastModified: REVISED.zure, changeFrequency: 'weekly', priority: 1.0 },
+    { url: `${BASE}/business`, lastModified: REVISED.business, changeFrequency: 'monthly', priority: 0.4 },
     // 料金（単独ページ・2026-07-30 PMF修理#1）。「番頭 料金」「労務AI 料金 比較」等の
     //   購買意欲クエリの着地先。以前は /business#pricing のアンカーしか無く、
     //   /pricing /plans /price /ryokin はすべて404で、検索結果に出る料金ページが存在しなかった。

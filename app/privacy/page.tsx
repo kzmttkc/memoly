@@ -11,11 +11,11 @@ export default function PrivacyPage() {
       <PublicHeader />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
-          <Link href="/business" className="text-sm text-neutral-500 hover:text-neutral-700">
-            トップに戻る
+          <Link href="/zure" className="text-sm text-neutral-500 hover:text-neutral-700">
+            入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">プライバシーポリシー</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月12日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月22日</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
@@ -56,6 +56,9 @@ export default function PrivacyPage() {
               </li>
               <li>サービス利用状況（匿名の統計情報）</li>
             </ul>
+            <p className="mt-2 text-neutral-600">
+              入口で置いた就業規則の本文、または貼った本文は、残す操作の前にサーバへ保存しません。同じブラウザに24時間だけ控え、残す操作のあとで会社の書類へ移します。共有のパソコンでは、残す操作まで画面を閉じないでください。入口の「この控えを消す」で、控えをすぐ消せます。
+            </p>
             <p className="mt-2 text-neutral-500">なお、会話から長期記憶を作成する際は、対象者のラベルに生の氏名・住所・マイナンバー等を残さず、イニシャルや役割で記録するようAIに指示しています（AIによる処理のため、完全な自動仮名化を保証するものではありません）。マイナンバー（個人番号）およびこれを含む書類の内容は入力しないでください。</p>
           </section>
 

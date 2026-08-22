@@ -55,7 +55,7 @@ export default function SeidoKitPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '制度対応', item: `${BASE}/seido` },
       { '@type': 'ListItem', position: 3, name: SEIDO_KIT_NAME, item: URL },
     ],
@@ -72,7 +72,7 @@ export default function SeidoKitPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <Link href="/seido" className="hover:text-brand-700">制度対応</Link>
         <span className="mx-1.5">/</span>

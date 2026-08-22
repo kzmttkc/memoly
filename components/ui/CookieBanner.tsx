@@ -17,7 +17,6 @@ export function CookieBanner() {
   const [show, setShow] = useState(false)
   const [tabbarOffset, setTabbarOffset] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
-  const acceptRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     // 2026-07-23 ブランド移行: 旧キー memoly_cookie_accepted → banto_cookie_accepted。
@@ -67,14 +66,6 @@ export function CookieBanner() {
     }
   }, [show])
 
-  // 2026-08-08 UXペルソナ監査: バナーはDOM上ページ本文の後に配置されており、
-  //   キーボード利用者が「OK」に到達するには本文の全リンク・ボタンを
-  //   Tabで通過する必要があった（約20回）。バナー表示時に「OK」へ直接
-  //   フォーカスし、Tab移動なしで即座に同意操作できるようにする。
-  useEffect(() => {
-    if (show) acceptRef.current?.focus()
-  }, [show])
-
   function accept() {
     localStorage.setItem('banto_cookie_accepted', '1')
     setShow(false)
@@ -99,7 +90,7 @@ export function CookieBanner() {
       //   タップ標的（WCAG 2.5.5）を保ったまま器の縦paddingだけを詰める。
       //   py-2(8px×2) → py-0.5(2px×2) で 61px → 49px（7.3%）。
       //   タップ標的を縮めて数字を作らないこと（ボタンの min-h-11 は触らない）。
-      className="fixed left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-[0_-1px_3px_rgba(0,0,0,0.04)] px-4 py-0.5"
+      className="fixed left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-[0_-1px_3px_rgba(0,0,0,0.04)] px-4 py-0.5 print:hidden"
       role="banner"
       aria-label="Cookie使用の通知"
     >
@@ -125,7 +116,6 @@ export function CookieBanner() {
           </Link>
         </p>
         <button
-          ref={acceptRef}
           onClick={accept}
           // 2026-07-30 UX監査 #8: 28x41 で推奨44px未満だった。バナーは全ページの
           //   最下部に常駐し、これを押さない限り画面下端が塞がったままになるため、

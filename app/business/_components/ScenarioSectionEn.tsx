@@ -1,4 +1,5 @@
 import { Building2, Clock } from 'lucide-react'
+import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { SCENARIOS_EN } from '../_lib/scenarios.en'
@@ -24,12 +25,13 @@ export default function ScenarioSectionEn() {
             Real usage scenarios (from our own internal testing)
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-            How Banto actually gets used, from our test logs
+            How Banto actually gets used, from our historical records
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-            These are not customer testimonials — they are records of the operator&apos;s own
-            internal testing, using different company profiles to verify Banto&apos;s behavior.
-            Quotes reflect what actually happened in those sessions.
+            The current entry is placing a work rules file. What follows is a historical record of
+            the operator&apos;s own internal testing from July 2026, before that entry changed.
+            These are not customer testimonials — quotes reflect what actually happened in those
+            sessions.
           </p>
         </div>
 
@@ -56,7 +58,11 @@ export default function ScenarioSectionEn() {
         </div>
 
         <p className="mt-6 text-center text-xs leading-relaxed text-neutral-500">
-          The above are records from the operator&apos;s own internal testing, not customer testimonials.
+          The above are historical records from the operator&apos;s own internal testing, not customer testimonials.
+          {' '}
+          <Link href="/zure?lang=en" className="underline underline-offset-2 hover:text-brand-700">
+            Place a work rules file
+          </Link>
         </p>
       </div>
     </section>

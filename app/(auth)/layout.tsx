@@ -43,16 +43,16 @@ export default function AuthLayout({
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <Link
-              href="/business"
+              href="/zure"
               className="inline-flex items-baseline gap-1.5 text-2xl font-bold tracking-tight text-neutral-900"
-              aria-label="番頭 Banto トップへ"
+              aria-label="番頭 Banto 入口へ"
             >
               <span className="text-brand-600">番頭</span>
               <span className="text-sm font-semibold tracking-wide text-neutral-500">
                 Banto
               </span>
             </Link>
-            <p className="mt-2 text-xs text-neutral-500">会社を覚える労務AI</p>
+            <p className="mt-2 text-xs text-neutral-500">就業規則のファイルから、ずれを1枚に</p>
           </div>
           <main id="auth-main">{children}</main>
         </div>

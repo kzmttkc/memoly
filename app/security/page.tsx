@@ -29,11 +29,11 @@ export default function SecurityPage() {
       <PublicHeader />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
-          <Link href="/business" className="text-sm text-neutral-500 hover:text-neutral-700">
-            トップに戻る
+          <Link href="/zure" className="text-sm text-neutral-500 hover:text-neutral-700">
+            入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">セキュリティとデータ保護</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年7月23日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月22日</p>
           <p className="mt-4 text-sm leading-relaxed text-neutral-600">
             番頭は、会社の規程や労務相談という機微な情報をお預かりするサービスです。このページでは、実際に実装している保護の仕組みを、誇張なくそのまま説明します。
           </p>
@@ -41,7 +41,14 @@ export default function SecurityPage() {
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">1. 会社ごとのデータ分離（RLS）</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">1. 登録前のファイル</h2>
+            <p>
+              入口で就業規則のファイルを置くか、本文を貼ると、本文は応答にだけ使い、この時点ではデータベースに書きません。このブラウザに24時間だけ控え、残す操作のあとで会社の書類として保存します。読めなかったページは未読として残します。同じ回線から1時間に8回まで置けます。
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">2. 会社ごとのデータ分離（RLS）</h2>
             <p>
               番頭のデータベースは、行レベルセキュリティ（RLS：Row Level Security）という仕組みで、データの1行1行に「どの会社のものか」を持たせ、データベース自体が「その会社のメンバー以外は読めない・書けない」を強制しています。
             </p>
@@ -51,14 +58,14 @@ export default function SecurityPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">2. AIの学習に使われません</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">3. AIの学習に使われません</h2>
             <p>
               AI回答の生成にはAnthropic社のClaude APIを使用しています。Anthropic社の商用API規約では、APIで送信されたデータは既定でAIモデルの学習に使用されません。お客様の相談内容や規程が、他社への回答やAIモデルの改善に流用されることはありません。
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">3. 通信と基盤の保護</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">4. 通信と基盤の保護</h2>
             <ul className="list-inside list-disc space-y-1 text-neutral-600">
               <li>通信はすべてHTTPS/TLSで暗号化しています。HSTS（HTTP Strict Transport Security）を有効にし、ブラウザに常時HTTPS接続を強制しています。</li>
               <li>Content Security Policy（CSP）等のセキュリティヘッダを設定し、第三者スクリプトの実行やクリックジャッキングを制限しています。</li>
@@ -67,14 +74,14 @@ export default function SecurityPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">4. プロンプトインジェクションへの方針</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">5. プロンプトインジェクションへの方針</h2>
             <p>
               アップロードされた規程や登録データの中に「これまでの指示を無視して」のようなAIへの指示文が紛れ込んでいても、番頭はそれを指示として実行せず、点検・参照対象のデータとしてのみ扱うよう、AIへの指示を明示的に分離・防御しています。外部から取り込んだ文書がAIの動作を乗っ取ることを防ぐための多層的な対策で、継続的に強化しています。
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">5. データの保持期間と削除</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">6. データの保持期間と削除</h2>
             <ul className="list-inside list-disc space-y-1 text-neutral-600">
               <li>お預かりしたデータは、アカウントが存在する限り保持されます。</li>
               <li>アカウントを削除すると、会社のデータ（相談履歴・記憶・規程・期限）は他のメンバーが残っていない限り即時に削除されます。</li>
@@ -84,14 +91,14 @@ export default function SecurityPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">6. データはお客様のものです（エクスポート）</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">7. データはお客様のものです（エクスポート）</h2>
             <p>
               管理者は、設定画面（プランと設定）からいつでも自社データ一式（自社ルール・記憶・取込規程・期限・相談履歴）をJSON形式でダウンロードできます。解約を難しくするためのデータの抱え込みはしません。
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">7. 操作の監査ログ</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">8. 操作の監査ログ</h2>
             <p>
               メンバーの招待、規程・記憶の削除、データのエクスポート、APIキーの発行・失効などの重要な操作は、追記専用（後から書き換え・削除ができない）の監査ログに記録され、管理者が設定画面から確認できます。
             </p>
@@ -101,7 +108,7 @@ export default function SecurityPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">8. 委託先の一覧</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">9. 委託先の一覧</h2>
             <p>サービスの提供に必要な範囲で、次の外部サービスを利用しています。</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-neutral-600">
               <li><span className="font-medium text-neutral-800">Supabase</span>（米国）：データベース・認証</li>
@@ -128,14 +135,14 @@ export default function SecurityPage() {
               明示する形で答える。ブランド規定（brand.md）により、運営者自身の
               資格・監修・登録状態には肯定形でも否定形でも触れない。 */}
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">9. この記載の根拠について</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">10. この記載の根拠について</h2>
             <p>
               本ページの内容は、いずれも当社が実装済みの内容を自ら記載したものです。外部機関による監査・認証を受けたものではありません。記載の裏付けが必要な場合は、下記の窓口へご照会ください。実装が変わった際は本ページも更新します。
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-base font-semibold text-neutral-900">10. 脆弱性のご報告・お問い合わせ</h2>
+            <h2 className="mb-3 text-base font-semibold text-neutral-900">11. 脆弱性のご報告・お問い合わせ</h2>
             <p>
               セキュリティ上の問題を発見された場合や、データの取り扱いについてのご質問は <a href="mailto:support@banto-roumu.com" className="text-brand-600 underline">support@banto-roumu.com</a> までご連絡ください。確認のうえ誠実に対応します。
             </p>

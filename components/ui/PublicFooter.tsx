@@ -25,6 +25,7 @@ import { UitruthCrossCta } from '@/components/ui/UitruthCrossCta'
 
 /** サービス側の導線（読者が「次に何を見るか」） */
 const SERVICE_LINKS: { href: string; label: string }[] = [
+  { href: '/zure', label: 'ファイルを置く' },
   { href: '/business', label: 'サービス概要' },
   { href: '/pricing', label: '料金' },
   { href: '/faq', label: 'よくある質問' },
@@ -49,7 +50,15 @@ const LEGAL_LINKS: { href: string; label: string }[] = [
 const LINK_CLASS =
   'inline-flex min-h-11 items-center hover:text-brand-700 sm:min-h-0'
 
-export function PublicFooter({ ctaLocation }: { ctaLocation?: string }) {
+export function PublicFooter({
+  ctaLocation,
+  showCrossCta = true,
+  omitServiceHrefs = [],
+}: {
+  ctaLocation?: string
+  showCrossCta?: boolean
+  omitServiceHrefs?: string[]
+}) {
   return (
     <footer className="border-t border-neutral-200 bg-neutral-50">
       <div className="mx-auto max-w-5xl px-6 py-10">
@@ -57,9 +66,9 @@ export function PublicFooter({ ctaLocation }: { ctaLocation?: string }) {
             表示計測(uitruth_cta_view)に useEffect が要るため、この枠だけを
             クライアント境界へ切り出している（フッタ本体はサーバーコンポーネントのまま）。
             クリックは Plausible の Outbound Link 自動計測に乗る＝明示イベントは持たない。 */}
-        <UitruthCrossCta />
+        {showCrossCta && <UitruthCrossCta />}
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <Link href="/business" className="flex min-h-11 shrink-0 items-center gap-2 sm:min-h-0">
+          <Link href="/zure" className="flex min-h-11 shrink-0 items-center gap-2 sm:min-h-0">
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
               <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
@@ -68,14 +77,14 @@ export function PublicFooter({ ctaLocation }: { ctaLocation?: string }) {
 
           <nav aria-label="フッタ" className="flex flex-col gap-2 text-sm text-neutral-600 sm:items-end">
             <div className="flex flex-wrap items-center gap-x-5 sm:justify-end">
-              {SERVICE_LINKS.map((l) => (
+              {SERVICE_LINKS.filter(l => !omitServiceHrefs.includes(l.href)).map((l) => (
                 <Link key={l.href} href={l.href} className={LINK_CLASS}>
                   {l.label}
                 </Link>
               ))}
               {ctaLocation && (
-                <TrackedCTA location={ctaLocation} className={LINK_CLASS}>
-                  無料で始める
+                <TrackedCTA location={ctaLocation} href="/zure" className={LINK_CLASS}>
+                  ファイルを置く
                 </TrackedCTA>
               )}
             </div>

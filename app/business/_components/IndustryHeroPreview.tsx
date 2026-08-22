@@ -35,7 +35,7 @@ import { setSharedIndustry } from '../_lib/industry-selection'
  *  実装（要点を1件ずつ or 対話で覚える・ファイル取込なし）との期待ギャップを生んだ。
  *  「要点を覚える」表現へ調整し、直下の橋渡しコピーで期待を正す。 */
 const MEMORY_ROWS = [
-  { label: '就業規則の要点（試用期間・休職 ほか）', kind: '規程の要点' },
+  { label: '就業規則ファイルの1枚（書いてあること / ないこと）', kind: 'ずれ' },
   { label: '36協定 未締結という前提', kind: 'プロファイル' },
   { label: '昨日の相談: 試用期間の延長', kind: '相談の経緯' },
 ]
@@ -178,7 +178,7 @@ export default function IndustryHeroPreview() {
                 実態より小さく書いており、検討者が最初に払う初期投入コストを自ら重く
                 見せていた。未対応なのは「ファイル添付」であって「全文取込」ではない。 */}
             <p className="border-t border-neutral-100 px-4 py-2.5 text-[11px] leading-snug text-neutral-600">
-              就業規則は本文を貼り付ければ全文を覚えます（ファイル添付は未対応）。
+              就業規則のファイルを置くと、ずれが1枚になります。ファイルが無いときは本文を貼れます。
             </p>
           </div>
         </>
@@ -205,16 +205,16 @@ function IndustryPanel({ industry }: { industry: IndustryKey }) {
         <span className="text-xs font-semibold text-neutral-700">番頭</span>
         <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-medium text-success-700">
           <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden />
-          記憶あり
+          1枚あり
         </span>
       </div>
 
       <div className="space-y-3 px-4 py-4">
         {/* 覚えている会社プロファイル */}
         <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-600">
             <Building2 className="h-3.5 w-3.5" aria-hidden />
-            覚えている自社プロファイル
+            このファイルの前提
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {ind.tags.map(tag => (

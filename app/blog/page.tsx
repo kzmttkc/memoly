@@ -22,7 +22,7 @@ const URL = `${BASE}/blog`
 export const metadata: Metadata = {
   title: '規程管理・組織の記憶ブログ｜番頭(Banto)',
   description:
-    '社内規程が参照されない理由、改定履歴の管理、規程と現場運用の乖離。会社を覚えるAI「番頭」が向き合う、労務の"記憶"にまつわるテーマを掘り下げるブログです。',
+    '社内規程が参照されない理由、改定履歴の管理、規程と現場運用の乖離。就業規則のファイルからずれを1枚にする番頭が向き合う、労務のテーマを掘り下げるブログです。',
   alternates: { canonical: URL },
   openGraph: {
     title: '規程管理・組織の記憶ブログ｜番頭(Banto)',
@@ -47,7 +47,7 @@ export default function BlogIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: 'ブログ', item: URL },
     ],
   }
@@ -75,7 +75,7 @@ export default function BlogIndexPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">ブログ</span>
       </nav>
@@ -88,7 +88,7 @@ export default function BlogIndexPage() {
         </h1>
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
           社内規程は整備するだけでは終わりません。参照されているか、改定履歴が残っているか、現場の運用とずれていないか。
-          会社を覚えるAI「番頭」が向き合っている、規程と組織の「記憶」にまつわるテーマを掘り下げます。
+          就業規則のファイルからずれを1枚にする番頭が向き合っている、規程と現場のあいだのテーマを掘り下げます。
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
           <span className="inline-flex items-center gap-1">
@@ -129,14 +129,14 @@ export default function BlogIndexPage() {
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            規程を、覚えているAIに相談できます
+            気になる論点は、就業規則のファイルから
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録すれば、自社の規程や過去の判断を踏まえて番頭に続けて相談できます。無料で試せます。
+            登録の前に、PDF・Wordを置くか、本文を貼れます。ずれの1枚のあとで、相談が開きます。
           </p>
           <div className="mt-6 flex justify-center">
-            <Link href="/business" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
-              番頭の全体像を見る
+            <Link href="/zure" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
+              ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>

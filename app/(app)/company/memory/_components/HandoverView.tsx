@@ -37,6 +37,9 @@ interface HandoverData {
     weakCategories: { name: string; score: number }[]
     diagnosedAt: string
   } | null
+  conflicts?: { kind: string; topic: string; detail: string }[]
+  deadlines?: { title: string; dueOn: string | null }[]
+  documents?: { title: string; updatedAt: string }[]
 }
 
 type State =
@@ -102,6 +105,32 @@ function buildHandoverText(d: HandoverData): string {
     }
   } else {
     lines.push('（まだリスク診断の記録はありません）')
+  }
+  lines.push('')
+
+  lines.push('■ ずれ（確認対象）')
+  if (d.conflicts?.length) {
+    for (const c of d.conflicts) lines.push(`・[${c.kind}] ${c.topic}：${c.detail}`)
+  } else {
+    lines.push('（登録内容から機械的に拾えるずれはありません）')
+  }
+  lines.push('')
+
+  lines.push('■ 登録した期限')
+  if (d.deadlines?.length) {
+    for (const dl of d.deadlines) {
+      lines.push(`・${dl.title}${dl.dueOn ? `（${dl.dueOn}）` : ''}`)
+    }
+  } else {
+    lines.push('（登録した期限はありません）')
+  }
+  lines.push('')
+
+  lines.push('■ 取込済みの規程')
+  if (d.documents?.length) {
+    for (const doc of d.documents) lines.push(`・${doc.title}`)
+  } else {
+    lines.push('（取込済みの規程はありません）')
   }
   lines.push('')
   lines.push('※ 本サマリーは番頭が会社の記憶として残してきた内容の要約です。最終的な判断・手続きは一次情報と専門家でご確認ください。')
@@ -328,6 +357,45 @@ export function HandoverView({ companyId }: { companyId: string }) {
           </Card>
         )}
       </section>
+
+      {(d.conflicts?.length ?? 0) > 0 && (
+        <section className="mb-7">
+          <h3 className="mb-3 text-sm font-semibold text-neutral-900">ずれ（確認対象）</h3>
+          <Card padded={false} className="divide-y divide-neutral-100">
+            {d.conflicts!.map((c, i) => (
+              <div key={i} className="px-4 py-3">
+                <p className="mb-0.5 text-xs font-medium text-brand-700">{c.kind} ・ {c.topic}</p>
+                <p className="break-words text-sm text-neutral-900">{c.detail}</p>
+              </div>
+            ))}
+          </Card>
+        </section>
+      )}
+
+      {(d.deadlines?.length ?? 0) > 0 && (
+        <section className="mb-7">
+          <h3 className="mb-3 text-sm font-semibold text-neutral-900">登録した期限</h3>
+          <ul className="space-y-1 text-sm text-neutral-800">
+            {d.deadlines!.map((dl, i) => (
+              <li key={i}>
+                {dl.title}
+                {dl.dueOn ? `（${dl.dueOn}）` : ''}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(d.documents?.length ?? 0) > 0 && (
+        <section className="mb-2">
+          <h3 className="mb-3 text-sm font-semibold text-neutral-900">取込済みの規程</h3>
+          <ul className="space-y-1 text-sm text-neutral-800">
+            {d.documents!.map((doc, i) => (
+              <li key={i}>{doc.title}</li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <p className="mt-6 border-t border-neutral-200 pt-4 text-xs leading-relaxed text-neutral-500">
         本サマリーは番頭が会社の記憶として残してきた内容の要約です。最終的な判断・手続きは一次情報と専門家でご確認ください。

@@ -12,6 +12,7 @@ import type { NextConfig } from "next";
 const PRICING_DESTINATION = "/pricing";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['unpdf', 'mammoth'],
   // $HOME直下の迷子package-lock.jsonをワークスペースルートと誤検出し
   // dev(Turbopack)がモジュール解決に失敗するため明示
   turbopack: {

@@ -14,8 +14,13 @@ import { maybeAskDifyForQuery } from '@/lib/dify'
 import { checkAndIncrement } from '@/lib/rate-limit'
 import { resolvePlan, rateLimitBody } from '@/lib/plans'
 import { detectDecisionConflicts } from '@/lib/decision-conflict'
+import { detectRuleOperationConflicts } from '@/lib/rule-operation-conflict'
 import { embeddingEnabled } from '@/lib/embedding'
 import { buildRecalledMemory, serializeRecalledMemory } from '@/lib/recall'
+import { citationFromContext, formatAnswerCitation } from '@/lib/answer-citation'
+import { selectFactsForQuery } from '@/lib/legal-facts'
+import { formatKabauFactsBlock, loadKabauLedger } from '@/lib/kabau-ledger'
+import { FILE_FIRST_CODE, FILE_FIRST_MESSAGE, isChatAllowed } from '@/lib/file-first'
 
 // ============================================================================
 // /api/company/chat — 会社スコープのチャット
@@ -86,6 +91,18 @@ export async function POST(req: NextRequest) {
   const companyName = companyMeta?.name ?? '自社'
   const plan = resolvePlan(companyMeta?.plan).id
 
+  const supabaseForDocs = await createServerSupabaseClient()
+  const { count: docCount, error: docErr } = await supabaseForDocs
+    .from('company_documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('company_id', companyId)
+  if (!docErr && !isChatAllowed(docCount ?? 0)) {
+    return NextResponse.json(
+      { error: FILE_FIRST_MESSAGE, code: FILE_FIRST_CODE },
+      { status: 409 },
+    )
+  }
+
   // --- 日次利用上限ガード（plan連動・高コストsonnet呼び出し前）。超過は429。DB未適用時はfail-open ---
   if (!(await checkAndIncrement(user.id, 'chat', plan))) {
     return NextResponse.json(rateLimitBody(plan), { status: 429 })
@@ -104,10 +121,11 @@ export async function POST(req: NextRequest) {
   //   recency+キーワードで優先選択する（縦深: 過去の自社判断・人ごとの状況を含む）。
   //   loadRelevantRuleExcerpts は F1 規程まるごと取込: 取込済み規程（就業規則等）から
   //   関連条文の原文抜粋を引く（未取込/テーブル未適用なら空＝既存挙動と同一）。
-  const [ctx, ruleExcerpts, difyContext] = await Promise.all([
+  const [ctx, ruleExcerpts, difyContext, kabauFacts] = await Promise.all([
     loadCompanyContext(companyId, MAX_MEMORIES, lastUserMessage),
     loadRelevantRuleExcerpts(companyId, lastUserMessage),
     maybeAskDifyForQuery(lastUserMessage, companyId),
+    loadKabauLedger(),
   ])
 
   // 過去判断 × 最新法令の確認対象を決定的に検知（LLM不要）。今回の相談に関連トピックが
@@ -120,16 +138,46 @@ export async function POST(req: NextRequest) {
     factEffectiveDate: c.fact.effectiveDate,
   }))
 
-  const system = buildCompanySystemPrompt(
-    companyName,
-    ctx.profiles,
-    ctx.memories,
-    difyContext,
-    lastUserMessage,
-    ctx.decisions,
-    ctx.peopleSituations,
-    decisionConflicts,
-    ruleExcerpts,
+  const opConflicts = detectRuleOperationConflicts(ctx.profiles)
+  const opBlock = opConflicts.length
+    ? `\n\n【規程と運用のずれ（断定せず確認を促す）】\n${opConflicts
+        .map(
+          (c, i) =>
+            `${i + 1}. 「${c.topic}」は規程では「${c.ruleValue}」、運用では「${c.operationValue}」です。どちらを正とするかは会社と専門家が決めます。`,
+        )
+        .join('\n')}`
+    : ''
+
+  const system =
+    buildCompanySystemPrompt(
+      companyName,
+      ctx.profiles,
+      ctx.memories,
+      difyContext,
+      lastUserMessage,
+      ctx.decisions,
+      ctx.peopleSituations,
+      decisionConflicts,
+      ruleExcerpts,
+    ) +
+    opBlock +
+    formatKabauFactsBlock(kabauFacts)
+
+  const legalFacts = selectFactsForQuery(lastUserMessage)
+  const legalCite = legalFacts[0]
+    ? {
+        label: legalFacts[0].label,
+        sourceName: legalFacts[0].sourceName,
+        effectiveDate: legalFacts[0].effectiveDate,
+      }
+    : null
+  const citationBlock = formatAnswerCitation(
+    citationFromContext({
+      ruleTitles: [...new Set(ruleExcerpts.map(r => r.title).filter(Boolean))],
+      legal: legalCite,
+      hasProfiles: ctx.profiles.length > 0,
+    }),
+    /[A-Za-z]{12,}/.test(lastUserMessage) ? 'en' : 'ja',
   )
 
   // 記憶想起の可視化（革新性の体感化）: この相談で system に注入した「自社の記憶」を
@@ -251,6 +299,16 @@ export async function POST(req: NextRequest) {
           ),
         )
       } finally {
+        // 3行出典は注入した行から機械的に付ける。モデルが既に【出典】を書いていれば重ねない。
+        if (full && !full.includes('【出典】') && !full.includes('[Source]')) {
+          const extra = `\n\n${citationBlock}`
+          full += extra
+          try {
+            controller.enqueue(new TextEncoder().encode(extra))
+          } catch {
+            // ストリームが既に閉じている場合は保存だけ残す。
+          }
+        }
         // assistant 応答を保存（ベストエフォート・失敗してもストリームは閉じる）
         if (full) {
           await supabase

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 import { getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
 import LeadCapture from '@/app/business/_components/LeadCapture'
+import { OFFER } from '@/lib/offer'
 import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 import KasuharaSelfCheck from './_components/KasuharaSelfCheck'
 import { PublicFooter } from '@/components/ui/PublicFooter'
@@ -34,14 +35,12 @@ const BASE = 'https://banto-roumu.com'
 // CTA = 番頭 無料登録（会社登録の入口）。/business と同一導線。
 //   新規訪問者（SEO記事経由）は signup へ直行させる。login 着地だと「新規登録」の
 //   小リンクを自力で見つける必要があり、北極星（無料登録）直前の蛇口が細くなる。
-const SIGNUP_HREF = '/signup?next=/company'
+const SIGNUP_HREF = OFFER.path
 
-// 末尾CTAのサブコピー3種。掲載順の輪番で決定的に選ぶ（ビルドごとに揺れない）。
-//   核の主張「覚えているから前提の説明が要らない」を、同一文の反復にならないよう言い換える。
 const CTA_SUBCOPY = [
-  '会社を登録して、最初の相談を投げてみてください。前提を説明し直さない労務相談を、無料で試せます。',
-  '会社を登録して、最初の相談を投げてみてください。二度目からは、話が早い。その体験を無料で試せます。',
-  '会社を登録して、最初の相談を投げてみてください。昨日の相談の続きから話せる労務AIを、無料で試せます。',
+  '次は就業規則のファイルを置くだけです。ずれが1枚になります。',
+  '登録の前に、PDF・Wordを置くか、本文を貼れます。相談はそのあとです。',
+  '書いてあることと書いてないことが、1枚になります。',
 ]
 
 export function generateStaticParams() {
@@ -103,7 +102,7 @@ export default async function RoumuUseCasePage({
 
   // signup CTA の遷移先。LPごとに計測用UTMを持つ場合は ?next=/company に & で連結する
   // （底面ファネル語の流入をチャネル別にCVR分離計測するため）。既定は無UTMのまま。
-  const signupHref = u.signupUtm ? `${SIGNUP_HREF}&${u.signupUtm}` : SIGNUP_HREF
+  const signupHref = u.signupUtm ? `${SIGNUP_HREF}?${u.signupUtm}` : SIGNUP_HREF
 
   // FAQPage 構造化データ（リッチリザルト適格・本文と一致）
   const faqJsonLd = {
@@ -121,7 +120,7 @@ export default async function RoumuUseCasePage({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '労務AIの使い方', item: `${BASE}/roumu` },
       { '@type': 'ListItem', position: 3, name: u.ogCategory, item: url },
     ],
@@ -171,7 +170,7 @@ export default async function RoumuUseCasePage({
 
       {/* ===== パンくず（視覚） ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <Link href="/roumu" className="hover:text-brand-700">労務AIの使い方</Link>
         <span className="mx-1.5">/</span>
@@ -201,7 +200,7 @@ export default async function RoumuUseCasePage({
             href={signupHref}
             className={buttonClass({ variant: 'primary', size: 'lg' })}
           >
-            無料で会社を登録して試す
+            {OFFER.cta}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </TrackedCTA>
           <Link
@@ -334,7 +333,7 @@ export default async function RoumuUseCasePage({
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            自社を覚えるAIを、今日から
+            就業規則のファイルを置く
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
             {CTA_SUBCOPY[
@@ -350,7 +349,7 @@ export default async function RoumuUseCasePage({
               href={signupHref}
               className={buttonClass({ variant: 'secondary', size: 'lg' })}
             >
-              無料で会社を登録して試す
+              {OFFER.cta}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </TrackedCTA>
           </div>

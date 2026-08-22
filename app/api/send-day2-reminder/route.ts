@@ -167,7 +167,7 @@ export async function GET(req: Request) {
         `番頭にご登録いただき、ありがとうございます。\n\n` +
         `就業規則の本文をコピーして貼り付けると、番頭が全文を覚えます。\n` +
         `以降は「自社の規程では第◯条にこう定めています」と、一般論ではなく御社の条文を引いて答えます。\n\n` +
-        `貼り付けは3分ほどで終わります。ファイルの添付には未対応のため、本文をテキストでお願いします。`
+        `貼り付けでも、PDF・Wordの取り込みでも構いません。スキャン画像で本文が取れないページは、貼り付けで補えます。`
 
       // 宛先ごとの配信停止URL（署名付き・ログイン不要で止まる。法務監査#4）。
       const unsub = buildUnsubscribeUrls(BANTO_URL, user.id, 'digest')
@@ -192,7 +192,7 @@ export async function GET(req: Request) {
             <h2 style="color:#324a8a;font-size:18px;margin:0 0 12px">就業規則を貼り付けると、自社の条文で答えます</h2>
             <p style="color:#374151;line-height:1.8;font-size:14px">番頭にご登録いただき、ありがとうございます。</p>
             <p style="color:#374151;line-height:1.8;font-size:14px">就業規則の本文をコピーして貼り付けると、番頭が<strong>全文を覚えます</strong>。以降は「自社の規程では第◯条にこう定めています」と、一般論ではなく御社の条文を引いて答えます。</p>
-            <p style="color:#6b7280;line-height:1.8;font-size:13px">貼り付けは3分ほどで終わります。ファイルの添付には未対応のため、本文をテキストでお願いします。</p>
+            <p style="color:#6b7280;line-height:1.8;font-size:13px">貼り付けでも、PDF・Wordの取り込みでも構いません。スキャン画像で本文が取れないページは、貼り付けで補えます。</p>
             <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
             <a href="${BANTO_URL}/company/documents" style="background:#324a8a;color:#ffffff;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;font-size:14px">就業規則を貼り付ける</a>
             <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">

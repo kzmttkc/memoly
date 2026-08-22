@@ -29,7 +29,7 @@ function HomeInner() {
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title="自社のホーム"
-        description="今週の法改正・手続き期限など、自社に関係する動きから表示します。気になったカードから、その場で相談・書類作成・診断に進めます。"
+        description="書類から始められます。相談は、就業規則のファイルのあとです。"
       />
 
       {/* D17+C13/D10/D14/D16: 初回チェックリスト（今日やること1つを最上部）・
@@ -54,18 +54,18 @@ function HomeInner() {
       {/* 主要導線（フィードの下・二次アクション）。 */}
       <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Link
+          href={`/company/documents?companyId=${companyId}`}
+          className={buttonClass({ variant: 'primary', className: 'h-auto flex-col gap-1.5 py-4' })}
+        >
+          <FileText className="h-5 w-5" aria-hidden />
+          書類
+        </Link>
+        <Link
           href={`/company/chat?companyId=${companyId}`}
           className={buttonClass({ variant: 'secondary', className: 'h-auto flex-col gap-1.5 py-4' })}
         >
           <MessageSquareText className="h-5 w-5" aria-hidden />
           相談
-        </Link>
-        <Link
-          href={`/company/documents?companyId=${companyId}`}
-          className={buttonClass({ variant: 'secondary', className: 'h-auto flex-col gap-1.5 py-4' })}
-        >
-          <FileText className="h-5 w-5" aria-hidden />
-          書類
         </Link>
         <Link
           href={`/company/risk?companyId=${companyId}`}

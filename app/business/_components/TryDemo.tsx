@@ -8,6 +8,7 @@ import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { trackV as track } from '../_lib/variant'
+import { hrefWithForwardedAttribution } from './TrackedCTA'
 import {
   INDUSTRIES,
   getIndustry,
@@ -84,15 +85,9 @@ function usePrefersReducedMotion(): boolean {
 // 着地URL(/business?utm_source=…)の utm 帰属を signup href へ引き継ぐ。
 // TrackedCTA と同思想: 静的生成を壊さないため click 時に window.location から読む。
 function signupHrefWithAttribution(): string {
-  const base = '/signup?next=/company'
+  const base = '/zure'
   if (typeof window === 'undefined') return base
-  const landing = new URLSearchParams(window.location.search)
-  const qs = new URLSearchParams('next=/company')
-  for (const key of ['utm_source', 'utm_campaign', 'utm_medium']) {
-    const v = landing.get(key)
-    if (v) qs.set(key, v.slice(0, 60))
-  }
-  return `/signup?${qs.toString()}`
+  return hrefWithForwardedAttribution(base)
 }
 
 export default function TryDemo() {
@@ -434,16 +429,16 @@ export default function TryDemo() {
             </span>
             <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-medium text-success-700">
               <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden />
-              記憶あり
+              1枚あり
             </span>
           </div>
 
           {/* 覚えているサンプル会社プロファイル */}
           <div className="border-b border-neutral-200 px-4 py-4">
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-600">
                 <Building2 className="h-3.5 w-3.5" aria-hidden />
-                覚えているサンプル会社プロファイル
+                サンプル会社の前提
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {industry.tags.map(tag => (
@@ -489,7 +484,7 @@ export default function TryDemo() {
             {showRecalc && !typing && (
               <div className="flex justify-center pt-1">
                 <Link
-                  href="/signup?next=/company"
+                  href="/zure"
                   className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-4 text-[13px] font-medium text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 sm:min-h-0 sm:py-2"
                   onClick={e => {
                     track('signup_cta_clicked', {
@@ -498,7 +493,7 @@ export default function TryDemo() {
                       industry: industryKey,
                     })
                     const target = signupHrefWithAttribution()
-                    if (target !== '/signup?next=/company') {
+                    if (target !== '/zure') {
                       e.preventDefault()
                       router.push(target)
                     }
@@ -579,7 +574,7 @@ export default function TryDemo() {
               : 'これはサンプル会社の前提での答え方です。'}
           </p>
           <p className="mt-1 text-sm leading-relaxed text-neutral-600">
-            自社の規程を覚えさせれば、自社専用の答えが返ります。
+            就業規則のファイルを置けば、自社の1枚から相談が始まります。
           </p>
           {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: 長い日本語CTA文言が
               whitespace-nowrap（Buttonの既定）で折り返せず、極端に狭い実効幅で
@@ -587,7 +582,7 @@ export default function TryDemo() {
               （通常倍率では1行に収まるため見た目は不変）。 */}
           <div className="mt-4 flex min-w-0 justify-center">
             <Link
-              href="/signup?next=/company"
+              href="/zure"
               className={buttonClass({ variant: 'primary', className: 'whitespace-normal text-center' })}
               onClick={(e) => {
                 track('signup_cta_clicked', {
@@ -595,13 +590,13 @@ export default function TryDemo() {
                   engaged: started,
                 })
                 const target = signupHrefWithAttribution()
-                if (target !== '/signup?next=/company') {
+                if (target !== '/zure') {
                   e.preventDefault()
                   router.push(target)
                 }
               }}
             >
-              自社の規程を覚えさせて、自社専用で試す
+              ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>

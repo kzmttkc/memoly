@@ -63,8 +63,8 @@ export default function TokushohoPage() {
       <PublicHeader />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
-          <Link href="/business" className="text-sm text-neutral-500 hover:text-neutral-700">
-            トップに戻る
+          <Link href="/zure" className="text-sm text-neutral-500 hover:text-neutral-700">
+            入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">特定商取引法に基づく表記</h1>
           <p className="mt-1 text-sm text-neutral-500">最終更新：2026年7月30日</p>

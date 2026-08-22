@@ -6,6 +6,7 @@ import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { SEIDO_POSTS, SEIDO_SLUGS, SEIDO_DISCLAIMER, getSeidoPost } from '@/lib/seido'
+import { OFFER } from '@/lib/offer'
 import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
@@ -73,7 +74,7 @@ export default async function SeidoPostPage({
 
   const url = `${BASE}/seido/${p.slug}`
   const others = SEIDO_POSTS.filter((x) => x.slug !== p.slug)
-  const signupHref = `/signup?next=/company&utm_source=seido&utm_campaign=${p.slug}`
+  const signupHref = `/zure?utm_source=seido&utm_campaign=${p.slug}`
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
@@ -98,7 +99,7 @@ export default async function SeidoPostPage({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '制度対応', item: `${BASE}/seido` },
       { '@type': 'ListItem', position: 3, name: p.title, item: url },
     ],
@@ -113,7 +114,7 @@ export default async function SeidoPostPage({
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <Link href="/seido" className="hover:text-brand-700">制度対応</Link>
         <span className="mx-1.5">/</span>
@@ -236,10 +237,10 @@ export default async function SeidoPostPage({
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            会社のことを覚えて、労務の相談に乗るAIへ
+            就業規則のファイルを置く
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            番頭は、自社の規程や決めごとを覚えて労務の相談に乗るAIです。制度対応チェックリストの全文も、無料登録で読めます。
+            登録の前に、就業規則のファイルを置けます。ずれの1枚のあとで、相談が開きます。
           </p>
           <div className="mt-6 flex justify-center">
             <TrackedCTA
@@ -247,7 +248,7 @@ export default async function SeidoPostPage({
               href={signupHref}
               className={buttonClass({ variant: 'secondary', size: 'lg' })}
             >
-              無料で会社を登録して試す
+              {OFFER.cta}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </TrackedCTA>
           </div>

@@ -25,7 +25,7 @@ const URL = `${BASE}/faq`
 export const metadata: Metadata = {
   title: 'よくある質問｜番頭(Banto)',
   description:
-    '番頭(Banto)の料金・セキュリティ・製品の仕組み・規程管理・導入に関するよくある質問をまとめました。会社の規程を覚える労務AIについて、検討時の疑問に答えます。',
+    '番頭(Banto)の料金・セキュリティ・製品の仕組み・規程管理・導入に関するよくある質問をまとめました。就業規則のファイルからずれを1枚にする流れについて、検討時の疑問に答えます。',
   alternates: { canonical: URL },
   openGraph: {
     title: 'よくある質問｜番頭(Banto)',
@@ -49,7 +49,7 @@ export default function FaqPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: 'よくある質問', item: URL },
     ],
   }
@@ -79,7 +79,7 @@ export default function FaqPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">よくある質問</span>
       </nav>
@@ -162,10 +162,10 @@ export default function FaqPage() {
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            気になる疑問が解消したら、無料で試せます
+            疑問が解けたら、就業規則のファイルを置く
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録すれば、自社の規程や過去のやり取りを踏まえて番頭に続けて相談できます。無料で試せます。
+            登録の前に置けます。ずれの1枚のあとで、相談が開きます。
           </p>
           {/* 2026-08-12 UXペルソナ監査 R-5（離脱級）: 「無料で試せます」という見出しの
               直下に置かれていた3つのボタンが /business・/blog・/roumu の回遊リンクだけで、
@@ -176,9 +176,10 @@ export default function FaqPage() {
           <div className="mt-6 flex flex-col items-center gap-3">
             <TrackedCTA
               location="faq_footer"
+              href="/zure"
               className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50"
             >
-              無料で会社を登録して試す
+              ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </TrackedCTA>
             <Link

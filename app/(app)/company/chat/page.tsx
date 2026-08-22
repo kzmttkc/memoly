@@ -19,6 +19,8 @@ import { track } from '@/lib/analytics'
 import { useLocale, t } from '@/lib/locale'
 import { CompanySwitcher } from '../_components/CompanySwitcher'
 import { CompanyGuard } from '../_components/CompanyGuard'
+import { FILE_FIRST_CODE, FILE_FIRST_MESSAGE } from '@/lib/file-first'
+import { OFFER } from '@/lib/offer'
 import { PLANS } from '@/lib/plans'
 
 // ============================================================================
@@ -280,6 +282,7 @@ function CompanyChat() {
   //   restoring 中はサンプル質問を出さない（復元結果で上書きされるチラつき防止）。
   const [restoring, setRestoring] = useState(false)
   const [resumedTitle, setResumedTitle] = useState<string | null>(null)
+  const [fileGate, setFileGate] = useState<'loading' | 'blocked' | 'ok'>('loading')
   const conversationIdRef = useRef<string | null>(null)
   const lastExtractedAtRef = useRef(0)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -547,6 +550,11 @@ function CompanyChat() {
 
         if (res.status === 409) {
           setLoading(false)
+          const data = await res.json().catch(() => ({}))
+          if (data.code === FILE_FIRST_CODE) {
+            router.push(`/company/documents?companyId=${companyId}`)
+            return
+          }
           router.push('/company')
           return
         }
@@ -757,6 +765,43 @@ function CompanyChat() {
     }
   }, [initialQ, companyId, sendMessage])
 
+  useEffect(() => {
+    if (!companyId) {
+      setFileGate('ok')
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch(`/api/company/document/ingest?companyId=${companyId}`)
+        const d = await r.json().catch(() => ({}))
+        if (cancelled) return
+        const n = Array.isArray(d.documents) ? d.documents.length : 0
+        setFileGate(n > 0 ? 'ok' : 'blocked')
+      } catch {
+        if (!cancelled) setFileGate('ok')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [companyId])
+
+  if (fileGate === 'blocked') {
+    return (
+      <div className="mx-auto max-w-xl px-1 py-10">
+        <h1 className="text-xl font-semibold text-neutral-900">相談の前に、ファイルを置く</h1>
+        <p className="mt-3 text-sm leading-relaxed text-neutral-700">{FILE_FIRST_MESSAGE}</p>
+        <Link
+          href={`/company/documents?companyId=${companyId}`}
+          className={buttonClass({ variant: 'primary', size: 'lg', className: 'mt-6 w-full' })}
+        >
+          {OFFER.cta}
+        </Link>
+      </div>
+    )
+  }
+
   return (
     /* height（min-height ではない）で親の高さを固定する。
        min-height だと子の flex-1 が内容ぶん伸び続け、メッセージ枠の overflow-y-auto が
@@ -866,7 +911,7 @@ function CompanyChat() {
           // UX-4: 回答が規程系の話題のときだけ、起草（documents）への連結チップを出す。
           const showDraftChip = isLatestAnswer && DRAFTABLE_RE.test(msg.content)
           // F3: 【根拠】で自社ルールを引いた回答には「前提の修正」導線（誤前提の自己修復路）。
-          const showFixPremise = isLatestAnswer && msg.content.includes('【根拠】')
+          const showFixPremise = isLatestAnswer && (msg.content.includes('【根拠】') || msg.content.includes('【出典】'))
           // I08: 断定を避けた回答には「社労士に相談する下準備」への次アクションを標準提示。
           const showUncertainNext = isLatestAnswer && UNCERTAIN_RE.test(msg.content)
           // P01/P07: 自社情報が未登録で答えられなかった回答には「規程を覚えさせる」入口を出す。

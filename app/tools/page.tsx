@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { TOOL_LIST } from '@/lib/tools'
 import { PublicFooter } from '@/components/ui/PublicFooter'
+import { OFFER, TOOL_NEXT, zureHref } from '@/lib/offer'
 
 // ============================================================================
 // /tools — 無料セルフ点検ツールの一覧（ハブ・SSG・クローラブル）
@@ -75,7 +76,7 @@ export default function ToolsIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '無料ツール', item: URL },
     ],
   }
@@ -109,7 +110,7 @@ export default function ToolsIndexPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">無料ツール</span>
       </nav>
@@ -180,14 +181,14 @@ export default function ToolsIndexPage() {
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            点検の先は、自社を覚えるAIに
+            点検の次は、就業規則のファイル
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            点検で気になった点は、会社を登録すれば番頭に続けて相談できます。二度目からは前提を説明し直さずに話せます。無料で試せます。
+            {TOOL_NEXT.body}
           </p>
           <div className="mt-6 flex justify-center">
-            <Link href="/business" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
-              番頭の全体像を見る
+            <Link href={zureHref('banto_tool', 'tools_index')} className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
+              {OFFER.cta}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>

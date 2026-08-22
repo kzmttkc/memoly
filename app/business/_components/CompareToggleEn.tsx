@@ -102,7 +102,7 @@ export default function CompareToggleEn() {
           </p>
           <p className={side === 'banto' ? 'flex items-center gap-1.5 text-xs text-neutral-600' : 'hidden'}>
             <Check className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
-            Banto remembers the premise, so the first message already answers from your company&apos;s situation.
+            The one-page sheet from your file is already there, so the first message answers from your company&apos;s situation.
           </p>
         </div>
       </div>

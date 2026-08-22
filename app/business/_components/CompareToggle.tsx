@@ -126,7 +126,7 @@ export default function CompareToggle() {
             }
           >
             <Check className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
-            前提は覚えているので、1通目から自社の状況に沿った答えが返ります。
+            前提はファイルの1枚にあるので、1通目から自社の状況に沿った答えが返ります。
           </p>
         </div>
       </div>

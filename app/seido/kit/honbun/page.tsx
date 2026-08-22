@@ -73,7 +73,7 @@ export default async function SeidoKitHonbunPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <Link href="/seido" className="hover:text-brand-700">制度対応</Link>
         <span className="mx-1.5">/</span>

@@ -20,6 +20,8 @@ import { computeFallbackRiskAudit } from '@/lib/risk-fallback'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { localizeError } from '../_components/errors'
 import { PAID_PLAN_IDS, type PlanId } from '@/lib/plans'
+import { afterCompanyCreateHref } from '@/lib/offer'
+import { ingestPendingZure, readPendingZure } from '@/lib/zure-pending'
 
 // ============================================================================
 // /company/onboarding — 会社作成後の「5問 構造化ウィザード」
@@ -78,15 +80,29 @@ function OnboardingInner() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState({ show: false, message: '' })
   const showToast = useCallback((message: string) => setToast({ show: true, message }), [])
+  const [zureGate, setZureGate] = useState<'pending' | 'zure' | 'onboard'>('pending')
 
   // 変種はSSR/初回は 'A'（現状UI）。マウント後に実バケットへ更新し、その時点で
   // onboarding_started を1回だけ発火する（活性化ファネルの分母＝到達を点灯）。
   const [variant, setVariant] = useState<'A' | 'B'>('A')
+
   useEffect(() => {
+    if (!companyId) {
+      setZureGate('onboard')
+      return
+    }
+    if (readPendingZure()) {
+      setZureGate('zure')
+      void ingestPendingZure(companyId).finally(() => {
+        router.replace(afterCompanyCreateHref(companyId))
+      })
+      return
+    }
+    setZureGate('onboard')
     const v = getOnboardingVariant()
     setVariant(v)
     track('onboarding_started', { variant: v })
-  }, [])
+  }, [companyId, router])
 
   const homeHref = `/company/home?companyId=${companyId}`
   // TTV: 5問の回答を「集めて終わり」にせず、登録直後に自社専用のリスク診断を即提示する。
@@ -164,6 +180,16 @@ function OnboardingInner() {
       showToast('保存に失敗しました。通信を確認してください。')
       setSaving(false)
     }
+  }
+
+  if (zureGate === 'pending' || zureGate === 'zure') {
+    return (
+      <p className="px-6 py-16 text-center text-sm text-neutral-600">
+        {zureGate === 'zure'
+          ? 'さきほどの1枚を、会社の書類に残しています…'
+          : '読み込み中…'}
+      </p>
+    )
   }
 
   return (

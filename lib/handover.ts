@@ -1,5 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { loadCompanyContext } from '@/lib/company'
+import { detectDecisionConflicts } from '@/lib/decision-conflict'
+import { detectRuleOperationConflicts } from '@/lib/rule-operation-conflict'
 
 // ============================================================================
 // handover.ts — 「会社の記憶 引き継ぎビュー」のデータ集約（TOP5 #4・記憶moatの複利）
@@ -35,6 +37,12 @@ export interface HandoverSummary {
   people: { subject: string; notes: string[] }[]
   /** 現行リスク要点（最新1件）。 */
   risk: HandoverRisk | null
+  /** 規程 vs 運用、過去判断 vs 法令。 */
+  conflicts: { kind: string; topic: string; detail: string }[]
+  /** 登録済みの期限（ユーザーが確定した日付のみ）。 */
+  deadlines: { title: string; dueOn: string | null }[]
+  /** 取込済み規程名。 */
+  documents: { title: string; updatedAt: string }[]
 }
 
 // DB列 → 表示カテゴリ名（risk-audit / risk-trend と一致）。
@@ -59,6 +67,8 @@ export async function loadHandoverSummary(companyId: string): Promise<HandoverSu
   const ctx = await loadCompanyContext(companyId, 30)
 
   let risk: HandoverRisk | null = null
+  let deadlines: HandoverSummary['deadlines'] = []
+  let documents: HandoverSummary['documents'] = []
   try {
     const supabase = await createServerSupabaseClient()
     const { data } = await supabase
@@ -87,9 +97,32 @@ export async function loadHandoverSummary(companyId: string): Promise<HandoverSu
         diagnosedAt: String(row.created_at ?? ''),
       }
     }
+
+    const { data: dl } = await supabase
+      .from('company_deadlines')
+      .select('title, due_on')
+      .eq('company_id', companyId)
+      .eq('active', true)
+      .order('due_on', { ascending: true })
+      .limit(12)
+    deadlines = (dl ?? []).map(r => ({
+      title: String(r.title ?? ''),
+      dueOn: typeof r.due_on === 'string' ? r.due_on : null,
+    }))
+
+    const { data: docs } = await supabase
+      .from('company_documents')
+      .select('title, updated_at')
+      .eq('company_id', companyId)
+      .order('updated_at', { ascending: false })
+      .limit(12)
+    documents = (docs ?? []).map(r => ({
+      title: String(r.title ?? ''),
+      updatedAt: String(r.updated_at ?? ''),
+    }))
   } catch (e) {
     // リスク取得失敗は引き継ぎビュー全体を止めない（ルール/判断/人は出す）。
-    console.error('[handover] risk load failed (skipping)', (e as Error).message)
+    console.error('[handover] extra load failed (skipping)', (e as Error).message)
   }
 
   return {
@@ -102,5 +135,19 @@ export async function loadHandoverSummary(companyId: string): Promise<HandoverSu
     })),
     people: ctx.peopleSituations.map(p => ({ subject: p.subject, notes: p.notes })),
     risk,
+    conflicts: [
+      ...detectRuleOperationConflicts(ctx.profiles).map(c => ({
+        kind: '規程と運用',
+        topic: c.topic,
+        detail: `規程では「${c.ruleValue}」、運用では「${c.operationValue}」`,
+      })),
+      ...detectDecisionConflicts(ctx.decisions).map(c => ({
+        kind: '過去判断と法令',
+        topic: c.topicLabel,
+        detail: `判断「${c.decisionSummary}」は ${c.fact.label}（${c.fact.effectiveDate}）より前`,
+      })),
+    ],
+    deadlines,
+    documents,
   }
 }

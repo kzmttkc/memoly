@@ -37,9 +37,12 @@ export function PublicHeader({
   ctaLocation,
   /** 料金ページ自身では「料金」リンクを出さない（自分自身への導線を置かない）。 */
   showPricingLink = true,
+  /** 入口ページ自身では「ファイルを置く」を出さない（自分自身への導線を置かない）。 */
+  showPrimaryCta = true,
 }: {
   ctaLocation?: string
   showPricingLink?: boolean
+  showPrimaryCta?: boolean
 } = {}) {
   const ctaClass = buttonClass({
     variant: 'primary',
@@ -54,7 +57,7 @@ export function PublicHeader({
             持っており、PublicHeader と同時に描画される面は無い（重複しない）。 */}
         <Link
           id="page-top"
-          href="/business"
+          href="/zure"
           className="flex min-h-11 shrink-0 items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
@@ -78,19 +81,20 @@ export function PublicHeader({
           )}
           <Link
             href="/login?next=/company"
-            className="hidden min-h-11 items-center px-1 text-sm text-neutral-600 hover:text-brand-700 sm:inline-flex"
+            className={`${showPrimaryCta ? 'hidden sm:inline-flex' : 'inline-flex'} min-h-11 items-center px-1 text-sm text-neutral-600 hover:text-brand-700`}
           >
             ログイン
           </Link>
-          {ctaLocation ? (
-            <TrackedCTA location={ctaLocation} className={ctaClass}>
-              無料で始める
-            </TrackedCTA>
-          ) : (
-            <Link href="/signup?next=/company" className={ctaClass}>
-              無料で始める
-            </Link>
-          )}
+          {showPrimaryCta &&
+            (ctaLocation ? (
+              <TrackedCTA location={ctaLocation} href="/zure" className={ctaClass}>
+                ファイルを置く
+              </TrackedCTA>
+            ) : (
+              <Link href="/zure" className={ctaClass}>
+                ファイルを置く
+              </Link>
+            ))}
         </nav>
       </div>
     </header>

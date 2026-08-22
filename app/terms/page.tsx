@@ -11,17 +11,17 @@ export default function TermsPage() {
       <PublicHeader />
       <div className="mx-auto max-w-2xl px-6 py-12">
         <div className="mb-8">
-          <Link href="/business" className="text-sm text-neutral-500 hover:text-neutral-700">
-            トップに戻る
+          <Link href="/zure" className="text-sm text-neutral-500 hover:text-neutral-700">
+            入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">利用規約</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年7月30日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月23日</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">1. サービス概要</h2>
-            <p>番頭（Banto、以下「本サービス」）は、会社のルール・規程・労務を覚えて回答するAIアシスタントです。運営は KIZUNA Creation（Kazumoto Takeshi 個人事業）。<a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropic（Claude API）</a>を使用してAI回答を生成します。運営者情報（代表者名・所在地・連絡先）の開示方法は<Link href="/tokushoho" className="text-brand-600 underline">特定商取引法に基づく表記</Link>をご覧ください。</p>
+            <p>番頭（Banto、以下「本サービス」）は、就業規則のファイル（または本文）を置くと、書いてあることと書いてないことを1枚にするサービスです。残す操作のあと、その書類を会社の前提として保存し、以後の回答はその書類と労務の事実を前提にします。運営は KIZUNA Creation（Kazumoto Takeshi 個人事業）。<a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropic（Claude API）</a>を使用してAI回答を生成します。運営者情報（代表者名・所在地・連絡先）の開示方法は<Link href="/tokushoho" className="text-brand-600 underline">特定商取引法に基づく表記</Link>をご覧ください。</p>
           </section>
 
           <section>

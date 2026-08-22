@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { track, trackThenNavigate, markSignupCompletedAt } from '@/lib/analytics'
+import { afterCompanyCreateHref } from '@/lib/offer'
 import { Input } from '@/components/ui/Input'
 import { Button, buttonClass } from '@/components/ui/Button'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
@@ -161,7 +162,7 @@ function SignupForm() {
     return qs ? `${path}?${qs}` : path
   }, [next, companyForNext, noteParam, planParam, isEn])
 
-  // C03: 会社名が入力済みなら、signup成立直後にその場で会社を作成して onboarding へ直行する
+  // C03: 会社名が入力済みなら、signup成立直後にその場で会社を作成して書類へ直行する
   //   （/company の会社作成画面を1段削減）。発動条件は「着地が /company（ハブ）そのもの」かつ
   //   「無料ツール結果の持ち回り(note)が無い」とき。note がある場合は /company 側の
   //   「点検結果を保存します」の約束表示・保存実装に委ねる（既存の約束を壊さない）。
@@ -180,17 +181,14 @@ function SignupForm() {
         const data = await res.json().catch(() => ({}))
         const newId = data?.company?.companyId
         if (res.ok && newId) {
-          // /company 画面と同じ活性化ファネルイベント（POST成功後のみ・PIIなし）。
           track('company_created')
-          // planParam(例: shigyo LP CTA由来)があれば onboarding へも持ち回る
-          // （onboarding 側が保存/スキップ後の遷移先で billing へ反映する）。
-          // 2026-07-29 CTO修正（L3監査#2）: このパスは nextDest を経由しないため、
-          //   lang=en を別途ここでも付与する（付けないと英語話者だけこの分岐で
-          //   日本語のonboardingに落ちる）。
-          const onboardingParams = new URLSearchParams({ companyId: newId })
-          if (planParam) onboardingParams.set('plan', planParam)
-          if (isEn) onboardingParams.set('lang', 'en')
-          router.push(`/company/onboarding?${onboardingParams.toString()}`)
+          const extra = new URLSearchParams()
+          if (planParam) extra.set('plan', planParam)
+          if (isEn) extra.set('lang', 'en')
+          const href = extra.toString()
+            ? `${afterCompanyCreateHref(newId)}&${extra.toString()}`
+            : afterCompanyCreateHref(newId)
+          router.push(href)
           return
         }
       } catch {
@@ -231,7 +229,8 @@ function SignupForm() {
   //     next 未指定＝踏み板を出さない（直接流入の母数を壊さない・上記コメントの意図に一致）。
   const fromBanto = (searchParams.get('next') || '').startsWith('/company') || !!attribution.source
   const fromTool = attribution.source === 'banto_tool'
-  const contextSource = fromTool ? 'banto_tool' : 'banto_demo'
+  const fromZure = searchParams.get('intent') === 'zure'
+  const contextSource = fromTool ? 'banto_tool' : fromZure ? 'zure' : 'banto_demo'
 
   // 計測: 登録フォーム到達（/signup の pageview とは別に「signUp 試行の母数」を明示）。
   //   これで 登録フォーム到達→完了/失敗 の各段が Plausible で読める。PIIは送らない。
@@ -399,8 +398,12 @@ function SignupForm() {
         </h2>
         <p className="text-sm leading-relaxed text-neutral-600">
           {isEn
-            ? `We sent a confirmation email to ${email}. Opening the link in the email completes your sign-up and takes you straight to the company setup screen.`
-            : `${email} に確認メールをお送りしました。メール内のリンクを開くと登録が完了し、そのまま会社の登録画面に進めます。`}
+            ? fromZure
+              ? `We sent a confirmation email to ${email}. Open the link in the same browser so the one-page sheet can be saved to your company documents. After 24 hours, or on another device, place the file again.`
+              : `We sent a confirmation email to ${email}. Open the link to finish signing up.`
+            : fromZure
+              ? `${email} に確認メールをお送りしました。同じブラウザでメール内のリンクを開くと、さきほどの1枚を会社の書類に残せます。別の端末や、控えから24時間を過ぎた場合は、もう一度ファイルを置いてください。`
+              : `${email} に確認メールをお送りしました。メール内のリンクを開くと登録が完了します。`}
         </p>
         <p className="mt-3 text-xs leading-relaxed text-neutral-500">
           {isEn
@@ -413,31 +416,45 @@ function SignupForm() {
             記載は実挙動の範囲のみ（覚える対象は既存機能: 自社ルール・相談履歴・期限）。 */}
         <div className="mt-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-left">
           <p className="text-xs font-medium text-neutral-500">
-            {isEn ? 'While you wait — what Banto will remember' : '確認を待つあいだに ─ 番頭が覚えること'}
+            {isEn ? 'While you wait' : '確認を待つあいだに'}
           </p>
           <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-neutral-700">
             {isEn ? (
+              fromZure ? (
+                <>
+                  <li>The one-page sheet stays in this browser for 24 hours</li>
+                  <li>After confirmation, it moves to your company documents</li>
+                  <li>Chat comes after the file</li>
+                </>
+              ) : (
+                <>
+                  <li>Place a work rules file to get the one-page sheet</li>
+                  <li>After you save it, it moves to your company documents</li>
+                  <li>Chat comes after the file</li>
+                </>
+              )
+            ) : fromZure ? (
               <>
-                <li>Your work rules and 36 Agreement status</li>
-                <li>Your paid-leave/overtime practices and past consultations</li>
-                <li>Your annual labor procedures and confirmed deadlines</li>
+                <li>・さきほどの1枚（このブラウザに24時間控えがあります）</li>
+                <li>・確認が終わると、会社の書類に残ります</li>
+                <li>・相談はファイルのあとです</li>
               </>
             ) : (
               <>
-                <li>・就業規則や36協定など、自社ルールの前提</li>
-                <li>・有給や残業の運用と、過去に相談した内容</li>
-                <li>・年間の労務手続きと、自社で確定した期限</li>
+                <li>・就業規則のファイルを置くと、ずれの1枚が出ます</li>
+                <li>・残す操作のあと、会社の書類に移ります</li>
+                <li>・相談はファイルのあとです</li>
               </>
             )}
           </ul>
           <p className="mt-2.5 text-xs leading-relaxed text-neutral-600">
             {isEn
-              ? 'Once you’re in, you won’t need to explain the same context again — your next conversation picks up where today’s left off.'
-              : fromBanto
-                ? fromTool
-                  ? 'さきほどの点検結果も、登録後にそのまま引き継げます。二度目の相談は、昨日の続きから始まります。'
-                  : 'さきほどの答え方も、登録後は自社の前提で続けられます。二度目の相談は、昨日の続きから始まります。'
-                : '一度覚えた前提は説明し直す必要がありません。二度目の相談は、昨日の続きから始まります。'}
+              ? fromZure
+                ? 'After confirmation, the one-page sheet moves to your company documents. Chat comes after the file.'
+                : 'After confirmation, you can place a work rules file. Chat comes after the file.'
+              : fromZure
+                ? '確認が終わると、さきほどの1枚が会社の書類に残ります。相談はファイルのあとです。'
+                : '確認が終わったら、就業規則のファイルを置けます。相談はファイルのあとです。'}
           </p>
         </div>
 
@@ -532,9 +549,11 @@ function SignupForm() {
           <p>
             {isEn
               ? 'This sign-up lets you continue with your own company’s context.'
-              : fromTool
-                ? 'さきほどの点検結果を、自社の前提でそのまま受け取るための登録です。'
-                : 'さきほどの答え方を、自社の前提でそのまま受け取るための登録です。'}
+              : fromZure
+                ? 'さきほどの1枚を、この会社に残すための登録です。チャットはまだ開きません。'
+                : fromTool
+                  ? 'さきほどの点検結果を、自社の前提でそのまま受け取るための登録です。'
+                  : 'さきほどの答え方を、自社の前提でそのまま受け取るための登録です。'}
           </p>
           {/* 2026-07-28 CTO修正（L1監査#16）: 「会社の登録は次の画面で」は、実際には
               この画面に会社名欄（任意）が既にあり、下の「はじめるまでの流れ」とも
@@ -548,7 +567,29 @@ function SignupForm() {
         </div>
       )}
 
-      <p className="mb-2 text-center text-sm text-neutral-600">{isEn ? 'Start free' : '無料で始める'}</p>
+      <p className="mb-2 text-center text-sm text-neutral-600">
+        {isEn ? 'Start free' : fromZure ? 'この1枚を残す' : '無料で始める'}
+      </p>
+      {!fromZure && (
+        <p className="mb-4 text-center text-xs leading-relaxed text-neutral-500">
+          {isEn ? (
+            <>
+              You can{' '}
+              <Link href="/zure?lang=en" className="text-brand-600 underline underline-offset-2">
+                place a work rules file first
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              <Link href="/zure" className="text-brand-600 underline underline-offset-2">
+                先に就業規則のファイルを置く
+              </Link>
+              こともできます。
+            </>
+          )}
+        </p>
+      )}
 
       {/* 2026-07-25 CTO修正: 課金開始(BILLING_ENABLED=true)に合わせて「無料モニター期間」表記を撤去。
           直接流入（bare /signup）にも安心材料を1行出す。事実（この登録画面ではカード情報を収集しない・
@@ -648,8 +689,8 @@ function SignupForm() {
           />
           <p className="mt-1 text-xs text-neutral-500">
             {isEn
-              ? 'If entered, you’ll go straight into your company risk check right after signing up.'
-              : '入力しておくと、登録後すぐに自社の診断に進めます。'}
+              ? 'If entered, you’ll go to the documents page right after signing up.'
+              : '入力しておくと、登録後すぐに書類へ進めます。'}
           </p>
         </div>
 
@@ -751,7 +792,13 @@ function SignupForm() {
         )}
 
         <Button type="submit" size="lg" disabled={loading} className="w-full">
-          {loading ? (isEn ? 'Signing up...' : '登録中...') : isEn ? 'Start free' : '無料で始める'}
+          {loading
+            ? (isEn ? 'Signing up...' : '登録中...')
+            : isEn
+              ? 'Start free'
+              : fromZure
+                ? 'この1枚を残す'
+                : '無料で始める'}
         </Button>
       </form>
 
@@ -771,16 +818,28 @@ function SignupForm() {
         </p>
         <ol className="space-y-2">
           {(isEn
-            ? [
-                'Enter your email address and password',
-                'Enter one company name (you can do this on this same screen)',
-                'Answer 5 optional questions to get an instant risk check and annual procedure calendar',
-              ]
-            : [
-                'メールアドレスとパスワードを入力する',
-                '会社名を1つ登録する（この画面でまとめて入力できます）',
-                '任意の5つの質問に答えると、自社のリスク診断と年間手続きカレンダーがその場で出る',
-              ]
+            ? fromZure
+              ? [
+                  'Enter your email address and password',
+                  'Enter one company name (you can do this on this same screen)',
+                  'The one-page sheet is saved to your company documents',
+                ]
+              : [
+                  'Enter your email address and password',
+                  'Enter one company name (you can do this on this same screen)',
+                  'Place your work rules file to get a one-page sheet',
+                ]
+            : fromZure
+              ? [
+                  'メールアドレスとパスワードを入力する',
+                  '会社名を1つ登録する（この画面でまとめて入力できます）',
+                  'さきほどの1枚が、会社の書類に残る',
+                ]
+              : [
+                  'メールアドレスとパスワードを入力する',
+                  '会社名を1つ登録する（この画面でまとめて入力できます）',
+                  '就業規則のファイルを置くと、ずれの1枚が出る',
+                ]
           ).map((step, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-neutral-700">
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">

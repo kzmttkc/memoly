@@ -37,7 +37,7 @@ export default function TermsEnglishPage() {
             Back to top
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">Terms of Service</h1>
-          <p className="mt-1 text-sm text-neutral-500">Last updated: July 28, 2026</p>
+          <p className="mt-1 text-sm text-neutral-500">Last updated: August 23, 2026</p>
           <p className="mt-1 text-xs text-neutral-500">
             English translation for reference. The <Link href="/terms" className="underline">Japanese version</Link> is the governing text in case of any discrepancy.
           </p>
@@ -47,10 +47,11 @@ export default function TermsEnglishPage() {
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">1. Service overview</h2>
             <p>
-              Banto (&quot;the Service&quot;) is an AI assistant that remembers your company&apos;s work
-              rules, policies, and labor-related decisions and answers questions accordingly. The
-              Service is operated by KIZUNA Creation (a sole proprietorship operated by Kazumoto
-              Takeshi). Banto uses{' '}
+              Banto (&quot;the Service&quot;) starts from a work rules file (or pasted text). It puts what is
+              written and what is not onto one page. After you choose to keep that page, the Service
+              stores it as a company document and later answers use that document and labor facts as
+              the premise. The Service is operated by KIZUNA Creation (a sole proprietorship operated
+              by Kazumoto Takeshi). Banto uses{' '}
               <a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">
                 Anthropic (Claude API)
               </a>{' '}

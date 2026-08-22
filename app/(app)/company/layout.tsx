@@ -20,7 +20,7 @@ import { CompanyHeartbeat } from './_components/CompanyHeartbeat'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: '番頭 — 会社を覚える労務AI',
+  title: '番頭',
 }
 
 export default function CompanyLayout({

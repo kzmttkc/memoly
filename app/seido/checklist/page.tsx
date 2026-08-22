@@ -52,7 +52,7 @@ export default function SeidoChecklistPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '制度対応', item: `${BASE}/seido` },
       { '@type': 'ListItem', position: 3, name: 'インボイス2026年10月対応チェックリスト', item: URL },
     ],
@@ -70,7 +70,7 @@ export default function SeidoChecklistPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <Link href="/seido" className="hover:text-brand-700">制度対応</Link>
         <span className="mx-1.5">/</span>
@@ -137,7 +137,7 @@ export default function SeidoChecklistPage() {
             無料登録して、全{SEIDO_CHECKLIST_ITEM_COUNT}項目を読む
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            番頭は、自社の規程や決めごとを覚えて労務の相談に乗るAIです。登録は無料で、チェックリストの全文が読めるようになります。
+            番頭は、就業規則のファイルを置くとずれが1枚になるサービスです。チェックリストの全文は無料登録の特典です。登録の前に、ファイルを置くこともできます。
           </p>
           <div className="mt-6 flex justify-center">
             <TrackedCTA
@@ -150,7 +150,8 @@ export default function SeidoChecklistPage() {
             </TrackedCTA>
           </div>
           <p className="mt-4 text-xs text-brand-100">
-            登録済みの方は
+            <Link href="/zure" className="underline hover:text-white">先に就業規則のファイルを置く</Link>
+            。登録済みの方は
             <Link href="/login?next=/seido/checklist/zenbun" className="underline hover:text-white">ログインして全文を開けます</Link>
           </p>
         </Card>

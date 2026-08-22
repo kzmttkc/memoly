@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getCurrentUser, getMembership, resolveDefaultCompany } from '@/lib/company'
 import { extractCompanyFacts, extractCompanyMemory } from '@/lib/memory'
+import { parseAdvisorWriteback } from '@/lib/advisor-writeback'
 import { embedText, toVectorLiteral } from '@/lib/embedding'
 import { logCompanyAudit } from '@/lib/audit'
 
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
   if (action === 'approve') return approveFact(req)
   if (action === 'decision') return captureDecision(req)
   if (action === 'note') return saveToolNote(req)
+  if (action === 'advisor') return saveAdvisorWriteback(req)
 
   const body = await req.json().catch(() => ({}))
   const { messages, companyId: bodyCompanyId } = body as {
@@ -277,6 +279,45 @@ async function captureDecision(req: NextRequest): Promise<NextResponse> {
     },
     degraded: depth.degraded ?? null,
   })
+}
+
+// POST ?action=advisor — 社労士の返事を外部確定として台帳へ戻す。
+//   番頭は助言しない。事務所が書いた行として残すだけ。member でも可。
+async function saveAdvisorWriteback(req: NextRequest): Promise<NextResponse> {
+  const body = await req.json().catch(() => ({}))
+  const { companyId: bodyCompanyId, text } = body as { companyId?: string; text?: string }
+  if (typeof text !== 'string') {
+    return NextResponse.json({ error: 'text required' }, { status: 400 })
+  }
+  const row = parseAdvisorWriteback(text)
+  if (!row) {
+    return NextResponse.json(
+      { error: '記録できる内容が短すぎます。社労士の返事をそのまま貼ってください。' },
+      { status: 422 },
+    )
+  }
+
+  let companyId: string
+  if (bodyCompanyId) {
+    const m = await getMembership(bodyCompanyId)
+    if (!m) return NextResponse.json({ error: 'この会社に所属していません' }, { status: 403 })
+    companyId = m.companyId
+  } else {
+    const def = await resolveDefaultCompany()
+    if (!def) return NextResponse.json({ error: 'NO_COMPANY' }, { status: 409 })
+    companyId = def.companyId
+  }
+
+  const supabase = await createServerSupabaseClient()
+  const { error } = await insertMemoryWithEmbedding(supabase, {
+    company_id: companyId,
+    ...row,
+  })
+  if (error) {
+    console.error('[company:memory] advisor writeback insert failed', error)
+    return NextResponse.json({ error: '記録に失敗しました。' }, { status: 500 })
+  }
+  return NextResponse.json({ ok: true, saved: 1, decision: row })
 }
 
 // admin のみ: rule 候補を company_profiles に正式昇格させる。

@@ -47,7 +47,7 @@ export default function SeidoIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '制度対応', item: URL },
     ],
   }
@@ -73,7 +73,7 @@ export default function SeidoIndexPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">制度対応</span>
       </nav>
@@ -191,14 +191,14 @@ export default function SeidoIndexPage() {
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            会社のことを覚えて、労務の相談に乗るAIへ
+            制度の次は、就業規則のファイルから
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            番頭は、自社の規程や決めごとを覚えて労務の相談に乗るAIです。会社を登録すれば、就業規則や社内の決めごとを踏まえて続けて相談できます。無料で試せます。
+            登録の前に、PDF・Wordを置くか、本文を貼れます。ずれの1枚のあとで、相談が開きます。
           </p>
           <div className="mt-6 flex justify-center">
-            <Link href="/business" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
-              番頭の全体像を見る
+            <Link href="/zure" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
+              ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>

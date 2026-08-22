@@ -49,9 +49,8 @@ export function hrefWithForwardedAttribution(href: string): string {
 export function TrackedCTA({
   location,
   className,
-  // 既定で確認後/登録後の着地を /company に固定（活性化の次の一歩を保証）。
-  // signup ページは ?next を読んで尊重する実装になっている。
-  href = '/signup?next=/company',
+  // 既定の入口はファイルを置く（/zure）。料金カードなど登録が本意の面は href を明示する。
+  href = '/zure',
   // 2026-07-28 CTO修正（L2監査#13）: 同一ページ内に同じ href(既定値)を持つ
   //   TrackedCTAが複数（hero/pricing x2/final/footer）マウントされ、かつヘッダの
   //   HeaderCta（常時マウント・prefetch既定=true）も同じhrefを持つため、ページ

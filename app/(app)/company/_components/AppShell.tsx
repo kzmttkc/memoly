@@ -61,6 +61,14 @@ interface NavGroup {
 const NAV_GROUPS: NavGroup[] = [
   { label: null, labelEn: null, items: [{ href: '/company/home', label: 'ホーム', labelEn: 'Home', icon: Home }] },
   {
+    label: 'つくる',
+    labelEn: 'Create',
+    items: [
+      { href: '/company/documents', label: '書類', labelEn: 'Documents', icon: FileText },
+      { href: '/company/reports', label: '社労士に渡すメモ', labelEn: 'Memo for your labor consultant', icon: FileBarChart },
+    ],
+  },
+  {
     label: '相談する',
     labelEn: 'Consult',
     items: [{ href: '/company/chat', label: '相談', labelEn: 'Chat', icon: MessageSquareText }],
@@ -72,14 +80,6 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/company/risk', label: 'リスク診断', labelEn: 'Risk check', icon: ShieldCheck },
       { href: '/company/insights', label: '助成金・法改正', labelEn: 'Subsidies & law changes', icon: Sparkles },
       { href: '/company/deadlines', label: '期限', labelEn: 'Deadlines', icon: CalendarClock },
-    ],
-  },
-  {
-    label: 'つくる',
-    labelEn: 'Create',
-    items: [
-      { href: '/company/documents', label: '書類', labelEn: 'Documents', icon: FileText },
-      { href: '/company/reports', label: '社労士に渡すメモ', labelEn: 'Memo for your labor consultant', icon: FileBarChart },
     ],
   },
   {
@@ -96,6 +96,13 @@ const NAV_GROUPS: NavGroup[] = [
 // 同柱の配下ページでもタブがアクティブになる（activePaths）。
 const MOBILE_TAB_NAV: NavItem[] = [
   { href: '/company/home', label: 'ホーム', labelEn: 'Home', icon: Home },
+  {
+    href: '/company/documents',
+    label: '書類',
+    labelEn: 'Documents',
+    icon: FileText,
+    activePaths: ['/company/reports'],
+  },
   { href: '/company/chat', label: '相談', labelEn: 'Chat', icon: MessageSquareText },
   {
     href: '/company/insights',
@@ -103,13 +110,6 @@ const MOBILE_TAB_NAV: NavItem[] = [
     labelEn: 'Notice',
     icon: Sparkles,
     activePaths: ['/company/risk', '/company/deadlines'],
-  },
-  {
-    href: '/company/documents',
-    label: 'つくる',
-    labelEn: 'Create',
-    icon: FileText,
-    activePaths: ['/company/reports'],
   },
   {
     href: '/company/memory',

@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/cn'
 import { track } from '@/lib/analytics'
+import { ingestPendingZure, readPendingZure } from '@/lib/zure-pending'
 import { CompanyGuard } from '../_components/CompanyGuard'
 
 // ============================================================================
@@ -61,7 +62,7 @@ function DocumentsInner() {
   const router = useRouter()
   const companyId = params.get('companyId') ?? ''
 
-  const [tab, setTab] = useState<'generate' | 'review'>('generate')
+  const [tab, setTab] = useState<'generate' | 'review'>('review')
   const [toast, setToast] = useState<{
     show: boolean
     message: string
@@ -150,6 +151,8 @@ function DocumentsInner() {
   // --- タブ2: 規程レビュー ---
   const [reviewText, setReviewText] = useState('')
   const [reviewing, setReviewing] = useState(false)
+  const [extracting, setExtracting] = useState(false)
+  const [unreadNote, setUnreadNote] = useState<string | null>(null)
   const [items, setItems] = useState<ReviewItem[] | null>(null)
   const [summary, setSummary] = useState('')
   const [disclaimer, setDisclaimer] = useState('')
@@ -167,6 +170,37 @@ function DocumentsInner() {
   //   要約はカードで残して読める形にする。
   const [changeSummary, setChangeSummary] = useState<string | null>(null)
 
+  async function extractFile(file: File) {
+    if (extracting) return
+    setExtracting(true)
+    setUnreadNote(null)
+    try {
+      const form = new FormData()
+      form.set('companyId', companyId)
+      form.set('file', file)
+      const res = await fetch('/api/company/document/extract', { method: 'POST', body: form })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        showToast(data.error ?? 'ファイルの読み取りに失敗しました')
+        return
+      }
+      const text = typeof data.text === 'string' ? data.text : ''
+      if (text) setReviewText(text)
+      if (!ingestTitle || ingestTitle === '就業規則') {
+        const base = String(data.filename ?? file.name).replace(/\.[^.]+$/, '')
+        if (base) setIngestTitle(base.slice(0, 100))
+      }
+      const note = typeof data.unreadNote === 'string' ? data.unreadNote : null
+      setUnreadNote(note)
+      if (note && !text) showToast(note)
+      else if (text) showToast(note ? `本文を読みました。${note}` : '本文を読みました。下でレビューできます。')
+    } catch {
+      showToast('ファイルの読み取りに失敗しました。通信を確認してください。')
+    } finally {
+      setExtracting(false)
+    }
+  }
+
   const loadIngested = useCallback(async () => {
     if (!companyId) return
     try {
@@ -181,6 +215,28 @@ function DocumentsInner() {
   useEffect(() => {
     loadIngested()
   }, [loadIngested])
+
+  useEffect(() => {
+    if (!companyId) return
+    let cancelled = false
+    void (async () => {
+      const pendingBefore = readPendingZure()
+      const ok = await ingestPendingZure(companyId)
+      if (cancelled) return
+      if (ok) {
+        setTab('review')
+        await loadIngested()
+        showToast('就業規則のファイルを残しました。')
+        return
+      }
+      if (pendingBefore) {
+        showToast('1枚を残す操作が終わりませんでした。下の欄に、同じファイルを置いてください。')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [companyId, loadIngested, showToast])
 
   async function review() {
     if (reviewing || reviewText.trim().length < 10) {
@@ -303,8 +359,14 @@ function DocumentsInner() {
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title="書類作成・規程レビュー"
-        description="登録済みの自社ルールをもとに、書類のたたき台を作成したり、既存の規程をAIで点検できます。"
+        description="就業規則のファイルを置くと、ずれの1枚が会社に残ります。相談はそのあとです。"
       />
+
+      {ingested.length === 0 && (
+        <p className="mb-6 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm leading-relaxed text-neutral-800">
+          まだ就業規則は残っていません。下の「規程をレビュー」からファイルを置くか、テキストを貼り付けてください。
+        </p>
+      )}
 
       {/* タブ */}
       <div className="mb-6 flex gap-1 border-b border-neutral-200">
@@ -369,6 +431,31 @@ function DocumentsInner() {
         // ---- タブ2: 規程レビュー ----
         <div className="space-y-4">
           <Card className="space-y-4">
+            <div>
+              <label htmlFor="review-file" className="mb-1.5 block text-sm font-medium text-neutral-700">
+                ファイルから本文を取り込む（PDF・Word・テキスト）
+              </label>
+              <input
+                id="review-file"
+                type="file"
+                accept=".pdf,.docx,.txt,.md,application/pdf,text/plain"
+                disabled={extracting}
+                onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) void extractFile(file)
+                  e.target.value = ''
+                }}
+                className="block w-full text-sm text-neutral-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-700"
+              />
+              <p className="mt-1 text-xs text-neutral-500">
+                {extracting
+                  ? '読み取り中です…'
+                  : '本文が取れた分だけ下に入ります。スキャン画像など取れなかったページは未読として残します。'}
+              </p>
+              {unreadNote && (
+                <p className="mt-1 text-xs leading-relaxed text-warning-700">{unreadNote}</p>
+              )}
+            </div>
             <div>
               <label htmlFor="review-text" className="mb-1.5 block text-sm font-medium text-neutral-700">
                 既存の規程テキストを貼り付け

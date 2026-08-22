@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { PLANS, billingEnabled } from '@/lib/plans'
 import { FAQ_ITEMS } from '@/lib/faq'
-import { PLAN_COPY } from './_lib/plan-copy'
+import { PLAN_COPY, PLAN_FILE_FIRST } from './_lib/plan-copy'
 import { TrackedCTA } from '../business/_components/TrackedCTA'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
@@ -44,7 +44,7 @@ const URL = `${BASE}/pricing`
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: '番頭の料金｜月額3,980円から・無料プランあり｜会社を覚える労務AI',
+  title: '番頭の料金｜月額3,980円から・無料プランあり｜就業規則のファイルを置く',
   description:
     'Entry 3,980円/月（1社5名まで）、Standard 9,800円/月（20名まで）、士業 29,800円/月（1席）。無料プランから始められ、クレジットカード登録は不要です。',
   alternates: {
@@ -94,7 +94,7 @@ export default function PricingPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '料金', item: URL },
     ],
   }
@@ -108,7 +108,7 @@ export default function PricingPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/business" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">料金</span>
       </nav>
@@ -120,7 +120,7 @@ export default function PricingPage() {
           番頭の料金
         </h1>
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
-          会社の規程を覚える労務AI「番頭」の料金です。無料プランから始められ、登録にクレジットカードは要りません。
+          就業規則のファイルからずれを1枚にする番頭の料金です。ずれの1枚は登録の前に出ます。無料プランから始められ、登録にクレジットカードは要りません。
           有料プランは月額3,980円（Entry・1社5名まで）からで、上限人数までは何人で使っても料金は変わりません。
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-neutral-500">
@@ -141,11 +141,11 @@ export default function PricingPage() {
         <div className="mx-auto max-w-5xl px-6 py-12">
           <div className="mx-auto mb-10 max-w-2xl rounded-2xl border border-brand-200 bg-brand-50/50 p-6 text-center sm:p-8">
             <p className="text-lg font-semibold text-neutral-900">
-              無料プランから始められます。そして番頭は、使うほど御社専用に育ちます。
+              無料プランから始められます。ずれの1枚は、登録の前に出ます。
             </p>
             <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-              規程や相談の記憶が貯まるほど、答えは自社の実態に近づいていきます。
-              だからこそ先にお伝えします。合わないと感じたら、預けたデータごと全削除してやめられます。
+              相談と記憶が増えるのは、ファイルを残したあとの話です。
+              合わないと感じたら、預けたデータごと全削除してやめられます。
             </p>
             <p className="mt-3 text-sm leading-relaxed text-neutral-600">
               {paidSignupOpen ? (
@@ -207,6 +207,11 @@ export default function PricingPage() {
                 >
                   {p.cta}
                 </TrackedCTA>
+                <p className="mt-3 text-center text-xs leading-relaxed text-neutral-500">
+                  <Link href={PLAN_FILE_FIRST.href} className="underline underline-offset-2 hover:text-brand-700">
+                    {PLAN_FILE_FIRST.label}
+                  </Link>
+                </p>
               </Card>
             ))}
           </div>
@@ -216,7 +221,7 @@ export default function PricingPage() {
             士業プランのみ、事務所の利用メンバー数に応じた席単位の課金です。顧問先の登録数の上限は{PLANS.shigyo.maxCompanies}社までで、これとは別に、事務所の利用メンバー数（席）の上限は{PLANS.shigyo.seatCap}席までです（顧問先数と席数は別々の上限です）。
             年払い（月払いより2ヶ月分お得）は現在Entryプランのみのご用意で、Standardと士業プランは月払いのみです。
             複数店舗をお持ちの場合は、1社の契約にまとめて店舗ごとの前提を登録する方法と、
-            士業プランの複数会社管理機能で店舗ごとに記憶を分ける方法のどちらも選べます。
+            士業プランの複数会社管理機能で店舗ごとに書類を分ける方法のどちらも選べます。
             {/* 2026-07-30 PMF修理#1: 税・支払い・解約の表記は /tokushoho（特定商取引法に基づく表記）の
                 確定文言に一致させる。ここだけ独自に言い換えると表示が食い違う。
                 2026-08-20 正典整合（business-facts.md 2026-07-30 Takeshi確定）: 当社は消費税の
@@ -245,13 +250,13 @@ export default function PricingPage() {
         <div className="mx-auto max-w-3xl px-6 py-12">
           <h2 className="text-lg font-bold tracking-tight text-neutral-900">無料プランでできること</h2>
           <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-            会社の登録、規程{PLANS.free.documentCap}本の記憶、日々の労務相談は無料プランのままお試しいただけます。
-            まず「二度目の相談が前回の続きから始まる」ところまで、費用をかけずに確かめてください。
+            会社の登録、規程{PLANS.free.documentCap}本までの保存、日々の労務相談は無料プランのままお試しいただけます。
+            登録の前に就業規則のファイルを置き、ずれの1枚まで、費用をかけずに確かめてください。
           </p>
           <ul className="mt-5 space-y-2.5">
             {[
               `AIチャット相談 1日${PLANS.free.limits.chat}回まで`,
-              `自社の規程を${PLANS.free.documentCap}本まで記憶（就業規則1本を丸ごと試せます）`,
+              `就業規則などの規程を${PLANS.free.documentCap}本まで残せる（まず1本を試せます）`,
               `労務リスク・セルフ診断、規程ドラフトの下書き・レビュー 各1日${PLANS.free.limits.risk_audit}回まで`,
               `利用メンバー ${PLANS.free.seatCap}名まで`,
             ].map((f) => (
@@ -291,17 +296,18 @@ export default function PricingPage() {
       <section className="mx-auto max-w-3xl px-6 pb-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            まず無料で、自社を覚えるところまで
+            まず無料で、就業規則のファイルを置くところまで
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録して、最初の相談を投げてみてください。クレジットカードの登録は不要です。
+            登録の前に、就業規則のPDF・Wordを置くか、本文を貼れます。クレジットカードは不要です。
           </p>
           <div className="mt-6 flex justify-center">
             <TrackedCTA
               location="pricing_page_footer"
+              href="/zure"
               className={buttonClass({ variant: 'secondary', size: 'lg' })}
             >
-              無料で会社を登録して試す
+              ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </TrackedCTA>
           </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import { MessageSquareText, FileText, ShieldCheck, Lock, BadgeCheck, ArrowRight, ArrowDown, Check, X, Building2, Sparkles, Database, KeyRound, Trash2, ChevronDown, UserCog, Copy, ClipboardList, Globe } from 'lucide-react'
+import { MessageSquareText, FileText, ShieldCheck, Lock, BadgeCheck, ArrowRight, Check, X, Building2, Sparkles, Database, KeyRound, Trash2, ChevronDown, UserCog, Copy, ClipboardList, Globe } from 'lucide-react'
 import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -22,7 +22,7 @@ import LeadCapture from './_components/LeadCapture'
 import { VARIANT_HEADER, type LpVariant } from './_lib/variant-shared'
 import { JARGON_TERMS } from '@/lib/faq'
 import { PLANS, billingEnabled } from '@/lib/plans'
-import { PLAN_COPY } from '@/app/pricing/_lib/plan-copy'
+import { PLAN_COPY, PLAN_FILE_FIRST } from '@/app/pricing/_lib/plan-copy'
 import { USECASE_LIST } from '@/lib/usecase'
 import { TOOL_LIST } from '@/lib/tools'
 import { PublicFooter } from '@/components/ui/PublicFooter'
@@ -56,9 +56,9 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
+  title: '番頭｜就業規則のファイルを置くと、ずれが1枚になります',
   description:
-    '会社の規程をAIが覚えて、労務の疑問に自社の前提で即答します。無料で始められ、有料プランは月額3,980円から。顧問社労士とは別に、日々の細かい確認をその場で済ませたい中小企業の総務・経営者向けです。',
+    '就業規則のPDF・Wordを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
   // 2026-07-30 PMF修理#3: 日英の対応関係(hreflang)がサイト全体で0件だった。
   //   英語版 /business/en は本文・titleとも英語で配信されているのに、日本語版との
   //   関係を検索エンジンに一切伝えていない＝英語圏の検索結果に出る根拠が無い状態。
@@ -72,9 +72,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
+    title: '番頭｜就業規則のファイルを置くと、ずれが1枚になります',
     description:
-      '会社の規程をAIが覚えて、労務の疑問に自社の前提で即答します。無料で始められ、有料プランは月額3,980円から。顧問社労士とは別に、日々の細かい確認をその場で済ませたい中小企業の総務・経営者向けです。',
+      '就業規則のPDF・Wordを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
     url: 'https://banto-roumu.com/business',
     siteName: '番頭(Banto)',
     locale: 'ja_JP',
@@ -84,15 +84,15 @@ export const metadata: Metadata = {
         url: 'https://banto-roumu.com/og-banto-main.png',
         width: 1200,
         height: 630,
-        alt: '番頭｜会社の規程を覚える労務AI',
+        alt: '番頭｜就業規則のファイルを置く',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '番頭｜会社の規程を覚える労務AI｜中小企業の総務・経営者向け',
+    title: '番頭｜就業規則のファイルを置くと、ずれが1枚になります',
     description:
-      '会社の規程をAIが覚えて、労務の疑問に自社の前提で即答します。無料で始められ、有料プランは月額3,980円から。顧問社労士とは別に、日々の細かい確認をその場で済ませたい中小企業の総務・経営者向けです。',
+      '就業規則のPDF・Wordを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
     images: ['https://banto-roumu.com/og-banto-main.png'],
   },
 }
@@ -117,12 +117,12 @@ const FAQ = [
     a: '番頭が提供するのは一般的な情報提供と、自社の数値を入れた下書きの補助です。就業規則の作成代行や個別の法的助言ではありません。最終的な判断は、必要に応じて専門家にご確認ください。',
   },
   {
-    q: '就業規則のファイルをアップロードして覚えさせられますか',
-    a: '就業規則の本文をコピーして貼り付ければ、全文をそのまま覚えます（PDFやWordのファイル添付には未対応のため、本文をテキストで貼り付けてください）。以降の相談では「自社の規程では第◯条にこう定めています」と、一般論ではなく自社の条文を引いて答えます。36協定の有無や所定労働時間などの要点は、対話や入力でも覚えさせられます。一度覚えた内容は繰り返し説明する必要がなく、二度目からは前提を省いて相談できます。',
+    q: '就業規則のファイルを置けますか',
+    a: '登録の前に、PDF・Word（.docx）・テキストを置けます。ファイルが無いときは、入口で本文を貼れます。スキャン画像など本文が取れないページは未読として残します。ずれの1枚のあとで登録し、相談では自社の条文を引いて答えます。',
   },
   {
     q: 'SmartHRやfreeeなど既存のツールを使っています。乗り換えや全項目の入れ直しが必要ですか',
-    a: '番頭は既存の手続きシステムを置き換えるものではなく、併用を前提にしています。SmartHR・freee・オフィスステーションなどは手続き・データ管理を、番頭は自社ルールの相談を担う役割分担です。従業員情報や規程のすべてを入れ直す必要はありません。相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。',
+    a: '番頭は既存の手続きシステムを置き換えるものではなく、併用を前提にしています。SmartHR・freee・オフィスステーションなどは手続き・データ管理を、番頭は自社ルールの相談を担う役割分担です。従業員情報や規程のすべてを入れ直す必要はありません。就業規則のファイルを置けば、その1枚を前提に相談できます。',
   },
   {
     // 2026-07-28 CTO修正（L2監査#3）: 顧問先の登録上限（50社）が非公開で、
@@ -131,7 +131,7 @@ const FAQ = [
     // 2026-07-29 CTO修正（UX監査Round5#4・軽）: 顧問先の社数上限（50社）は開示済みだったが、
     // 事務所の利用メンバー数（席）自体の上限（50席・lib/plans.ts shigyo.seatCap）が
     // /tokushoho にしか記載されておらず、料金の全体像を判断できなかった（Round5指摘）。
-    a: `士業プランで、複数の顧問先企業を切り替えて使えます（顧問先は最大${PLANS.shigyo.maxCompanies}社まで登録できます）。記憶とデータは企業ごとに分離され、顧問先ごとに覚えた前提で、切り替えてすぐ相談を続けられます。料金は事務所の利用メンバー数に応じた席単位の課金で、これとは別に席数の上限が事務所あたり最大${PLANS.shigyo.seatCap}席あります（顧問先数と席数は別々の上限です）。`,
+    a: `士業プランで、複数の顧問先企業を切り替えて使えます（顧問先は最大${PLANS.shigyo.maxCompanies}社まで登録できます）。書類とデータは企業ごとに分離され、顧問先ごとに残した規程で、切り替えて相談できます。料金は事務所の利用メンバー数に応じた席単位の課金で、これとは別に席数の上限が事務所あたり最大${PLANS.shigyo.seatCap}席あります（顧問先数と席数は別々の上限です）。`,
   },
   {
     // 2026-07-28 CTO修正（L2監査#2）: 複数店舗・複数拠点の運用方法がLP/FAQの
@@ -160,9 +160,9 @@ const FAQ = [
 //   HowTo構造化データで共用するSSOT（2026-08-09 SEO/AEO監査で追加。可視本文と
 //   JSON-LDの内容を必ず一致させる＝他の構造化データと同じ方針）。
 const ONBOARDING_STEPS = [
-  { step: '1', title: '無料で会社を登録', body: 'メールアドレスだけで始められます。クレジットカードは不要です。' },
-  { step: '2', title: '気になる質問を5つ', body: '残業・有給・規程など、いつも調べていたことをそのまま聞いてみてください。' },
-  { step: '3', title: '重い悩みを1件相談', body: 'いちばん気がかりな1件を相談。明日の番頭は、今日の続きを覚えています。' },
+  { step: '1', title: '就業規則のファイルを置く', body: 'PDF・Word・テキストを置きます。登録の前に、ずれが1枚になります。' },
+  { step: '2', title: '1枚を確認する', body: '書いてあることと書いてないことが並びます。この画面で保存もできます。' },
+  { step: '3', title: '残すときに登録する', body: '会社の書類に残すときだけ、メールで登録します。チャットはまだ開きません。' },
 ]
 
 // 専門用語の簡潔な補足（2026-07-29 CTO・L3監査#7）: FAQ・体験デモ・比較表などの
@@ -179,9 +179,9 @@ const JARGON = JARGON_TERMS
 const FEATURES = [
   {
     icon: BantoMark,
-    title: '覚える',
+    title: '1枚にする',
     body:
-      '就業規則の本文をそのまま貼り付ければ、全文を覚えます（PDFやWordのファイル添付には未対応です）。以降の相談では「自社の規程では第◯条にこう定めています」と、自社の条文を引いて答えます。会社のプロファイル（所定労働時間・休日・36協定の状況など）と相談の経緯も蓄積され、毎回の前提説明がなくなり、二度目からは話が早くなります。',
+      '就業規則のPDF・Word（.docx）・テキストを置くと、書いてあることと書いてないことが1枚になります。スキャン画像など本文が取れないページは未読として残します。残す操作のあと、相談では自社の条文を引いて答えます。会社のプロファイルと相談の経緯も蓄積され、毎回の前提説明がなくなり、二度目からは話が早くなります。',
   },
   {
     icon: MessageSquareText,
@@ -212,7 +212,7 @@ const BEFORE_SCENES = [
   '前回どう判断したか、過去のチャット履歴を10分さかのぼる',
 ]
 const AFTER_SCENES = [
-  '貼り付けは0回。規程も前提も、番頭が覚えている',
+  'ファイルを一度置けば、同じ規程を何度も貼らない',
   '「来週、残業できる？」と聞くだけで、自社前提の答え',
   '前回の判断は、続きからそのまま話せる',
 ]
@@ -231,7 +231,7 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
   {
     label: '主な役割',
     cells: [
-      { text: '会社の規程・前提を覚えて、労務の相談に自社前提で答える', strong: true },
+      { text: '就業規則のファイルからずれを1枚にし、そのあと自社前提で相談に答える', strong: true },
       { text: '人事・労務手続きの電子化と従業員データベース' },
       { text: '給与計算・勤怠・人事労務手続きと従業員データの管理' },
       { text: '労務手続き書類の作成・電子申請' },
@@ -239,9 +239,9 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
     ],
   },
   {
-    label: '自社の規程・前提を覚えた回答',
+    label: '置いたファイルを前提にした回答',
     cells: [
-      { text: '中心機能。規程と相談の経緯を記憶して回答', strong: true },
+      { text: '中心。ファイルの1枚と相談の経緯を残して回答', strong: true },
       { text: '主目的ではありません' },
       { text: '主目的ではありません' },
       { text: '主目的ではありません' },
@@ -256,7 +256,7 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
   {
     label: '導入までの時間',
     cells: [
-      { text: '登録からそのまま相談を始められ、初回の回答まで数分が目安です', strong: true },
+      { text: 'ファイルを置くと数分で1枚。登録はそのあとです', strong: true },
       { text: '初期設定・従業員情報の登録を経て利用を開始する流れです（会社の規模により異なります）' },
       { text: '初期設定・従業員情報の登録を経て利用を開始する流れです（会社の規模により異なります）' },
       { text: '初期設定を経て利用を開始する流れです（会社の規模により異なります）' },
@@ -478,8 +478,7 @@ export default async function BusinessLandingPage({
             >
               ログイン
             </Link>
-            {/* A12: スクロール深度で「無料で始める」→「診断を始める」へ動的変化。
-                リンク先・location='header' 計測・utm引き継ぎは従来と同一。 */}
+            {/* 主CTAは最後まで「無料で始める」。スクロールで文言を変えない。 */}
             {/* 2026-07-28 CTO修正（L1監査#2）: whitespace-normal で極端に狭い実効幅でも
                 折り返せるようにする（通常倍率では1行に収まるため見た目は不変）。 */}
             <HeaderCta className={buttonClass({ variant: 'primary', size: 'sm', className: 'whitespace-normal text-center' })} />
@@ -505,7 +504,7 @@ export default async function BusinessLandingPage({
             summaryClassName="flex w-full cursor-pointer select-none items-center justify-center gap-1 text-xs font-medium text-neutral-600 hover:text-neutral-700 sm:justify-start"
             summary={
               <>
-                番頭(Banto)とは — 30秒でわかる概要
+                番頭(Banto)とは — 製品の概要
                 <ChevronDown
                   className="h-3.5 w-3.5 shrink-0 transition-transform group-data-[state=open]:rotate-180"
                   aria-hidden
@@ -514,7 +513,7 @@ export default async function BusinessLandingPage({
             }
           >
             <p className="mt-2 pb-1 text-center text-sm leading-relaxed text-neutral-600 sm:text-left">
-              番頭(Banto)は、中小企業の総務・経営者向けの労務記憶AIです。就業規則・36協定・有給休暇管理などの自社規程をAIに覚えさせておき、労務の疑問に自社の前提で即答します。汎用AIのように、聞くたびに社内規程や過去の運用を説明し直す必要がありません。企業ごとにデータを分離して保管し、無料で試せます。
+              番頭(Banto)は、中小企業の総務・経営者向けに、就業規則のファイルからずれを1枚にするサービスです。登録はそのあとです。相談では、置いたファイルの前提で答えます。企業ごとにデータを分離して保管します。
             </p>
           </Disclosure>
         </div>
@@ -573,40 +572,22 @@ export default async function BusinessLandingPage({
             <HeroSubcopy variant={variant} />
           </div>
 
-          {/* CTA。主CTA=デモ体験（登録不要）へページ内スクロール。冷たい初見客に
-              会社登録を先に迫らず、まず数秒でアハに届ける。純粋な内部アンカー。
-              2026-07-23 A04/A05: 主CTAを時間約束型・従CTAを成果型の文言へ変更
-              （リンク先・計測イベント(location="hero")・UTM引き継ぎは不変）。
-              2026-07-30 UX監査 #5: 補足2行（SmartHR/freee・Ask in English）は
-              CTAの**下**へ移した。375x812 変種Aで主CTAが top=763 ＝ 固定Cookieバナー
-              (top=765) の真下に隠れ、変種A（配信30%）の初回訪問者が登録CTAを
-              一度も見られなかったため。 */}
+          {/* CTA。主ボタンは登録1つ。デモはページ内ジャンプ。 */}
           <div className="mt-8">
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <a
-                href="#demo"
-                className={buttonClass({ variant: 'primary', size: 'lg', className: 'whitespace-normal text-center' })}
-              >
-                30秒で答え方を見る
-                <ArrowDown className="h-4 w-4" aria-hidden />
-              </a>
-              {/* 2026-07-28 CTO修正（L1監査#7）: 「1分で自社リスク診断」は診断が
-                  その場で始まるかのような文言だったが、実際はここから登録フォーム
-                  (/signup)への遷移のみで、診断自体は登録後の5問（オンボーディング）
-                  で行われる。実態（登録して診断に進む）に即した文言へ修正する
-                  （リンク先・計測location="hero"は不変）。 */}
               <TrackedCTA
                 location="hero"
-                className={buttonClass({ variant: 'ghost', size: 'lg', className: 'whitespace-normal text-center' })}
+                href="/zure"
+                className={buttonClass({ variant: 'primary', size: 'lg', className: 'whitespace-normal text-center' })}
               >
-                無料登録して1分でリスク診断
+                ファイルを置く
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </TrackedCTA>
             </div>
             {/* 2026-07-23 A06: リスクリバーサル1行。この登録不要デモ体験自体は
                 会社登録前のセルフ点検ツールで課金と無関係。全削除可は削除自己サーブと整合する事実。 */}
             <p className="mt-3 text-center text-xs text-neutral-500 lg:text-left">
-              登録不要で体験できます。クレジットカードも不要、預けたデータはいつでも全削除できます。
+              登録の前に、就業規則のファイルを置けます。クレジットカードは不要です。
             </p>
             {/* 2026-07-24 L1(発見性): モバイルFV圏内に無料ツール・記事への明示リンク。
                 ヘッダのツール/記事リンクはモバイルで畳むため、ここでFV内到達を担保する。
@@ -733,10 +714,10 @@ export default async function BusinessLandingPage({
         <div className="mx-auto max-w-5xl px-6 py-20">
           <div className="mx-auto mb-10 max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-              汎用AIとの違いは「覚えているか」
+              汎用AIとの違いは、同じファイルを何度も貼らないこと
             </h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
-              同じ質問を、切り替えて比べてみてください。前提を聞き返されるか、前提から答えが始まるかが違いです。
+              同じ質問を、切り替えて比べてみてください。毎回前提を聞き返されるか、置いたファイルから答えが始まるかが違いです。
             </p>
           </div>
           <CompareToggle />
@@ -757,7 +738,7 @@ export default async function BusinessLandingPage({
       <section id="features" className="scroll-mt-20 mx-auto max-w-5xl px-6 py-20">
         <div className="mx-auto mb-12 max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-            覚える・答える・つくる・気づく
+            1枚にする・答える・つくる・気づく
           </h2>
           <p className="mt-3 text-base leading-relaxed text-neutral-600">
             番頭の仕事はこの4つ。総務が毎回費やしていた説明・調べ物・下書きの時間を肩代わりします。
@@ -856,9 +837,9 @@ export default async function BusinessLandingPage({
                 相談の続きは、「社労士に渡すメモ」で
               </h2>
               <p className="mt-4 text-base leading-relaxed text-neutral-600">
-                番頭は専門家の代わりではなく、専門家への橋渡しまでを仕事にしています。
-                覚えている会社の基本情報・整備済みの規程・近づいている期限・会社で決めた運用に、
-                相談したい論点を添えて1枚のメモに整理。コピーして、そのまま顧問社労士に渡せます。
+                番頭は社労士の代わりではありません。個別の法的助言や届出の代行もしません。
+                専門家への橋渡しまでを仕事にしています。
+                置いたファイルと、残した期限・運用を1枚のメモに整理。コピーして、そのまま顧問社労士に渡せます。
               </p>
               <p className="mt-3 text-sm leading-relaxed text-neutral-600">
                 論点から話を始められるので相談の往復が減ります。メモに載る数値や期限は、登録済みの内容だけにもとづきます。
@@ -918,7 +899,7 @@ export default async function BusinessLandingPage({
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600">
                   士業プランでは複数の顧問先を切り替えて使え、記憶とデータは企業ごとに分離されます。
                   A社で覚えた規程や経緯がB社の回答に混ざることはなく、切り替えた瞬間から、
-                  その顧問先について覚えた前提で相談の続きを始められます。
+                  その顧問先について残した規程で相談の続きを始められます。
                   顧問先が「社労士に渡すメモ」で論点を整理して持ち込めば、面談は前提の確認ではなく論点から始められます。
                 </p>
               </div>
@@ -927,7 +908,7 @@ export default async function BusinessLandingPage({
                   コピーのみ。顧問先ごとに記憶が分かれる士業プラン前提を上のコピーで明示。 */}
               <TrackedCTA
                 location="shigyo_section"
-                href="/signup?next=/company&plan=shigyo"
+                href="/zure?plan=shigyo"
                 className={buttonClass({
                   variant: 'secondary',
                   size: 'sm',
@@ -1200,7 +1181,7 @@ export default async function BusinessLandingPage({
             <div className="px-6 pb-6">
               <p className="text-sm leading-relaxed text-neutral-600">
                 番頭は既存の手続きシステムを置き換えません。従業員情報や規程を、番頭にすべて入れ直す必要はありません。
-                相談したい範囲の規程の要点だけを対話で覚えさせれば、自社の前提に沿った回答が得られます。
+                就業規則のファイルを置けば、その1枚を前提に相談できます。
                 手続き・給与関連はこれまでのツールのまま、番頭は「自社ルールの相談窓口」を1つ足す位置づけです。
               </p>
               {/* 2026-07-24 P03(勤怠ツール併用の比較検討者): 打刻データの二重入力不安を
@@ -1340,6 +1321,11 @@ export default async function BusinessLandingPage({
                 >
                   {p.cta}
                 </TrackedCTA>
+                <p className="mt-3 text-center text-xs leading-relaxed text-neutral-500">
+                  <Link href={PLAN_FILE_FIRST.href} className="underline underline-offset-2 hover:text-brand-700">
+                    {PLAN_FILE_FIRST.label}
+                  </Link>
+                </p>
               </Card>
             ))}
           </div>
@@ -1355,6 +1341,13 @@ export default async function BusinessLandingPage({
             {/* 2026-07-28 CTO修正（L2監査#2）: 複数店舗の扱いを料金セクション直下にも明記する。 */}
             複数店舗をお持ちの場合は、1社の契約にまとめて店舗ごとの前提を登録する方法と、
             士業プランの複数会社管理機能で店舗ごとに記憶を分ける方法のどちらも選べます（詳しくは下のFAQをご覧ください）。
+          </p>
+          <p className="mt-4 text-center text-xs leading-relaxed text-neutral-500">
+            インボイス制度の2026年10月キット（買い切り）は、労務の月額とは別商品です。
+            <Link href="/seido/kit" className="font-medium text-brand-700 underline hover:text-brand-800">
+              キットの案内
+            </Link>
+            から確認できます。
           </p>
         </div>
       </section>
@@ -1521,7 +1514,7 @@ export default async function BusinessLandingPage({
               {
                 '@type': 'ListItem',
                 position: 2,
-                name: '番頭（会社を覚える労務AI）',
+                name: '番頭',
                 item: 'https://banto-roumu.com/business',
               },
             ],
@@ -1537,7 +1530,7 @@ export default async function BusinessLandingPage({
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'HowTo',
-            name: '番頭を今日から使い始める3つのステップ',
+            name: '就業規則のファイルからずれを1枚にする3つのステップ',
             step: ONBOARDING_STEPS.map((s) => ({
               '@type': 'HowToStep',
               position: Number(s.step),
@@ -1549,7 +1542,7 @@ export default async function BusinessLandingPage({
       />
 
       {/* ===== 今日やることチェックリスト（B11・2026-07-23） =====
-          最終CTAの直前で「登録→5問→1相談」の最初の一歩を具体化し、
+          最終CTAの直前で「ファイル→1枚→残すときに登録」の最初の一歩を具体化し、
           登録後に何をすればよいか分からない不安を先に解消する。 */}
       <section className="mx-auto max-w-3xl px-6 pt-20">
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
@@ -1578,10 +1571,10 @@ export default async function BusinessLandingPage({
             <Sparkles className="h-5 w-5" aria-hidden />
           </span>
           <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            自社を覚えるAIを、今日から
+            就業規則のファイルを置く
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            会社を登録して、最初の相談を投げてみてください。今日話したことを、番頭は明日も覚えています。
+            ファイルを置くと、ずれが1枚になります。登録はそのあとです。相談は、その次です。
           </p>
           <div className="mt-7 flex min-w-0 justify-center">
             <TrackedCTA
@@ -1592,7 +1585,7 @@ export default async function BusinessLandingPage({
                 className: 'whitespace-normal text-center',
               })}
             >
-              無料で会社を登録して試す
+              ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </TrackedCTA>
           </div>
