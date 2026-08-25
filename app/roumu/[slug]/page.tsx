@@ -8,7 +8,8 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 import { getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
-import LeadCapture from '@/app/business/_components/LeadCapture'
+import ArticleCheckSheet from './_components/ArticleCheckSheet'
+import { checkSheetItems } from '@/lib/article-checksheet'
 import { OFFER } from '@/lib/offer'
 import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 import KasuharaSelfCheck from './_components/KasuharaSelfCheck'
@@ -329,6 +330,19 @@ export default async function RoumuUseCasePage({
         </div>
       </section>
 
+      {/* ===== 段2（名前を取る）: この記事の論点で作る確認シート =====
+          gtm-doctrine.md §2・2026-08-25。実測: 記事は読まれている（30日 417 visitors・
+          GSC 28日 imp 1,879 / clk 107）のに lead_captured は90日で0件、登録画面到達も
+          30日で6人だった。段2（メールアドレスを預かる）が事実上存在していなかった。
+
+          読み終わりの位置（本文・事例・FAQの直後）に置く。冒頭には置かない。
+          対価は記事ごとに変わる「まだ確認していない項目とその確認材料の1枚」で、
+          送信と同時にその場に出る（後で送る約束をしない）。取るのはメール1つだけ。
+
+          項目は lib/article-checksheet.ts が記事自身の文から決定的に組み立てる
+          （こちらで法令の記述を書き起こさない）。 */}
+      <ArticleCheckSheet slug={u.slug} heading={u.ogCategory} items={checkSheetItems(u)} />
+
       {/* ===== カスハラ関連記事の末尾: Kabau 実務パック導線（1箇所）=====
           (WORK_ORDERS.md Trust Stack v2 #3 番頭側・2026-08-21)
           出し分けは lib/kabau-pack.ts isKasuharaUseCase（slug＋h1）。文言は Kabau側の
@@ -365,14 +379,12 @@ export default async function RoumuUseCasePage({
         </Card>
       </section>
 
-      {/* ===== メール獲得（無料PDF・2026-07-30 PMF修理#2） =====
-          実測: sitemap の51URLのうち索引される42ページ（/roumu 33本を含む）に
-          input[type=email] が1つも無く、メール獲得は /business の1か所だけだった。
-          記事を最後まで読んだ人は、いま最も渡しやすい相手。登録という重い一歩の前に
-          「メアドだけ」の軽い一歩を、読み終わりの位置に置く。
-          既存の signup CTA（直上）は主導線として不変で、これはその下の受け皿。
-          送信先・PDF・honeypot は /business と同一コンポーネント（新経路を増やさない）。 */}
-      <LeadCapture placement="article" context={u.slug} />
+      {/* 2026-08-25: ここにあった汎用PDF枠（LeadCapture placement="article"・全58記事に
+          同じ「労務引き継ぎチェックシート」を出すもの）は撤去した。実測で
+          lead_captured は90日で0件。記事の話題と対価が噛み合っておらず（カスハラ義務化を
+          読んだ人に引き継ぎのPDFを出していた）、しかも大きな登録CTAの下に沈んでいた。
+          代わりに記事ごとの確認シート（上記 ArticleCheckSheet）を読み終わりの位置に置く。
+          /business と /tools の LeadCapture はそのまま（今回の変更対象外）。 */}
 
       {/* ===== 関連LPへの内部リンク（クラスタ内部リンク） ===== */}
       <section className="mx-auto max-w-3xl px-6 pb-16">

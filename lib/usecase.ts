@@ -19,7 +19,11 @@
 //   note へは全文でなく「抜粋＋この自社記事への被リンク」を二次告知として出す（降格・廃止しない）。
 
 // 機械追記される日次生成LP（SSOT: lib/usecase-auto.json）。空配列でも安全に連結される。
-import autoUseCases from './usecase-auto.json'
+// import 属性 `with { type: 'json' }` は Node の ESM では必須（無いと
+// ERR_IMPORT_ATTRIBUTE_MISSING で読めない）。bundler 側は付いていても付いていなくても
+// 同じに解決する。付けておくことで node --test からこのモジュールを直接 import でき、
+// 58記事すべてを対象にした検査（tests/unit/article-checksheet.test.ts）が回る。
+import autoUseCases from './usecase-auto.json' with { type: 'json' }
 
 export type UseCaseSection = {
   /** 小見出し */

@@ -34,8 +34,14 @@ const ALLOWED_SOURCES = new Set([
   // 結果直後に同じ LeadCapture を差し込んだので、経路を区別できるようにする。
   // 許可リストに無い値は 'unknown' に丸められるため、ここを足さないと
   // どこから来たリードかが永久に分からない。
-  'article_dl',     // 記事末尾（/roumu/*）
+  'article_dl',     // 記事末尾（/roumu/*）の汎用PDF枠（現在は /tools と /business のみ）
   'tool_dl',        // 無料ツールの結果直後（/tools/*）
+  // 2026-08-25 GTM段2（gtm-doctrine.md §2）: 上の 'article_dl'（全58記事に同じ
+  // 労務引き継ぎPDFを出す枠）は lead_captured 実測0件/90日だった。対価を
+  // 「その記事の論点で作った確認シート」に替え、記事ごとに meta.slug を持たせる。
+  // lib/article-checksheet.ts の CHECKSHEET_SOURCE と同じ文字列であること
+  // （不一致だと 'unknown' に丸められ、どの対価で取れたか分からなくなる）。
+  'article_checksheet',
   'unknown',
 ])
 

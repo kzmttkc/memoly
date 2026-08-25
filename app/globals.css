@@ -444,4 +444,26 @@ body {
     margin: 0 !important;
     padding: 0 !important;
   }
+
+  /* 記事の確認シート（段2）を出しているあいだは、その1枚だけを刷る。
+     記事本文が一緒に出てくると「1枚」ではなくなるため。
+     .banto-sheet-only は ArticleCheckSheet が body に付け外しする。 */
+  body.banto-sheet-only * {
+    visibility: hidden;
+  }
+  body.banto-sheet-only .banto-checksheet,
+  body.banto-sheet-only .banto-checksheet * {
+    visibility: visible;
+  }
+  body.banto-sheet-only .banto-checksheet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  body.banto-sheet-only .banto-sheet-controls {
+    display: none !important;
+  }
 }

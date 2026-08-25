@@ -10,7 +10,7 @@ import { useState, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { track, trackThenNavigate, markSignupCompletedAt } from '@/lib/analytics'
+import { track, trackOncePerVisit, trackThenNavigate, markSignupCompletedAt } from '@/lib/analytics'
 import { afterCompanyCreateHref } from '@/lib/offer'
 import { Input } from '@/components/ui/Input'
 import { Button, buttonClass } from '@/components/ui/Button'
@@ -235,14 +235,31 @@ function SignupForm() {
   // 計測: 登録フォーム到達（/signup の pageview とは別に「signUp 試行の母数」を明示）。
   //   これで 登録フォーム到達→完了/失敗 の各段が Plausible で読める。PIIは送らない。
   //   attribution(source/campaign)が有れば付与＝流入元別コンバージョンが読める。
+  //
+  //   2026-08-25 是正: ここは以前 `useEffect(..., [attribution])` だった。attribution は
+  //   useMemo が返す**オブジェクト**で、依存配列は参照同一性で比較するため、
+  //   searchParams の同一性が変わって useMemo が作り直されるたびに再実行され、
+  //   同じ訪問で何度も発火していた（Plausible 30日実測: events 67 / visitors 6 ＝
+  //   1人あたり11.2回）。段2（名前を取る）の件数をこの母数で判定するので、
+  //   参照同一性に依存しない「1訪問1回」へ移した（lib/analytics-once.ts）。
+  //   依存配列も、比較が値で済むプリミティブ（キー文字列）だけにする。
+  const attributionKey = `${attribution.source ?? ''}|${attribution.campaign ?? ''}`
   useEffect(() => {
-    track('signup_started', Object.keys(attribution).length ? attribution : undefined)
-  }, [attribution])
+    trackOncePerVisit(
+      'signup_started',
+      Object.keys(attribution).length ? attribution : undefined,
+    )
+    // attribution は attributionKey と同じ内容を指す（値が同じなら再発火しない）。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attributionKey])
 
   // 計測: 踏み板が実際に表示された回数（表示→登録の効きを流入元別に読む）。
   //   fromBanto の時だけ1回発火。PIIは載せない（低カーディナリティの source のみ）。
+  //   2026-08-25 是正: 依存はプリミティブだが発火ガードが無く、同一タブ内の
+  //   再マウント（Suspense 境界の再サスペンド・戻る/進む）で素通りしていた
+  //   （実測 events 34 / visitors 5 ＝ 1人あたり6.8回）。1訪問1回に縛る。
   useEffect(() => {
-    if (fromBanto) track('signup_context_shown', { source: contextSource })
+    if (fromBanto) trackOncePerVisit('signup_context_shown', { source: contextSource })
   }, [fromBanto, contextSource])
 
   async function handleSignup(e: React.FormEvent) {

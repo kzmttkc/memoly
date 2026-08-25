@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { track } from '@/lib/analytics'
 import { useToolOpen } from '@/components/tools/client'
+import { KASUHARA_SOCHI_ITEMS } from '@/lib/article-checksheet'
 
 // ============================================================================
 // KasuharaSelfCheck — /roumu/kasuhara-gimuka-2026 専用の登録不要セルフ点検
@@ -29,15 +30,10 @@ import { useToolOpen } from '@/components/tools/client'
 // ============================================================================
 
 // 本文の「社内対応チェックリスト」（同ページ下部セクション）と同一の5項目。
-// 新規に書き起こしたものではない（lib/usecase.ts kasuhara-gimuka-2026 の
-// sections 内、社内対応チェックリストの箇条書きから「・」を除いただけ）。
-const ITEMS = [
-  'カスハラに対する会社の方針を文書で明示しているか（就業規則・社内通知など）',
-  '従業員向けの相談窓口を決め、周知しているか（担当・連絡方法・記録の残し方）',
-  '迷惑行為があったときの対応手順を決めているか（一次対応・記録・引き継ぎ・外部連絡の判断）',
-  '被害を受けた従業員への配慮（安全確保・メンタル面のフォロー）を用意しているか',
-  '現場の担当者が方針と手順を理解しているか（周知・簡単な研修）',
-]
+// 2026-08-25: 同じ5項目を記事末尾の確認シート（ArticleCheckSheet）も使うため、
+// ベタ書きをやめて lib/article-checksheet.ts の1箇所へ寄せた。2箇所に書いてあると
+// 片方だけ直って食い違う。
+const ITEMS = KASUHARA_SOCHI_ITEMS
 
 // sharoushi有料パックへのリンク先・文言はWORK_ORDERS.mdで確定済みのものをそのまま使う。
 const PACK_HREF =

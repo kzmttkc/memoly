@@ -8,6 +8,8 @@
  * - PII（メール本文・記憶内容）は props に入れない。件数・種別など非個人情報のみ
  */
 
+import { shouldFireOnce } from './analytics-once'
+
 type PlausibleProps = Record<string, string | number | boolean>
 
 export function track(event: string, props?: PlausibleProps) {
@@ -19,6 +21,31 @@ export function track(event: string, props?: PlausibleProps) {
     else plausible?.(event)
   } catch {
     /* 計測失敗は無視。機能本体に影響させない */
+  }
+}
+
+/**
+ * 「この訪問でまだ発火していなければ」1回だけ計測する。
+ *
+ * useEffect の中から呼ぶイベント（画面に到達した・枠が表示された、のような
+ * *状態* を数えるもの）はこちらを使う。素の track() を useEffect に置くと、
+ * 依存配列にオブジェクトが入った瞬間に再レンダごとの再発火になり、母数が壊れる
+ * （2026-08-25 実測: signup_started が1人あたり11.2回発火していた。経緯は
+ * lib/analytics-once.ts のコメント）。
+ *
+ * key を event と分けてあるのは、同じイベント名を面ごとに1回ずつ発火させたい
+ * 場合のため（例: `signup_started` を1訪問1回に対し、面別に数えたいイベントは
+ * `${event}:${面}` をキーにする）。省略時は event 名そのものをキーにする。
+ *
+ * クリック等の *行為* を数えるイベントには使わない（2回押したら2回が正しい）。
+ */
+export function trackOncePerVisit(event: string, props?: PlausibleProps, key?: string) {
+  try {
+    if (typeof window === 'undefined') return
+    if (!shouldFireOnce(key ?? event, window.sessionStorage)) return
+    track(event, props)
+  } catch {
+    /* sessionStorage 不可・計測失敗は無視。機能本体に影響させない */
   }
 }
 
