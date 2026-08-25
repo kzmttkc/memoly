@@ -83,6 +83,10 @@ export type UseCase = {
   updatedAt?: string
   /** 一次情報コンテンツの初出日（YYYY-MM-DD・任意）。未設定時は updatedAt を datePublished に流用。 */
   publishedAt?: string
+  /** 同一意図の並存を1本に寄せるとき、評価を集める側（強い側）の slug。
+   *  設定すると <link rel="canonical"> がその絶対URLを指し、sitemap からは外れる。
+   *  ページ・URL・本文は残す（削除でも301でもない）。設定は CANONICAL_MERGE が唯一の入口。 */
+  canonicalSlug?: string
 }
 
 const USECASE_LIST_CURATED: UseCase[] = [
@@ -1467,16 +1471,91 @@ const USECASE_LIST_CURATED: UseCase[] = [
   },
 ]
 
+// ============================================================================
+// 同一意図の並存を canonical で1本に寄せる（弱い側 slug → 強い側 slug）
+//
+//   2026-08-25 GSC 28日実測（2026-07-28〜08-24）で、Kabau×番頭のドメイン間の重複は
+//   1組しか無く、共食いは /roumu/ の**内部**にあることが分かった。同じ検索意図に
+//   複数本が並存し、被リンクとクロール予算が割れて強い側の順位が上がらない。
+//
+//   打ち手は canonical のみ。記事の削除・301・統合執筆はしない（既存資産を壊さない）。
+//   弱い側のURLも本文もそのまま残り、検索エンジンに渡す評価先だけが強い側になる。
+//
+//   向きは GSC の表示回数・クリックで決めた。ただし判定は数字ではなく**本文を読んで**
+//   行っている（キーワードが似ていても答えている問いが違えば重複ではない）。
+//   実施した組と、重複ではないと判定した組の根拠は tests/unit/roumu-canonical.test.ts。
+//
+//   巻き戻し: このオブジェクトを空にすれば全ページが自分自身に戻る。
+//   撤退条件は output/0825/banto_canonical_before.json に記録。
+// ============================================================================
+const CANONICAL_MERGE: Record<string, string> = {
+  // カスハラ義務化2026（強い側 imp 566 / clk 53）
+  'kasuhara-sochi-gimu': 'kasuhara-gimuka-2026',
+
+  // カスハラ×就業規則の記載例・規定例（強い側 180/15）。7本が同じ条文例を返していた
+  'kasuhara-kigyou-kisoku-kitei-rei': 'kashara-kiyaku-kisoku-kiji-rei',
+  'customer-harassment-kiyaku-kizai-rei': 'kashara-kiyaku-kisoku-kiji-rei',
+  'customer-harassment-kisoku-kisamui-rei': 'kashara-kiyaku-kisoku-kiji-rei',
+  'kashara-kiyaku-seibi-boushi': 'kashara-kiyaku-kisoku-kiji-rei',
+  'kasutoma-hara-kisoku-jirei': 'kashara-kiyaku-kisoku-kiji-rei',
+  'cashara-shugyou-kisoku-teigi-example': 'kashara-kiyaku-kisoku-kiji-rei',
+
+  // カスハラ対策義務化×就業規則整備（強い側 115/9）。6本並存
+  'kasuhara-taisaku-gimuuka-shuugyou-kisoku': 'customer-harassment-kigyou-kisoku-gimuuka',
+  'kasuharah-taisaku-gimukauka-shugyo-kisoku': 'customer-harassment-kigyou-kisoku-gimuuka',
+  'kasuhara-giyomukasentai-kisoku-henkou': 'customer-harassment-kigyou-kisoku-gimuuka',
+  'customer-harassment-kiyaku-sakusei': 'customer-harassment-kigyou-kisoku-gimuuka',
+  'kasuhara-shugyou-kisoku-taio': 'customer-harassment-kigyou-kisoku-gimuuka',
+
+  // 週20時間（強い側 183/1・弱い側 144/1 は位41.0で沈んでいる）
+  'shuukan-20jikan-hatarakikata-koyou-kubun': 'shuu-20-jikan-roudou-kisoku',
+  // パート社保の賃金要件撤廃は2本がほぼ同文（どちらも 0/0）。
+  // 施行期日政令が未制定なので、撤廃を確定と書かない側を残す
+  'part-time-shakai-hoken-yonku-jikan': 'part-time-shakai-hoken-tekiyo-shuuukan-jikan',
+
+  // 労働条件通知書の書き方（強い側 44/0）
+  'roudou-jouken-tsuuchisho-kakikata': 'roudou-jouken-tsuuchisho-kakikata-chusho',
+  'roudou-jouken-tsuuchisho-towa': 'roudou-jouken-tsuuchisho-kakikata-chusho',
+  'roudou-jouken-tsuuchisho-koushou-youshiki': 'roudou-jouken-tsuuchisho-kakikata-chusho',
+
+  // 就業規則テンプレート・雛形（強い側 17/1）
+  'shubyou-kisoku-hinagata-chusho': 'shugyou-kisoku-template-muryou',
+
+  // 労務管理×エクセル（強い側 16/0）
+  'roumu-kanri-excel': 'roumu-kanri-excel-kadai-kaiketsu',
+
+  // 労務管理システムの費用・相場（強い側 2/0）
+  'roumu-kanri-system-souba-sentaku': 'roumu-kanri-system-hiyou',
+  'roumu-system-hiyou-hikaku': 'roumu-kanri-system-hiyou',
+
+  // 労務AIの選び方（強い側 15/0）
+  'labor-ai-comparison': 'roumu-ai-agent-sentaku-katsuyou',
+}
+
 // 手作業で厳選したLP群に、機械追記の日次生成LP（usecase-auto.json）を末尾で連結する。
 // 連結後の USECASE_LIST が page.tsx（generateStaticParams）と sitemap.ts の SSOT になる＝
 // JSON に1件足せば、/roumu/{slug} ページも sitemap も自動で増える（Own-Domain First の配管）。
 export const USECASE_LIST: UseCase[] = [
   ...USECASE_LIST_CURATED,
   ...(autoUseCases as UseCase[]),
-]
+].map((u) =>
+  CANONICAL_MERGE[u.slug] ? { ...u, canonicalSlug: CANONICAL_MERGE[u.slug] } : u,
+)
 
 export function getUseCase(slug: string): UseCase | undefined {
   return USECASE_LIST.find((u) => u.slug === slug)
 }
 
 export const USECASE_SLUGS = USECASE_LIST.map((u) => u.slug)
+
+/** そのLPの <link rel="canonical"> に入れる絶対URL。統合した側は強い側を指す。 */
+export function canonicalUrlFor(u: UseCase): string {
+  return `https://banto-roumu.com/roumu/${u.canonicalSlug ?? u.slug}`
+}
+
+/** sitemap.xml に載せる /roumu の slug。canonical を他へ向けたページは載せない
+ *  （sitemap の「これを索引せよ」と canonical の「あちらを索引せよ」が矛盾するため）。
+ *  ページ自体は残っており、/roumu ハブからの内部リンクでクロール経路も残る。 */
+export const SITEMAP_USECASE_SLUGS = USECASE_LIST.filter((u) => !u.canonicalSlug).map(
+  (u) => u.slug,
+)

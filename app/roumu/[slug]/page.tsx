@@ -7,7 +7,7 @@ import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { PublicHeader } from '@/components/ui/PublicHeader'
-import { getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
+import { canonicalUrlFor, getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
 import ArticleCheckSheet from './_components/ArticleCheckSheet'
 import { checkSheetItems } from '@/lib/article-checksheet'
 import { OFFER } from '@/lib/offer'
@@ -66,7 +66,9 @@ export async function generateMetadata({
   return {
     title,
     description: u.description,
-    alternates: { canonical: url },
+    // 同一意図の並存を1本に寄せた記事は、強い側の絶対URLを指す（lib/usecase.ts の
+    // CANONICAL_MERGE）。それ以外は自分自身。title・本文・URLは変えていない。
+    alternates: { canonical: canonicalUrlFor(u) },
     openGraph: {
       title,
       description: u.description,

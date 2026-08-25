@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { USECASE_SLUGS } from '@/lib/usecase'
+import { SITEMAP_USECASE_SLUGS } from '@/lib/usecase'
 import { TOOL_SLUGS } from '@/lib/tools'
 import { BLOG_SLUGS } from '@/lib/blog'
 import { SEIDO_SLUGS } from '@/lib/seido'
@@ -54,7 +54,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     // 目的別の使い方（ハブ・キーストーン）＋各検索意図LP
     { url: `${BASE}/roumu`, lastModified: REVISED.roumu, changeFrequency: 'weekly', priority: 0.9 },
-    ...USECASE_SLUGS.map((slug) => ({
+    // 2026-08-25: 同一意図の並存を canonical で1本に寄せた記事は載せない。
+    //   sitemap の「これを索引せよ」と canonical の「あちらを索引せよ」が矛盾するため。
+    //   ページは残っており、/roumu ハブからの内部リンクでクロール経路も残る。
+    ...SITEMAP_USECASE_SLUGS.map((slug) => ({
       url: `${BASE}/roumu/${slug}`,
       lastModified: REVISED.roumu,
       changeFrequency: 'monthly' as const,
