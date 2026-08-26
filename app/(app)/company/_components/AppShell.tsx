@@ -19,6 +19,7 @@ import {
   X,
   Search,
   UserCog,
+  ListChecks,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { cn } from '@/lib/cn'
@@ -78,6 +79,8 @@ const NAV_GROUPS: NavGroup[] = [
     labelEn: 'Notice',
     items: [
       { href: '/company/risk', label: 'リスク診断', labelEn: 'Risk check', icon: ShieldCheck },
+      // 2026-08-26 Kabau×番頭 1本化 Phase 2-5: /zure の10措置診断の履歴。
+      { href: '/company/kasuhara', label: 'カスハラ10措置', labelEn: 'Kasuhara measures', icon: ListChecks },
       { href: '/company/insights', label: '助成金・法改正', labelEn: 'Subsidies & law changes', icon: Sparkles },
       { href: '/company/deadlines', label: '期限', labelEn: 'Deadlines', icon: CalendarClock },
     ],
@@ -109,7 +112,7 @@ const MOBILE_TAB_NAV: NavItem[] = [
     label: '気づく',
     labelEn: 'Notice',
     icon: Sparkles,
-    activePaths: ['/company/risk', '/company/deadlines'],
+    activePaths: ['/company/risk', '/company/deadlines', '/company/kasuhara'],
   },
   {
     href: '/company/memory',
