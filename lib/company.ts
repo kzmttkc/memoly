@@ -91,7 +91,7 @@ export async function getCurrentUser() {
   return user
 }
 
-/** 過去の自社判断（memory_type='decision'）。番頭の差別化の核。 */
+/** 過去の自社判断（memory_type='decision'）。Kabauの差別化の核。 */
 export interface CompanyDecision {
   summary: string          // 下した判断（decisionText を保存したもの）
   topic: string | null     // トピックラベル（例「育休」）

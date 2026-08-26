@@ -13,7 +13,7 @@ import { track } from '@/lib/analytics'
 //     - tool_open 計装（初回マウントで1回）
 //     - 「ブラウザ内計算・非送信」の共通注記
 //     - 結果の免責（先頭文が共通・確認先だけツールごとに差し替え）
-//     - 番頭 登録CTA（結果末尾に1本・高痛点/低痛点で文言を出し分ける枠）
+//     - Kabau 登録CTA（結果末尾に1本・高痛点/低痛点で文言を出し分ける枠）
 //   計測イベントの語彙は既存のまま: tool_open / tool_completed / signup_cta_clicked。
 //   tool_completed の status 分岐は計算仕様に密結合のため各ツール側に残す。
 // ============================================================================
@@ -201,7 +201,7 @@ export function ResultDisclaimer({ detail }: { detail: string }) {
   )
 }
 
-// 結果末尾の番頭登録CTA（枠）。
+// 結果末尾のKabau登録CTA（枠）。
 //   高痛点/低痛点の文言出し分け・status はツール側で決めて渡す（1変数のみ変更の流儀）。
 //   Phase1/景表法厳守: 「違反判定/解消」「社労士監修」は書かず、実挙動どおりの約束に留める。
 export function ToolSignupCta({

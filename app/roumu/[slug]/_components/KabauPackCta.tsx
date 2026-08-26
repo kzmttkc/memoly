@@ -7,7 +7,7 @@ import { KABAU_PACK_URL, KABAU_PACK_COPY } from '@/lib/kabau-pack'
 
 // ============================================================================
 // KabauPackCta — /roumu/[slug] のカスハラ関連記事の末尾に置く Kabau 実務パック導線
-//   (WORK_ORDERS.md Trust Stack v2 #3 番頭側・PDCA H45・2026-08-21)
+//   (WORK_ORDERS.md Trust Stack v2 #3 Kabau側・PDCA H45・2026-08-21)
 //
 //   - 1記事に1箇所（FAQ の直後＝記事本文の末尾）。出し分けは lib/kabau-pack.ts の
 //     isKasuharaUseCase（slug＋h1）。

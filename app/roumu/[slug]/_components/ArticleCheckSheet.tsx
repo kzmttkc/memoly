@@ -40,7 +40,7 @@ import { CHECKSHEET_SOURCE, type CheckSheetItem } from '@/lib/article-checksheet
 
 /** 取得目的の明示。/business の LeadCapture と同一文（新しい文言を増やさない）。 */
 const PURPOSE_NOTE =
-  'メールアドレスは資料のご案内と、番頭に関するお知らせにのみ利用します。配信はいつでも停止できます。'
+  'メールアドレスは資料のご案内と、Kabauに関するお知らせにのみ利用します。配信はいつでも停止できます。'
 
 export default function ArticleCheckSheet({
   slug,

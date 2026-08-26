@@ -7,9 +7,9 @@ import { BantoMark } from '@/components/ui/BantoMark'
 import { Card } from '@/components/ui/Card'
 
 // ============================================================================
-// MemoryBalanceMeter — 「番頭が自社について覚えていること：N件」を常時表示する。
+// MemoryBalanceMeter — 「Kabauが自社について覚えていること：N件」を常時表示する。
 // ----------------------------------------------------------------------------
-//   LTV施策(解約防止の主装置)。番頭の価値は「使うほど自社を覚える＝乗り換えると
+//   LTV施策(解約防止の主装置)。Kabauの価値は「使うほど自社を覚える＝乗り換えると
 //   ゼロからやり直し」という沈没コストにある。それを毎週増える実数として見せ、
 //   解約の心理的コストを上げる（ダークパターンではなく事実の可視化）。
 //
@@ -92,7 +92,7 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-neutral-500">番頭が自社について覚えていること</p>
+            <p className="text-xs text-neutral-500">Kabauが自社について覚えていること</p>
             {loading ? (
               <p className="mt-0.5 text-sm text-neutral-400">読み込み中...</p>
             ) : total > 0 ? (
@@ -124,7 +124,7 @@ export function MemoryBalanceMeter({ companyId }: { companyId: string }) {
         </div>
         {!loading && total > 0 && (
           <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-            相談・判断・規程を重ねるほど積み上がります。増えるほど、番頭は御社専用に鋭くなります。
+            相談・判断・規程を重ねるほど積み上がります。増えるほど、Kabauは御社専用に鋭くなります。
           </p>
         )}
       </Card>

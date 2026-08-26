@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { ErrorState } from '@/components/ui/ErrorState'
 
 // /company 配下のセグメントエラー境界。ダッシュボード各ページの実行時例外を
-// 素クラッシュにせず、番頭デザインの復帰画面に受け止める。
+// 素クラッシュにせず、Kabauデザインの復帰画面に受け止める。
 export default function CompanyError({
   error,
   reset,

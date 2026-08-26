@@ -27,7 +27,7 @@ import { detectDecisionConflicts } from '@/lib/decision-conflict'
 //       キャッシュへ書く（lazy生成・クーロン不要）。生成回数は会社×週で1回に収束する。
 //
 //   生成ロジックは lib/insights-core.ts（insights ルートと共通）を再利用し、結果を
-//   「カード」へ正規化する。カードは診断→起草の連結（番頭の独自価値）を1タップで
+//   「カード」へ正規化する。カードは診断→起草の連結（Kabauの独自価値）を1タップで
 //   提供するため actionTo/actionLabel を持つ。citation/確定度は prompts.ts/legal-facts.ts
 //   の方針（確定度ラベル・固い数値は確定値のみ・無ければ要確認・human-in-the-loop）に揃える。
 //
@@ -250,7 +250,7 @@ async function buildDeterministicCards(
         kind: 'decisionReview',
         title: `過去の自社判断が「${c.topicLabel}」の確認対象です`,
         selfImpact: `${decidedPart}判断「${c.decisionSummary}」は、その後の法令（${c.fact.label}・施行 ${c.fact.effectiveDate}）より前に決められています。最新の改正を反映できているか確認の対象になりえます。`,
-        nextAction: 'この判断を最新の法令に照らして見直すか、番頭に相談して整理するとよいでしょう。',
+        nextAction: 'この判断を最新の法令に照らして見直すか、Kabauに相談して整理するとよいでしょう。',
         confidence: '参考情報',
         actionTo: 'chat',
         actionLabel: 'この点を相談する',

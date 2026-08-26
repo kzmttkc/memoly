@@ -190,7 +190,7 @@ export function DataSecuritySection({
         <Card>
           <p className="text-sm font-medium text-neutral-900">セキュリティとデータ保護</p>
           <p className="mt-1 text-xs leading-relaxed text-neutral-500">
-            会社ごとのデータ分離（RLS）・AI学習への不使用・委託先の一覧など、番頭のデータ保護の仕組みは
+            会社ごとのデータ分離（RLS）・AI学習への不使用・委託先の一覧など、Kabauのデータ保護の仕組みは
             <Link href="/security" className="text-brand-600 underline" target="_blank">
               セキュリティとデータ保護
             </Link>

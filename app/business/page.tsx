@@ -28,7 +28,7 @@ import { TOOL_LIST } from '@/lib/tools'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 
 // ============================================================================
-// /business — 番頭(Banto) 公開ランディングページ（認証不要・公開ルート）
+// /business — Kabau（カバウ） 公開ランディングページ（認証不要・公開ルート）
 //   ルート app/layout.tsx の <body> は消費者Memoly向けにダーク強制
 //   (bg-gray-950 text-gray-100)。本ページはBtoB労務向けライト基調が要件のため、
 //   最外要素に .company-light（globals.css 定義のライト再マップ + 白背景）を当てて
@@ -36,11 +36,11 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 //   PROTECTED_PREFIXES は /chat /memory /company のみで /business は含まれない＝公開。
 //
 //   設計方針（2026-06-27 CMO 改稿）:
-//     - 核の主張「汎用AIは毎回説明が要る／番頭は覚えている」は1回だけ強く言う。
+//     - 核の主張「汎用AIは毎回説明が要る／Kabauは覚えている」は1回だけ強く言う。
 //       各機能は「自社に合わせて」を連呼せず、もたらす成果で差別化する
 //       （覚える=記憶の蓄積 / 答える=調べ物ゼロで即答 / つくる=下書きが数分 /
 //        気づく=見逃し防止）。
-//     - 企業の焦点は業務効率化。番頭は"便利"でなく総務1人分の説明・調べ物・
+//     - 企業の焦点は業務効率化。Kabauは"便利"でなく総務1人分の説明・調べ物・
 //       下書きを肩代わりする、という枠で語る（業務効率化セクション）。
 //     - BtoB採用は"便利"より先に「機密の労務データを預けて大丈夫か」に答える
 //       必要があるため、セキュリティ・プライバシーを独立セクションで明示する。
@@ -56,7 +56,7 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: '番頭｜就業規則のファイルを置くと、ずれが1枚になります',
+  title: 'Kabau｜就業規則のファイルを置くと、ずれが1枚になります',
   description:
     '就業規則のPDF・Wordを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
   // 2026-07-30 PMF修理#3: 日英の対応関係(hreflang)がサイト全体で0件だった。
@@ -72,11 +72,11 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: '番頭｜就業規則のファイルを置くと、ずれが1枚になります',
+    title: 'Kabau｜就業規則のファイルを置くと、ずれが1枚になります',
     description:
       '就業規則のPDF・Wordを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
     url: 'https://banto-roumu.com/business',
-    siteName: '番頭(Banto)',
+    siteName: 'Kabau（カバウ）',
     locale: 'ja_JP',
     type: 'website',
     images: [
@@ -84,13 +84,13 @@ export const metadata: Metadata = {
         url: 'https://banto-roumu.com/og-banto-main.png',
         width: 1200,
         height: 630,
-        alt: '番頭｜就業規則のファイルを置く',
+        alt: 'Kabau｜就業規則のファイルを置く',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '番頭｜就業規則のファイルを置くと、ずれが1枚になります',
+    title: 'Kabau｜就業規則のファイルを置くと、ずれが1枚になります',
     description:
       '就業規則のPDF・Wordを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
     images: ['https://banto-roumu.com/og-banto-main.png'],
@@ -114,7 +114,7 @@ const FAQ = [
   },
   {
     q: '就業規則の作成代行を依頼できますか',
-    a: '番頭が提供するのは一般的な情報提供と、自社の数値を入れた下書きの補助です。就業規則の作成代行や個別の法的助言ではありません。最終的な判断は、必要に応じて専門家にご確認ください。',
+    a: 'Kabauが提供するのは一般的な情報提供と、自社の数値を入れた下書きの補助です。就業規則の作成代行や個別の法的助言ではありません。最終的な判断は、必要に応じて専門家にご確認ください。',
   },
   {
     q: '就業規則のファイルを置けますか',
@@ -122,7 +122,7 @@ const FAQ = [
   },
   {
     q: 'SmartHRやfreeeなど既存のツールを使っています。乗り換えや全項目の入れ直しが必要ですか',
-    a: '番頭は既存の手続きシステムを置き換えるものではなく、併用を前提にしています。SmartHR・freee・オフィスステーションなどは手続き・データ管理を、番頭は自社ルールの相談を担う役割分担です。従業員情報や規程のすべてを入れ直す必要はありません。就業規則のファイルを置けば、その1枚を前提に相談できます。',
+    a: 'Kabauは既存の手続きシステムを置き換えるものではなく、併用を前提にしています。SmartHR・freee・オフィスステーションなどは手続き・データ管理を、Kabauは自社ルールの相談を担う役割分担です。従業員情報や規程のすべてを入れ直す必要はありません。就業規則のファイルを置けば、その1枚を前提に相談できます。',
   },
   {
     // 2026-07-28 CTO修正（L2監査#3）: 顧問先の登録上限（50社）が非公開で、
@@ -219,14 +219,14 @@ const AFTER_SCENES = [
 
 // 比較表（2026-07-23 B18）。「正直な土俵」原則:
 //   - 相手の強み（手続きの電子化・帳票・汎用性）は強みとして明記する。
-//   - 番頭の弱み（電子申請・給与計算は非対応）も同じ表の中で明記する。
+//   - Kabauの弱み（電子申請・給与計算は非対応）も同じ表の中で明記する。
 //   - 各社の記載は2026年7月時点の公開情報にもとづく一般的な整理に留め、
 //     優劣の断定・誹謗・優良誤認になりうる表現（「〜はできない」等の断定）を避ける。
 //   - 出所と「併用できる」事実は表の直下に注記する。
 // 2026-07-24 P03(freee併用の比較検討者): 併用例示が SmartHR 固定で freee が名指し
 //   されず、比較モードの確信が一拍遅れていた。freee人事労務（国内2大労務SaaSの一角）を
 //   独立列として追加し、各社の得意分野も正直に認める（優劣の断定・誹謗・優良誤認は避ける）。
-const COMPARISON_HEADERS = ['番頭', 'SmartHR', 'freee人事労務', 'オフィスステーション', '汎用AIチャット']
+const COMPARISON_HEADERS = ['Kabau', 'SmartHR', 'freee人事労務', 'オフィスステーション', '汎用AIチャット']
 const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean }[] }[] = [
   {
     label: '主な役割',
@@ -248,7 +248,7 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
       { text: '汎用の記憶機能はあるものの、規程や期限に特化した管理ではありません' },
     ],
   },
-  // 導入までの時間（2026-07-23 W3.5d G-f）。番頭は登録直後から相談でき初回回答
+  // 導入までの時間（2026-07-23 W3.5d G-f）。Kabauは登録直後から相談でき初回回答
   // まで数分が目安（TTV設計はC03/C06で充足済みの事実）。他社は導入形態が会社ごとに
   // 異なるため「〜できない/〜かかる」の断定を避けた中立表現に留める（正直な土俵）。
   // ※「データ分離」行は競合のセキュリティ体制を当社が断定できず優良誤認リスクの
@@ -290,7 +290,7 @@ const COMPARISON_ROWS: { label: string; cells: { text: string; strong?: boolean 
 
 // ---------------------------------------------------------------------------
 // DataIsolationDiagram — 「会社ごとにデータが分離される」をコードだけで図解。
-//   中央に番頭マーク。周囲に自社A/B/Cの独立した箱（各に錠前）。箱は点線で
+//   中央にKabauマーク。周囲に自社A/B/Cの独立した箱（各に錠前）。箱は点線で
 //   区切られ、データが交差しないこと（混ざらない）を視覚化する。RLSの安心を一目で。
 //   装飾図のため aria-hidden。隣のキャプションがテキストで意味を担保する。
 // ---------------------------------------------------------------------------
@@ -316,7 +316,7 @@ function DataIsolationDiagram() {
         </div>
       </div>
 
-      {/* 中央：番頭マーク（接続線は引かず、独立を強調） */}
+      {/* 中央：Kabauマーク（接続線は引かず、独立を強調） */}
       <div className="flex justify-center">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-md">
           <BantoMark className="h-6 w-6" />
@@ -405,7 +405,7 @@ export default async function BusinessLandingPage({
         <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-x-2 px-6 py-2">
           {/* 2026-08-11 UI監査#5: ロゴ寸法を PublicHeader / 他ページ（h-6 w-6 rounded-md +
               text-base）と統一（本ページだけ h-7/text-lg で揺れていた）。
-              2026-08-11 UI監査#1: 副題「Banto」は sm 未満で畳む（PublicHeaderの「(Banto)」を
+              2026-08-11 UI監査#1: 副題「Kabau」は sm 未満で畳む（PublicHeaderの「(Kabau)」を
               畳む既存作法と同じ）。375px でナビが2行に折り返しヘッダが113pxを常時占有して
               いたため、ロゴ側を縮めて1行に収める（文言・リンクは不変）。 */}
           {/* 2026-08-11 UI監査#2: id="page-top" は BackToTop がクリック後にフォーカスを
@@ -419,8 +419,8 @@ export default async function BusinessLandingPage({
               <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
             <span className="text-base font-semibold tracking-tight text-neutral-900">
-              番頭
-              <span className="ml-1 hidden text-sm font-medium text-neutral-500 sm:inline">Banto</span>
+              Kabau
+              <span className="ml-1 hidden text-sm font-medium text-neutral-500 sm:inline">カバウ</span>
             </span>
           </Link>
           {/* 2026-07-28 CTO修正（L1監査#2・200%ズーム対応）: 極端に狭い実効幅（高倍率
@@ -504,7 +504,7 @@ export default async function BusinessLandingPage({
             summaryClassName="flex w-full cursor-pointer select-none items-center justify-center gap-1 text-xs font-medium text-neutral-600 hover:text-neutral-700 sm:justify-start"
             summary={
               <>
-                番頭(Banto)とは — 製品の概要
+                Kabau（カバウ）とは — 製品の概要
                 <ChevronDown
                   className="h-3.5 w-3.5 shrink-0 transition-transform group-data-[state=open]:rotate-180"
                   aria-hidden
@@ -513,7 +513,7 @@ export default async function BusinessLandingPage({
             }
           >
             <p className="mt-2 pb-1 text-center text-sm leading-relaxed text-neutral-600 sm:text-left">
-              番頭(Banto)は、中小企業の総務・経営者向けに、就業規則のファイルからずれを1枚にするサービスです。登録はそのあとです。相談では、置いたファイルの前提で答えます。企業ごとにデータを分離して保管します。
+              Kabau（カバウ）は、中小企業の総務・経営者向けに、就業規則のファイルからずれを1枚にするサービスです。登録はそのあとです。相談では、置いたファイルの前提で答えます。企業ごとにデータを分離して保管します。
             </p>
           </Disclosure>
         </div>
@@ -553,10 +553,10 @@ export default async function BusinessLandingPage({
                 新ロゴ画像は承認待ちのため入れない。A/B共通・変種スロットの外）。 */}
             <p className="mb-4 flex items-baseline justify-center gap-2.5 lg:justify-start">
               <span className="text-xl font-extrabold tracking-[0.18em] text-brand-700">
-                BANTO
+                KABAU
               </span>
               <span className="text-sm font-semibold tracking-wide text-neutral-500">
-                番頭
+                カバウ
               </span>
             </p>
             {/* アイブロー＝A/B変種スロット。A=役割ラベル / B=痛み起点フック。
@@ -618,16 +618,16 @@ export default async function BusinessLandingPage({
             <p className="mx-auto mt-5 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
               <Database className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden />
               <span>
-                SmartHR・freeeなどの既存システムはそのまま。番頭は「自社ルールの相談窓口」を1つ足す使い方です。
+                SmartHR・freeeなどの既存システムはそのまま。Kabauは「自社ルールの相談窓口」を1つ足す使い方です。
               </span>
             </p>
-            {/* 2026-07-24 P10(英語選好の外資HR): 番頭のチャットは英語質問に英語で
+            {/* 2026-07-24 P10(英語選好の外資HR): Kabauのチャットは英語質問に英語で
                 答える（実装済み・実証済み）が、入口が日本語のみでその価値が発見されず
                 離脱する。UIシェルの全訳はせず、「英語で聞けば英語で答える」への控えめな
                 誘導一行のみ。虚偽能力主張なし＝UI全体が英語対応と誤認させない範囲。 */}
             <p className="mx-auto mt-2 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
               <Globe className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
-              <span lang="en">Ask in English — Banto answers your labor questions in English.</span>
+              <span lang="en">Ask in English — Kabau answers your labor questions in English.</span>
             </p>
           </div>
           </div>
@@ -707,7 +707,7 @@ export default async function BusinessLandingPage({
           表記は使わない（詳細は _components/ScenarioSection.tsx）。 */}
       <ScenarioSection />
 
-      {/* ===== 核の主張：汎用AI vs 番頭（ここで一度だけ強く言う） =====
+      {/* ===== 核の主張：汎用AI vs Kabau（ここで一度だけ強く言う） =====
           2026-07-23 B05: 静的な箇条書き2カードを、同じ質問への回答差をトグルで
           見せるインタラクティブ比較（CompareToggle）へ置換。主張でなく挙動で示す。 */}
       <section id="vs-ai" className="scroll-mt-20 border-y border-neutral-200 bg-neutral-50">
@@ -741,7 +741,7 @@ export default async function BusinessLandingPage({
             1枚にする・答える・つくる・気づく
           </h2>
           <p className="mt-3 text-base leading-relaxed text-neutral-600">
-            番頭の仕事はこの4つ。総務が毎回費やしていた説明・調べ物・下書きの時間を肩代わりします。
+            Kabauの仕事はこの4つ。総務が毎回費やしていた説明・調べ物・下書きの時間を肩代わりします。
           </p>
         </div>
 
@@ -764,7 +764,7 @@ export default async function BusinessLandingPage({
           <div className="rounded-2xl border border-brand-200 bg-white p-5 ring-1 ring-brand-100 sm:p-6">
             <p className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
               <BantoMark className="h-4 w-4 text-brand-600" aria-hidden />
-              番頭にしてから
+              Kabauにしてから
             </p>
             <ul className="mt-4 space-y-3">
               {AFTER_SCENES.map(item => (
@@ -822,7 +822,7 @@ export default async function BusinessLandingPage({
       </section>
 
       {/* ===== 社労士に渡すメモ（B20・2026-07-23） =====
-          実機能: /company/reports の mode='sharoushi'（F5）。番頭が覚えている
+          実機能: /company/reports の mode='sharoushi'（F5）。Kabauが覚えている
           基本情報・整備済みの規程・近い期限・会社で決めた運用に相談論点を添えて
           1枚のメモへ整理し、コピーして渡せる（app/(app)/company/reports/page.tsx・
           lib/report.ts で実装確認済み。実装されていない能力は書かない）。 */}
@@ -837,7 +837,7 @@ export default async function BusinessLandingPage({
                 相談の続きは、「社労士に渡すメモ」で
               </h2>
               <p className="mt-4 text-base leading-relaxed text-neutral-600">
-                番頭は社労士の代わりではありません。個別の法的助言や届出の代行もしません。
+                Kabauは社労士の代わりではありません。個別の法的助言や届出の代行もしません。
                 専門家への橋渡しまでを仕事にしています。
                 置いたファイルと、残した期限・運用を1枚のメモに整理。コピーして、そのまま顧問社労士に渡せます。
               </p>
@@ -930,7 +930,7 @@ export default async function BusinessLandingPage({
             機密の労務データを、安心して預けられる設計
           </h2>
           <p className="mt-3 text-base leading-relaxed text-neutral-600">
-            労務データは会社の機密です。番頭は「便利さ」より先に、『預けて大丈夫か』にまず答えます。
+            労務データは会社の機密です。Kabauは「便利さ」より先に、『預けて大丈夫か』にまず答えます。
           </p>
         </div>
         {/* 会社ごとデータ分離の図解：RLSの安心を一目で */}
@@ -1019,7 +1019,7 @@ export default async function BusinessLandingPage({
 
       {/* ===== 信頼シグナル（作り手の当事者性） =====
           2026-07-23 B16: 商家の帳場格子を思わせる縦縞をCSSだけで極薄に敷く
-          （画像なし・藍系#243B6Eトーン・「名前は番頭から」の物語と響き合う場所に限定）。 */}
+          （画像なし・藍系#243B6Eトーン・「名前はKabauから」の物語と響き合う場所に限定）。 */}
       <section className="border-t border-neutral-200 bg-neutral-50 bg-[repeating-linear-gradient(90deg,rgba(36,59,110,0.03)_0,rgba(36,59,110,0.03)_1px,transparent_1px,transparent_32px)]">
         {/* 2026-08-11 UI監査: 本LPの他セクション（py-20 ×8）とリズムを揃える（唯一のpy-16だった）。 */}
         <div className="mx-auto max-w-5xl px-6 py-20">
@@ -1054,11 +1054,12 @@ export default async function BusinessLandingPage({
                 <Building2 className="h-5 w-5" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-neutral-900">名前は、商家の「番頭」から</p>
+                {/* 2026-08-26 Kabau×番頭 1本化: 旧名の物語は捨てず、新名への引き継ぎとして残す */}
+                <p className="font-semibold text-neutral-900">名前は、Kabau（かばう）</p>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-600">
-                  かつての商家で、帳場のことをすべて覚えて主人を支えたのが番頭でした。
-                  取引の経緯も、店ごとの決めごとも、聞けばすぐ答えが返ってくる。
-                  会社のことを覚えて労務を支えるこのAIに、その名前を借りています。
+                  旧名の「番頭」は、かつての商家で帳場のことをすべて覚えて主人を支えた役から借りました。
+                  会社のことを覚えて支える仕事はそのままに、いまの名前はKabau（カバウ）。
+                  カスハラ対応から日々の労務まで、会社と働く人をかばう、から取っています。
                 </p>
               </div>
             </div>
@@ -1067,7 +1068,7 @@ export default async function BusinessLandingPage({
       </section>
 
       {/* ===== 比較表（B18・2026-07-23） =====
-          「正直な土俵」: 相手の強みも番頭の非対応も同じ表で明記する（データは
+          「正直な土俵」: 相手の強みもKabauの非対応も同じ表で明記する（データは
           COMPARISON_ROWS を参照。断定・誹謗・優良誤認を避ける方針もそこに記載）。 */}
       <section id="compare" className="scroll-mt-20 border-t border-neutral-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-20">
@@ -1076,7 +1077,7 @@ export default async function BusinessLandingPage({
               手続きシステムとも、汎用AIとも役割が違います
             </h2>
             <p className="mt-3 text-base leading-relaxed text-neutral-600">
-              それぞれに得意分野があります。番頭が担うのは「会社を覚えて、相談に自社前提で答える」の部分です。
+              それぞれに得意分野があります。Kabauが担うのは「会社を覚えて、相談に自社前提で答える」の部分です。
             </p>
           </div>
           {/* 2026-08-11 UI監査#3: min-w-[860px] の表がモバイルで「残り3列ある」ことに
@@ -1148,7 +1149,7 @@ export default async function BusinessLandingPage({
           </div>
           <p className="mt-4 text-center text-xs leading-relaxed text-neutral-500">
             2026年7月時点の各社公開情報にもとづく一般的な整理です。正確な機能・料金は各サービスの公式サイトをご確認ください。
-            番頭は手続きシステムの代替ではないため、SmartHR・freee・オフィスステーションなどと併用できます。
+            Kabauは手続きシステムの代替ではないため、SmartHR・freee・オフィスステーションなどと併用できます。
           </p>
 
           {/* 2026-07-24 I4(比較検討者の不安): 「併用できます」だけでは『また全部
@@ -1180,17 +1181,17 @@ export default async function BusinessLandingPage({
           >
             <div className="px-6 pb-6">
               <p className="text-sm leading-relaxed text-neutral-600">
-                番頭は既存の手続きシステムを置き換えません。従業員情報や規程を、番頭にすべて入れ直す必要はありません。
+                Kabauは既存の手続きシステムを置き換えません。従業員情報や規程を、Kabauにすべて入れ直す必要はありません。
                 就業規則のファイルを置けば、その1枚を前提に相談できます。
-                手続き・給与関連はこれまでのツールのまま、番頭は「自社ルールの相談窓口」を1つ足す位置づけです。
+                手続き・給与関連はこれまでのツールのまま、Kabauは「自社ルールの相談窓口」を1つ足す位置づけです。
               </p>
               {/* 2026-07-24 P03(勤怠ツール併用の比較検討者): 打刻データの二重入力不安を
                   登録前に解消する。チャットが固有名込みで即答している事実（勤怠はMF等に
-                  入れるだけ・番頭に打刻を転記する必要はない）をLPへ焼き戻す。誇張・虚偽
+                  入れるだけ・Kabauに打刻を転記する必要はない）をLPへ焼き戻す。誇張・虚偽
                   能力なし・実挙動と一致。 */}
               <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-                勤怠（マネーフォワード勤怠・ジョブカン・KING OF TIMEなど）とお使いの方も、打刻データを番頭に入れ直す必要はありません。
-                打刻はこれまでの勤怠ツールのまま、番頭はそのルール照合・記憶・期限・書類のたたき台を足す役割です。
+                勤怠（マネーフォワード勤怠・ジョブカン・KING OF TIMEなど）とお使いの方も、打刻データをKabauに入れ直す必要はありません。
+                打刻はこれまでの勤怠ツールのまま、Kabauはそのルール照合・記憶・期限・書類のたたき台を足す役割です。
               </p>
             </div>
           </Disclosure>
@@ -1207,7 +1208,7 @@ export default async function BusinessLandingPage({
               誇張なし: 無料プランの利用上限・記憶の蓄積・全削除可はいずれも本文と整合する事実。 */}
           <div className="mx-auto mb-12 max-w-2xl rounded-2xl border border-brand-200 bg-brand-50/50 p-6 text-center sm:p-8">
             <p className="text-lg font-semibold text-neutral-900">
-              無料プランから始められます。そして番頭は、使うほど御社専用に育ちます。
+              無料プランから始められます。そしてKabauは、使うほど御社専用に育ちます。
             </p>
             <p className="mt-3 text-sm leading-relaxed text-neutral-600">
               規程や相談の記憶が貯まるほど、答えは自社の実態に近づいていきます。
@@ -1471,7 +1472,7 @@ export default async function BusinessLandingPage({
 
       {/* ===== 構造化データ（rich results 適格化）=====
           FAQPage は上の可視FAQと対。Organization=KIZUNA Creation。
-          BreadcrumbList=トップ > 番頭（業務効率化）。aggregateRating は捏造しない。 */}
+          BreadcrumbList=トップ > Kabau（業務効率化）。aggregateRating は捏造しない。 */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -1514,7 +1515,7 @@ export default async function BusinessLandingPage({
               {
                 '@type': 'ListItem',
                 position: 2,
-                name: '番頭',
+                name: 'Kabau',
                 item: 'https://banto-roumu.com/business',
               },
             ],

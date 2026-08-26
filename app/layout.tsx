@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 import { CookieBanner } from "@/components/ui/CookieBanner";
 import { Clarity } from "@/components/analytics/Clarity";
+import { BRAND_NAME, BRAND_NAME_JA, BRAND_TAGLINE, BRAND_LEGACY_NAME } from "@/lib/brand";
 
 // 欧文/数字は Geist(latin・軽量)。日本語は OS標準フォント
 // (Hiragino Sans / Noto Sans JP / Yu Gothic)に委ねる。
@@ -17,7 +18,8 @@ import { Clarity } from "@/components/analytics/Clarity";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://banto-roumu.com'
-const TITLE = '番頭(Banto) — 就業規則のファイルを置く'
+// 2026-08-26 Kabau×番頭 1本化 Phase 1-1: 表示ブランドを Kabau へ（lib/brand.ts が正典）。
+const TITLE = `${BRAND_NAME_JA}｜${BRAND_TAGLINE} — 就業規則のファイルを置く`
 const DESC = '就業規則のファイルを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。企業ごとにデータを分けて保管します。'
 
 export const metadata: Metadata = {
@@ -40,16 +42,17 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "番頭",
+    title: BRAND_NAME,
   },
   openGraph: {
     title: TITLE,
     description: DESC,
     url: APP_URL,
-    siteName: "番頭(Banto)",
+    siteName: BRAND_NAME_JA,
     locale: "ja_JP",
     type: "website",
-    images: [{ url: `${APP_URL}/og-banto-main.png`, width: 1200, height: 630, alt: "番頭(Banto)" }],
+    // OG画像はKabauL01のまま（ビジュアル変更はTakeshi実物承認待ち・Phase 1-1の範囲外）
+    images: [{ url: `${APP_URL}/og-banto-main.png`, width: 1200, height: 630, alt: BRAND_NAME_JA }],
   },
   twitter: {
     card: "summary_large_image",
@@ -106,7 +109,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "番頭 (Banto)",
+              name: BRAND_NAME_JA,
+              alternateName: BRAND_LEGACY_NAME,
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
               description: DESC,
@@ -127,7 +131,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: "番頭(Banto)",
+              name: `${BRAND_NAME_JA}｜${BRAND_TAGLINE}`,
+              alternateName: BRAND_LEGACY_NAME,
               url: APP_URL,
               inLanguage: "ja",
               publisher: { "@type": "Organization", name: "KIZUNA Creation" },

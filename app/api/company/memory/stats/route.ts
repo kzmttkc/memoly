@@ -5,7 +5,7 @@ import { getCurrentUser, getMembership } from '@/lib/company'
 // ============================================================================
 // /api/company/memory/stats — 記憶残高（沈没コスト可視化）の件数を返す（GET）
 // ----------------------------------------------------------------------------
-//   LTV施策(解約防止の主装置): ダッシュボードに「番頭が自社について覚えていること：N件」
+//   LTV施策(解約防止の主装置): ダッシュボードに「Kabauが自社について覚えていること：N件」
 //   を常時表示するための実数ソース。company_memories（自社の長期記憶）と
 //   company_profiles（承認済み自社ルール）に加え、オンボーディングで登録した
 //   company_attributes（業種・規模・制度有無）の充足フィールド数も数える。
@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
   ).size
 
   return NextResponse.json({
-    // 規程も「番頭が覚えていること」の実体なので total に含める（P1-2）。
+    // 規程も「Kabauが覚えていること」の実体なので total に含める（P1-2）。
     // subjects は memories/decisions の属性（同じ記憶の別の切り口）なので二重加算しない。
     total: memories + decisions + rules + profiles + profileFacts + ruleDocs,
     memories,

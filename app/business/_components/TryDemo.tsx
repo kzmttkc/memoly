@@ -372,7 +372,7 @@ export default function TryDemo() {
           サンプル会社で、答え方の違いを試す
         </h2>
         <p className="mt-3 text-base leading-relaxed text-neutral-600">
-          業種を選ぶと、その業種のサンプル会社の前提を踏まえて番頭がどう答えるかを体験できます。質問をクリックしてください。
+          業種を選ぶと、その業種のサンプル会社の前提を踏まえてKabauがどう答えるかを体験できます。質問をクリックしてください。
         </p>
       </div>
 
@@ -421,7 +421,7 @@ export default function TryDemo() {
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
               <BantoMark className="h-3 w-3" aria-hidden />
             </span>
-            <span className="text-xs font-semibold text-neutral-700">番頭</span>
+            <span className="text-xs font-semibold text-neutral-700">Kabau</span>
             {/* 2026-07-30 UX監査#9: neutral-100 地に neutral-500 で 4.34:1 ＝ WCAG 1.4.3 AA
                 （4.5:1）未達。10pxの極小文字なので実害が大きい。neutral-700 へ。 */}
             <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-700">
@@ -461,7 +461,7 @@ export default function TryDemo() {
           >
             {turns.length === 0 && !typing && (
               <p className="py-6 text-center text-sm text-neutral-500">
-                下の質問をクリックすると、ここに番頭の答えが表示されます。
+                下の質問をクリックすると、ここにKabauの答えが表示されます。
               </p>
             )}
 
@@ -611,7 +611,7 @@ export default function TryDemo() {
 }
 
 // ---------------------------------------------------------------------------
-// Conversation — 1往復（ユーザー質問＝右吹き出し / 番頭回答＝左吹き出し）。
+// Conversation — 1往復（ユーザー質問＝右吹き出し / Kabau回答＝左吹き出し）。
 //   typing=true のときは回答末尾に点滅カーソルを添える（装飾＝aria-hidden）。
 //   2026-07-29 CTO修正（UX監査Round4#4,#5）: typing中は onSkip をタップ/
 //   Enter/Spaceで発火できるようにし（表示速度が遅い・フリーズしたと感じた時の
@@ -638,7 +638,7 @@ function Conversation({
         </p>
       </div>
 
-      {/* 番頭の回答（左寄せ） */}
+      {/* Kabauの回答（左寄せ） */}
       <div className="flex items-start gap-2">
         <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
           <BantoMark className="h-3.5 w-3.5" aria-hidden />

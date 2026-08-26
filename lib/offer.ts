@@ -29,7 +29,7 @@ export const HERO_EN = {
 
 export const TOOL_NEXT = {
   title: '次は、就業規則のファイルを置く',
-  body: '点検の数字は画面に残っています。番頭の入口は登録ではなく、就業規則のPDF・Word、または本文の貼り付けです。置くと、書いてあることと書いてないことが1枚になります。',
+  body: '点検の数字は画面に残っています。Kabauの入口は登録ではなく、就業規則のPDF・Word、または本文の貼り付けです。置くと、書いてあることと書いてないことが1枚になります。',
 } as const
 
 export const KABAU_LINE =

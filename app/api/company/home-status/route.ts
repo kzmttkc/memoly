@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
       .eq('company_id', companyId)
       .order('created_at', { ascending: false })
       .limit(2),
-    // D17: 取り込んだ規程の本数（company_documents は「番頭に覚えさせた」規程原文）。
+    // D17: 取り込んだ規程の本数（company_documents は「Kabauに覚えさせた」規程原文）。
     supabase
       .from('company_documents')
       .select('*', { count: 'exact', head: true })

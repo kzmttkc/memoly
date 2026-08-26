@@ -268,10 +268,10 @@ export default function TryDemoEn() {
       <div className="mx-auto mb-10 max-w-2xl text-center">
         <p className="mb-3 text-sm font-semibold tracking-wide text-brand-600">Try it</p>
         <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-          See how Banto answers, with a sample company
+          See how Kabau answers, with a sample company
         </h2>
         <p className="mt-3 text-base leading-relaxed text-neutral-600">
-          Pick an industry, then click a question to see how Banto answers based on that sample
+          Pick an industry, then click a question to see how Kabau answers based on that sample
           company&apos;s premises.
         </p>
       </div>
@@ -311,7 +311,7 @@ export default function TryDemoEn() {
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
               <BantoMark className="h-3 w-3" aria-hidden />
             </span>
-            <span className="text-xs font-semibold text-neutral-700">Banto</span>
+            <span className="text-xs font-semibold text-neutral-700">Kabau</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600">
               Sample company ({industry.label})
             </span>
@@ -340,7 +340,7 @@ export default function TryDemoEn() {
           <div ref={scrollRef} aria-live="polite" className="max-h-[26rem] space-y-3 overflow-y-auto px-4 py-4">
             {turns.length === 0 && !typing && (
               <p className="py-6 text-center text-sm text-neutral-500">
-                Click a question below to see Banto&apos;s answer here.
+                Click a question below to see Kabau&apos;s answer here.
               </p>
             )}
 

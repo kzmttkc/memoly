@@ -16,7 +16,7 @@ import LeadCaptureEn from '../_components/LeadCaptureEn'
 //   Scope: this is a concise English rendering of the Japanese /business LP,
 //   not a full translation of every article/tool on the site (out of scope).
 //   It exists so an English-reading visitor (e.g. an overseas HQ manager of a
-//   Japan subsidiary) can understand what Banto does, try it, trust the
+//   Japan subsidiary) can understand what Kabau does, try it, trust the
 //   security/privacy posture, and sign up, without needing to read Japanese.
 //   The product chat itself already answers in English when asked in English
 //   (existing, verified behavior) — this page makes that discoverable
@@ -38,7 +38,7 @@ import LeadCaptureEn from '../_components/LeadCaptureEn'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: 'Banto — Place a work rules file | For Japan HR & operators',
+  title: 'Kabau — Place a work rules file | For Japan HR & operators',
   description:
     'Place a PDF or Word file of your work rules, or paste the text. You get one page of what is written and what is not. Sign-up comes after. Built for small businesses operating in Japan.',
   // 2026-07-30 PMF fix #3: hreflang was absent site-wide (0 occurrences), and
@@ -56,11 +56,11 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Banto — Place a work rules file',
+    title: 'Kabau — Place a work rules file',
     description:
       'Place a PDF or Word file of your work rules, or paste the text. You get one page of what is written and what is not. Sign-up comes after.',
     url: 'https://banto-roumu.com/business/en',
-    siteName: 'Banto',
+    siteName: 'Kabau',
     locale: 'en_US',
     type: 'website',
   },
@@ -88,7 +88,7 @@ const GLOSSARY = [
   {
     term: 'Shakaihoshi roumushi (labor & social security attorney)',
     body:
-      'A licensed Japanese professional for labor/social-insurance filings and individual advice. Banto is not a substitute for one — see the Compliance note below.',
+      'A licensed Japanese professional for labor/social-insurance filings and individual advice. Kabau is not a substitute for one — see the Compliance note below.',
   },
 ]
 
@@ -97,7 +97,7 @@ const FEATURES = [
     icon: BantoMark,
     title: 'Remembers',
     body:
-      'Tell Banto your work rules, 36 Agreement status, and past decisions once. It keeps that context so you don\'t re-explain it every time, unlike a generic AI chat.',
+      'Tell Kabau your work rules, 36 Agreement status, and past decisions once. It keeps that context so you don\'t re-explain it every time, unlike a generic AI chat.',
   },
   {
     icon: MessageSquareText,
@@ -141,7 +141,7 @@ export default function BusinessEnglishPage() {
               <BantoMark className="h-4 w-4" aria-hidden />
             </span>
             <span className="text-lg font-bold tracking-tight text-neutral-900">
-              番頭<span className="ml-1 text-sm font-medium text-neutral-500">Banto</span>
+              Kabau<span className="ml-1 text-sm font-medium text-neutral-500">formerly Banto</span>
             </span>
           </Link>
           <nav className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export default function BusinessEnglishPage() {
         </p>
         <p className="mx-auto mt-3 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500">
           <Globe className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden />
-          <span>Ask Banto&apos;s chat in English and it answers in English — this works today, not a roadmap item.</span>
+          <span>Ask Kabau&apos;s chat in English and it answers in English — this works today, not a roadmap item.</span>
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/zure?lang=en" className={buttonClass({ variant: 'primary', size: 'lg' })}>
@@ -359,10 +359,10 @@ export default function BusinessEnglishPage() {
       <section className="mx-auto max-w-3xl px-6 pb-16">
         <Card padded className="bg-neutral-50">
           <p className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-            <Check className="h-4 w-4 text-brand-600" aria-hidden /> What Banto is — and isn&apos;t
+            <Check className="h-4 w-4 text-brand-600" aria-hidden /> What Kabau is — and isn&apos;t
           </p>
           <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-            Banto provides general information and drafting assistance based on your company&apos;s own
+            Kabau provides general information and drafting assistance based on your company&apos;s own
             inputs. It is not a substitute for a licensed shakaihoshi roumushi (labor &amp; social
             security attorney) and does not provide individualized legal advice or represent you
             before government offices. The operator has passed Japan&apos;s shakaihoshi roumushi exam
@@ -381,7 +381,7 @@ export default function BusinessEnglishPage() {
               <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
                 <BantoMark className="h-3.5 w-3.5" aria-hidden />
               </span>
-              <span className="font-semibold text-neutral-900">番頭(Banto)</span>
+              <span className="font-semibold text-neutral-900">Kabau</span>
             </div>
             <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-600">
               <Link href="/business" className="hover:text-brand-700">日本語サイト</Link>
@@ -392,10 +392,10 @@ export default function BusinessEnglishPage() {
             </nav>
           </div>
           <p className="mt-6 text-xs leading-relaxed text-neutral-600">
-            Banto provides general information, not individualized legal advice or filing
+            Kabau provides general information, not individualized legal advice or filing
             representation. Please consult a licensed professional for final legal decisions.
           </p>
-          <p className="mt-2 text-xs text-neutral-600">© {new Date().getFullYear()} 番頭(Banto) (KIZUNA Creation)</p>
+          <p className="mt-2 text-xs text-neutral-600">© {new Date().getFullYear()} Kabau (KIZUNA Creation)</p>
         </div>
       </footer>
     </div>

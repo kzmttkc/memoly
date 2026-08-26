@@ -18,7 +18,7 @@ import LeadCapture from '@/app/business/_components/LeadCapture'
 
 export const metadata: Metadata = buildToolMetadata({
   slug: 'yukyu-5nichi-check',
-  title: '年5日の有給取得義務を無料でセルフ点検｜番頭(Banto)',
+  title: '年5日の有給取得義務を無料でセルフ点検｜Kabau（カバウ）',
   description:
     '年5日の有給休暇の取得義務を満たしているか、無料で点検できるツールです。基準日と取得済みの日数を入れると、あと何日取らせる必要があるか、期限はいつかを画面で確認できます。登録不要・会社データは保存しません。',
   ogDescription:

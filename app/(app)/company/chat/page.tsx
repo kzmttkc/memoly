@@ -36,12 +36,12 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   isTyping?: boolean
-  // 記憶想起の可視化: この回答を作るのに番頭が参照した「自社の記憶」の非PIIサマリ。
+  // 記憶想起の可視化: この回答を作るのにKabauが参照した「自社の記憶」の非PIIサマリ。
   //   サーバの X-Recalled-Memory ヘッダ由来。assistant メッセージにだけ付く。
   recalled?: RecalledMemory
 }
 
-// 「この相談で参照した自社の記憶」パネル。番頭の核＝“覚えていて踏まえて答える”を、
+// 「この相談で参照した自社の記憶」パネル。Kabauの核＝“覚えていて踏まえて答える”を、
 //   回答のたびに可視化する（革新性の体感化）。氏名等は載せず分類ラベルと件数のみ。
 //   D06(2026-07-23): 既定で開いた状態にする（「覚えている」実感を毎回目に入れる。
 //   ユーザーは従来どおり折りたためる）。
@@ -155,7 +155,7 @@ function buildSamplePrompts(attrs: CompanyAttributesRow): string[] {
 }
 
 // 自社プロファイル要約ミニバー（G-c）: company_attributes（オンボ5問）を1行の要約にする。
-//   「番頭はこの前提で答えます」の安心感＝混線しない・毎回説明し直さなくてよい、の可視化。
+//   「Kabauはこの前提で答えます」の安心感＝混線しない・毎回説明し直さなくてよい、の可視化。
 //   決定的（LLM非依存）・未回答(null)の項目は出さない（「不明」を並べて不安を煽らない）。
 //   注: 締め日は company_attributes に存在しないため、業種・人数・制度3項目で構成する。
 const EMPLOYEE_BAND_LABELS: Record<string, string> = {
@@ -187,19 +187,19 @@ const DRAFTABLE_RE = /就業規則|規程|36協定|労使協定/
 
 // I08(2026-07-23): 回答が断定を避けている（AIだけでは判断しきれない）ときの検出。
 //   このときは「社労士に相談する下準備メモ」への導線を強調して、次の一歩を標準化する。
-//   Phase1コンプラ: 番頭が専門家を仲介する表現は使わない（メモを作って自分で相談に行く導線）。
+//   Phase1コンプラ: Kabauが専門家を仲介する表現は使わない（メモを作って自分で相談に行く導線）。
 const UNCERTAIN_RE =
   /断定できません|判断が分かれ|個別の事情|個別の判断|専門家|社労士[にへ]|労働基準監督署に確認|確認をおすすめ/
 
 // P01/P07(2026-07-24): 回答が「自社の規程・情報が未登録なので分からない」と述べたとき、
-//   その場から規程を覚えさせる入口（/company/rules）を出す。番頭の看板「会社を覚える」の
+//   その場から規程を覚えさせる入口（/company/rules）を出す。Kabauの看板「会社を覚える」の
 //   価値が、まさに情報が無い瞬間に一歩で回収できるようにする。system プロンプトが未登録時に
-//   使う定型（「登録されていません」「番頭に伝えて登録」「取込済みの範囲では見当たりません」等）
+//   使う定型（「登録されていません」「Kabauに伝えて登録」「取込済みの範囲では見当たりません」等）
 //   に一致する語で検出する。
 const TEACH_RULES_RE =
-  /登録されていません|登録されていない|未登録|取込済みの範囲では見当たりません|番頭に(?:伝えて|覚え)|覚えさせ|登録していただく|登録すると次回/
+  /登録されていません|登録されていない|未登録|取込済みの範囲では見当たりません|Kabauに(?:伝えて|覚え)|覚えさせ|登録していただく|登録すると次回/
 
-// I2(2026-07-24): 課金/解約/退会など「番頭の労務スコープ外」の質問を検知する。
+// I2(2026-07-24): 課金/解約/退会など「Kabauの労務スコープ外」の質問を検知する。
 //   従来はチャットAIが「専用の労務AIなので案内できません」と導線ゼロで門前払いしていた
 //   （答えは /tokushoho・/company/billing・サポート窓口に実在するのに製品外へ放り出す＝P05/P09）。
 //   検知したらAPIを呼ばず、定型の敬体案内＋各ページ/窓口への導線カードを返す。
@@ -224,8 +224,8 @@ const BILLING_PLAN_LINE =
   `${PLANS.standard.displayName}＝月額${BILLING_YEN(PLANS.standard.monthlyJpy)}（1社を管理・記憶フル/書類作成/能動通知）、` +
   `${PLANS.shigyo.displayName}プラン＝月額${BILLING_YEN(PLANS.shigyo.monthlyJpy)}（複数の会社／顧問先を切り替えて管理でき、会社ごとに記憶が分かれます）。`
 const BILLING_FAQ_TEXT =
-  'ご料金や解約についてのご質問ですね。番頭の労務相談とは別のご案内になりますが、こちらでお答えします。\n\n' +
-  '番頭は無料プランでもご利用いただけます。有料プランへの切り替えは、会社ページの「プランの管理」からご自身で申し込んだときのみ課金され、登録しただけで自動的に料金が発生することはありません。\n\n' +
+  'ご料金や解約についてのご質問ですね。Kabauの労務相談とは別のご案内になりますが、こちらでお答えします。\n\n' +
+  'Kabauは無料プランでもご利用いただけます。有料プランへの切り替えは、会社ページの「プランの管理」からご自身で申し込んだときのみ課金され、登録しただけで自動的に料金が発生することはありません。\n\n' +
   BILLING_PLAN_LINE +
   '\n\n特定商取引法に基づく表記、プランの解約・退会のお手続き、お問い合わせ窓口は、下のご案内からもご確認いただけます。'
 
@@ -268,7 +268,7 @@ function CompanyChat() {
   const [profileSummary, setProfileSummary] = useState<string[]>([])
   // ミニバーの折りたたみ（1行のまま要約部分だけ隠せる）。
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
-  // 判断採取フック（TOP5 #1）: 番頭が「この方針を記録しますか？」と能動提案する状態。
+  // 判断採取フック（TOP5 #1）: Kabauが「この方針を記録しますか？」と能動提案する状態。
   //   reason=提案理由ラベル / savingDecision=保存中 / dismissed=この往復では再提示しない。
   const [decisionPrompt, setDecisionPrompt] = useState<{ reason: string } | null>(null)
   const [savingDecision, setSavingDecision] = useState(false)
@@ -605,13 +605,13 @@ function CompanyChat() {
         // H08: サーバー側失敗（5xx等）。network(catch)と二重計上しないよう throw せず inline 処理。
         if (!res.ok) {
           track('chat_error', { kind: 'server', status: res.status })
-          // G-h: 「接続に失敗しました」で突き放さない。番頭側の不調と認め、次の一手を添える。
+          // G-h: 「接続に失敗しました」で突き放さない。Kabau側の不調と認め、次の一手を添える。
           setMessages(prev => [
             ...prev,
             {
               role: 'assistant',
               content:
-                '申し訳ありません。番頭がうまく答えを返せませんでした。少し時間をおいて、同じ内容をもう一度送っていただけますか。ここまでのやり取りは画面に残っています。',
+                '申し訳ありません。Kabauがうまく答えを返せませんでした。少し時間をおいて、同じ内容をもう一度送っていただけますか。ここまでのやり取りは画面に残っています。',
             },
           ])
           return
@@ -668,7 +668,7 @@ function CompanyChat() {
           extractFacts(finalMessages)
         }
 
-        // --- 判断採取フック（TOP5 #1）: 番頭側から能動的に「記録しますか？」を提案 ---
+        // --- 判断採取フック（TOP5 #1）: Kabau側から能動的に「記録しますか？」を提案 ---
         //   追加のLLM呼び出しはせず、軽量ヒューリスティックで“出すか”だけ判定する。
         //   出すと決めたら、保存対象としてこの確定会話を控える（human-in-the-loop）。
         const signal = detectDecisionSignal(
@@ -867,13 +867,13 @@ function CompanyChat() {
         </div>
       </div>
 
-      {/* 自社プロファイル要約ミニバー（G-c）: 「番頭はこの前提で答えます」を1行で常時表示。
+      {/* 自社プロファイル要約ミニバー（G-c）: 「Kabauはこの前提で答えます」を1行で常時表示。
           折りたたむと要約部分だけ隠れる（バー自体は残す＝再展開の足がかり）。 */}
       {profileSummary.length > 0 && (
         <div className="mb-2 flex min-w-0 items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50/80 px-3 py-1.5">
           <Building2 className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
           <span className="shrink-0 text-xs font-medium text-neutral-700">
-            番頭はこの前提で答えます
+            Kabauはこの前提で答えます
           </span>
           {!summaryCollapsed && (
             <span className="min-w-0 truncate text-xs text-neutral-600" title={profileSummary.join('・')}>
@@ -963,7 +963,7 @@ function CompanyChat() {
                   {/* I08: 断定を避けた回答の次アクション標準化（社労士相談の下準備）。 */}
                   {showUncertainNext && (
                     <p className="text-[11px] leading-relaxed text-neutral-500">
-                      AIだけでは判断しきれない内容です。番頭が覚えている自社情報を、社労士に相談するときの下準備メモに整理できます。
+                      AIだけでは判断しきれない内容です。Kabauが覚えている自社情報を、社労士に相談するときの下準備メモに整理できます。
                     </p>
                   )}
                   {/* D05: 回答末尾のアクションチップ（すべて既存機能への導線）。 */}
@@ -1013,7 +1013,7 @@ function CompanyChat() {
                         className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                       >
                         <ScrollText className="h-3.5 w-3.5" aria-hidden />
-                        番頭に規程を覚えさせる
+                        Kabauに規程を覚えさせる
                       </Link>
                     )}
                     {showFixPremise && (
@@ -1125,7 +1125,7 @@ function CompanyChat() {
         </div>
       )}
 
-      {/* 判断採取フック（TOP5 #1）: 番頭が能動的に「この方針を記録しますか？」と促す。
+      {/* 判断採取フック（TOP5 #1）: Kabauが能動的に「この方針を記録しますか？」と促す。
           押したときだけサーバが decision として構造化保存する（自動保存しない＝誤記憶防止）。 */}
       {decisionPrompt && !loading && (
         <div className="mt-3 flex flex-col gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 sm:flex-row sm:items-center">
@@ -1136,7 +1136,7 @@ function CompanyChat() {
                 この方針を会社の記憶に残しますか？
               </p>
               <p className="text-xs text-neutral-600">
-                {decisionPrompt.reason}。担当者が代わっても番頭が覚えています。
+                {decisionPrompt.reason}。担当者が代わってもKabauが覚えています。
               </p>
             </div>
           </div>

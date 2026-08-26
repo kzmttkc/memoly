@@ -48,7 +48,7 @@ export default function CompanyHomePage() {
 
 function CompanyHome() {
   const searchParams = useSearchParams()
-  // Kotri→番頭 hire-bridge の会社名プリフィル。?company=<店名> が有れば会社名欄の初期値に。
+  // Kotri→Kabau hire-bridge の会社名プリフィル。?company=<店名> が有れば会社名欄の初期値に。
   //   ユーザーは編集可能。値が無ければ従来どおり空。過度に長い値は切り詰める。
   //   Reactの標準エスケープに委ねる（dangerouslySetInnerHTML は使わない＝XSS安全）。
   const prefillCompany = (searchParams.get('company') ?? '').trim().slice(0, 100)

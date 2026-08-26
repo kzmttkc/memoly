@@ -160,7 +160,7 @@ export default function LeadCaptureEn() {
 
                 <p className="mt-3 text-xs leading-relaxed text-neutral-500">
                   We&apos;ll use your email only to send this resource and occasional updates about
-                  Banto. You can unsubscribe at any time.
+                  Kabau. You can unsubscribe at any time.
                 </p>
               </form>
             </>

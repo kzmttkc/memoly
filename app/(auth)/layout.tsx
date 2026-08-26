@@ -1,9 +1,9 @@
 import Link from 'next/link'
 
 // ============================================================================
-// 認証ルートグループ共通レイアウト — 番頭(Banto) ライト世界観。
+// 認証ルートグループ共通レイアウト — Kabau（カバウ） ライト世界観。
 //   ルート app/layout.tsx の <body> は消費者Memoly向けにダーク強制
-//   (bg-gray-950 text-gray-100)。認証画面は番頭LP(/business)からの動線上にあり、
+//   (bg-gray-950 text-gray-100)。認証画面はKabauLP(/business)からの動線上にあり、
 //   BtoB労務向けライト基調が要件のため .company-light（globals.css 定義の
 //   白背景 + brand 再マップ）を最外要素に当ててダーク body を上書きする。
 //   /business・/company と同じ手法でブランドを統一する。
@@ -42,14 +42,15 @@ export default function AuthLayout({
       <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
+            {/* 2026-08-26 Kabau×番頭 1本化 Phase 1-1: 表示ブランドを Kabau へ */}
             <Link
               href="/zure"
               className="inline-flex items-baseline gap-1.5 text-2xl font-bold tracking-tight text-neutral-900"
-              aria-label="番頭 Banto 入口へ"
+              aria-label="Kabau 入口へ"
             >
-              <span className="text-brand-600">番頭</span>
+              <span className="text-brand-600">Kabau</span>
               <span className="text-sm font-semibold tracking-wide text-neutral-500">
-                Banto
+                カバウ
               </span>
             </Link>
             <p className="mt-2 text-xs text-neutral-500">就業規則のファイルから、ずれを1枚に</p>

@@ -25,7 +25,7 @@ export default function ScenarioSectionEn() {
             Real usage scenarios (from our own internal testing)
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-            How Banto actually gets used, from our historical records
+            How Kabau actually gets used, from our historical records
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-neutral-600">
             The current entry is placing a work rules file. What follows is a historical record of

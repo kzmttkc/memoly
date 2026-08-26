@@ -25,7 +25,7 @@ import { createSeatCheckoutSession } from '@/lib/stripe'
 //     5. Price ID が env 未設定なら 503（PRICE_NOT_CONFIGURED）。
 //
 //   [[project_billing_lifecycle_state]] 既知失敗モードのガード:
-//     - amount0: 番頭はトライアル無し。0円 checkout を作らない（無料は Stripe 非経由）。
+//     - amount0: Kabauはトライアル無し。0円 checkout を作らない（無料は Stripe 非経由）。
 //     - 重複顧客: companies.stripe_customer_id があれば再利用（lib/stripe で customer 指定）。
 //     - 共有Stripeアカウント: metadata.product='banto' を session/subscription 両方に載せ、
 //       webhook 側が他製品決済と弁別できるようにする（lib/stripe）。

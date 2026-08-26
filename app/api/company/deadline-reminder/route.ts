@@ -253,7 +253,7 @@ export async function GET(req: Request) {
       if (integ?.slack_webhook_url) {
         const ok = await sendSlackMessage(
           integ.slack_webhook_url,
-          `:alarm_clock: *労務の期限が近づいています*（${companyName}）\n\n${itemsText}\n\n※${DISCLAIMER}\n<${homeUrl}|番頭で確認する>`,
+          `:alarm_clock: *労務の期限が近づいています*（${companyName}）\n\n${itemsText}\n\n※${DISCLAIMER}\n<${homeUrl}|Kabauで確認する>`,
           companyId,
         )
         if (ok) {
@@ -266,7 +266,7 @@ export async function GET(req: Request) {
         const email = authUser?.user?.email
         if (!email) continue
         // digest_unsubscribed ではガードしない（2026-07-30 UX監査 B-2）。
-        //   このフラグは登録時の「番頭の新機能・労務の最新情報をメールで受け取る（任意）」
+        //   このフラグは登録時の「Kabauの新機能・労務の最新情報をメールで受け取る（任意）」
         //   ＝プロダクトニュースの任意購読に対応するもので、既定は配信停止（true）になる。
         //   一方この通知は「利用者が自分で登録した自社の期限」が近づいたことを知らせる
         //   トランザクショナル通知であり、サービス提供に必要な連絡にあたる。マーケ通知の
@@ -292,24 +292,24 @@ export async function GET(req: Request) {
           body: JSON.stringify({
             from: DIGEST_FROM_EMAIL,
             to: email,
-            subject: '労務の期限が近づいています｜番頭',
+            subject: '労務の期限が近づいています｜Kabau',
             // ワンクリック配信停止（RFC 8058）。署名付きURLへ POST するだけで止まる。
             headers: unsubscribeHeaders(unsub.oneClick),
-            text: `${companyName}で登録済みの期限が近づいています。\n\n${itemsText}\n\n※${DISCLAIMER}\n\n→ 番頭で確認する: ${homeUrl}\n\n配信停止: ${unsub.page}`,
+            text: `${companyName}で登録済みの期限が近づいています。\n\n${itemsText}\n\n※${DISCLAIMER}\n\n→ Kabauで確認する: ${homeUrl}\n\n配信停止: ${unsub.page}`,
             html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
               <h2 style="color:#324a8a;font-size:18px;margin:0 0 4px">労務の期限が近づいています</h2>
               <p style="color:#6b7280;font-size:12px;margin:0 0 16px">${escapeHtml(companyName)}で登録済みの期限をお知らせします。</p>
               ${itemsHtml}
               <p style="color:#9ca3af;font-size:11px;line-height:1.7;margin:12px 0 20px">※${escapeHtml(DISCLAIMER)}</p>
-              <a href="${homeUrl}" style="background:#324a8a;color:#ffffff;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;font-size:14px">番頭で確認する</a>
+              <a href="${homeUrl}" style="background:#324a8a;color:#ffffff;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;font-size:14px">Kabauで確認する</a>
               <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
               <p style="color:#9ca3af;font-size:11px;line-height:1.8">
                 【送信者情報】<br>
-                サービス名：番頭（banto-roumu.com）<br>
+                サービス名：Kabau（banto-roumu.com）<br>
                 運営者：Kazumoto Takeshi<br>
                 所在地：${escapeHtml(SENDER_ADDRESS)}<br>
                 お問い合わせ：support@banto-roumu.com<br><br>
-                このメールは番頭に登録された期限の備忘として送信されています。<br>
+                このメールはKabauに登録された期限の備忘として送信されています。<br>
                 <a href="${unsub.page}" style="color:#324a8a">配信停止はこちら</a>
               </p>
             </div>`,

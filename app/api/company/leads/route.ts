@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 // ============================================================================
-// /api/company/leads (POST) — 番頭(Banto) micro-CV リード受け口
+// /api/company/leads (POST) — Kabau（カバウ） micro-CV リード受け口
 //
 //   役割: 公開LP(/business)の「就業規則チェックリストDL / 労務リスク3分診断」で
 //         入力されたメールを company_leads に1行 INSERT する。本登録（会社作成）の

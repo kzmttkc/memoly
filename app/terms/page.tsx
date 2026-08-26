@@ -21,7 +21,7 @@ export default function TermsPage() {
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">1. サービス概要</h2>
-            <p>番頭（Banto、以下「本サービス」）は、就業規則のファイル（または本文）を置くと、書いてあることと書いてないことを1枚にするサービスです。残す操作のあと、その書類を会社の前提として保存し、以後の回答はその書類と労務の事実を前提にします。運営は KIZUNA Creation（Kazumoto Takeshi 個人事業）。<a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropic（Claude API）</a>を使用してAI回答を生成します。運営者情報（代表者名・所在地・連絡先）の開示方法は<Link href="/tokushoho" className="text-brand-600 underline">特定商取引法に基づく表記</Link>をご覧ください。</p>
+            <p>Kabau（カバウ。旧称: 番頭(Banto)。以下「本サービス」）は、就業規則のファイル（または本文）を置くと、書いてあることと書いてないことを1枚にするサービスです。残す操作のあと、その書類を会社の前提として保存し、以後の回答はその書類と労務の事実を前提にします。運営は KIZUNA Creation（Kazumoto Takeshi 個人事業）。<a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Anthropic（Claude API）</a>を使用してAI回答を生成します。運営者情報（代表者名・所在地・連絡先）の開示方法は<Link href="/tokushoho" className="text-brand-600 underline">特定商取引法に基づく表記</Link>をご覧ください。</p>
           </section>
 
           <section>
@@ -40,7 +40,7 @@ export default function TermsPage() {
             <p>収集したデータはアカウントが存在する限り保持されます。アカウント削除と同時に全データを削除します。最終ログインから2年間未使用の場合、事前通知の後にデータを削除します。</p>
           </section>
 
-          {/* 2026-07-30 法務追加（法務監査 軸E）: 番頭は顧客企業の「従業員等」＝契約者本人
+          {/* 2026-07-30 法務追加（法務監査 軸E）: Kabauは顧客企業の「従業員等」＝契約者本人
               ではない第三者の個人データを保持する設計（lib/prompts.ts の
               【関係者ごとの状況】ブロックが実在し、AIが人単位で参照する）。労務相談は
               休職・傷病・ハラスメントを含みうるため、要配慮個人情報が入る前提で書く必要がある。

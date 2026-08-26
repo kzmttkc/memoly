@@ -106,7 +106,7 @@ export async function GET(req: Request) {
   if (opsWebhook) {
     opsNotified = await sendSlackMessage(
       opsWebhook,
-      `:warning: *番頭 / 滞納${PAST_DUE_GRACE_DAYS}日超のプラン降格*${dryRun ? '（dryRun）' : ''}\n` +
+      `:warning: *Kabau / 滞納${PAST_DUE_GRACE_DAYS}日超のプラン降格*${dryRun ? '（dryRun）' : ''}\n` +
         `${expired.length}社を plan=free に落とします。復帰は Stripe での支払い成功で自動。\n\n${summary}`,
     )
   } else {

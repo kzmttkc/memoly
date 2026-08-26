@@ -5,7 +5,7 @@ import { INDUSTRY_MAJORS, EMPLOYEE_BANDS } from '@/lib/company-attributes'
 // report.ts — F6「経営者向け1枚報告」の決定的アセンブラ（LLM非依存）
 // ----------------------------------------------------------------------------
 //   目的（看板「会社を覚える」と実体の一致）:
-//     番頭が覚えている会社データ（属性・規程・期限・過去の判断）を、経営者が
+//     Kabauが覚えている会社データ（属性・規程・期限・過去の判断）を、経営者が
 //     1枚で把握できる要約に組み立てる。核心は「事実はコード側で組み立て、
 //     数値・期限・規程名を創作しない」こと。LLM は体裁を整える役に留める
 //     （lib/report.ts は事実の骨格＝ハルシネーションの入る余地を持たない）。
@@ -94,7 +94,7 @@ function hasDocMatching(titles: Set<string>, keywords: string[]): boolean {
 }
 
 /**
- * 「まだ番頭に教えていない項目」を導く（未登録の属性＝次に埋めると価値が出る点）。
+ * 「まだKabauに教えていない項目」を導く（未登録の属性＝次に埋めると価値が出る点）。
  *   null（未回答）のみを対象にする。false（明示的に「ない」）は登録済みなので出さない。
  *   捏造・断定をしないため、中立の「登録すると整理が進みます」トーンのラベルで返す。
  */
@@ -119,7 +119,7 @@ export function buildReportBody(input: ReportInput): string {
 
   lines.push(`# ${companyName} 経営者向けまとめ（${jpDate(today)}時点）`)
   lines.push('')
-  lines.push('番頭が覚えている会社の情報を、1枚で見渡せるように整理しました。数値や期限は登録済みの内容にもとづいています。未登録の項目は「未登録」と表示しています。')
+  lines.push('Kabauが覚えている会社の情報を、1枚で見渡せるように整理しました。数値や期限は登録済みの内容にもとづいています。未登録の項目は「未登録」と表示しています。')
   lines.push('')
 
   // --- 1. 会社の基本情報（登録済みのものだけ・未登録は正直に表示） ---
@@ -144,7 +144,7 @@ export function buildReportBody(input: ReportInput): string {
   lines.push('')
 
   // --- 2. 覚えている規程（company_documents のタイトル一覧・件数） ---
-  lines.push('## 番頭が覚えている規程')
+  lines.push('## Kabauが覚えている規程')
   if (documents.length) {
     lines.push(`登録済みの規程は${documents.length}件です。`)
     for (const d of documents.slice(0, 10)) {
@@ -178,7 +178,7 @@ export function buildReportBody(input: ReportInput): string {
   // --- 4. 最近の相談・決定の要約（decisions があれば・無ければ省略） ---
   if (context.decisions.length) {
     lines.push('## 最近の判断の記録')
-    lines.push('過去に番頭に相談して決めた内容のうち、新しいものから並べています。')
+    lines.push('過去にKabauに相談して決めた内容のうち、新しいものから並べています。')
     for (const dec of context.decisions.slice(0, 5)) {
       const topic = dec.topic ? `［${dec.topic}］` : ''
       lines.push(`- ${topic}${dec.summary}`)
@@ -199,7 +199,7 @@ export function buildReportBody(input: ReportInput): string {
   const hints = unansweredAttributeHints(attrs)
   if (hints.length) {
     lines.push('## 次に登録するとよい項目')
-    lines.push('以下はまだ番頭に登録されていません。登録すると、この1枚まとめや相談の精度が上がります。')
+    lines.push('以下はまだKabauに登録されていません。登録すると、この1枚まとめや相談の精度が上がります。')
     for (const h of hints) {
       lines.push(`- ${h}`)
     }
@@ -217,8 +217,8 @@ export function buildReportBody(input: ReportInput): string {
 //   F6と同じ硬化パターン: 事実（数値・期限・規程名・属性）はこの層でコード確定し、
 //   LLM は前書き/むすびの短文しか触れない（route が intro＋body＋outro を連結）。
 //
-//   Phase1コンプラ（F6と同一）: 番頭が「社労士監修/AI社労士/法的精度」を名乗らない。
-//     このメモは「会社が自分の社労士に渡す自社まとめ」であり、番頭が社労士を名乗る文面を
+//   Phase1コンプラ（F6と同一）: Kabauが「社労士監修/AI社労士/法的精度」を名乗らない。
+//     このメモは「会社が自分の社労士に渡す自社まとめ」であり、Kabauが社労士を名乗る文面を
 //     一切書かない。断定/命令/診断をしない。未登録は正直に「未登録」。禁止語0・敬体。
 // ============================================================================
 
@@ -285,7 +285,7 @@ export function buildSharoushiMemoBody(input: SharoushiMemoInput): string {
 
   lines.push(`# ${companyName} 社労士相談メモ（${jpDate(today)}時点）`)
   lines.push('')
-  lines.push('社労士に相談・引き継ぎをする際にお渡しする、会社側の下準備メモです。番頭が覚えている登録済みの情報を整理しています。未登録の項目は「未登録」と表示しています。相談の往復を減らすための整理資料であり、対応の要否はこのメモでは判断していません。')
+  lines.push('社労士に相談・引き継ぎをする際にお渡しする、会社側の下準備メモです。Kabauが覚えている登録済みの情報を整理しています。未登録の項目は「未登録」と表示しています。相談の往復を減らすための整理資料であり、対応の要否はこのメモでは判断していません。')
   lines.push('')
 
   // --- 1. 会社の基本情報（登録済みのみ・未登録は正直に） ---

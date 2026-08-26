@@ -17,7 +17,7 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: 'ご購入の確認｜番頭(Banto)',
+  title: 'ご購入の確認｜Kabau（カバウ）',
   robots: { index: false, follow: false },
 }
 

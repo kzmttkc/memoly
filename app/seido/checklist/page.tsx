@@ -11,7 +11,7 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 
 // ============================================================================
 // /seido/checklist — 無料チェックリストのLP（公開・SSG）。2026-08-13 新設。
-//   番頭無料登録の特典（引き継ぎ書 設計骨子2）。このページは中身の見出しと
+//   Kabau無料登録の特典（引き継ぎ書 設計骨子2）。このページは中身の見出しと
 //   項目数だけを見せ、全文は /seido/checklist/zenbun（要ログイン）で読ませる。
 //   登録ゲートの計測: CTA → /signup?next=/seido/checklist/zenbun&
 //   utm_source=seido&utm_campaign=checklist → signup_completed(props.source=seido)。
@@ -24,23 +24,23 @@ const URL = `${BASE}/seido/checklist`
 const SIGNUP_HREF = '/signup?next=/seido/checklist/zenbun&utm_source=seido&utm_campaign=checklist'
 
 export const metadata: Metadata = {
-  title: 'インボイス2026年10月対応チェックリスト（無料）｜番頭(Banto)',
+  title: 'インボイス2026年10月対応チェックリスト（無料）｜Kabau（カバウ）',
   description:
-    '2026年10月のインボイス経過措置縮小（80%から70%へ）と2割特例終了に向けて、買手・売手の立場別に確認することをまとめた無料チェックリストです。番頭の無料登録で全項目を読めます。',
+    '2026年10月のインボイス経過措置縮小（80%から70%へ）と2割特例終了に向けて、買手・売手の立場別に確認することをまとめた無料チェックリストです。Kabauの無料登録で全項目を読めます。',
   alternates: { canonical: URL },
   openGraph: {
-    title: 'インボイス2026年10月対応チェックリスト（無料）｜番頭(Banto)',
+    title: 'インボイス2026年10月対応チェックリスト（無料）｜Kabau（カバウ）',
     description:
       '2026年10月のインボイス改正に向けて、買手・売手の立場別に確認することをまとめた無料チェックリストです。',
     url: URL,
-    siteName: '番頭(Banto)',
+    siteName: 'Kabau（カバウ）',
     locale: 'ja_JP',
     type: 'website',
     images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: 'インボイス2026年10月対応チェックリスト' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'インボイス2026年10月対応チェックリスト（無料）｜番頭(Banto)',
+    title: 'インボイス2026年10月対応チェックリスト（無料）｜Kabau（カバウ）',
     description:
       '2026年10月のインボイス改正に向けて、買手・売手の立場別に確認することをまとめた無料チェックリストです。',
     images: [`${BASE}/og-image.png`],
@@ -52,7 +52,7 @@ export default function SeidoChecklistPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '制度対応', item: `${BASE}/seido` },
       { '@type': 'ListItem', position: 3, name: 'インボイス2026年10月対応チェックリスト', item: URL },
     ],
@@ -70,7 +70,7 @@ export default function SeidoChecklistPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
         <span className="mx-1.5">/</span>
         <Link href="/seido" className="hover:text-brand-700">制度対応</Link>
         <span className="mx-1.5">/</span>
@@ -86,7 +86,7 @@ export default function SeidoChecklistPage() {
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
           2026年10月1日の経過措置縮小（80%から70%へ）と2割特例の終了に向けて、期日までに確認することを立場別にまとめました。
           全{SEIDO_CHECKLIST_ITEM_COUNT}項目、すべて国税庁・財務省・公正取引委員会の一次資料の範囲で作っています。
-          番頭に無料で会社を登録すると、全項目を読めます。
+          Kabauに無料で会社を登録すると、全項目を読めます。
         </p>
       </section>
 
@@ -137,7 +137,7 @@ export default function SeidoChecklistPage() {
             無料登録して、全{SEIDO_CHECKLIST_ITEM_COUNT}項目を読む
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
-            番頭は、就業規則のファイルを置くとずれが1枚になるサービスです。チェックリストの全文は無料登録の特典です。登録の前に、ファイルを置くこともできます。
+            Kabauは、就業規則のファイルを置くとずれが1枚になるサービスです。チェックリストの全文は無料登録の特典です。登録の前に、ファイルを置くこともできます。
           </p>
           <div className="mt-6 flex justify-center">
             <TrackedCTA

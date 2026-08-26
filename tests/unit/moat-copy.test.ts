@@ -67,13 +67,14 @@ test('記事の締めは覚えるAIではなくファイルを置く', () => {
   assert.match(drop, /navigator\.share/)
 })
 
-test('公開面のパンくず「番頭」は入口へ戻る', () => {
+// 2026-08-26 Kabau×番頭 1本化 Phase 1-1: パンくずのブランド表記は Kabau（旧・番頭）。
+test('公開面のパンくず「Kabau」は入口へ戻る', () => {
   const faq = read('app/faq/page.tsx')
-  assert.match(faq, /href="\/zure" className="hover:text-brand-700">番頭/)
-  assert.doesNotMatch(faq, /href="\/business" className="hover:text-brand-700">番頭/)
+  assert.match(faq, /href="\/zure" className="hover:text-brand-700">Kabau/)
+  assert.doesNotMatch(faq, /href="\/business" className="hover:text-brand-700">Kabau/)
   assert.match(faq, /item: `\$\{BASE\}\/zure`/)
   const tools = read('app/tools/page.tsx')
-  assert.match(tools, /href="\/zure" className="hover:text-brand-700">番頭/)
+  assert.match(tools, /href="\/zure" className="hover:text-brand-700">Kabau/)
 })
 
 test('直リンクの登録画面はファイルを先に置けると案内する', () => {

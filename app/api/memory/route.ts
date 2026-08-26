@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 //
 // このエンドポイントは旧「Memoly」消費者版の残骸だった。会話から抽出した
 // 個人の記憶 (memoly_memories) とプロファイル属性 (memoly_profiles) を保存・
-// 一覧取得・削除していた。現在このリポジトリは「番頭」SaaSであり、会社
+// 一覧取得・削除していた。現在このリポジトリは「Kabau」SaaSであり、会社
 // スコープの記憶は /api/company/memory が正規に担っている。この個人版は
 // 既存ユーザー0（未使用）で、放置すると認証済みユーザーの個人データ
 // CRUD口として攻撃面が残り続ける。よってメモリ抽出/保存/一覧/削除ロジックを
@@ -17,7 +17,7 @@ function gone() {
     {
       error: 'Gone',
       detail:
-        '/api/memory は廃止されました。番頭の記憶機能は /api/company/memory を使用してください。',
+        '/api/memory は廃止されました。Kabauの記憶機能は /api/company/memory を使用してください。',
     },
     { status: 410 }
   )

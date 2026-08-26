@@ -62,7 +62,7 @@ export const PLAN_COPY = [
     badge: null,
     // 2026-07-30 PMF修理#4: Entry と同じ理由で plan=standard を載せる。
     signupHref: '/signup?next=/company&plan=standard' as string | undefined,
-    anchor: '総務担当を1人増やす前に、まず番頭に任せられる範囲を確かめられます。',
+    anchor: '総務担当を1人増やす前に、まずKabauに任せられる範囲を確かめられます。',
     cta: 'Standardで始める',
     features: [
       'Entry のすべての機能',

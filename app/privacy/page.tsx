@@ -39,12 +39,12 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">1. 収集する情報</h2>
-            <p>番頭（Banto）は以下の情報を収集します：</p>
+            <p>Kabau（カバウ）は以下の情報を収集します：</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-neutral-600">
               <li>メールアドレス（アカウント作成時）</li>
               <li>会社プロファイル・チャットの相談内容</li>
               <li>AIが抽出した記憶・属性（所定労働時間・休日・規程の状況等）</li>
-              {/* 2026-07-30 法務追加（法務監査 軸E）: 番頭は「関係者ごとの状況（人ごとに
+              {/* 2026-07-30 法務追加（法務監査 軸E）: Kabauは「関係者ごとの状況（人ごとに
                   覚えていること）」を保持する設計（lib/prompts.ts）で、実際には契約者本人では
                   ない従業員等の個人情報を扱う。ところが本項にその類型が1つも書かれておらず、
                   実装と収集項目の開示が食い違っていた。労務相談の性質上、要配慮個人情報が
@@ -84,7 +84,7 @@ export default function PrivacyPage() {
               <li><strong className="text-neutral-800">Resend</strong>：お知らせメールの送信（米国）</li>
               <li><strong className="text-neutral-800">Dify</strong>：法令ナレッジベースへの照会（米国）。相談内容のうち法令に関する質問テキストを送信する場合があります。</li>
               <li><strong className="text-neutral-800">OpenAI</strong>：記憶の意味検索用のベクトル化（米国）。記憶の要約テキストを送信します。APIで送信されたデータは既定でAIモデルの学習に使用されません。<a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">OpenAIのAPIデータ利用ポリシー</a></li>
-              <li><strong className="text-neutral-800">Stripe</strong>：有料プランの決済処理（米国）。カード情報はStripeが直接取り扱い、番頭のサーバーには保存されません。<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripeのプライバシーポリシー</a></li>
+              <li><strong className="text-neutral-800">Stripe</strong>：有料プランの決済処理（米国）。カード情報はStripeが直接取り扱い、Kabauのサーバーには保存されません。<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripeのプライバシーポリシー</a></li>
               {/* 2026-07-30 法務追加（法務監査#6）: weekly-email / deadline-reminder が
                   lib/slack.ts 経由で hooks.slack.com へ本文を送っているのに、本一覧にも
                   /terms 5.3 にも Slack が無かった。実際に外部へ出る経路は必ず書く。 */}
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
           {/* 2026-07-28 CTO修正（L1監査#9）: 日本の個人情報保護法が求める外国第三者提供の
               説明（本人同意・移転先の制度水準）が欠けていた（ペルソナ4/10指摘）。 */}
           {/* 2026-07-30 法務修正（法務監査 軸E）: 外国第三者提供の根拠を「登録者の同意」
-              単独で構成していたが、番頭が保持する個人データには、同意した登録者本人では
+              単独で構成していたが、Kabauが保持する個人データには、同意した登録者本人では
               ない従業員等のデータが含まれる（lib/prompts.ts の人単位の記憶）。
               登録者の同意は、その第三者である従業員等については論理的に根拠にならない。
               そこで、従業員等のデータについては「お客様（会社）からの委託＋委託先の
@@ -141,7 +141,7 @@ export default function PrivacyPage() {
                   ・7社は利用規約に DPA が自動組込み（Anthropic/OpenAI/Supabase/Resend/
                     Stripe/Plausible。Slack は再委託先でなく顧客指定の送信先のため対象外）
                   ・Dify は別途署名・メール送付が必要で **未締結**
-                  ・Vercel は DPA の適用対象が Enterprise/Pro 限定で、番頭は Hobby プラン
+                  ・Vercel は DPA の適用対象が Enterprise/Pro 限定で、Kabauは Hobby プラン
                     のため **未適用の疑い**
                 であることが判明した。つまり「いずれも確認済み」は事実に反する（A と同じ
                 類型の誤り）。断定を消し、実態どおりに書き分ける。締結手続は Takeshi 手番

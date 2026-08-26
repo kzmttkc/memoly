@@ -27,23 +27,23 @@ const URL = `${BASE}/seido/kit`
 const PRICE = `¥${SEIDO_KIT_PRICE_JPY.toLocaleString('ja-JP')}`
 
 export const metadata: Metadata = {
-  title: `${SEIDO_KIT_NAME}（${PRICE}・買い切り）｜番頭(Banto)`,
+  title: `${SEIDO_KIT_NAME}（${PRICE}・買い切り）｜Kabau（カバウ）`,
   description:
     '経過措置80%から70%への縮小に対応する再交渉文面5通（買手用・売手用、公正取引委員会等Q&Aの枠組み準拠）、影響額計算ツール、39項目の実務チェックリスト。2026年10月1日の期日までに使える実務キットです。',
   alternates: { canonical: URL },
   openGraph: {
-    title: `${SEIDO_KIT_NAME}（${PRICE}・買い切り）｜番頭(Banto)`,
+    title: `${SEIDO_KIT_NAME}（${PRICE}・買い切り）｜Kabau（カバウ）`,
     description:
       '再交渉文面5通・影響額計算ツール・39項目の実務チェックリスト。2026年10月1日の期日までに使える実務キットです。',
     url: URL,
-    siteName: '番頭(Banto)',
+    siteName: 'Kabau（カバウ）',
     locale: 'ja_JP',
     type: 'website',
     images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: SEIDO_KIT_NAME }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SEIDO_KIT_NAME}（${PRICE}・買い切り）｜番頭(Banto)`,
+    title: `${SEIDO_KIT_NAME}（${PRICE}・買い切り）｜Kabau（カバウ）`,
     description:
       '再交渉文面5通・影響額計算ツール・39項目の実務チェックリスト。',
     images: [`${BASE}/og-image.png`],
@@ -55,7 +55,7 @@ export default function SeidoKitPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '番頭(Banto)', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '制度対応', item: `${BASE}/seido` },
       { '@type': 'ListItem', position: 3, name: SEIDO_KIT_NAME, item: URL },
     ],
@@ -72,7 +72,7 @@ export default function SeidoKitPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
         <span className="mx-1.5">/</span>
         <Link href="/seido" className="hover:text-brand-700">制度対応</Link>
         <span className="mx-1.5">/</span>
@@ -178,7 +178,7 @@ export default function SeidoKitPage() {
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-brand-100">
             クレジットカード決済（Stripe）。決済完了後、すぐにすべての内容をご利用いただけます。
-            番頭の無料登録（ログイン）が必要です。
+            Kabauの無料登録（ログイン）が必要です。
           </p>
           <div className="mt-6 flex justify-center">
             <BuyButton location="kit_lp" label={`${PRICE}で購入する`} />

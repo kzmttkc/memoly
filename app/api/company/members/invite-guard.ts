@@ -2,7 +2,7 @@
 // invite-guard.ts — 席招待で「そのアカウントへ席を入れてよいか」を決める純関数
 // ----------------------------------------------------------------------------
 // 【攻撃（2026-07-30 監査・重大）】
-//   番頭の Supabase Auth は mailer_autoconfirm=true で運用しており、
+//   Kabauの Supabase Auth は mailer_autoconfirm=true で運用しており、
 //   POST /auth/v1/signup はメール確認なしで即 access_token を返す。つまり
 //   **メールアドレスの所有を証明せずに任意のアドレスでアカウントを作れる**。
 //

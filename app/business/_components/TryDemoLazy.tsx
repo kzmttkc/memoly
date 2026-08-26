@@ -32,7 +32,7 @@ const TryDemo = dynamic(() => import('./TryDemo'), {
           サンプル会社で、答え方の違いを試す
         </h2>
         <p className="mt-3 text-base leading-relaxed text-neutral-600">
-          業種を選ぶと、その業種のサンプル会社の前提を踏まえて番頭がどう答えるかを体験できます。質問をクリックしてください。
+          業種を選ぶと、その業種のサンプル会社の前提を踏まえてKabauがどう答えるかを体験できます。質問をクリックしてください。
         </p>
       </div>
 

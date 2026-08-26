@@ -14,9 +14,9 @@ import { PublicHeader } from '@/components/ui/PublicHeader'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: 'セキュリティとデータ保護 | 番頭(Banto)',
+  title: 'セキュリティとデータ保護 | Kabau（カバウ）',
   description:
-    '番頭(Banto)のセキュリティ対策の説明。会社ごとのデータ分離(RLS)、暗号化、AI学習への不使用、データの保持期間・エクスポート・削除、委託先の一覧。',
+    'Kabau（カバウ）のセキュリティ対策の説明。会社ごとのデータ分離(RLS)、暗号化、AI学習への不使用、データの保持期間・エクスポート・削除、委託先の一覧。',
   alternates: { canonical: '/security' },
 }
 
@@ -35,7 +35,7 @@ export default function SecurityPage() {
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">セキュリティとデータ保護</h1>
           <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月22日</p>
           <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-            番頭は、会社の規程や労務相談という機微な情報をお預かりするサービスです。このページでは、実際に実装している保護の仕組みを、誇張なくそのまま説明します。
+            Kabauは、会社の規程や労務相談という機微な情報をお預かりするサービスです。このページでは、実際に実装している保護の仕組みを、誇張なくそのまま説明します。
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default function SecurityPage() {
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">2. 会社ごとのデータ分離（RLS）</h2>
             <p>
-              番頭のデータベースは、行レベルセキュリティ（RLS：Row Level Security）という仕組みで、データの1行1行に「どの会社のものか」を持たせ、データベース自体が「その会社のメンバー以外は読めない・書けない」を強制しています。
+              Kabauのデータベースは、行レベルセキュリティ（RLS：Row Level Security）という仕組みで、データの1行1行に「どの会社のものか」を持たせ、データベース自体が「その会社のメンバー以外は読めない・書けない」を強制しています。
             </p>
             <p className="mt-2">
               たとえるなら、ビルの入口の鍵（ログイン）とは別に、部屋ごとの金庫（各社のデータ）にそれぞれ鍵がかかっている状態です。アプリケーションの不具合があっても、データベース層の権限チェックが最後の壁として他社データへのアクセスを遮断します。自社ルール・相談履歴・取込済み規程・期限・監査ログのすべてがこの分離の対象です。
@@ -76,7 +76,7 @@ export default function SecurityPage() {
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">5. プロンプトインジェクションへの方針</h2>
             <p>
-              アップロードされた規程や登録データの中に「これまでの指示を無視して」のようなAIへの指示文が紛れ込んでいても、番頭はそれを指示として実行せず、点検・参照対象のデータとしてのみ扱うよう、AIへの指示を明示的に分離・防御しています。外部から取り込んだ文書がAIの動作を乗っ取ることを防ぐための多層的な対策で、継続的に強化しています。
+              アップロードされた規程や登録データの中に「これまでの指示を無視して」のようなAIへの指示文が紛れ込んでいても、Kabauはそれを指示として実行せず、点検・参照対象のデータとしてのみ扱うよう、AIへの指示を明示的に分離・防御しています。外部から取り込んだ文書がAIの動作を乗っ取ることを防ぐための多層的な対策で、継続的に強化しています。
             </p>
           </section>
 
@@ -117,7 +117,7 @@ export default function SecurityPage() {
               <li><span className="font-medium text-neutral-800">OpenAI</span>（米国）：記憶の意味検索用のベクトル化（APIデータは既定で学習不使用）</li>
               <li><span className="font-medium text-neutral-800">Vercel</span>（米国）：ホスティング</li>
               <li><span className="font-medium text-neutral-800">Resend</span>（米国）：メール送信</li>
-              <li><span className="font-medium text-neutral-800">Stripe</span>（米国）：決済（有料プラン利用時。カード番号は番頭のサーバーを通りません）</li>
+              <li><span className="font-medium text-neutral-800">Stripe</span>（米国）：決済（有料プラン利用時。カード番号はKabauのサーバーを通りません）</li>
               <li><span className="font-medium text-neutral-800">Plausible Analytics</span>（EU）：匿名のアクセス解析（Cookie不使用）</li>
             </ul>
             {/* 2026-08-12 法務追加（越境移転レビュー E）: 本ページの所在国表記は実測と一致

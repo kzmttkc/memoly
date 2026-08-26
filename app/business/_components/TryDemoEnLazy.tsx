@@ -22,10 +22,10 @@ const TryDemoEn = dynamic(() => import('./TryDemoEn'), {
       <div className="mx-auto mb-10 max-w-2xl text-center">
         <p className="mb-3 text-sm font-semibold tracking-wide text-brand-600">Try it</p>
         <h2 className="text-3xl font-bold tracking-tight text-neutral-900">
-          See how Banto answers, with a sample company
+          See how Kabau answers, with a sample company
         </h2>
         <p className="mt-3 text-base leading-relaxed text-neutral-600">
-          Pick an industry, then click a question to see how Banto answers based on that sample
+          Pick an industry, then click a question to see how Kabau answers based on that sample
           company&apos;s premises.
         </p>
       </div>

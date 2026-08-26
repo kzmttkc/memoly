@@ -249,7 +249,7 @@ export default function LeadCapture({
                 )}
 
                 <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-                  メールアドレスは資料のご案内と、番頭に関するお知らせにのみ利用します。配信はいつでも停止できます。
+                  メールアドレスは資料のご案内と、Kabauに関するお知らせにのみ利用します。配信はいつでも停止できます。
                 </p>
               </form>
             </>

@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
+import { BRAND_TRANSITION_NOTE, BRAND_TRANSITION_NOTE_EN } from '@/lib/brand'
 
 export default function LoginPage() {
   return (
@@ -31,7 +32,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  // 番頭(Banto) の動線では /company へ。?next を尊重しつつ既定は /company。
+  // Kabau（カバウ） の動線では /company へ。?next を尊重しつつ既定は /company。
   const next = searchParams.get('next') || '/company'
   // 2026-07-28 CTO修正（L2監査#5）: /signup?lang=en は言語出し分けに対応済みだが
   //   /loginは?lang=enパラメータ自体を無視し常に日本語だった（ペルソナ6指摘）。
@@ -73,7 +74,12 @@ function LoginForm() {
       {/* 2026-07-28 CTO修正（L2監査#1）: layout.tsxのブランド見出しは<Link>であり
           真の見出し(h1)ではなかった。/loginにも読み上げ専用のh1を追加する
           （視覚デザインは既存の"ログイン"文言のまま不変）。 */}
-      <h1 className="sr-only">{isEn ? 'Log in to Banto' : '番頭(Banto) ログイン'}</h1>
+      <h1 className="sr-only">{isEn ? 'Log in to Kabau' : 'Kabau（カバウ） ログイン'}</h1>
+      {/* 2026-08-26 Kabau×番頭 1本化: 移行注記（3ヶ月掲示・2026-11-26まで。文言は lib/brand.ts）。
+          既存のKabauユーザーが「知らないサービスに来た」と誤解して離脱しないための1行。 */}
+      <p className="mb-3 rounded-md bg-neutral-100 px-3 py-2 text-center text-xs text-neutral-600">
+        {isEn ? BRAND_TRANSITION_NOTE_EN : BRAND_TRANSITION_NOTE}
+      </p>
       <p className="mb-6 text-center text-sm text-neutral-600">{isEn ? 'Log in' : 'ログイン'}</p>
 
       <form onSubmit={handleLogin} className="space-y-4">

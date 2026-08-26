@@ -18,7 +18,7 @@ import { track } from '@/lib/analytics'
 
 // ============================================================================
 // HandoverView — 「会社の記憶 引き継ぎビュー」（TOP5 #4・記憶moatの複利）
-//   「人は代わる、番頭は覚えている」を体現する1画面。担当交代/承継時に、新担当が
+//   「人は代わる、Kabauは覚えている」を体現する1画面。担当交代/承継時に、新担当が
 //   この会社の労務判断履歴をここだけで把握できるようにする。
 //     - 確定した自社ルール + 過去の主要判断（新しい順）+ 関係者ごとの状況 + 現行リスク要点。
 //   /api/company/handover（GET・LLM不要の集約）から取得し、読みやすく集約表示する。
@@ -58,7 +58,7 @@ function fmtDate(iso: string | null): string {
   }).format(d)
 }
 
-// 引き継ぎサマリーをプレーンテキスト化（コピー用）。番頭の継続記憶を1通の引き継ぎ書に。
+// 引き継ぎサマリーをプレーンテキスト化（コピー用）。Kabauの継続記憶を1通の引き継ぎ書に。
 function buildHandoverText(d: HandoverData): string {
   const lines: string[] = []
   lines.push(`【${d.companyName} 労務の引き継ぎサマリー】`)
@@ -133,7 +133,7 @@ function buildHandoverText(d: HandoverData): string {
     lines.push('（取込済みの規程はありません）')
   }
   lines.push('')
-  lines.push('※ 本サマリーは番頭が会社の記憶として残してきた内容の要約です。最終的な判断・手続きは一次情報と専門家でご確認ください。')
+  lines.push('※ 本サマリーはKabauが会社の記憶として残してきた内容の要約です。最終的な判断・手続きは一次情報と専門家でご確認ください。')
 
   return lines.join('\n')
 }
@@ -221,7 +221,7 @@ export function HandoverView({ companyId }: { companyId: string }) {
       </div>
 
       <p className="mb-6 rounded-xl border border-brand-100 bg-brand-50/40 px-4 py-3 text-sm leading-relaxed text-neutral-700">
-        人は代わっても、番頭は覚えています。この1画面で、{d.companyName}の労務ルール・過去の判断・関係者ごとの状況・現行リスクを引き継げます。
+        人は代わっても、Kabauは覚えています。この1画面で、{d.companyName}の労務ルール・過去の判断・関係者ごとの状況・現行リスクを引き継げます。
       </p>
 
       {/* ===== 確定した自社ルール ===== */}
@@ -291,7 +291,7 @@ export function HandoverView({ companyId }: { companyId: string }) {
             >
               相談のページ
             </Link>
-            で方針が決まると、番頭が「会社の記憶に残しますか」と確認し、ここに積み重なります。
+            で方針が決まると、Kabauが「会社の記憶に残しますか」と確認し、ここに積み重なります。
           </Card>
         )}
       </section>
@@ -398,7 +398,7 @@ export function HandoverView({ companyId }: { companyId: string }) {
       )}
 
       <p className="mt-6 border-t border-neutral-200 pt-4 text-xs leading-relaxed text-neutral-500">
-        本サマリーは番頭が会社の記憶として残してきた内容の要約です。最終的な判断・手続きは一次情報と専門家でご確認ください。
+        本サマリーはKabauが会社の記憶として残してきた内容の要約です。最終的な判断・手続きは一次情報と専門家でご確認ください。
       </p>
 
       <Toast

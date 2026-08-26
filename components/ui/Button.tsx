@@ -2,7 +2,7 @@ import { forwardRef } from 'react'
 import { cn } from '@/lib/cn'
 
 // ============================================================================
-// Button — 番頭(Banto) 会社版の共通ボタン
+// Button — Kabau（カバウ） 会社版の共通ボタン
 //   variant: primary(brand塗り=主要CTA) / secondary(outline) / ghost(透明) / danger
 //   size:    sm / md / lg
 //   focus-visible:ring を内蔵（キーボード操作時のみ可視リング＝アクセシビリティ）。

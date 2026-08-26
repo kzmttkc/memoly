@@ -1,6 +1,6 @@
 // ============================================================================
-// kabau-pack.ts — 番頭 → Kabau（sharoushi-agent.com）カスハラ実務パック導線の SSOT
-//   (WORK_ORDERS.md Trust Stack v2 #3 番頭側・PDCA H45・2026-08-21)
+// kabau-pack.ts — Kabau → Kabau（sharoushi-agent.com）カスハラ実務パック導線の SSOT
+//   (WORK_ORDERS.md Trust Stack v2 #3 Kabau側・PDCA H45・2026-08-21)
 //
 //   置き場所は2つ（それぞれ1箇所）:
 //     - /roumu/[slug] のカスハラ関連記事の末尾（app/roumu/[slug]/_components/KabauPackCta.tsx）

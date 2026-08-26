@@ -9,8 +9,8 @@ import type { Metadata } from 'next'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Banto',
-  description: 'Terms of Service for Banto (English).',
+  title: 'Terms of Service | Kabau',
+  description: 'Terms of Service for Kabau (English).',
   // 2026-07-30 PMF fix #3: pair this page with the Japanese original via hreflang
   //   (site-wide there were 0 hreflang tags and no /en URL in sitemap.xml).
   //   The reciprocal declaration on /terms (Japanese) is owned by another team
@@ -47,11 +47,11 @@ export default function TermsEnglishPage() {
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">1. Service overview</h2>
             <p>
-              Banto (&quot;the Service&quot;) starts from a work rules file (or pasted text). It puts what is
+              Kabau (formerly Banto; &quot;the Service&quot;) starts from a work rules file (or pasted text). It puts what is
               written and what is not onto one page. After you choose to keep that page, the Service
               stores it as a company document and later answers use that document and labor facts as
               the premise. The Service is operated by KIZUNA Creation (a sole proprietorship operated
-              by Kazumoto Takeshi). Banto uses{' '}
+              by Kazumoto Takeshi). Kabau uses{' '}
               <a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">
                 Anthropic (Claude API)
               </a>{' '}

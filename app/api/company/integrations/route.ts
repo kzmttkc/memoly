@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
   if (test === true) {
     testSent = await sendSlackMessage(
       webhookUrl as string,
-      ':white_check_mark: 番頭とSlackの連携が設定されました。期限リマインドと週次ダイジェストがこのチャンネルに届きます。',
+      ':white_check_mark: KabauとSlackの連携が設定されました。期限リマインドと週次ダイジェストがこのチャンネルに届きます。',
       companyId as string,
     )
   }

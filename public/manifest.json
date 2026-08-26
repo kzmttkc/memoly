@@ -1,6 +1,6 @@
 {
-  "name": "番頭(Banto) — 就業規則のファイルを置く",
-  "short_name": "番頭",
+  "name": "Kabau（カバウ）｜労務コンプライアンスAI — 就業規則のファイルを置く",
+  "short_name": "Kabau",
   "description": "就業規則のファイルを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。",
   "start_url": "/zure",
   "display": "standalone",

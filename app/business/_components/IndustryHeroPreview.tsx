@@ -129,9 +129,9 @@ export default function IndustryHeroPreview() {
             ref={chatRef}
             className="fv-chat"
             role="img"
-            aria-label="番頭との会話例。昨日の相談の続きから今日の会話が始まる様子"
+            aria-label="Kabauとの会話例。昨日の相談の続きから今日の会話が始まる様子"
           >
-            <div className="fv-chat__header">番頭</div>
+            <div className="fv-chat__header">Kabau</div>
             <div className="fv-chat__body">
               <div className="fv-divider fv-anim">─&ensp;昨日 17:24&ensp;─</div>
               <div className="fv-msg fv-msg--user fv-anim">試用期間は延長できますか？</div>
@@ -151,7 +151,7 @@ export default function IndustryHeroPreview() {
             ref={memoryRef}
             className="fv-memory mt-3 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
             role="img"
-            aria-label="記憶残高の表示イメージ。規程・前提・相談の経緯が番頭に積み上がっていく様子"
+            aria-label="記憶残高の表示イメージ。規程・前提・相談の経緯がKabauに積み上がっていく様子"
           >
             <div className="flex items-center gap-2 px-4 pt-3">
               <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
@@ -202,7 +202,7 @@ function IndustryPanel({ industry }: { industry: IndustryKey }) {
         <span className="flex h-5 w-5 items-center justify-center rounded-md bg-brand-600 text-white">
           <BantoMark className="h-3 w-3" aria-hidden />
         </span>
-        <span className="text-xs font-semibold text-neutral-700">番頭</span>
+        <span className="text-xs font-semibold text-neutral-700">Kabau</span>
         <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[10px] font-medium text-success-700">
           <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden />
           1枚あり
@@ -235,7 +235,7 @@ function IndustryPanel({ industry }: { industry: IndustryKey }) {
           </p>
         </div>
 
-        {/* 番頭の回答（左寄せ・自社前提の一句を強調） */}
+        {/* Kabauの回答（左寄せ・自社前提の一句を強調） */}
         <div className="flex items-start gap-2">
           <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
             <BantoMark className="h-3.5 w-3.5" aria-hidden />

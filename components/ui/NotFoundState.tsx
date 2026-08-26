@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { buttonClass } from '@/components/ui/Button'
 
 // ============================================================================
-// NotFoundState — セグメント not-found.tsx 共通の面（番頭デザインシステム準拠）。
+// NotFoundState — セグメント not-found.tsx 共通の面（Kabauデザインシステム準拠）。
 //   サーバーコンポーネントでよい（インタラクション無し）。各 not-found.tsx から
 //   backHref/backLabel だけ差し替えて使う。
 // ============================================================================

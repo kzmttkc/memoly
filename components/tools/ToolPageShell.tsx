@@ -78,7 +78,7 @@ export function ToolPageShell({ jsonLd, h1, lead, explain, faqs, related, source
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">番頭</Link>
+        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
         <span className="mx-1.5">/</span>
         {/* 2026-08-12 UXペルソナ監査 R-17: 「無料ツール」がただの span で、ツールページ
             から一覧へ戻るには最下部まで下るしかなかった（他のツールを試したい人が

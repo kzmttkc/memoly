@@ -31,7 +31,7 @@ import {
 
 // 招待応答の統一文言（未登録/既存/既メンバーのどれでも同じ＝存在が推測できない）。
 const INVITE_ACCEPTED_MESSAGE =
-  '招待を受け付けました。相手が番頭に登録済みの場合は即時追加され、未登録の場合は登録後に有効になります。'
+  '招待を受け付けました。相手がKabauに登録済みの場合は即時追加され、未登録の場合は登録後に有効になります。'
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser()

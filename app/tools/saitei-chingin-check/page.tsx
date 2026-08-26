@@ -20,7 +20,7 @@ import LeadCapture from '@/app/business/_components/LeadCapture'
 
 export const metadata: Metadata = buildToolMetadata({
   slug: 'saitei-chingin-check',
-  title: '最低賃金を無料でセルフ点検｜番頭(Banto)',
+  title: '最低賃金を無料でセルフ点検｜Kabau（カバウ）',
   description:
     '自社の時給が地域別最低賃金を下回っていないかを無料で点検できるツールです。都道府県と時給を入れると、令和7年度の最低賃金と比べて、下回っている場合はあと何円上げる必要があるかを画面で確認できます。登録不要・会社データは保存しません。',
   ogDescription:

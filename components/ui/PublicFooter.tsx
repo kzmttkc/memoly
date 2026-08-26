@@ -72,7 +72,10 @@ export function PublicFooter({
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
               <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
-            <span className="font-semibold text-neutral-900">番頭(Banto)</span>
+            <span className="font-semibold text-neutral-900">
+              Kabau（カバウ）
+              <span className="ml-2 text-xs font-normal text-neutral-500">旧・番頭(Banto)</span>
+            </span>
           </Link>
 
           <nav aria-label="フッタ" className="flex flex-col gap-2 text-sm text-neutral-600 sm:items-end">
@@ -99,11 +102,11 @@ export function PublicFooter({
         </div>
 
         <p className="mt-6 text-xs leading-relaxed text-neutral-600">
-          番頭(Banto) が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
+          Kabau（カバウ）が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
           最終的な判断は、必要に応じて専門家にご確認ください。
         </p>
         <p className="mt-2 text-xs text-neutral-600">
-          © {new Date().getFullYear()} 番頭(Banto)（KIZUNA Creation）
+          © {new Date().getFullYear()} Kabau（KIZUNA Creation）
         </p>
       </div>
     </footer>
