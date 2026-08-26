@@ -51,6 +51,7 @@ const ALLOWED_SOURCES = new Set([
   'kabau_tool_result',       // 計算ツールの結果送付（tool-result-mail）
   'kabau_page_doc',          // ページ内資料の送付（page-doc-mail）
   'kabau_updates',           // 更新案内オプトイン（email-updates）
+  'kasuhara_gap',            // /zure の10措置照合（控えの送付・Phase 2）
   'unknown',
 ])
 

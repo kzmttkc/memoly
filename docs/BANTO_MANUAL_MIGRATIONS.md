@@ -83,6 +83,7 @@ anon で `POST /rest/v1/rpc/banto_cohort_stats` を叩くと
 | `day2_reminder_migration.sql` | 旧個人版 `memoly_users.day2_sent_at` | ⚠️ 死蔵 | 列は実在するが、Day2 リマインドは 2026-07-30 に `companies` ベースへ移した。この .sql は歴史的経緯 |
 | `reports_table.sql` | 旧個人版 `memoly_reports`（App Store 審査対応） | ✅ | 本番に実在 |
 | `banto_cohort_stats.sql` | コホート集計関数の本体 | ✅ | service role で 200 応答 |
+| `kasuhara_assessments.sql` | カスハラ10措置診断の結果（Kabau×番頭 1本化 Phase 2・本文は保存しない設計） | ✅ | 2026-08-26 Management API で適用（200）。書き込みは service role のみ・SELECT は自社行のみ |
 | `cleanup_orphan_companies.sql` | **一度きりの掃除スクリプト**（退会で孤児化した会社を消す） | 適用対象外 | 冪等な定義ではなく手動運用。実行の要否はその都度判断 |
 
 ---

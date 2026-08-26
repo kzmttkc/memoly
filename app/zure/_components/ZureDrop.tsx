@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { FileUp, LoaderCircle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { track } from '@/lib/analytics'
+import { KasuharaGap } from './KasuharaGap'
 import { HERO, HERO_EN, KABAU_LINE, OFFER } from '@/lib/offer'
 import { createClient } from '@/lib/supabase'
 import { fileFromPastedText, sniffKind, unreadNoteForUnsupported, plainTextFromClipboardData, emptyOrFolderNote } from '@/lib/document-extract'
@@ -471,6 +472,8 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
           </button>
           )}
           </div>
+          {/* Kabau×番頭 1本化 Phase 2: 1枚の下段に10措置照合を置く（V2 §3・chrome外＝印刷にも出る） */}
+          <KasuharaGap />
         </section>
       )}
 
