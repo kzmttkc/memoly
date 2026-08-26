@@ -42,6 +42,15 @@ const ALLOWED_SOURCES = new Set([
   // lib/article-checksheet.ts の CHECKSHEET_SOURCE と同じ文字列であること
   // （不一致だと 'unknown' に丸められ、どの対価で取れたか分からなくなる）。
   'article_checksheet',
+  // 2026-08-26 Kabau×番頭 1本化 Phase 1-2（V2設計 §6）: 静的サイト（sharoushi-agent.com）の
+  // Netlify Forms 提出を、Netlify の submission-created イベント関数が本エンドポイントへ
+  // サーバ間転送する。会員基盤・段2の数えを company_leads 1本にするための受け口。
+  // 値は Netlify の form-name と1対1（転送側 netlify/functions/submission-created.js と一致必須）。
+  'kabau_kasuhara_deadline', // 逆算スケジュール枠（規定例/マニュアルガイド・kasuhara-deadline-mail）
+  'kabau_kasuhara_record',   // 10措置チェックの対応状況記録（kasuhara-record-mail）
+  'kabau_tool_result',       // 計算ツールの結果送付（tool-result-mail）
+  'kabau_page_doc',          // ページ内資料の送付（page-doc-mail）
+  'kabau_updates',           // 更新案内オプトイン（email-updates）
   'unknown',
 ])
 
