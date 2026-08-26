@@ -132,16 +132,28 @@ const evId = p => `evt_e2e_${p}_${crypto.randomBytes(6).toString('hex')}`
 // tests/unit/billing-webhook.test.ts で正しく検証済みで、壊れていたのはこのテスト側の
 // モックだけだった。既定を 'paid'（実際の正常完了時の値）にし、明示的に上書きできるように
 // paymentStatus を引数へ追加する。
-const ckEvent = ({ id, amount, companyId, plan, seats, cust, sub, banto = true, paymentStatus = 'paid' }) => ({
-  id, object: 'event', type: 'checkout.session.completed', api_version: '2025-06-30',
-  created: Math.floor(Date.now() / 1000), livemode: false,
-  data: { object: {
-    object: 'checkout.session', id: 'cs_e2e_' + crypto.randomBytes(6).toString('hex'),
-    amount_total: amount, customer: cust, subscription: sub, payment_status: paymentStatus,
-    metadata: banto ? { product: 'banto', company_id: companyId, plan, seats: String(seats) } : {},
-    customer_details: { email: 'e2e@banto.test' },
-  } },
-})
+//
+// 2026-08-26 実セッション方式へ再設計（Kabau×番頭 1本化セッション）:
+//   b379e49（2026-08-21 クロス配信ガード再設計）で webhook は event 内の amount/metadata でなく
+//   **stripe.checkout.sessions.listLineItems(session.id) の実応答**で製品判定するようになった。
+//   偽の cs_e2e_* id では line items が引けず全 checkout が 500 になり、8/21〜8/26 の
+//   毎日の実行が 10 PASS / 18 FAIL で固定されていた（logs/billing_e2e.log 実測）。
+//   本番コードの契約（実Stripeに存在する session が前提・引けなければ5xxで再送）は正しいので、
+//   ハーネス側が **テストモードの実セッションを作り、その id でイベントを構成する**。
+//   sessionId は必須引数にし、偽 id の後戻りをできなくする。
+const ckEvent = ({ id, sessionId, amount, companyId, plan, seats, cust, sub, metadata, paymentStatus = 'paid' }) => {
+  if (!sessionId) throw new Error('ckEvent: sessionId（実テストセッションのid）は必須です')
+  return {
+    id, object: 'event', type: 'checkout.session.completed', api_version: '2025-06-30',
+    created: Math.floor(Date.now() / 1000), livemode: false,
+    data: { object: {
+      object: 'checkout.session', id: sessionId,
+      amount_total: amount, customer: cust, subscription: sub, payment_status: paymentStatus,
+      metadata: metadata ?? { product: 'banto', company_id: companyId, plan, seats: String(seats) },
+      customer_details: { email: 'e2e@banto.test' },
+    } },
+  }
+}
 // 2026-08-05 敵対的再監査（billing_lifecycle_e2e.mjsのpayment_status欠落と同種の欠陥が
 // 他イベント種別にも無いかの全種チェック）: 本番のStripe subscriptionオブジェクトは
 // pause_collectionフィールドを常に持つ（null=通常課金中／オブジェクト=請求一時停止中）。
@@ -193,11 +205,18 @@ const cleanup = async ids => {
   }
 }
 
-// --- ローカルサーバ起動（next start・STRIPE_SECRET_KEY は明示除去＝live 混入防止） ---
+// --- ローカルサーバ起動 ---
+//   STRIPE_SECRET_KEY: sk_test_ のときだけ子へ渡す（webhook が listLineItems で実テスト
+//   セッションを引くのに必要）。live キーは従来どおり明示除去＝本番 Stripe 操作は構造的に不可能。
 let server = null
 async function startServer() {
   const childEnv = { ...process.env, STRIPE_WEBHOOK_SECRET: WHSEC, PORT: String(PORT) }
-  delete childEnv.STRIPE_SECRET_KEY // 本番キーがシェルにあっても子には渡さない
+  const envStripeKey = env.STRIPE_SECRET_KEY ?? ''
+  if (envStripeKey.startsWith('sk_test_')) {
+    childEnv.STRIPE_SECRET_KEY = envStripeKey
+  } else {
+    delete childEnv.STRIPE_SECRET_KEY // 本番キーがシェルにあっても子には渡さない
+  }
   server = spawn(join(ROOT, 'node_modules', '.bin', 'next'), ['start', '-p', String(PORT)], {
     cwd: ROOT, env: childEnv, stdio: ['ignore', 'pipe', 'pipe'],
   })
@@ -210,6 +229,40 @@ async function startServer() {
   throw new Error('next start が 60 秒以内に起動しませんでした（npm run build 済みか確認）')
 }
 const stopServer = () => { if (server) { server.kill('SIGTERM'); server = null } }
+
+// ============================================================================
+// 実セッション基盤（2026-08-26・上の ckEvent コメント参照）
+// ============================================================================
+let stripeE2E = null       // sk_test_ クライアント（Price実額ブロックで代入）
+const testSessions = []    // 作った未完了セッション。finally で全て expire（痕跡を残さない）
+
+/** テストモードに実 Checkout Session を作り、その id を返す（決済は発生しない）。 */
+async function mkSession(priceId, { quantity = 1 } = {}) {
+  const s = await stripeE2E.checkout.sessions.create({
+    mode: 'subscription',
+    line_items: [{ price: priceId, quantity }],
+    success_url: 'https://banto-roumu.com/company/billing?companyId=e2e-harness&billing=success',
+    cancel_url: 'https://banto-roumu.com/company/billing?companyId=e2e-harness&billing=canceled',
+    metadata: { e2e_harness: 'true' },
+  })
+  testSessions.push(s.id)
+  return s.id
+}
+
+/**
+ * 他製品相当の Price（Kabauの STRIPE_PRICE_* に解決されない実 Price）。
+ * fukuai ¥680 相当。lookup_key で1本だけ作り、以後の実行では再利用する。
+ */
+async function ensureForeignPrice() {
+  const found = await stripeE2E.prices.list({ lookup_keys: ['e2e_foreign_680'], limit: 1 })
+  if (found.data[0]) return found.data[0].id
+  const p = await stripeE2E.prices.create({
+    currency: 'jpy', unit_amount: 680, recurring: { interval: 'month' },
+    lookup_key: 'e2e_foreign_680', nickname: 'E2E foreign（fukuai相当・Kabau price に非解決）',
+    product_data: { name: 'E2E foreign product' },
+  })
+  return p.id
+}
 
 // ============================================================================
 // 実行
@@ -243,10 +296,18 @@ try {
   //   未完了のcheckout session作成のみ・カード入力・決済は一切発生しない)で検証する。
   const stripeKey = env.STRIPE_SECRET_KEY ?? ''
   if (!stripeKey.startsWith('sk_test_')) {
-    console.log('  ⚠️  SKIP  Price実額/Checkout到達チェック（STRIPE_SECRET_KEYがsk_test_以外のため安全側でスキップ）')
-  } else {
+    // 2026-08-26: b379e49 以降、webhook は listLineItems の実応答で製品判定する。
+    // テストキーが無いと checkout 系の全経路が検証不能（偽 id は本番コードが正しく 5xx にする）。
+    // 中途半端に FAIL の山を出すより、設定不備として明確に落とす。
+    console.error('abort: STRIPE_SECRET_KEY が sk_test_ ではありません。')
+    console.error('→ 現行 webhook（b379e49〜）は実テストセッションの line items で製品判定するため、')
+    console.error('   テストキー無しでは checkout 経路を検証できません（RUNBOOK P4 参照）。')
+    process.exit(2)
+  }
+  {
     const { default: StripeSDK } = await import('stripe')
     const stripeCheck = new StripeSDK(stripeKey)
+    stripeE2E = stripeCheck
     for (const planId of PAID_PLAN_IDS) {
       const def = PLANS[planId]
       const monthPriceId = def.priceEnvVar ? env[def.priceEnvVar] : undefined
@@ -283,7 +344,7 @@ try {
   }
 
   // --- 0. 署名不正は 400 ---
-  const bad = await postEv(ckEvent({ id: evId('bad'), amount: 3980, companyId: 'x', plan: 'starter', seats: 1, cust: 'cus_x', sub: 'sub_x' }), true)
+  const bad = await postEv(ckEvent({ id: evId('bad'), sessionId: 'cs_e2e_sig_rejected_before_use', amount: 3980, companyId: 'x', plan: 'starter', seats: 1, cust: 'cus_x', sub: 'sub_x' }), true)
   A('署名ガード: 不正署名は 400', bad.status === 400, `http=${bad.status}`)
 
   // --- 0b. 未入金checkout(payment_status='unpaid')は付与しない（監査#7・2026-08-05に
@@ -293,7 +354,7 @@ try {
   const c0b = await createCompany('unpaid_checkout'); created.push(c0b)
   const unpaidId = evId('unpaid')
   const unpaidRes = await postEv(ckEvent({
-    id: unpaidId, amount: 3980, companyId: c0b, plan: 'starter', seats: 1,
+    id: unpaidId, sessionId: await mkSession(env.STRIPE_PRICE_STARTER), amount: 3980, companyId: c0b, plan: 'starter', seats: 1,
     cust: 'cus_e2e_unpaid', sub: 'sub_e2e_unpaid', paymentStatus: 'unpaid',
   }))
   const rowUnpaid = await getCompany(c0b)
@@ -306,13 +367,14 @@ try {
   const cust1 = 'cus_e2e_' + crypto.randomBytes(5).toString('hex')
   const sub1 = 'sub_e2e_' + crypto.randomBytes(5).toString('hex')
   const grantId = evId('grant')
-  const g = await postEv(ckEvent({ id: grantId, amount: 3980, companyId: c1, plan: 'starter', seats: 1, cust: cust1, sub: sub1 }))
+  const grantSession = await mkSession(env.STRIPE_PRICE_STARTER)
+  const g = await postEv(ckEvent({ id: grantId, sessionId: grantSession, amount: 3980, companyId: c1, plan: 'starter', seats: 1, cust: cust1, sub: sub1 }))
   let row = await getCompany(c1)
   A('付与: Entry月額 checkout→plan=starter/status=active', g.status === 200 && row?.plan === 'starter' && row?.status === 'active', `http=${g.status} plan=${row?.plan}`)
   A('付与: stripe_customer_id / subscription_id 保存', row?.stripe_customer_id === cust1 && row?.stripe_subscription_id === sub1)
 
   // 冪等: 同一 event.id 再送
-  const dup = await postEv(ckEvent({ id: grantId, amount: 3980, companyId: c1, plan: 'starter', seats: 1, cust: cust1, sub: sub1 }))
+  const dup = await postEv(ckEvent({ id: grantId, sessionId: grantSession, amount: 3980, companyId: c1, plan: 'starter', seats: 1, cust: cust1, sub: sub1 }))
   row = await getCompany(c1)
   A('冪等: 同一event.id再送は already processed・状態不変', dup.status === 200 && /already|duplicate/.test(dup.body) && row?.plan === 'starter', dup.body.slice(0, 40))
 
@@ -346,19 +408,19 @@ try {
 
   // --- 2. Entry 年額 ¥39,800（amount は PAID_AMOUNTS 外→metadata ガードで付与） ---
   const c2 = await createCompany('entry_yearly'); created.push(c2)
-  const gy = await postEv(ckEvent({ id: evId('gy'), amount: 39800, companyId: c2, plan: 'starter', seats: 1, cust: 'cus_e2e_y', sub: 'sub_e2e_y_' + Date.now() }))
+  const gy = await postEv(ckEvent({ id: evId('gy'), sessionId: await mkSession(env.STRIPE_PRICE_STARTER_YEARLY), amount: 39800, companyId: c2, plan: 'starter', seats: 1, cust: 'cus_e2e_y', sub: 'sub_e2e_y_' + Date.now() }))
   row = await getCompany(c2)
   A('付与: Entry年額¥39,800→plan=starter（metadataガード経由）', gy.status === 200 && row?.plan === 'starter', `plan=${row?.plan}`)
 
   // --- 3. Standard ¥9,800 ---
   const c3 = await createCompany('standard'); created.push(c3)
-  const gs = await postEv(ckEvent({ id: evId('gs'), amount: 9800, companyId: c3, plan: 'standard', seats: 5, cust: 'cus_e2e_s', sub: 'sub_e2e_s_' + Date.now() }))
+  const gs = await postEv(ckEvent({ id: evId('gs'), sessionId: await mkSession(env.STRIPE_PRICE_STANDARD), amount: 9800, companyId: c3, plan: 'standard', seats: 5, cust: 'cus_e2e_s', sub: 'sub_e2e_s_' + Date.now() }))
   row = await getCompany(c3)
   A('付与: Standard¥9,800→plan=standard/seats=5', gs.status === 200 && row?.plan === 'standard' && row?.seats_purchased === 5, `plan=${row?.plan} seats=${row?.seats_purchased}`)
 
   // --- 4. 士業 ¥29,800 × 3席（quantity 課金: amount_total=89,400） ---
   const c4 = await createCompany('shigyo_seats'); created.push(c4)
-  const gsh = await postEv(ckEvent({ id: evId('gsh'), amount: 89400, companyId: c4, plan: 'shigyo', seats: 3, cust: 'cus_e2e_sh', sub: 'sub_e2e_sh_' + Date.now() }))
+  const gsh = await postEv(ckEvent({ id: evId('gsh'), sessionId: await mkSession(env.STRIPE_PRICE_SHIGYO, { quantity: 3 }), amount: 89400, companyId: c4, plan: 'shigyo', seats: 3, cust: 'cus_e2e_sh', sub: 'sub_e2e_sh_' + Date.now() }))
   row = await getCompany(c4)
   A('付与: 士業¥29,800×3席→plan=shigyo/seats=3', gsh.status === 200 && row?.plan === 'shigyo' && row?.seats_purchased === 3, `plan=${row?.plan} seats=${row?.seats_purchased}`)
 
@@ -372,7 +434,7 @@ try {
   //     実際にpause_collectionを読んでDBへ反映するところまでを実サーバ・実DBで検証する。
   const c4b = await createCompany('pause_collection'); created.push(c4b)
   const sub4b = 'sub_e2e_pause_' + Date.now()
-  const g4b = await postEv(ckEvent({ id: evId('g4b'), amount: 3980, companyId: c4b, plan: 'starter', seats: 1, cust: 'cus_e2e_pause', sub: sub4b }))
+  const g4b = await postEv(ckEvent({ id: evId('g4b'), sessionId: await mkSession(env.STRIPE_PRICE_STARTER), amount: 3980, companyId: c4b, plan: 'starter', seats: 1, cust: 'cus_e2e_pause', sub: sub4b }))
   row = await getCompany(c4b)
   A('準備: pause_collectionテスト用に付与済み(plan=starter)', g4b.status === 200 && row?.plan === 'starter', `plan=${row?.plan}`)
 
@@ -390,9 +452,11 @@ try {
   A('請求停止(b): updated(status=active but pause_collectionあり)→plan=free/status=canceled', pausedFlag.status === 200 && row?.plan === 'free' && row?.status === 'canceled', `plan=${row?.plan} status=${row?.status}`)
 
   // --- 5. クロス配信ガード（他製品の決済を付与しない） ---
-  const f1 = await postEv(ckEvent({ id: evId('fk'), amount: 680, companyId: c4, plan: 'starter', seats: 1, cust: 'cus_foreign_f', sub: 'sub_f', banto: false }))
+  // fukuai相当: metadata無し＋Kabauのどの price にも解決されない実Price → no_matching_price で ignore
+  const f1 = await postEv(ckEvent({ id: evId('fk'), sessionId: await mkSession(await ensureForeignPrice()), amount: 680, companyId: c4, plan: 'starter', seats: 1, cust: 'cus_foreign_f', sub: 'sub_f', metadata: {} }))
   A('クロスガード: fukuai¥680（metadata無）→ignored', f1.status === 200 && /ignored/.test(f1.body), f1.body.slice(0, 45))
-  const f2 = await postEv(ckEvent({ id: evId('sk'), amount: 2980, companyId: c4, plan: 'starter', seats: 1, cust: 'cus_foreign_s', sub: 'sub_s', banto: false }))
+  // sharoushi相当: 他製品を名乗る metadata → price が偶然Kabauに一致しても foreign_product で拒否
+  const f2 = await postEv(ckEvent({ id: evId('sk'), sessionId: await mkSession(env.STRIPE_PRICE_STARTER), amount: 2980, companyId: c4, plan: 'starter', seats: 1, cust: 'cus_foreign_s', sub: 'sub_s', metadata: { product: 'sharoushi', company_id: c4 } }))
   row = await getCompany(c4)
   A('クロスガード: sharoushi¥2,980→ignored・既存planを汚さない', f2.status === 200 && /ignored/.test(f2.body) && row?.plan === 'shigyo')
 
@@ -406,6 +470,10 @@ try {
   fail++
 } finally {
   try { await cleanup(created) } catch (e) { console.error('cleanup 失敗（要手動確認）:', e.message) }
+  // 作った未完了セッションを全て失効（テスト痕跡を残さない・既存 Checkout到達チェックと同じ流儀）
+  for (const sid of testSessions) {
+    try { await stripeE2E?.checkout.sessions.expire(sid) } catch { /* 既に失効済み等は無視 */ }
+  }
   stopServer()
 }
 
