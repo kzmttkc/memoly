@@ -10,7 +10,7 @@ import { PublicHeader } from '@/components/ui/PublicHeader'
 import { canonicalUrlFor, getUseCase, USECASE_LIST, USECASE_SLUGS } from '@/lib/usecase'
 import ArticleCheckSheet from './_components/ArticleCheckSheet'
 import { checkSheetItems } from '@/lib/article-checksheet'
-import { OFFER } from '@/lib/offer'
+import { OFFER, zureHref } from '@/lib/offer'
 import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 import KasuharaSelfCheck from './_components/KasuharaSelfCheck'
 import KabauPackCta from './_components/KabauPackCta'
@@ -35,10 +35,9 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 
 const BASE = 'https://banto-roumu.com'
 
-// CTA = 就業規則AI 無料登録（会社登録の入口）。/business と同一導線。
-//   新規訪問者（SEO記事経由）は signup へ直行させる。login 着地だと「新規登録」の
-//   小リンクを自力で見つける必要があり、北極星（無料登録）直前の蛇口が細くなる。
-const SIGNUP_HREF = OFFER.path
+// CTA = 獲得の顔 /zure（ファイルを置く）。登録はファイルの副作用（lib/offer.ts）。
+//   signupUtm がある記事は既存の lp 計測を維持。無い記事は zureHref で utm を必ず付ける
+//   （2026-08-28 CEO W1: 21本中 signupUtm は4本だけ＝残りは素の /zure で帰属が死んでいた）。
 
 const CTA_SUBCOPY = [
   '次は就業規則のファイルを置くだけです。ずれが1枚になります。',
@@ -105,9 +104,11 @@ export default async function RoumuUseCasePage({
 
   const url = `${BASE}/roumu/${u.slug}`
 
-  // signup CTA の遷移先。LPごとに計測用UTMを持つ場合は ?next=/company に & で連結する
-  // （底面ファネル語の流入をチャネル別にCVR分離計測するため）。既定は無UTMのまま。
-  const signupHref = u.signupUtm ? `${SIGNUP_HREF}?${u.signupUtm}` : SIGNUP_HREF
+  // 記事CTAの遷移先。カスタム UTM があれば維持、なければ roumu×slug で必ず計測可能にする。
+  // （2026-08-28 CEO W1: signupUtm 未設定の記事は素の /zure になり帰属が死んでいた）
+  const ctaHref = u.signupUtm
+    ? `${OFFER.path}?${u.signupUtm}`
+    : zureHref('roumu', u.slug)
 
   // FAQPage 構造化データ（リッチリザルト適格・本文と一致）
   const faqJsonLd = {
@@ -202,17 +203,17 @@ export default async function RoumuUseCasePage({
               矛盾の主因だった）。/business と同じ TrackedCTA に揃える（href/見た目は不変）。 */}
           <TrackedCTA
             location="roumu_article_top"
-            href={signupHref}
+            href={ctaHref}
             className={buttonClass({ variant: 'primary', size: 'lg' })}
           >
             {OFFER.cta}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </TrackedCTA>
           <Link
-            href="/business"
+            href="/offer"
             className={buttonClass({ variant: 'secondary', size: 'lg' })}
           >
-            就業規則AIの全体像を見る
+            無料と有料の違い
           </Link>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
@@ -371,7 +372,7 @@ export default async function RoumuUseCasePage({
             {/* 2026-08-10 計測是正: 記事末尾CTAも同様に未計測だった（上記コメント参照）。 */}
             <TrackedCTA
               location="roumu_article_bottom"
-              href={signupHref}
+              href={ctaHref}
               className={buttonClass({ variant: 'secondary', size: 'lg' })}
             >
               {OFFER.cta}

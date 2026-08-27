@@ -31,6 +31,7 @@ const REVISED = {
   blog: '2026-07-22', // /blog 新設(規程管理・組織の記憶テーマ、初回3記事)
   faq: '2026-07-22', // /faq 独立FAQページ新設
   pricing: '2026-07-30', // /pricing 単独の料金ページ新設(PMF修理#1・購買意欲クエリの着地先)
+  offer: '2026-08-28', // /offer 無料と有料の境界1枚（CEO P0）
   en: '2026-07-30', // 英語版3ページ(/business/en /privacy/en /terms/en)をsitemapへ収録(PMF修理#3)
   contact: '2026-08-08', // /contact 新設(問い合わせ導線404の修理)。2026-08-09 SEO監査でsitemap未収録を発見し追加
   seido: '2026-08-13', // /seido 制度対応シリーズ新設(第1弾: インボイス2026年10月改正・訂正型3本+チェックリストLP)
@@ -44,6 +45,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     //   購買意欲クエリの着地先。以前は /business#pricing のアンカーしか無く、
     //   /pricing /plans /price /ryokin はすべて404で、検索結果に出る料金ページが存在しなかった。
     { url: `${BASE}/pricing`, lastModified: REVISED.pricing, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${BASE}/offer`, lastModified: REVISED.offer, changeFrequency: 'monthly', priority: 0.85 },
     // 無料ツール一覧（ハブ）＋各ツール（SSOT: lib/tools.ts から全列挙）
     { url: `${BASE}/tools`, lastModified: REVISED.tools, changeFrequency: 'monthly', priority: 0.8 },
     ...TOOL_SLUGS.map((slug) => ({

@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-08-27T22:10:34.087Z",
+  "brand": "就業規則AI",
+  "northStar": {
+    "metric": "zure_sheet_shown",
+    "fileTarget": 10,
+    "kabauFileTarget": 3,
+    "killDate": "2026-10-01",
+    "daysLeft": 35,
+    "elapsedDays": 1,
+    "totalWindowDays": 35,
+    "zureShown": null,
+    "zureSource": "MANUAL_REQUIRED",
+    "expectedByToday": null,
+    "onTrack": null,
+    "progress": null
+  },
+  "commercial": {
+    "paidCompanies": null,
+    "note": "Stripe/Supabaseで手計測。subscription_started を突合"
+  },
+  "nextActions": [
+    "Plausibleで zure_sheet_shown を手計測するか PLAUSIBLE_API_KEY を設定"
+  ]
+}

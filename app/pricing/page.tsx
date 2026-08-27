@@ -78,6 +78,7 @@ export const metadata: Metadata = {
 const PRICING_FAQ = FAQ_ITEMS.filter((f) => f.category === '料金・契約')
 
 export default function PricingPage() {
+  // NOTE: 境界の一枚図は /offer（CEO P0）。本ページは月額プラン詳細。
   const paidSignupOpen = billingEnabled()
 
   const faqJsonLd = {
@@ -122,6 +123,13 @@ export default function PricingPage() {
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
           就業規則のファイルからずれを1枚にする就業規則AIの料金です。ずれの1枚は登録の前に出ます。無料プランから始められ、登録にクレジットカードは要りません。
           有料プランは月額3,980円（Entry・1社5名まで）からで、上限人数までは何人で使っても料金は変わりません。
+        </p>
+        <p className="mt-3 text-sm text-neutral-600">
+          無料ツール・パック・月額の違いを先に見る場合は{' '}
+          <Link href="/offer" className="font-medium text-brand-700 underline-offset-2 hover:underline">
+            無料と有料の違い
+          </Link>
+          をご覧ください。
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-neutral-500">
           <span className="inline-flex items-center gap-1">

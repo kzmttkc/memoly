@@ -125,4 +125,15 @@ test('公開ヘッダとルートは /zure を顔にする', () => {
 
   const roumu = read('app/roumu/page.tsx')
   assert.doesNotMatch(roumu, /会社を覚えるAIに相談できます/)
+  assert.match(roumu, /zureHref\('roumu', 'hub'\)/)
+
+  const roumuArticle = read('app/roumu/[slug]/page.tsx')
+  assert.match(roumuArticle, /zureHref\('roumu', u\.slug\)/)
+  assert.match(roumuArticle, /href="\/offer"/)
+  assert.doesNotMatch(roumuArticle, /href="\/business"/)
+  assert.doesNotMatch(roumuArticle, /SIGNUP_HREF/)
+
+  const offerPage = read('app/offer/page.tsx')
+  assert.match(offerPage, /無料と有料/)
+  assert.match(read('app/offer/OfferViewTrack.tsx'), /offer_view/)
 })

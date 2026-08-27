@@ -5,6 +5,7 @@ import { PublicHeader } from '@/components/ui/PublicHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { USECASE_LIST } from '@/lib/usecase'
+import { zureHref } from '@/lib/offer'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 
 // ============================================================================
@@ -147,7 +148,7 @@ export default function RoumuIndexPage() {
             登録の前に、PDFまたはWordを置くか、本文を貼れます。ずれの1枚のあとで、相談が開きます。
           </p>
           <div className="mt-6 flex justify-center">
-            <Link href="/zure" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
+            <Link href={zureHref('roumu', 'hub')} className="inline-flex items-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50">
               ファイルを置く
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>

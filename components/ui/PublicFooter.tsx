@@ -26,6 +26,7 @@ import { UitruthCrossCta } from '@/components/ui/UitruthCrossCta'
 /** サービス側の導線（読者が「次に何を見るか」） */
 const SERVICE_LINKS: { href: string; label: string }[] = [
   { href: '/zure', label: 'ファイルを置く' },
+  { href: '/offer', label: '無料と有料の違い' },
   { href: '/business', label: 'サービス概要' },
   { href: '/pricing', label: '料金' },
   { href: '/faq', label: 'よくある質問' },
