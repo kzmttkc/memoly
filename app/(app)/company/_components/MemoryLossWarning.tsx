@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card'
 // ============================================================================
 // MemoryLossWarning — 解約導線の手前に出す「記憶喪失」の正規な引き止め。
 // ----------------------------------------------------------------------------
-//   LTV施策(解約時の記憶喪失警告)。Kabauの価値は積み上げた自社の記憶にあり、
+//   LTV施策(解約時の記憶喪失警告)。就業規則AIの価値は積み上げた自社の記憶にあり、
 //   解約＝その記憶が前提として使えなくなることを、事実として穏当に伝える。
 //
 //   ダークパターンにしない方針:
@@ -57,11 +57,11 @@ export function MemoryLossWarning({ companyId }: { companyId: string }) {
         </span>
         <div className="min-w-0">
           <p className="text-sm font-medium text-neutral-900">
-            解約すると、Kabauが自社について覚えた {stats.total}件の記憶が使えなくなります
+            解約すると、就業規則AIが自社について覚えた {stats.total}件の記憶が使えなくなります
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
             {stats.decisions > 0 && `過去に下した判断 ${stats.decisions}件を含む、`}
-            これまで積み上げた自社ルール・相談の記憶は、Kabauがそれを前提に回答するための土台です。
+            これまで積み上げた自社ルール・相談の記憶は、就業規則AIがそれを前提に回答するための土台です。
             解約後は新しい相談でこれらを前提にできなくなります。
             必要なら、解約の前に
             <Link

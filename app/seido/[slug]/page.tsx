@@ -41,14 +41,14 @@ export async function generateMetadata({
   if (!p) return {}
   const url = `${BASE}/seido/${p.slug}`
   return {
-    title: `${p.title}｜Kabau（カバウ）`,
+    title: `${p.title}｜就業規則AI`,
     description: p.description,
     alternates: { canonical: url },
     openGraph: {
       title: p.title,
       description: p.description,
       url,
-      siteName: 'Kabau（カバウ）',
+      siteName: '就業規則AI',
       locale: 'ja_JP',
       type: 'article',
       publishedTime: p.publishedAt,
@@ -88,7 +88,7 @@ export default async function SeidoPostPage({
     author: { '@type': 'Organization', name: 'KIZUNA Creation' },
     publisher: {
       '@type': 'Organization',
-      name: 'Kabau（カバウ）',
+      name: '就業規則AI',
       logo: { '@type': 'ImageObject', url: `${BASE}/icon-512.png` },
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
@@ -99,7 +99,7 @@ export default async function SeidoPostPage({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '制度対応', item: `${BASE}/seido` },
       { '@type': 'ListItem', position: 3, name: p.title, item: url },
     ],
@@ -114,7 +114,7 @@ export default async function SeidoPostPage({
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <Link href="/seido" className="hover:text-brand-700">制度対応</Link>
         <span className="mx-1.5">/</span>
@@ -189,7 +189,7 @@ export default async function SeidoPostPage({
                     インボイス2026年10月対応チェックリスト（無料）
                   </p>
                   <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
-                    この記事の内容を、買手・売手（個人・法人・免税継続）の立場別のチェックリストにまとめました。Kabauの無料登録で全項目を読めます。
+                    この記事の内容を、買手・売手（個人・法人・免税継続）の立場別のチェックリストにまとめました。就業規則AIの無料登録で全項目を読めます。
                   </p>
                   <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
                     チェックリストを見る

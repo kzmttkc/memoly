@@ -7,7 +7,7 @@ import { track } from '@/lib/analytics'
 // UitruthCrossCta — 公開フッタの常設クロス送客枠（同じ運営の UITruth へ）。
 //
 //   なぜ切り出すか: 2026-08-20 にこの枠を PublicFooter へ足したが、表示もクリックも
-//   イベントを1本も出しておらず効果が測れなかった（Plausible 実測でKabauホストの
+//   イベントを1本も出しておらず効果が測れなかった（Plausible 実測で就業規則AIホストの
 //   当日イベントは pageview / demo_autoplayed / kasuhara_selfcheck_item_toggled のみ）。
 //   計測には useEffect が要るが、PublicFooter は約20の公開ページから読まれる
 //   サーバーコンポーネントで、'use client' を足すとフッタ全体（と各ページの静的性）に
@@ -19,9 +19,9 @@ import { track } from '@/lib/analytics'
 //       sharoushi は site/js/actions.js の [data-track-view] が threshold 0.4 で
 //       1回だけ発火する（props は {source:'footer_perm'}）。同じ閾値・同じ
 //       「1回だけ」規則を React 側で再実装する。site prop だけを足して分離する。
-//     - クリック: 明示イベントは足さない。Kabauと sharoushi は同一の Plausible
+//     - クリック: 明示イベントは足さない。就業規則AIと sharoushi は同一の Plausible
 //       スクリプト（pa-zK4ObFABW1NCS-rSYTlSn.js）を読んでおり、その設定は
-//       outboundLinks:!0（有効）。Kabauの plausible-init.js は init() に上書き設定を
+//       outboundLinks:!0（有効）。就業規則AIの plausible-init.js は init() に上書き設定を
 //       渡さないため、外部リンククリックは "Outbound Link: Click"（props.url に
 //       utm 込みの完全 URL）として自動計測される。url の utm_source が
 //       banto / sharoushi を分けるので、両サイトを同一イベントで横比較できる。

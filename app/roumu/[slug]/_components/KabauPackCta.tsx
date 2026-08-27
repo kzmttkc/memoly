@@ -6,12 +6,12 @@ import { track } from '@/lib/analytics'
 import { KABAU_PACK_URL, KABAU_PACK_COPY } from '@/lib/kabau-pack'
 
 // ============================================================================
-// KabauPackCta — /roumu/[slug] のカスハラ関連記事の末尾に置く Kabau 実務パック導線
-//   (WORK_ORDERS.md Trust Stack v2 #3 Kabau側・PDCA H45・2026-08-21)
+// KabauPackCta — /roumu/[slug] のカスハラ関連記事の末尾に置く 就業規則AI 実務パック導線
+//   (WORK_ORDERS.md Trust Stack v2 #3 就業規則AI側・PDCA H45・2026-08-21)
 //
 //   - 1記事に1箇所（FAQ の直後＝記事本文の末尾）。出し分けは lib/kabau-pack.ts の
 //     isKasuharaUseCase（slug＋h1）。
-//   - 文言は Kabau側 site/kasuhara-*-guide.html の .pack-cta 既存文（lib/kabau-pack.ts）。
+//   - 文言は 就業規則AI側 site/kasuhara-*-guide.html の .pack-cta 既存文（lib/kabau-pack.ts）。
 //     新規コピーは書かない。
 //   - セット割引・同梱課金は作らない（外部リンクのみ。決済コードに触れない）。
 //   - 計測: 既存の Plausible 計測（lib/analytics track）で

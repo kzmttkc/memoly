@@ -19,23 +19,23 @@ const BASE = 'https://banto-roumu.com'
 const URL = `${BASE}/seido`
 
 export const metadata: Metadata = {
-  title: '制度対応｜期日のある制度改正を一次資料で整理する｜Kabau（カバウ）',
+  title: '制度対応｜期日のある制度改正を一次資料で整理する｜就業規則AI',
   description:
     'インボイス経過措置の80%から70%への縮小、2割特例の終了と3割特例。期日が確定している制度改正を、国税庁・財務省などの一次資料に当たって整理し、中小企業のバックオフィスがやることに落とすシリーズです。',
   alternates: { canonical: URL },
   openGraph: {
-    title: '制度対応｜期日のある制度改正を一次資料で整理する｜Kabau（カバウ）',
+    title: '制度対応｜期日のある制度改正を一次資料で整理する｜就業規則AI',
     description:
       '期日が確定している制度改正を、一次資料に当たって整理し、中小企業のバックオフィスがやることに落とすシリーズです。',
     url: URL,
-    siteName: 'Kabau（カバウ）',
+    siteName: '就業規則AI',
     locale: 'ja_JP',
     type: 'website',
     images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: '制度対応シリーズ' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '制度対応｜期日のある制度改正を一次資料で整理する｜Kabau（カバウ）',
+    title: '制度対応｜期日のある制度改正を一次資料で整理する｜就業規則AI',
     description:
       '期日が確定している制度改正を、一次資料に当たって整理し、中小企業のバックオフィスがやることに落とすシリーズです。',
     images: [`${BASE}/og-image.png`],
@@ -47,7 +47,7 @@ export default function SeidoIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '制度対応', item: URL },
     ],
   }
@@ -73,7 +73,7 @@ export default function SeidoIndexPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">制度対応</span>
       </nav>
@@ -149,7 +149,7 @@ export default function SeidoIndexPage() {
                   インボイス2026年10月対応チェックリスト（全{SEIDO_CHECKLIST_ITEM_COUNT}項目・無料）
                 </p>
                 <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
-                  買手（本則課税）・売手（個人・法人・免税継続）の立場別に、期日までに確認することをまとめました。Kabauの無料登録で全項目を読めます。
+                  買手（本則課税）・売手（個人・法人・免税継続）の立場別に、期日までに確認することをまとめました。就業規則AIの無料登録で全項目を読めます。
                 </p>
                 <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
                   チェックリストを見る
@@ -187,7 +187,7 @@ export default function SeidoIndexPage() {
         </p>
       </section>
 
-      {/* ===== Kabau本体への導線 ===== */}
+      {/* ===== 就業規則AI本体への導線 ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">

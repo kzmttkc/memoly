@@ -11,15 +11,15 @@ const BASE = 'https://banto-roumu.com'
 const URL = `${BASE}${OFFER.path}`
 
 export const metadata: Metadata = {
-  title: '就業規則のファイルを置く｜Kabau（カバウ）',
+  title: '就業規則のファイルを置く｜就業規則AI',
   description:
     '就業規則のPDF・Wordを置くか、本文を貼ると、書いてあることと書いてないことが1枚になります。登録の前に置けます。相談は、そのあとです。',
   alternates: { canonical: OFFER.path },
   openGraph: {
-    title: '就業規則のファイルを置く｜Kabau（カバウ）',
+    title: '就業規則のファイルを置く｜就業規則AI',
     description: 'ファイルを置くと、ずれが1枚になります。登録はそのあとです。',
     url: URL,
-    siteName: 'Kabau（カバウ）',
+    siteName: '就業規則AI',
     locale: 'ja_JP',
     type: 'website',
     images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: '就業規則のファイルを置く' }],

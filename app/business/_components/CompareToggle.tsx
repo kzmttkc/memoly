@@ -6,14 +6,14 @@ import { BantoMark } from '@/components/ui/BantoMark'
 import { trackV as track } from '../_lib/variant'
 
 // ============================================================================
-// CompareToggle — 「汎用AI vs Kabau」のインタラクティブ比較（B05 軽量版・2026-07-23）。
+// CompareToggle — 「汎用AI vs 就業規則AI」のインタラクティブ比較（B05 軽量版・2026-07-23）。
 //   同じ質問に対する回答の違いを、トグルで切り替えて見せる。動画は作らない。
 //   従来の静的2カード（箇条書きの主張）を、実際の会話例による「見て分かる」対比に
 //   置き換える＝主張でなく挙動で差を示す。
 //
 //   誠実性: どちらの回答も様式化した例。汎用AI側は「間違える」姿ではなく
 //   「前提を聞き返す」姿で描く（実際の挙動として妥当な範囲・貶めない）。
-//   Kabau側の回答はデモと同じ製造業サンプルの前提に基づく一般情報。
+//   就業規則AI側の回答はデモと同じ製造業サンプルの前提に基づく一般情報。
 //
 //   no-JS/SEO: 両方の回答を常に DOM に置き、hidden クラスの付け替えだけで切替。
 //   計測: 新イベント名は増やさない。demo_question_clicked に source='compare' を
@@ -67,7 +67,7 @@ export default function CompareToggle() {
           }
         >
           <BantoMark className="h-4 w-4" aria-hidden />
-          Kabauに聞くと
+          就業規則AIに聞くと
         </button>
       </div>
 
@@ -93,7 +93,7 @@ export default function CompareToggle() {
             </div>
           </div>
 
-          {/* Kabauの回答: 覚えている前提から直接答える */}
+          {/* 就業規則AIの回答: 覚えている前提から直接答える */}
           <div className={side === 'banto' ? 'flex items-start gap-2' : 'hidden'}>
             <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
               <BantoMark className="h-3.5 w-3.5" aria-hidden />
@@ -132,7 +132,7 @@ export default function CompareToggle() {
       </div>
 
       <p className="mt-3 text-center text-xs leading-relaxed text-neutral-600">
-        どちらも回答の一例です。Kabauの回答は一般的な情報提供であり、個別の法的助言ではありません。
+        どちらも回答の一例です。就業規則AIの回答は一般的な情報提供であり、個別の法的助言ではありません。
       </p>
     </div>
   )

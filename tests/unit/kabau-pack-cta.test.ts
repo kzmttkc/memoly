@@ -1,11 +1,11 @@
 // ============================================================================
-// kabau-pack-cta.test.ts — 番頭→Kabau実務パック導線（WORK_ORDERS Trust Stack v2 #3・番頭側）
+// kabau-pack-cta.test.ts — 番頭→就業規則AI実務パック導線（WORK_ORDERS Trust Stack v2 #3・番頭側）
 //
 //   守るもの:
 //     1. /roumu/[slug] のカスハラ関連記事だけに導線が付く（判定はslug＋h1の両方で拾う。
 //        機械追記の usecase-auto.json には 'kashara' 'cashara' 'customer-harassment' 等の
 //        表記揺れがあり、slugだけだと取りこぼす）。
-//     2. 導線の文言は Kabau側 site/kasuhara-*-guide.html の pack CTA 既存文と同一（新規コピー禁止）。
+//     2. 導線の文言は 就業規則AI側 site/kasuhara-*-guide.html の pack CTA 既存文と同一（新規コピー禁止）。
 //     3. リンクは utm_source=banto&utm_medium=referral&utm_campaign=kabau_set を持つ。
 //     4. クリックは既存の Plausible 計測（lib/analytics track）で kabau_pack_cta_click として取れる。
 //     5. セット割引・同梱課金は作らない（このコンポーネントは Stripe/checkout に触れない）。
@@ -25,7 +25,7 @@ function read(rel: string): string {
   return readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8')
 }
 
-test('KABAU_PACK_URL: Kabau パックLPへ utm 付きで向く', () => {
+test('KABAU_PACK_URL: 就業規則AI パックLPへ utm 付きで向く', () => {
   const u = new URL(KABAU_PACK_URL)
   assert.equal(u.origin + u.pathname, 'https://sharoushi-agent.com/kasuhara-pack.html')
   assert.equal(u.searchParams.get('utm_source'), 'banto')
@@ -33,7 +33,7 @@ test('KABAU_PACK_URL: Kabau パックLPへ utm 付きで向く', () => {
   assert.equal(u.searchParams.get('utm_campaign'), 'kabau_set')
 })
 
-test('KABAU_PACK_COPY: Kabau側 pack CTA の既存文をそのまま使う（新規コピーを書かない）', () => {
+test('KABAU_PACK_COPY: 就業規則AI側 pack CTA の既存文をそのまま使う（新規コピーを書かない）', () => {
   // site/kasuhara-shugyokisoku-kitei-guide.html の .pack-cta（2026-08-21 実測）と同一文。
   assert.equal(KABAU_PACK_COPY.title, '足りない措置の書式は、Wordで渡せます')
   assert.equal(
@@ -90,7 +90,7 @@ test('/roumu/[slug]: カスハラ記事にだけ KabauPackCta を描画し、計
   assert.ok(!/stripe|checkout|price_/i.test(cta), 'セット割引・同梱課金を作らない')
 })
 
-test('チャット: 回答末尾の Kabau 導線も同じイベント名で計測する', () => {
+test('チャット: 回答末尾の 就業規則AI 導線も同じイベント名で計測する', () => {
   const panel = read('components/ui/AnswerSources.tsx')
   assert.ok(panel.includes("track('kabau_pack_cta_click'"), 'AnswerSources の計測イベント名が違う')
   assert.ok(!/stripe|checkout|price_/i.test(panel))

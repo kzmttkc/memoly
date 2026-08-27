@@ -5,7 +5,7 @@ import { AppShell } from './_components/AppShell'
 import { CompanyHeartbeat } from './_components/CompanyHeartbeat'
 
 // ============================================================================
-// /company レイアウト — Kabau（カバウ） 会社版のアプリシェルでラップする。
+// /company レイアウト — 就業規則AI 会社版のアプリシェルでラップする。
 //   ルート app/layout.tsx の body は消費者Memoly向けダーク強制
 //   (bg-gray-950 text-gray-100)。会社版(BtoB労務)はライト基調が要件。
 //   AppShell が bg-neutral-50 / text-neutral-900 の白サーフェスを敷き、
@@ -20,7 +20,7 @@ import { CompanyHeartbeat } from './_components/CompanyHeartbeat'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: 'Kabau',
+  title: '就業規則AI',
 }
 
 export default function CompanyLayout({

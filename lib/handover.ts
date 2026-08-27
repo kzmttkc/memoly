@@ -6,7 +6,7 @@ import { detectRuleOperationConflicts } from '@/lib/rule-operation-conflict'
 // ============================================================================
 // handover.ts — 「会社の記憶 引き継ぎビュー」のデータ集約（TOP5 #4・記憶moatの複利）
 //
-//   「人は代わる、Kabauは覚えている」を体現する1画面。担当交代/承継時に、新担当が
+//   「人は代わる、就業規則AIは覚えている」を体現する1画面。担当交代/承継時に、新担当が
 //   この会社の労務判断履歴を1画面で把握できるようにする。集めるのは:
 //     - 確定した自社ルール（company_profiles＝admin承認済みの rule）
 //     - 過去の主要判断（memory_type='decision'・新しい順）

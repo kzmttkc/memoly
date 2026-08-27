@@ -62,7 +62,7 @@ export function HomeEngagement({ companyId }: { companyId: string }) {
   const steps = [
     {
       done: status.ruleDocs > 0,
-      label: '就業規則などの規程をKabauに覚えさせる',
+      label: '就業規則などの規程を就業規則AIに覚えさせる',
       hint: '貼り付けるだけで、以後の相談が「自社の規程では第◯条に」と条文つきになります',
       href: `/company/documents?companyId=${companyId}`,
       cta: '規程を取り込む',
@@ -79,7 +79,7 @@ export function HomeEngagement({ companyId }: { companyId: string }) {
     {
       done: status.consult.userMessageCount >= 3,
       label: `労務の疑問を3回相談する（いま${Math.min(status.consult.userMessageCount, 3)}/3回）`,
-      hint: '相談するほどKabauが自社を覚えます',
+      hint: '相談するほど就業規則AIが自社を覚えます',
       href: `/company/chat?companyId=${companyId}`,
       cta: '相談する',
       icon: MessageSquareText,
@@ -119,7 +119,7 @@ export function HomeEngagement({ companyId }: { companyId: string }) {
           {/* 全体の進み（3ステップ）。 */}
           <div className="mt-4 border-t border-brand-100 pt-3">
             <p className="mb-2 text-xs text-neutral-500">
-              Kabauを使いこなす最初の3ステップ（{doneCount}/3 完了）
+              就業規則AIを使いこなす最初の3ステップ（{doneCount}/3 完了）
             </p>
             <ul className="space-y-1.5">
               {steps.map(s => (
@@ -148,7 +148,7 @@ export function HomeEngagement({ companyId }: { companyId: string }) {
       {status.consult.streak >= 2 && (
         <p className="flex items-center gap-1.5 text-xs text-neutral-600">
           <Flame className="h-3.5 w-3.5 text-warning-600" aria-hidden />
-          {status.consult.streak}日続けて相談しています。Kabauが覚える自社の情報も増えています。
+          {status.consult.streak}日続けて相談しています。就業規則AIが覚える自社の情報も増えています。
         </p>
       )}
 

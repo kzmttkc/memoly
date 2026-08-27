@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 // ============================================================================
-// 認証ルートグループ共通レイアウト — Kabau（カバウ） ライト世界観。
+// 認証ルートグループ共通レイアウト — 就業規則AI ライト世界観。
 //   ルート app/layout.tsx の <body> は消費者Memoly向けにダーク強制
 //   (bg-gray-950 text-gray-100)。認証画面はKabauLP(/business)からの動線上にあり、
 //   BtoB労務向けライト基調が要件のため .company-light（globals.css 定義の
@@ -46,12 +46,9 @@ export default function AuthLayout({
             <Link
               href="/zure"
               className="inline-flex items-baseline gap-1.5 text-2xl font-bold tracking-tight text-neutral-900"
-              aria-label="Kabau 入口へ"
+              aria-label="就業規則AI 入口へ"
             >
-              <span className="text-brand-600">Kabau</span>
-              <span className="text-sm font-semibold tracking-wide text-neutral-500">
-                カバウ
-              </span>
+              <span className="text-brand-600">就業規則AI</span>
             </Link>
             <p className="mt-2 text-xs text-neutral-500">就業規則のファイルから、ずれを1枚に</p>
           </div>

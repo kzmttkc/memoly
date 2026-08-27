@@ -1,6 +1,6 @@
 // ============================================================================
-// kabau-ledger.ts — Kabau 公開台帳（世の中の日付）の読み取り
-//   取れなければ空。Kabauが法令の確定日を独自に持たないための受け口。
+// kabau-ledger.ts — 就業規則AI 公開台帳（世の中の日付）の読み取り
+//   取れなければ空。就業規則AIが法令の確定日を独自に持たないための受け口。
 //   取得は KABAU_METHOD_JSON_URL があるときだけ（無いのに毎チャット叩かない）。
 // ============================================================================
 
@@ -57,7 +57,7 @@ export function formatKabauFactsBlock(facts: KabauFact[]): string {
     const src = f.source_name ? `${f.source_name} ${f.source_url}` : f.source_url
     return `- ${f.key}: ${f.value}（確認日 ${f.retrieved_on} / ${src}）`
   })
-  return `\n\n【Kabau公開台帳（世の中の確定事実。自社の決定ではない）】
+  return `\n\n【就業規則AI公開台帳（世の中の確定事実。自社の決定ではない）】
 ${lines.join('\n')}
 ここに無い施行日は確定扱いにしないでください。`
 }

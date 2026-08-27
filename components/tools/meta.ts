@@ -46,7 +46,7 @@ export function buildToolMetadata(def: ToolSeoDef): Metadata {
       title: def.title,
       description: def.ogDescription,
       url,
-      siteName: 'Kabau（カバウ）',
+      siteName: '就業規則AI',
       locale: 'ja_JP',
       type: 'website',
       images: [{ url: `${TOOLS_BASE}/og-image.png`, width: 1200, height: 630, alt: def.ogImageAlt }],
@@ -92,7 +92,7 @@ export function buildToolJsonLd(def: ToolJsonLdDef): Record<string, unknown>[] {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${TOOLS_BASE}/business` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${TOOLS_BASE}/business` },
       { '@type': 'ListItem', position: 2, name: '無料ツール', item: url },
       { '@type': 'ListItem', position: 3, name: def.breadcrumbName, item: url },
     ],

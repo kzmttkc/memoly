@@ -45,7 +45,7 @@ test('ブロックは確認日つき。空なら空文字', () => {
       status: '確定',
     },
   ])
-  assert.match(block, /Kabau公開台帳/)
+  assert.match(block, /就業規則AI公開台帳/)
   assert.match(block, /2026-08-20/)
   assert.match(block, /2026-10-01/)
 })

@@ -558,7 +558,7 @@ function RiskInner() {
     ]
     if (top) lines.push(`いちばん気になった点：${top}`)
     lines.push('')
-    lines.push('Kabauで就業規則のファイルを置く → banto-roumu.com/zure')
+    lines.push('就業規則AIで就業規則のファイルを置く → banto-roumu.com/zure')
     lines.push('#労務 #労務リスク診断')
     return lines.join('\n')
   }
@@ -779,8 +779,8 @@ function RiskInner() {
             <div className="mb-4 flex items-center justify-between">
               <span className="text-xs font-medium text-neutral-500">
                 {sampleMode
-                  ? 'Kabau ・ 労務セルフ診断（架空のサンプル会社）'
-                  : 'Kabau ・ 労務セルフ診断'}
+                  ? '就業規則AI ・ 労務セルフ診断（架空のサンプル会社）'
+                  : '就業規則AI ・ 労務セルフ診断'}
               </span>
               <span className="text-[10px] text-neutral-400">目安スコア</span>
             </div>

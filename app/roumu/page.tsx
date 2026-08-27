@@ -27,36 +27,36 @@ const BASE = 'https://banto-roumu.com'
 const URL = `${BASE}/roumu`
 
 export const metadata: Metadata = {
-  title: '労務AIの目的別の使い方一覧｜Kabau（カバウ）',
+  title: '労務AIの目的別の使い方一覧｜就業規則AI',
   description:
-    '就業規則の運用、労務の引き継ぎ、36協定の上限、有給5日の取得義務、入退社手続き、法改正への対応。中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にするKabauがどう役立つかをまとめた一覧です。',
+    '就業規則の運用、労務の引き継ぎ、36協定の上限、有給5日の取得義務、入退社手続き、法改正への対応。中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にする就業規則AIがどう役立つかをまとめた一覧です。',
   alternates: { canonical: URL },
   openGraph: {
-    title: '労務AIの目的別の使い方一覧｜Kabau（カバウ）',
+    title: '労務AIの目的別の使い方一覧｜就業規則AI',
     description:
-      '中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にするKabauがどう役立つかをまとめた一覧です。',
+      '中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にする就業規則AIがどう役立つかをまとめた一覧です。',
     url: URL,
-    siteName: 'Kabau（カバウ）',
+    siteName: '就業規則AI',
     locale: 'ja_JP',
     type: 'website',
     images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: '労務AIの目的別の使い方一覧' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '労務AIの目的別の使い方一覧｜Kabau（カバウ）',
+    title: '労務AIの目的別の使い方一覧｜就業規則AI',
     description:
-      '中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にするKabauがどう役立つかをまとめた一覧です。',
+      '中小企業の総務が労務でつまずきやすい論点ごとに、就業規則のファイルからずれを1枚にする就業規則AIがどう役立つかをまとめた一覧です。',
     images: [`${BASE}/og-image.png`],
   },
 }
 
 export default function RoumuIndexPage() {
-  // BreadcrumbList（Kabau → 目的別の使い方）
+  // BreadcrumbList（就業規則AI → 目的別の使い方）
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '労務AIの使い方', item: URL },
     ],
   }
@@ -90,7 +90,7 @@ export default function RoumuIndexPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">労務AIの使い方</span>
       </nav>
@@ -104,7 +104,7 @@ export default function RoumuIndexPage() {
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
           中小企業の総務が労務でつまずきやすい論点を、目的ごとに整理しました。
           就業規則の運用、労務の引き継ぎ、36協定や有給の管理、法改正への対応まで、
-          就業規則のファイルからずれを1枚にするKabauが、それぞれどう役立つかを具体例とあわせて読めます。
+          就業規則のファイルからずれを1枚にする就業規則AIが、それぞれどう役立つかを具体例とあわせて読めます。
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
           <span className="inline-flex items-center gap-1">
@@ -137,7 +137,7 @@ export default function RoumuIndexPage() {
         </ul>
       </section>
 
-      {/* ===== Kabau本体への導線 ===== */}
+      {/* ===== 就業規則AI本体への導線 ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">

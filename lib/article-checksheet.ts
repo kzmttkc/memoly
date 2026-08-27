@@ -5,7 +5,7 @@ import type { UseCase } from './usecase'
 //
 //   なぜ要るか（gtm-doctrine.md §2・2026-08-25）:
 //     「流入 → **名前** → 関係 → 販売」の段2（名前を取る）が存在しなかった。
-//     Kabauの /roumu/ は GSC 28日で imp 1,879 / clk 107 と6製品中で最強の検索資産
+//     就業規則AIの /roumu/ は GSC 28日で imp 1,879 / clk 107 と6製品中で最強の検索資産
 //     なのに、Plausible 実測で lead_captured は **90日で0件**（hostname=
 //     banto-roumu.com）。枠が無かったのではなく、置いてあった対価が
 //     「労務引き継ぎチェックシート（PDF）」1種類で、58記事すべてに同じものを
@@ -46,7 +46,7 @@ const MIN_ITEMS = 2
     旧名（番頭/ばんとう/Banto）も残す — 過去データや再生成で旧名が混入しても落とせるように。 */
 function mentionsProduct(text: string): boolean {
   // 「かばう」は動詞として本文に普通に出る（カスハラ文脈）ので入れない。
-  return /Kabau|カバウ|番頭|ばんとう|Banto/i.test(text)
+  return /就業規則AI|カバウ|番頭|ばんとう|Banto/i.test(text)
 }
 
 /**

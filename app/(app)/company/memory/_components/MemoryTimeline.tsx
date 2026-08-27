@@ -22,7 +22,7 @@ import { HandoverView } from './HandoverView'
 // MemoryTimeline — 「会社の記憶」タイムライン + 承認UI（adminのみ承認操作可）。
 //   GET /api/company/memory?companyId= で全記憶（summary/decision/rule候補）を取得し、
 //     1) rule候補 = AIが拾った自社事実 → adminがワンタップで正式ルールに昇格
-//     2) decision = 過去の自社判断 → 時系列で強調表示（Kabauの差別化の核）
+//     2) decision = 過去の自社判断 → 時系列で強調表示（就業規則AIの差別化の核）
 //     3) summary  = 相談の記憶 → 時系列表示
 //   subject(対象者)が付いた記憶はラベルを併記し「人ごとに覚えている」ことを見せる。
 //   ★個人特定情報は表示しない設計: subject は登録時にラベル粒度（例「Aさん(育休)」）で
@@ -174,7 +174,7 @@ export function MemoryTimeline() {
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title="会社の記憶"
-        description="Kabauは、過去の相談ややり取りの結果、下した判断、関係者ごとの状況を会社の記憶として残します。担当者が代わっても、会社として何をどう決めてきたかが引き継がれます。"
+        description="就業規則AIは、過去の相談ややり取りの結果、下した判断、関係者ごとの状況を会社の記憶として残します。担当者が代わっても、会社として何をどう決めてきたかが引き継がれます。"
       />
 
       {/* 表示モード切替（時系列 / 引き継ぎ）。印刷時は隠す。 */}

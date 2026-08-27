@@ -14,7 +14,7 @@ import { CompanyGuard } from '../_components/CompanyGuard'
 
 // ============================================================================
 // /company/reports — F6「経営者向け1枚報告」/ F5「社労士連携メモ」
-//   Kabauが覚えている会社データ（基本情報・規程・近い期限・過去の判断・未登録項目）を、
+//   就業規則AIが覚えている会社データ（基本情報・規程・近い期限・過去の判断・未登録項目）を、
 //   mode で2通りに整理して生成・表示・コピーする:
 //     - owner（F6）    ＝経営者本人向けの1枚まとめ。
 //     - sharoushi（F5）＝会社が相談する社労士に渡す下準備メモ（相談論点付き）。
@@ -115,7 +115,7 @@ function ReportsInner() {
     <div className="mx-auto max-w-2xl">
       <PageHeader
         title="経営のまとめ・社労士に渡すメモ"
-        description="Kabauが覚えている会社の情報を、目的に合わせて整理します。数値や期限は登録済みの内容にもとづきます。"
+        description="就業規則AIが覚えている会社の情報を、目的に合わせて整理します。数値や期限は登録済みの内容にもとづきます。"
       />
 
       {/* mode 切替: 経営者向けまとめ（F6）/ 社労士に渡すメモ（F5） */}
@@ -194,7 +194,7 @@ function ReportsInner() {
         <Card className="mt-4 space-y-3">
           <h2 className="text-sm font-semibold text-neutral-900">社労士の返事を台帳へ戻す</h2>
           <p className="text-sm leading-relaxed text-neutral-600">
-            Kabauは助言しません。事務所から返ってきた内容を、会社の「外部確定」として残します。
+            就業規則AIは助言しません。事務所から返ってきた内容を、会社の「外部確定」として残します。
           </p>
           <Textarea
             value={advisorText}

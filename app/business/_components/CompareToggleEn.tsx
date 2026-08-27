@@ -9,7 +9,7 @@ import { trackV as track } from '../_lib/variant'
 // CompareToggleEn — English counterpart of CompareToggle.tsx for /business/en
 //   (2026-07-29 CTO, L3 audit #1). Same mechanism and same underlying facts
 //   (both answers reproduce the JP version's content in English) — a generic
-//   AI asks clarifying questions first; Kabau answers directly because it
+//   AI asks clarifying questions first; 就業規則AI answers directly because it
 //   remembers the company's 36 Agreement status. No new claims are made.
 // ============================================================================
 
@@ -59,7 +59,7 @@ export default function CompareToggleEn() {
           }
         >
           <BantoMark className="h-4 w-4" aria-hidden />
-          Ask Kabau
+          Ask 就業規則AI
         </button>
       </div>
 
@@ -108,7 +108,7 @@ export default function CompareToggleEn() {
       </div>
 
       <p className="mt-3 text-center text-xs leading-relaxed text-neutral-600">
-        Both sides are example answers. Kabau&apos;s answer is general information, not individualized legal advice.
+        Both sides are example answers. 就業規則AI&apos;s answer is general information, not individualized legal advice.
       </p>
     </div>
   )

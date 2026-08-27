@@ -73,8 +73,8 @@ export function PublicFooter({
               <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
             <span className="font-semibold text-neutral-900">
-              Kabau（カバウ）
-              <span className="ml-2 text-xs font-normal text-neutral-500">旧・番頭(Banto)</span>
+              就業規則AI
+              <span className="ml-2 text-xs font-normal text-neutral-500">旧・Kabau／番頭</span>
             </span>
           </Link>
 
@@ -102,11 +102,11 @@ export function PublicFooter({
         </div>
 
         <p className="mt-6 text-xs leading-relaxed text-neutral-600">
-          Kabau（カバウ）が提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
+          就業規則AIが提供する情報は一般的な情報提供であり、個別の法的助言や書類作成代行ではありません。
           最終的な判断は、必要に応じて専門家にご確認ください。
         </p>
         <p className="mt-2 text-xs text-neutral-600">
-          © {new Date().getFullYear()} Kabau（KIZUNA Creation）
+          © {new Date().getFullYear()} 就業規則AI（KIZUNA Creation）
         </p>
       </div>
     </footer>

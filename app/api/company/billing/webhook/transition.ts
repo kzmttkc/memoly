@@ -24,7 +24,7 @@ export function isPaidPlanId(v: unknown): v is PlanId {
 }
 
 /**
- * 自製品(Kabau)の刻印。checkout が session/subscription の metadata に載せる値
+ * 自製品(就業規則AI)の刻印。checkout が session/subscription の metadata に載せる値
  * （lib/stripe.ts の BANTO_PRODUCT と同一。ここは SDK 非依存に保つため再定義）。
  */
 export const BANTO_PRODUCT_STAMP = 'banto'
@@ -36,21 +36,21 @@ export type CheckoutProductResolution =
   | { granted: false; reason: CheckoutRefusalReason }
 
 /**
- * この checkout がKabauの決済かを判定する（クロス配信ガード・2026-08-21 横断監査）。
+ * この checkout が就業規則AIの決済かを判定する（クロス配信ガード・2026-08-21 横断監査）。
  *
  * なぜ作り直したか:
  *   LIVE の Stripe アカウントは9製品で共有していて、Stripe は1イベントを
  *   「その種別を購読している全ての有効エンドポイント」へ配信する。他製品の
- *   checkout.session.completed はKabauの webhook にも届き、署名検証を通過する
+ *   checkout.session.completed は就業規則AIの webhook にも届き、署名検証を通過する
  *   （署名はアカウント単位の秘密で、製品は何も保証しない）。
  *
  *   旧実装は route.ts に
  *       if (!isBanto && !priceMatch && !amountMatch) → 無視
  *   と書かれていた。コメントは「三重ガード」と称していたが、これは
  *   **3つのうち1つでも当たれば通る OR** で、AND ではない。しかも金額は製品を
- *   またいで衝突する（実測: ¥9,800 = Kabau Standard / sharoushi Business /
- *   UITruth Pro、¥29,800 = Kabau 士業 / sharoushi 年払い / UITruth Starter年、
- *   ¥39,800 = Kabau Entry年 / Agentrix Agency月）。つまり amount 一致は
+ *   またいで衝突する（実測: ¥9,800 = 就業規則AI Standard / sharoushi Business /
+ *   UITruth Pro、¥29,800 = 就業規則AI 士業 / sharoushi 年払い / UITruth Starter年、
+ *   ¥39,800 = 就業規則AI Entry年 / Agentrix Agency月）。つまり amount 一致は
  *   「他製品でない」ことを1ミリも保証しない。
  *
  *   実害が出ていなかったのは metadata.company_id を他製品が偶然使っていない
@@ -60,8 +60,8 @@ export type CheckoutProductResolution =
  *   1. metadata.product が他製品を名乗る → price が偶然一致しても拒否。
  *      名乗りと price が食い違う決済は異常系であり、「付与しない」側に倒す
  *      （誤付与は返金では取り戻せない）。
- *   2. price がKabauのものに解決できる → そのプランを付与。
- *   3. それ以外は拒否。metadata.plan は根拠にしない——'standard' はKabauにも
+ *   2. price が就業規則AIのものに解決できる → そのプランを付与。
+ *   3. それ以外は拒否。metadata.plan は根拠にしない——'standard' は就業規則AIにも
  *      UITruth にも実在する。
  *
  * 呼び出し側の責務: pricePlan は planIdForPriceId(line item の price) の結果を渡す。

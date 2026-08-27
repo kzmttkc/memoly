@@ -29,7 +29,7 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: `${SEIDO_KIT_NAME} 本文｜Kabau（カバウ）`,
+  title: `${SEIDO_KIT_NAME} 本文｜就業規則AI`,
   robots: { index: false, follow: false },
 }
 
@@ -73,7 +73,7 @@ export default async function SeidoKitHonbunPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <Link href="/seido" className="hover:text-brand-700">制度対応</Link>
         <span className="mx-1.5">/</span>

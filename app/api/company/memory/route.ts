@@ -205,7 +205,7 @@ async function saveToolNote(req: NextRequest): Promise<NextResponse> {
 
 // ----------------------------------------------------------------------------
 // POST ?action=decision — イベント起点の「判断採取」フック（TOP5 #1・蓄積速度の核）
-//   チャットUIでKabauが「この方針で記録しておきますか？」と促し、ユーザーが確定
+//   チャットUIで就業規則AIが「この方針で記録しておきますか？」と促し、ユーザーが確定
 //   （ワンタップ）したときだけ呼ばれる human-in-the-loop の保存導線。
 //   ★自動保存しない（誤記憶防止）。ユーザーの明示確定が前提。
 //   サーバ側は既存 extractCompanyMemory の1パスを再利用し、isDecision/decisionText を
@@ -282,7 +282,7 @@ async function captureDecision(req: NextRequest): Promise<NextResponse> {
 }
 
 // POST ?action=advisor — 社労士の返事を外部確定として台帳へ戻す。
-//   Kabauは助言しない。事務所が書いた行として残すだけ。member でも可。
+//   就業規則AIは助言しない。事務所が書いた行として残すだけ。member でも可。
 async function saveAdvisorWriteback(req: NextRequest): Promise<NextResponse> {
   const body = await req.json().catch(() => ({}))
   const { companyId: bodyCompanyId, text } = body as { companyId?: string; text?: string }

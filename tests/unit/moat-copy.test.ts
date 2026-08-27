@@ -68,13 +68,13 @@ test('記事の締めは覚えるAIではなくファイルを置く', () => {
 })
 
 // 2026-08-26 Kabau×番頭 1本化 Phase 1-1: パンくずのブランド表記は Kabau（旧・番頭）。
-test('公開面のパンくず「Kabau」は入口へ戻る', () => {
+test('公開面のパンくず「就業規則AI」は入口へ戻る', () => {
   const faq = read('app/faq/page.tsx')
-  assert.match(faq, /href="\/zure" className="hover:text-brand-700">Kabau/)
-  assert.doesNotMatch(faq, /href="\/business" className="hover:text-brand-700">Kabau/)
+  assert.match(faq, /href="\/zure" className="hover:text-brand-700">就業規則AI/)
+  assert.doesNotMatch(faq, /href="\/business" className="hover:text-brand-700">就業規則AI/)
   assert.match(faq, /item: `\$\{BASE\}\/zure`/)
   const tools = read('app/tools/page.tsx')
-  assert.match(tools, /href="\/zure" className="hover:text-brand-700">Kabau/)
+  assert.match(tools, /href="\/zure" className="hover:text-brand-700">就業規則AI/)
 })
 
 test('直リンクの登録画面はファイルを先に置けると案内する', () => {

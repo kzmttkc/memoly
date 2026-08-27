@@ -56,7 +56,7 @@ export function getSeasonalReminders(now: Date = new Date()): SeasonalReminder[]
         '改正労働施策総合推進法により、2026年10月1日からカスハラ防止の措置が事業主の義務になります。' +
         '基本方針の明文化・相談窓口・対応手順の3点が済んでいるか、一度ご確認ください。',
       ctaPath: '/company/chat',
-      ctaLabel: '自社に必要な対応をKabauに相談する',
+      ctaLabel: '自社に必要な対応を就業規則AIに相談する',
     })
   } else if (iso >= KASUHARA_ENFORCEMENT && iso <= '2026-10-31') {
     out.push({
@@ -65,7 +65,7 @@ export function getSeasonalReminders(now: Date = new Date()): SeasonalReminder[]
         '基本方針・相談窓口・対応手順がまだ整っていない場合は、早めの整備をおすすめします。' +
         '何から着手すべきかは自社の状況により異なります。',
       ctaPath: '/company/chat',
-      ctaLabel: '自社に必要な対応をKabauに相談する',
+      ctaLabel: '自社に必要な対応を就業規則AIに相談する',
     })
   }
 
@@ -77,7 +77,7 @@ export function getSeasonalReminders(now: Date = new Date()): SeasonalReminder[]
         '4月1日を起算日として36協定を結んでいる会社が多く、1〜3月は更新・届出の集中時期です。' +
         '協定の有効期間の満了日と、新しい協定の締結・労基署への届出の予定をご確認ください。',
       ctaPath: '/company/deadlines',
-      ctaLabel: '期限としてKabauに覚えさせる',
+      ctaLabel: '期限として就業規則AIに覚えさせる',
     })
   }
 
@@ -89,7 +89,7 @@ export function getSeasonalReminders(now: Date = new Date()): SeasonalReminder[]
         '年10日以上付与した従業員には、付与日から1年以内に5日の取得が義務です。' +
         '4月や10月にまとめて付与している場合、この時期は取得日数が足りない従業員の最終確認のタイミングです。',
       ctaPath: '/company/chat',
-      ctaLabel: '取り方の選択肢をKabauに相談する',
+      ctaLabel: '取り方の選択肢を就業規則AIに相談する',
     })
   }
 

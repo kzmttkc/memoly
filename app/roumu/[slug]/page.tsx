@@ -35,7 +35,7 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 
 const BASE = 'https://banto-roumu.com'
 
-// CTA = Kabau 無料登録（会社登録の入口）。/business と同一導線。
+// CTA = 就業規則AI 無料登録（会社登録の入口）。/business と同一導線。
 //   新規訪問者（SEO記事経由）は signup へ直行させる。login 着地だと「新規登録」の
 //   小リンクを自力で見つける必要があり、北極星（無料登録）直前の蛇口が細くなる。
 const SIGNUP_HREF = OFFER.path
@@ -62,7 +62,7 @@ export async function generateMetadata({
   const u = getUseCase(slug)
   if (!u) return {}
   const url = `${BASE}/roumu/${u.slug}`
-  const title = `${u.titleKeyword}｜Kabau（カバウ）`
+  const title = `${u.titleKeyword}｜就業規則AI`
   return {
     title,
     description: u.description,
@@ -73,7 +73,7 @@ export async function generateMetadata({
       title,
       description: u.description,
       url,
-      siteName: 'Kabau（カバウ）',
+      siteName: '就業規則AI',
       locale: 'ja_JP',
       type: 'website',
       images: [
@@ -125,7 +125,7 @@ export default async function RoumuUseCasePage({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '労務AIの使い方', item: `${BASE}/roumu` },
       { '@type': 'ListItem', position: 3, name: u.ogCategory, item: url },
     ],
@@ -145,7 +145,7 @@ export default async function RoumuUseCasePage({
         author: { '@type': 'Organization', name: 'KIZUNA Creation' },
         publisher: {
           '@type': 'Organization',
-          name: 'Kabau（カバウ）',
+          name: '就業規則AI',
           logo: { '@type': 'ImageObject', url: `${BASE}/og-image.png` },
         },
       }
@@ -175,7 +175,7 @@ export default async function RoumuUseCasePage({
 
       {/* ===== パンくず（視覚） ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <Link href="/roumu" className="hover:text-brand-700">労務AIの使い方</Link>
         <span className="mx-1.5">/</span>
@@ -212,7 +212,7 @@ export default async function RoumuUseCasePage({
             href="/business"
             className={buttonClass({ variant: 'secondary', size: 'lg' })}
           >
-            Kabauの全体像を見る
+            就業規則AIの全体像を見る
           </Link>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
@@ -290,12 +290,12 @@ export default async function RoumuUseCasePage({
         </section>
       )}
 
-      {/* ===== Kabauがどう答えるか（具体例） ===== */}
+      {/* ===== 就業規則AIがどう答えるか（具体例） ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
-        <h2 className="text-xl font-bold tracking-tight text-neutral-900">Kabauはこう答えます</h2>
+        <h2 className="text-xl font-bold tracking-tight text-neutral-900">就業規則AIはこう答えます</h2>
         <p className="mt-2 text-xs text-neutral-500">
           サンプルの会社情報を覚えた状態での、回答のイメージです。数値や規程の内容は説明用の例です。
-          Kabauの答えは一般的な情報の整理であり、個別の法的助言ではありません。
+          就業規則AIの答えは一般的な情報の整理であり、個別の法的助言ではありません。
         </p>
         <ul className="mt-5 space-y-4">
           {u.examples.map((ex) => (
@@ -345,9 +345,9 @@ export default async function RoumuUseCasePage({
           （こちらで法令の記述を書き起こさない）。 */}
       <ArticleCheckSheet slug={u.slug} heading={u.ogCategory} items={checkSheetItems(u)} />
 
-      {/* ===== カスハラ関連記事の末尾: Kabau 実務パック導線（1箇所）=====
-          (WORK_ORDERS.md Trust Stack v2 #3 Kabau側・2026-08-21)
-          出し分けは lib/kabau-pack.ts isKasuharaUseCase（slug＋h1）。文言は Kabau側の
+      {/* ===== カスハラ関連記事の末尾: 就業規則AI 実務パック導線（1箇所）=====
+          (WORK_ORDERS.md Trust Stack v2 #3 就業規則AI側・2026-08-21)
+          出し分けは lib/kabau-pack.ts isKasuharaUseCase（slug＋h1）。文言は 就業規則AI側の
           既存 pack CTA 文を流用。セット割引・同梱課金は作らない。
           計測は kabau_pack_cta_click { source:'roumu_article', slug }。 */}
       {isKasuharaUseCase(u) && <KabauPackCta slug={u.slug} />}

@@ -7,8 +7,8 @@ import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 // PublicHeader — 公開面（/business を除く全ページ）の共通ヘッダ。
 //
 //   2026-08-12 UXペルソナ監査 R-1/R-6（離脱級）: 公開面のヘッダが4実装に分裂し、
-//   ロゴ表記（「Kabau」/「Kabau（カバウ）」）・高さ（53/61/65px）・導線がページごとに
-//   違っていた。とくに /blog は「Kabau（カバウ）｜ログイン」だけで、検索から
+//   ロゴ表記（「就業規則AI」/「就業規則AI」）・高さ（53/61/65px）・導線がページごとに
+//   違っていた。とくに /blog は「就業規則AI｜ログイン」だけで、検索から
 //   記事に着地した未登録の読者に次の一手（料金・登録）がヘッダに存在しなかった。
 //   /pricing も独自ヘッダで、同じものが3つ目の形で書かれていた。
 //   → /blog・/blog/[slug]・/pricing をこのコンポーネントへ寄せ、実装を1つにする。
@@ -20,13 +20,13 @@ import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 //   signup_cta_clicked を新たに発火させない（総数を跳ねさせて過去比較を壊さない）。
 //
 //   2026-07-30 UX監査 #6（重大）: 実測でヘッダ内リンクが
-//   ["Kabau（カバウ）", "ログイン"] の2つしかなく、**検索から着地する42ページ側の
+//   ["就業規則AI", "ログイン"] の2つしかなく、**検索から着地する42ページ側の
 //   ヘッダが最も貧しい**状態だった。未登録の初見客に対して、ヘッダから
 //   「料金」にも「登録」にも届かない。
 //   → 最低限「料金」と「無料で始める」を常設する（モバイル含む・畳まない）。
 //
 //   幅の制約（375px / 320px 実測）: 4要素を1行に収めるため、
-//     - ロゴの「(Banto)」は sm 未満で畳む（ブランド名「Kabau」は残す）
+//     - ロゴの「(Banto)」は sm 未満で畳む（ブランド名「就業規則AI」は残す）
 //     - 「ログイン」は sm 未満で畳む（フッタに同じリンクがあり、かつ SEO 着地の
 //       初見客は未登録＝ログインより料金/登録の優先度が高い）
 //   タップ領域は min-h-11（44px）を確保する（UX監査 #8）。
@@ -64,9 +64,9 @@ export function PublicHeader({
             <BantoMark className="h-3.5 w-3.5" aria-hidden />
           </span>
           {/* 2026-08-26 Kabau×番頭 1本化 Phase 1-1: 表示ブランドを Kabau へ。
-              sm未満は「Kabau」のみ（従来の「Kabau」のみと同じ畳み方）。 */}
+              sm未満は「就業規則AI」のみ（従来の「就業規則AI」のみと同じ畳み方）。 */}
           <span className="font-semibold tracking-tight text-neutral-900">
-            Kabau<span className="hidden sm:inline">（カバウ）</span>
+            就業規則AI
           </span>
         </Link>
         <nav className="flex items-center gap-1 sm:gap-3">

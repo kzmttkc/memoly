@@ -16,7 +16,7 @@ import { PublicHeader } from '@/components/ui/PublicHeader'
 // ----------------------------------------------------------------------------
 //   なぜ必要か（実測）: 2026-07-30 時点で /pricing /plans /price /ryokin はすべて
 //   404 で、料金は /business の id="pricing" アンカー1か所にしか存在しなかった。
-//   sitemap.xml の51URLにも料金ページが無い。つまり「Kabau 料金」「労務AI 料金 比較」
+//   sitemap.xml の51URLにも料金ページが無い。つまり「就業規則AI 料金」「労務AI 料金 比較」
 //   という**最も購買意欲の高いクエリ**に対して着地先が1枚も無く、直打ちは404だった。
 //   モバイルでは #pricing は全長21,278pxのうち y=16,101（76%地点）で、ヘッダの
 //   「料金」リンクは 640px 未満だと hidden sm:inline-flex で消える。
@@ -44,7 +44,7 @@ const URL = `${BASE}/pricing`
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Kabauの料金｜月額3,980円から・無料プランあり｜就業規則のファイルを置く',
+  title: '就業規則AIの料金｜月額3,980円から・無料プランあり｜就業規則のファイルを置く',
   description:
     'Entry 3,980円/月（1社5名まで）、Standard 9,800円/月（20名まで）、士業 29,800円/月（1席）。無料プランから始められ、クレジットカード登録は不要です。',
   alternates: {
@@ -55,18 +55,18 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Kabauの料金｜月額3,980円から・無料プランあり',
+    title: '就業規則AIの料金｜月額3,980円から・無料プランあり',
     description:
       'Entry 3,980円/月（1社5名まで）、Standard 9,800円/月（20名まで）、士業 29,800円/月（1席）。無料プランから始められ、クレジットカード登録は不要です。',
     url: URL,
-    siteName: 'Kabau（カバウ）',
+    siteName: '就業規則AI',
     locale: 'ja_JP',
     type: 'website',
-    images: [{ url: `${BASE}/og-banto-main.png`, width: 1200, height: 630, alt: 'Kabau（カバウ） の料金' }],
+    images: [{ url: `${BASE}/og-banto-main.png`, width: 1200, height: 630, alt: '就業規則AI の料金' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kabauの料金｜月額3,980円から・無料プランあり',
+    title: '就業規則AIの料金｜月額3,980円から・無料プランあり',
     description:
       'Entry 3,980円/月、Standard 9,800円/月、士業 29,800円/月（1席）。無料プランから始められ、クレジットカード登録は不要です。',
     images: [`${BASE}/og-banto-main.png`],
@@ -94,7 +94,7 @@ export default function PricingPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '料金', item: URL },
     ],
   }
@@ -108,7 +108,7 @@ export default function PricingPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">料金</span>
       </nav>
@@ -117,10 +117,10 @@ export default function PricingPage() {
       <section className="mx-auto max-w-3xl px-6 pt-8 pb-6 text-center">
         <Badge tone="brand" className="mb-5">料金</Badge>
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl">
-          Kabauの料金
+          就業規則AIの料金
         </h1>
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
-          就業規則のファイルからずれを1枚にするKabauの料金です。ずれの1枚は登録の前に出ます。無料プランから始められ、登録にクレジットカードは要りません。
+          就業規則のファイルからずれを1枚にする就業規則AIの料金です。ずれの1枚は登録の前に出ます。無料プランから始められ、登録にクレジットカードは要りません。
           有料プランは月額3,980円（Entry・1社5名まで）からで、上限人数までは何人で使っても料金は変わりません。
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-neutral-500">
@@ -313,7 +313,7 @@ export default function PricingPage() {
           </div>
           <p className="mt-4 text-xs text-brand-100">
             <Link href="/business" className="underline underline-offset-2 hover:text-white">
-              Kabauがどう答えるかを先に見る（サービス概要）
+              就業規則AIがどう答えるかを先に見る（サービス概要）
             </Link>
           </p>
         </Card>

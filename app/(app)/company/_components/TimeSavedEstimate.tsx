@@ -7,7 +7,7 @@ import { track } from '@/lib/analytics'
 import { fetchHomeStatus, type HomeStatus } from './home-status'
 
 // ============================================================================
-// TimeSavedEstimate — 「Kabauが肩代わりした時間（推定）」（外部評価 E02）。
+// TimeSavedEstimate — 「就業規則AIが肩代わりした時間（推定）」（外部評価 E02）。
 //   記憶メーターの直下に置き、相談の積み上げを「時間」という顧客の言葉に翻訳する。
 //
 //   誠実さの設計（誇張禁止）:
@@ -86,7 +86,7 @@ export function TimeSavedEstimate({ companyId }: { companyId: string }) {
           <Clock3 className="h-4.5 w-4.5" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-neutral-500">Kabauが肩代わりした調べ物の時間（推定）</p>
+          <p className="text-xs text-neutral-500">就業規則AIが肩代わりした調べ物の時間（推定）</p>
           <p className="mt-0.5 flex items-baseline gap-1.5">
             <span className="text-lg font-bold tabular-nums text-neutral-900">
               約{formatMinutes(totalMin)}

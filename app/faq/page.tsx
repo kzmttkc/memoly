@@ -23,23 +23,23 @@ const BASE = 'https://banto-roumu.com'
 const URL = `${BASE}/faq`
 
 export const metadata: Metadata = {
-  title: 'よくある質問｜Kabau（カバウ）',
+  title: 'よくある質問｜就業規則AI',
   description:
-    'Kabau（カバウ）の料金・セキュリティ・製品の仕組み・規程管理・導入に関するよくある質問をまとめました。就業規則のファイルからずれを1枚にする流れについて、検討時の疑問に答えます。',
+    '就業規則AIの料金・セキュリティ・製品の仕組み・規程管理・導入に関するよくある質問をまとめました。就業規則のファイルからずれを1枚にする流れについて、検討時の疑問に答えます。',
   alternates: { canonical: URL },
   openGraph: {
-    title: 'よくある質問｜Kabau（カバウ）',
-    description: 'Kabau（カバウ）の料金・セキュリティ・製品の仕組み・規程管理・導入に関するよくある質問をまとめました。',
+    title: 'よくある質問｜就業規則AI',
+    description: '就業規則AIの料金・セキュリティ・製品の仕組み・規程管理・導入に関するよくある質問をまとめました。',
     url: URL,
-    siteName: 'Kabau（カバウ）',
+    siteName: '就業規則AI',
     locale: 'ja_JP',
     type: 'website',
-    images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: 'Kabau（カバウ） よくある質問' }],
+    images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: '就業規則AI よくある質問' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'よくある質問｜Kabau（カバウ）',
-    description: 'Kabau（カバウ）の料金・セキュリティ・製品の仕組み・規程管理・導入に関するよくある質問をまとめました。',
+    title: 'よくある質問｜就業規則AI',
+    description: '就業規則AIの料金・セキュリティ・製品の仕組み・規程管理・導入に関するよくある質問をまとめました。',
     images: [`${BASE}/og-image.png`],
   },
 }
@@ -49,7 +49,7 @@ export default function FaqPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: 'よくある質問', item: URL },
     ],
   }
@@ -79,7 +79,7 @@ export default function FaqPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">よくある質問</span>
       </nav>
@@ -88,7 +88,7 @@ export default function FaqPage() {
       <section className="mx-auto max-w-3xl px-6 pt-8 pb-8">
         <Badge tone="brand" className="mb-5">よくある質問</Badge>
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl">
-          Kabau（カバウ）についてよくある質問
+          就業規則AIについてよくある質問
         </h1>
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
           料金、セキュリティ、製品の仕組み、規程管理、導入にかかる時間まで、検討時によくいただく質問をまとめました。
@@ -158,7 +158,7 @@ export default function FaqPage() {
         </Disclosure>
       </section>
 
-      {/* ===== Kabau本体・関連コンテンツへの導線 ===== */}
+      {/* ===== 就業規則AI本体・関連コンテンツへの導線 ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
@@ -186,7 +186,7 @@ export default function FaqPage() {
               href="/business"
               className="inline-flex min-h-11 items-center text-sm text-brand-100 underline underline-offset-4 hover:text-white"
             >
-              先にKabauの全体像を見る
+              先に就業規則AIの全体像を見る
             </Link>
           </div>
         </Card>

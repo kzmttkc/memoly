@@ -7,8 +7,8 @@ import type { Metadata } from 'next'
 // ============================================================================
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Kabau',
-  description: 'Privacy Policy for Kabau (English).',
+  title: 'Privacy Policy | 就業規則AI',
+  description: 'Privacy Policy for 就業規則AI (English).',
   // 2026-07-30 PMF fix #3: pair this page with the Japanese original via hreflang
   //   (site-wide there were 0 hreflang tags and no /en URL in sitemap.xml).
   //   The reciprocal declaration on /privacy (Japanese) is owned by another team
@@ -57,7 +57,7 @@ export default function PrivacyEnglishPage() {
 
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">1. Information we collect</h2>
-            <p>Kabau (formerly Banto) collects the following information:</p>
+            <p>就業規則AI (formerly Kabau / Banto) collects the following information:</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-neutral-600">
               <li>Email address (at account creation)</li>
               <li>Company profile and chat consultation content</li>
@@ -99,7 +99,7 @@ export default function PrivacyEnglishPage() {
               <li><strong className="text-neutral-800">Resend</strong>: notification email delivery (US)</li>
               <li><strong className="text-neutral-800">Dify</strong>: lookups against a legal knowledge base (US). Question text related to laws/regulations may be sent.</li>
               <li><strong className="text-neutral-800">OpenAI</strong>: vectorization for semantic memory search (US). Summary text of memories is sent. Data sent via the API is not used for model training by default. <a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">OpenAI API Data Usage Policy</a></li>
-              <li><strong className="text-neutral-800">Stripe</strong>: payment processing for paid plans (US). Card data is handled directly by Stripe and is not stored on Kabau&apos;s servers. <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripe Privacy Policy</a></li>
+              <li><strong className="text-neutral-800">Stripe</strong>: payment processing for paid plans (US). Card data is handled directly by Stripe and is not stored on 就業規則AI&apos;s servers. <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripe Privacy Policy</a></li>
               {/* 2026-08-12 法務修正（越境移転レビュー C）: 日本語版 §3 と /terms 5.3 には
                   Slack があるのに、この英語版の一覧にだけ Slack が欠落していた。
                   実際に個人データが国外へ出る経路（lib/slack.ts → hooks.slack.com）が
@@ -155,7 +155,7 @@ export default function PrivacyEnglishPage() {
 
             {/* 2026-08-12 法務修正（越境移転レビュー D）: 日本語版（正文）と同期。
                 「確認したうえで利用しています」という断定は、Dify（別途署名が必要・未締結）と
-                Vercel（DPA が Enterprise/Pro 限定・Kabauは Hobby）について事実に反していた。
+                Vercel（DPA が Enterprise/Pro 限定・就業規則AIは Hobby）について事実に反していた。
                 実測台帳は docs/compliance/vendor-dpa-register.md。 */}
             <h3 className="mb-1 mt-4 font-semibold text-neutral-900">(3) Measures taken by the operator</h3>
             <p className="text-neutral-600">

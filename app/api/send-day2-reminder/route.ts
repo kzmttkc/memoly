@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { buildUnsubscribeUrls, unsubscribeHeaders } from '@/app/api/unsubscribe/token'
 import { verifyCronBearer } from '@/lib/cron-auth'
 
-// Kabauの対外ドメイン（メール内リンク・配信停止・送信者情報で使用）。
+// 就業規則AIの対外ドメイン（メール内リンク・配信停止・送信者情報で使用）。
 const BANTO_URL = 'https://banto-roumu.com'
 
 // Resend への1リクエストの締切（2026-07-30 可用性監査#8・他2経路と同値）。
@@ -60,9 +60,9 @@ export async function GET(req: Request) {
 
   // 対象の抽出（2026-07-30 修正）:
   //   従来ここは旧Memoly個人版のテーブル（memoly_memories / memoly_users）を走査していた。
-  //   Kabauは company_* に書くため、このcronは毎日空振りして0通で終わっていた
+  //   就業規則AIは company_* に書くため、このcronは毎日空振りして0通で終わっていた
   //   ＝「登録2日目という最も離脱しやすい瞬間の唯一の打ち手」が死んでいた（UX監査 B-4）。
-  //   Kabauのスキーマ（companies / company_members）で対象を取り直す。
+  //   就業規則AIのスキーマ（companies / company_members）で対象を取り直す。
   //
   //   対象 = 会社作成から24〜48時間 かつ **まだ規程も記憶も入れていない** 会社の admin。
   //   価値の解錠条件は「就業規則を貼る」ことなので、そこに到達していない人にだけ送る。
@@ -148,7 +148,7 @@ export async function GET(req: Request) {
       }
 
       // 配信停止チェック＋重複防止（day2_sent_at は user_metadata で持つ。
-      // 旧 memoly_users テーブルはKabauでは使わないため）。
+      // 旧 memoly_users テーブルは就業規則AIでは使わないため）。
       const { data: authUser } = await admin.auth.admin.getUserById(user.id)
       if (authUser?.user?.user_metadata?.day2_unsubscribed) {
         errors.push(`${user.id}: unsubscribed`)
@@ -160,19 +160,19 @@ export async function GET(req: Request) {
       }
 
       // 本文は「就業規則を貼り付ける」の一点に絞る（UX監査 B-4/B-6）。
-      //   Kabauの価値が解錠されるのはここだけで、登録2日目に伝えるべきことも1つでよい。
+      //   就業規則AIの価値が解錠されるのはここだけで、登録2日目に伝えるべきことも1つでよい。
       //   プライバシー配慮のため、保存された記録の内容はメールに引用しない
       //   （労務データを平文メールに載せない安全側の設計）。
       const bodyText =
-        `Kabauにご登録いただき、ありがとうございます。\n\n` +
-        `就業規則の本文をコピーして貼り付けると、Kabauが全文を覚えます。\n` +
+        `就業規則AIにご登録いただき、ありがとうございます。\n\n` +
+        `就業規則の本文をコピーして貼り付けると、就業規則AIが全文を覚えます。\n` +
         `以降は「自社の規程では第◯条にこう定めています」と、一般論ではなく御社の条文を引いて答えます。\n\n` +
         `貼り付けでも、PDF・Wordの取り込みでも構いません。スキャン画像で本文が取れないページは、貼り付けで補えます。`
 
       // 宛先ごとの配信停止URL（署名付き・ログイン不要で止まる。法務監査#4）。
       const unsub = buildUnsubscribeUrls(BANTO_URL, user.id, 'digest')
 
-      // Resendでメール送信（差出人・リンク・送信者情報はすべてKabauに統一）
+      // Resendでメール送信（差出人・リンク・送信者情報はすべて就業規則AIに統一）
       const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         // 締切なしだと Resend の無応答で以降の宛先の配信が止まる（可用性監査#8）。
@@ -184,14 +184,14 @@ export async function GET(req: Request) {
         body: JSON.stringify({
           from: DIGEST_FROM_EMAIL,
           to: email,
-          subject: '就業規則を貼り付けると、明日から自社の条文で答えます｜Kabau',
+          subject: '就業規則を貼り付けると、明日から自社の条文で答えます｜就業規則AI',
           // ワンクリック配信停止（RFC 8058）。署名付きURLへ POST するだけで止まる。
           headers: unsubscribeHeaders(unsub.oneClick),
           text: `${bodyText}\n\n→ 就業規則を貼り付ける: ${BANTO_URL}/company/documents\n\n――\n同じ運営のサービスです。ChatGPTはあなたの会社をどう紹介していますか？ 登録不要・無料で計測できます: https://uitruth.app/?utm_source=banto&utm_medium=email&utm_campaign=day2_reminder\n\n配信停止: ${unsub.page}`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
             <h2 style="color:#324a8a;font-size:18px;margin:0 0 12px">就業規則を貼り付けると、自社の条文で答えます</h2>
-            <p style="color:#374151;line-height:1.8;font-size:14px">Kabauにご登録いただき、ありがとうございます。</p>
-            <p style="color:#374151;line-height:1.8;font-size:14px">就業規則の本文をコピーして貼り付けると、Kabauが<strong>全文を覚えます</strong>。以降は「自社の規程では第◯条にこう定めています」と、一般論ではなく御社の条文を引いて答えます。</p>
+            <p style="color:#374151;line-height:1.8;font-size:14px">就業規則AIにご登録いただき、ありがとうございます。</p>
+            <p style="color:#374151;line-height:1.8;font-size:14px">就業規則の本文をコピーして貼り付けると、就業規則AIが<strong>全文を覚えます</strong>。以降は「自社の規程では第◯条にこう定めています」と、一般論ではなく御社の条文を引いて答えます。</p>
             <p style="color:#6b7280;line-height:1.8;font-size:13px">貼り付けでも、PDF・Wordの取り込みでも構いません。スキャン画像で本文が取れないページは、貼り付けで補えます。</p>
             <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
             <a href="${BANTO_URL}/company/documents" style="background:#324a8a;color:#ffffff;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;font-size:14px">就業規則を貼り付ける</a>
@@ -200,11 +200,11 @@ export async function GET(req: Request) {
             <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
             <p style="color:#9ca3af;font-size:11px;line-height:1.8">
               【送信者情報】<br>
-              サービス名：Kabau（banto-roumu.com）<br>
+              サービス名：就業規則AI（banto-roumu.com）<br>
               運営者：Kazumoto Takeshi<br>
               所在地：${SENDER_ADDRESS}<br>
               お問い合わせ：support@banto-roumu.com<br><br>
-              このメールはKabauの初回フォローとして1回のみ送信されます。<br>
+              このメールは就業規則AIの初回フォローとして1回のみ送信されます。<br>
               <a href="${unsub.page}" style="color:#324a8a">配信停止はこちら</a>
             </p>
           </div>`,
@@ -219,7 +219,7 @@ export async function GET(req: Request) {
       }
 
       // 送信成功後に day2_sent_at を記録（重複防止フラグ）。
-      // Kabauには memoly_users テーブルが無いため auth.users の user_metadata に持つ
+      // 就業規則AIには memoly_users テーブルが無いため auth.users の user_metadata に持つ
       // （digest_unsubscribed と同じ流儀）。上の送信前チェックと対で二重送信を防ぐ。
       const { error: updateErr } = await admin.auth.admin.updateUserById(user.id, {
         user_metadata: {

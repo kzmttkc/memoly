@@ -8,7 +8,7 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 
 // ============================================================================
-// /blog — Kabauのブログ一覧（SSG・クローラブル）。2026-07-22 新設。
+// /blog — 就業規則AIのブログ一覧（SSG・クローラブル）。2026-07-22 新設。
 //   位置づけ: /roumu/* が検索意図LP（短め・キーワード起点）なのに対し、
 //   /blog は「組織の記憶・社内規程管理」というテーマを深掘りする読み物。
 //   sharoushi-agent.com とのテーマ重複回避・相互リンクは各記事(lib/blog.ts)側で
@@ -20,23 +20,23 @@ const BASE = 'https://banto-roumu.com'
 const URL = `${BASE}/blog`
 
 export const metadata: Metadata = {
-  title: '規程管理・組織の記憶ブログ｜Kabau（カバウ）',
+  title: '規程管理・組織の記憶ブログ｜就業規則AI',
   description:
-    '社内規程が参照されない理由、改定履歴の管理、規程と現場運用の乖離。就業規則のファイルからずれを1枚にするKabauが向き合う、労務のテーマを掘り下げるブログです。',
+    '社内規程が参照されない理由、改定履歴の管理、規程と現場運用の乖離。就業規則のファイルからずれを1枚にする就業規則AIが向き合う、労務のテーマを掘り下げるブログです。',
   alternates: { canonical: URL },
   openGraph: {
-    title: '規程管理・組織の記憶ブログ｜Kabau（カバウ）',
+    title: '規程管理・組織の記憶ブログ｜就業規則AI',
     description:
       '社内規程が参照されない理由、改定履歴の管理、規程と現場運用の乖離。組織の"記憶"にまつわるテーマを掘り下げます。',
     url: URL,
-    siteName: 'Kabau（カバウ）',
+    siteName: '就業規則AI',
     locale: 'ja_JP',
     type: 'website',
-    images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: 'Kabau（カバウ） ブログ' }],
+    images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: '就業規則AI ブログ' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '規程管理・組織の記憶ブログ｜Kabau（カバウ）',
+    title: '規程管理・組織の記憶ブログ｜就業規則AI',
     description: '社内規程が参照されない理由、改定履歴の管理、規程と現場運用の乖離を掘り下げます。',
     images: [`${BASE}/og-image.png`],
   },
@@ -47,7 +47,7 @@ export default function BlogIndexPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: 'ブログ', item: URL },
     ],
   }
@@ -55,7 +55,7 @@ export default function BlogIndexPage() {
   const blogJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Blog',
-    name: 'Kabau（カバウ） 規程管理・組織の記憶ブログ',
+    name: '就業規則AI 規程管理・組織の記憶ブログ',
     url: URL,
     publisher: { '@type': 'Organization', name: 'KIZUNA Creation' },
     blogPost: BLOG_POSTS.map((p) => ({
@@ -75,7 +75,7 @@ export default function BlogIndexPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">ブログ</span>
       </nav>
@@ -88,7 +88,7 @@ export default function BlogIndexPage() {
         </h1>
         <p className="mt-4 text-base leading-relaxed text-neutral-600">
           社内規程は整備するだけでは終わりません。参照されているか、改定履歴が残っているか、現場の運用とずれていないか。
-          就業規則のファイルからずれを1枚にするKabauが向き合っている、規程と現場のあいだのテーマを掘り下げます。
+          就業規則のファイルからずれを1枚にする就業規則AIが向き合っている、規程と現場のあいだのテーマを掘り下げます。
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-500">
           <span className="inline-flex items-center gap-1">
@@ -125,7 +125,7 @@ export default function BlogIndexPage() {
         </ul>
       </section>
 
-      {/* ===== Kabau本体への導線 ===== */}
+      {/* ===== 就業規則AI本体への導線 ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">

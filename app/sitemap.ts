@@ -6,7 +6,7 @@ import { SEIDO_SLUGS } from '@/lib/seido'
 
 // ============================================================================
 // sitemap.xml — クローラに「index対象の公開URL」を明示する。
-//   Kabauの公開ルートのみ。/ は /zure へリダイレクト。/company 配下
+//   就業規則AIの公開ルートのみ。/ は /zure へリダイレクト。/company 配下
 //   （middlewareで認証保護＝307）は載せない。獲得の顔の canonical は /zure。
 //   /roumu（ハブ）＋ /roumu/* は検索意図LP（SSG・公開）。SSOT(lib/usecase.ts)から全列挙する。
 //
@@ -40,7 +40,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${BASE}/zure`, lastModified: REVISED.zure, changeFrequency: 'weekly', priority: 1.0 },
     { url: `${BASE}/business`, lastModified: REVISED.business, changeFrequency: 'monthly', priority: 0.4 },
-    // 料金（単独ページ・2026-07-30 PMF修理#1）。「Kabau 料金」「労務AI 料金 比較」等の
+    // 料金（単独ページ・2026-07-30 PMF修理#1）。「就業規則AI 料金」「労務AI 料金 比較」等の
     //   購買意欲クエリの着地先。以前は /business#pricing のアンカーしか無く、
     //   /pricing /plans /price /ryokin はすべて404で、検索結果に出る料金ページが存在しなかった。
     { url: `${BASE}/pricing`, lastModified: REVISED.pricing, changeFrequency: 'monthly', priority: 0.9 },

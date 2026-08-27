@@ -7,16 +7,16 @@ import { buildUnsubscribeUrls, unsubscribeHeaders } from '@/app/api/unsubscribe/
 import { verifyCronBearer } from '@/lib/cron-auth'
 
 // ============================================================================
-// /api/company/weekly-email — Kabau版 週次リテンションメール（Vercel Cron）
+// /api/company/weekly-email — 就業規則AI版 週次リテンションメール（Vercel Cron）
 //   既存 cron 2本（/api/digest・/api/send-day2-reminder）は memoly_* 個人版のみ対象で
-//   Kabau（会社スコープ）ユーザーには1通も届いていなかった。本ルートがKabau版の起点。
+//   就業規則AI（会社スコープ）ユーザーには1通も届いていなかった。本ルートが就業規則AI版の起点。
 //
 //   フロー:
 //     1. CRON_SECRET Bearer 認可（既存 /api/digest と同一の流儀）
 //     2. 直近7日にアクティビティ（company_conversations 更新）があった会社を抽出
 //     3. 会社ごとに既存ダイジェストキャッシュ（company_digests・getOrGenerateDigest が
 //        アプリ内 lazy 生成で書いたもの）を再利用 → LLM は一切呼ばない（コストゼロ）
-//     4. メンバー全員のメールへKabauブランドのダイジェストを Resend で送信
+//     4. メンバー全員のメールへ就業規則AIブランドのダイジェストを Resend で送信
 //
 //   fail-safe（現行 /api/digest と同じ思想・env 未設定でも安全に何もしない）:
 //     - CRON_SECRET / RESEND_API_KEY / DIGEST_FROM_EMAIL のどれかが未設定なら
@@ -235,7 +235,7 @@ export async function GET(req: Request) {
       if (integ?.slack_webhook_url) {
         const ok = await sendSlackMessage(
           integ.slack_webhook_url,
-          `:newspaper: *今週の労務ダイジェスト*（${companyName}）\n\n${cardsText}\n\n※${disclaimer}\n<${homeUrl}|Kabauで詳しく確認する>`,
+          `:newspaper: *今週の労務ダイジェスト*（${companyName}）\n\n${cardsText}\n\n※${disclaimer}\n<${homeUrl}|就業規則AIで詳しく確認する>`,
           companyId,
         )
         if (ok) slackSent++
@@ -265,26 +265,26 @@ export async function GET(req: Request) {
             // 休眠会社（直近7日に会話なし）には、ダイジェストではなく再開のきっかけとして届ける。
             // 中身が薄いのに「今週のダイジェスト」と名乗ると期待を裏切るため、件名で正直に分ける。
             subject: isDormant
-              ? '就業規則を貼り付けると、自社の条文で答えます｜Kabau'
-              : '今週の労務ダイジェスト｜Kabau',
+              ? '就業規則を貼り付けると、自社の条文で答えます｜就業規則AI'
+              : '今週の労務ダイジェスト｜就業規則AI',
             // ワンクリック配信停止（RFC 8058）。URL は署名付きで、POST だけで停止する。
             // 署名鍵が無い環境では unsubscribeHeaders が空を返す（動かない機能を宣言しない）。
             headers: unsubscribeHeaders(unsub.oneClick),
-            text: `${companyName}に関係しうる労務の変更点をお届けします。\n\n${cardsText}\n\n※${disclaimer}\n\n→ Kabauで詳しく確認する: ${homeUrl}\n\n配信停止: ${unsub.page}`,
+            text: `${companyName}に関係しうる労務の変更点をお届けします。\n\n${cardsText}\n\n※${disclaimer}\n\n→ 就業規則AIで詳しく確認する: ${homeUrl}\n\n配信停止: ${unsub.page}`,
             html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
               <h2 style="color:#324a8a;font-size:18px;margin:0 0 4px">今週の労務ダイジェスト</h2>
               <p style="color:#6b7280;font-size:12px;margin:0 0 16px">${escapeHtml(companyName)}に関係しうる変更点をお届けします。</p>
               ${cardsHtml}
               <p style="color:#9ca3af;font-size:11px;line-height:1.7;margin:12px 0 20px">※${escapeHtml(disclaimer)}</p>
-              <a href="${homeUrl}" style="background:#324a8a;color:#ffffff;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;font-size:14px">Kabauで詳しく確認する</a>
+              <a href="${homeUrl}" style="background:#324a8a;color:#ffffff;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;font-size:14px">就業規則AIで詳しく確認する</a>
               <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
               <p style="color:#9ca3af;font-size:11px;line-height:1.8">
                 【送信者情報】<br>
-                サービス名：Kabau（banto-roumu.com）<br>
+                サービス名：就業規則AI（banto-roumu.com）<br>
                 運営者：Kazumoto Takeshi<br>
                 所在地：${escapeHtml(SENDER_ADDRESS)}<br>
                 お問い合わせ：support@banto-roumu.com<br><br>
-                このメールはKabauの週次ダイジェストとして送信されています。<br>
+                このメールは就業規則AIの週次ダイジェストとして送信されています。<br>
                 <a href="${unsub.page}" style="color:#324a8a">配信停止はこちら</a>
               </p>
             </div>`,

@@ -1,7 +1,7 @@
 import type { SVGProps } from 'react'
 
 // ============================================================================
-// BantoMark — Kabauブランドマーク L01（2026-07-23 Takeshi承認）。
+// BantoMark — 就業規則AIブランドマーク L01（2026-07-23 Takeshi承認）。
 //   「一本の線（積み上がる記憶）と、続きを示す点」。lucide Brain の全数置換用で、
 //   同じ className（h-3.5 w-3.5 等）/ aria-hidden がそのまま使えるドロップイン。
 //   currentColor 描画のため、ダークUI（/company data-theme='dark'）でも文脈色に

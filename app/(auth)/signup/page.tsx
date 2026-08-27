@@ -109,12 +109,12 @@ function SignupForm() {
   const [resent, setResent] = useState(false)
   const [resending, setResending] = useState(false)
   const router = useRouter()
-  // Kabau（カバウ） の動線では確認後に /company へ。?next を尊重しつつ既定は /company。
+  // 就業規則AI の動線では確認後に /company へ。?next を尊重しつつ既定は /company。
   const nextRaw = searchParams.get('next') || '/company'
   // 相対パスのみ許可（'//evil.com' はプロトコル相対URL＝open redirect になるため除外）。login側と同一ガード。
   const next = nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : '/company'
 
-  // Kotri→Kabau hire-bridge の「ここで入れたお店の名前は、引き継いで使えます」を実挙動にする。
+  // Kotri→就業規則AI hire-bridge の「ここで入れたお店の名前は、引き継いで使えます」を実挙動にする。
   //   Kotri /hire は /signup?company=<店名>&utm_source=kotri&utm_campaign=hire_bridge を送るが、
   //   従来 signup は company を読まず router.push(next) で捨てていた（着地=/company の会社名欄が空＝再入力・約束と乖離）。
   //   /company（会社作成画面）は既に ?company= を初期値にプリフィルする（commit a9c3015）。
@@ -198,7 +198,7 @@ function SignupForm() {
     router.push(nextDest)
   }
 
-  // 帰属(attribution): Kotri→Kabau hire-bridge 等の流入元を計測に載せる。
+  // 帰属(attribution): Kotri→就業規則AI hire-bridge 等の流入元を計測に載せる。
   //   例: /signup?utm_source=kotri&utm_campaign=hire_bridge
   //   非個人情報・低カーディナリティの流入元のみ。値が無ければ prop 自体を付けない
   //   （既存イベントの母数を壊さない・undefined を送らない）。過度な長さは切り詰める。
@@ -217,14 +217,14 @@ function SignupForm() {
   }, [searchParams])
 
   // 継続コンテキスト（踏み板）: デモ/無料ツールで温まった文脈を、登録画面に持ち越す。
-  //   Kabau起点の流入だけに1つの短い一文を出し、押した瞬間の温度落差での離脱を埋める。
-  //   判定＝「Kabauのツール/デモ/LPから来たか」を、既存クエリの意味そのままで導出する:
+  //   就業規則AI起点の流入だけに1つの短い一文を出し、押した瞬間の温度落差での離脱を埋める。
+  //   判定＝「就業規則AIのツール/デモ/LPから来たか」を、既存クエリの意味そのままで導出する:
   //     - next が /company で始まる（デモ・LP・ツールの共通CTA着地）
   //     - もしくは utm_source が有る（帰属付き流入）
   //   直接 /signup（bare）に来た人には出さない＝現行のまま・登録母数を壊さない。
   //   出し分けは2パターンのみ（過剰分岐しない）:
   //     - utm_source=banto_tool（点検ツール由来）→「点検結果を…」
-  //     - それ以外のKabau起点（デモ/LP）→「さきほどの答え方を…」
+  //     - それ以外の就業規則AI起点（デモ/LP）→「さきほどの答え方を…」
   //   ※判定は正規化後 next(既定/company)でなく生クエリで行う。bare /signup は
   //     next 未指定＝踏み板を出さない（直接流入の母数を壊さない・上記コメントの意図に一致）。
   const fromBanto = (searchParams.get('next') || '').startsWith('/company') || !!attribution.source
@@ -428,7 +428,7 @@ function SignupForm() {
             : '数分待ってもメールが届かない場合は、迷惑メールフォルダもご確認ください。'}
         </p>
 
-        {/* C01: 確認待ちを空白時間にしない。登録が終わった先でKabauが何を覚えるかを先出しし、
+        {/* C01: 確認待ちを空白時間にしない。登録が終わった先で就業規則AIが何を覚えるかを先出しし、
             デモ/ツール由来の文脈（fromBanto/fromTool）はここでも引き継ぎを約束する。
             記載は実挙動の範囲のみ（覚える対象は既存機能: 自社ルール・相談履歴・期限）。 */}
         <div className="mt-6 rounded-2xl border border-brand-200 bg-brand-50/60 px-5 py-4 text-left">
@@ -509,7 +509,7 @@ function SignupForm() {
           スクリーンリーダーの見出しナビゲーションが使えなかった（ペルソナ8指摘）。
           視覚デザイン（既存の小さい"無料で始める"文言）は変えず、読み上げ専用の
           h1を追加する。 */}
-      <h1 className="sr-only">{isEn ? 'Sign up for Kabau' : 'Kabau（カバウ） 新規登録'}</h1>
+      <h1 className="sr-only">{isEn ? 'Sign up for 就業規則AI' : '就業規則AI 新規登録'}</h1>
 
       {/* 2026-07-28 CTO修正（L2監査#3）: /signup?plan=shigyo で来ても画面上には
           何も反映されず、遷移先(nextDest)へ静かに持ち回るだけだった（ペルソナ10
@@ -557,7 +557,7 @@ function SignupForm() {
         </div>
       )}
 
-      {/* 継続コンテキスト（踏み板）: Kabau起点の流入だけに表示。デモ/ツールで温まった
+      {/* 継続コンテキスト（踏み板）: 就業規則AI起点の流入だけに表示。デモ/ツールで温まった
           文脈を「御社の前提で受け取るための登録」として言い直し、温度を持ち越す。
           景表法＝果たせる約束のみ（会社登録は次画面・まず1社ぶんから無料で）。
           フォーム自体は一切変えない＝純粋な追加表示。 */}
@@ -770,7 +770,7 @@ function SignupForm() {
           <span className="text-xs text-neutral-600">
             {isEn
               ? 'Receive product updates and labor-law news by email (optional, unsubscribe anytime)'
-              : 'Kabauの新機能・労務の最新情報をメールで受け取る（任意・いつでも停止可能）'}
+              : '就業規則AIの新機能・労務の最新情報をメールで受け取る（任意・いつでも停止可能）'}
           </span>
         </label>
 

@@ -269,7 +269,7 @@ function ageBucket(days: number): string {
 }
 
 /**
- * Kabau(会社版)の cohort heartbeat。記憶moatの生死＝「使うほど離れない＝日齢が
+ * 就業規則AI(会社版)の cohort heartbeat。記憶moatの生死＝「使うほど離れない＝日齢が
  * 進んでも戻ってくるか」を測る一次データ。継続率は時系列を遡れないため早期計装
  * そのものが資産（後から作れない）。
  *

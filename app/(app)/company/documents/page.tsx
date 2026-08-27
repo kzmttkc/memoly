@@ -20,7 +20,7 @@ import { CompanyGuard } from '../_components/CompanyGuard'
 //   タブ1 書類作成: 種類選択 → 生成 → ドラフト表示＋コピー
 //   タブ2 規程レビュー: テキスト貼付 → リスク一覧（severity を Badge で）
 //     ＋ F1 規程まるごと取込: レビューで抽出した自社ルール候補を取捨選択し、
-//       規程の原文まるごとをKabauの記憶に保存（以降のチャットが原文参照で答える）。
+//       規程の原文まるごとを就業規則AIの記憶に保存（以降のチャットが原文参照で答える）。
 // ============================================================================
 
 const DOCUMENT_TYPES = ['36協定', '就業規則', '賃金規程', '労働条件通知書']
@@ -274,7 +274,7 @@ function DocumentsInner() {
     }
   }
 
-  // F1: 規程原文まるごと＋承認済みルール候補をKabauの記憶へ保存する。
+  // F1: 規程原文まるごと＋承認済みルール候補を就業規則AIの記憶へ保存する。
   async function ingest() {
     if (ingesting) return
     if (reviewText.trim().length < 10) {
@@ -470,7 +470,7 @@ function DocumentsInner() {
                 className="resize-y"
               />
               <p className="mt-1 text-xs text-neutral-500">
-                レビューは先頭20,000字が対象です。「Kabauに覚えさせる」では貼り付けた全文が記憶されます。
+                レビューは先頭20,000字が対象です。「就業規則AIに覚えさせる」では貼り付けた全文が記憶されます。
               </p>
             </div>
             <Button size="lg" onClick={review} disabled={reviewing} className="w-full">
@@ -516,12 +516,12 @@ function DocumentsInner() {
                 <p className="pt-2 text-xs leading-relaxed text-neutral-500">{disclaimer}</p>
               )}
 
-              {/* F1 規程まるごと取込: レビュー後に「この規程をKabauに覚えさせる」を提示 */}
+              {/* F1 規程まるごと取込: レビュー後に「この規程を就業規則AIに覚えさせる」を提示 */}
               <Card className="space-y-4 border-brand-200 bg-brand-50/40">
                 <div>
                   <p className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
                     <BookMarked className="h-4 w-4 text-brand-600" aria-hidden />
-                    この規程をKabauに覚えさせる
+                    この規程を就業規則AIに覚えさせる
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-neutral-600">
                     貼り付けた規程の全文を記憶します。以降の相談で「自社の規程では第○条に〜」と、
@@ -593,7 +593,7 @@ function DocumentsInner() {
           {/* 取込済み規程の一覧（会社の記憶として保持中） */}
           {ingested.length > 0 && (
             <Card className="space-y-2">
-              <p className="text-sm font-medium text-neutral-600">Kabauが覚えている規程</p>
+              <p className="text-sm font-medium text-neutral-600">就業規則AIが覚えている規程</p>
               <ul className="space-y-1.5">
                 {ingested.map(doc => (
                   <li

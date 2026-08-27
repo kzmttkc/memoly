@@ -3,7 +3,7 @@ import { PlanId, BillingInterval, priceIdForPlan } from '@/lib/plans'
 import { buildBillingReturnUrls } from '@/lib/checkout-url'
 
 // ============================================================================
-// lib/stripe.ts — Kabau（カバウ） Stripe クライアント + 席サブスク checkout
+// lib/stripe.ts — 就業規則AI Stripe クライアント + 席サブスク checkout
 // ----------------------------------------------------------------------------
 // 秘密の扱い:
 //   - STRIPE_SECRET_KEY は **ランタイム env のみ**（git不可・.gitignore で .env* 除外済）。
@@ -13,7 +13,7 @@ import { buildBillingReturnUrls } from '@/lib/checkout-url'
 //     ときだけ起きる（checkout ルートがガード）。
 //
 // [[project_billing_lifecycle_state]] の既知失敗モードへのガード（コメントで明示）:
-//   - amount0 罠: トライアル checkout は amount_total=0 になりうる。Kabauは今のところ
+//   - amount0 罠: トライアル checkout は amount_total=0 になりうる。就業規則AIは今のところ
 //     トライアル無し（無料モニターは Stripe を経由しない）なので 0 は「自製品の課金」と
 //     みなさない。将来トライアルを足す場合は webhook 側の amount ガードを見直すこと。
 //   - masked鍵: Vercel/Netlify の env は管理画面で値がマスクされ読み戻せない。
@@ -22,7 +22,7 @@ import { buildBillingReturnUrls } from '@/lib/checkout-url'
 //   - 共有Stripeアカウントのクロス配信: LIVE は9製品で共有しており、Stripe は1イベントを
 //     購読中の全エンドポイントへ配信する。付与は **price 一致**で決め、metadata.product が
 //     他製品を名乗るイベントは拒否する（webhook/transition.ts の resolveCheckoutProduct）。
-//     amount は判定に使わない——製品間で衝突する（¥9,800 = Kabau Standard /
+//     amount は判定に使わない——製品間で衝突する（¥9,800 = 就業規則AI Standard /
 //     sharoushi Business / UITruth Pro 等・2026-08-21 実測）。
 // ============================================================================
 
@@ -81,7 +81,7 @@ export interface CreateSeatCheckoutArgs {
 //     この機能が読む規約URLは Stripe の「公開情報（Settings → ビジネスの詳細 →
 //     公開情報）」にあり、**アカウント単位で1つしか持てない**。当社は Stripe を
 //     全製品で共有している（ASSET_REGISTRY.md）ため、ここに banto-roumu.com/terms を
-//     入れると **UITruth や MyTone の決済画面にもKabauの規約が出る**。
+//     入れると **UITruth や MyTone の決済画面にも就業規則AIの規約が出る**。
 //     実測: 公開情報のビジネスウェブサイトは https://sharoushi-agent.com/、
 //     規約URL・プライバシーURLはどちらも未登録（2026-07-30）。
 //
@@ -108,7 +108,7 @@ const CHECKOUT_SUBMIT_MESSAGE =
 /**
  * 規約同意チェックの有効化。**現状は常にオフで運用する**（上の解説参照）。
  * Stripe の規約URLはアカウント単位で1つしか持てず、当社は全製品で共有しているため、
- * 有効化すると他製品の決済画面にKabauの規約が出る。製品ごとにアカウントを分けた日に true。
+ * 有効化すると他製品の決済画面に就業規則AIの規約が出る。製品ごとにアカウントを分けた日に true。
  */
 export function tosConsentEnabled(): boolean {
   return process.env.STRIPE_TOS_CONSENT === 'true'

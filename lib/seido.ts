@@ -304,7 +304,7 @@ export function getSeidoPost(slug: string): SeidoPost | undefined {
 }
 
 // ============================================================================
-// 無料チェックリスト（Kabau無料登録の特典）
+// 無料チェックリスト（就業規則AI無料登録の特典）
 //   /seido/checklist（公開LP）には groups の見出しと項目数のみ、
 //   /seido/checklist/zenbun（要ログイン）には全項目を描画する。
 //   項目はすべて上記記事と同じ一次資料の範囲内。個別判断が要る項目は

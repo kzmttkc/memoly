@@ -47,23 +47,23 @@ const ORDERED_TOOLS = [...TOOL_LIST].sort(
 )
 
 export const metadata: Metadata = {
-  title: '労務の無料セルフ点検ツール一覧｜Kabau（カバウ）',
+  title: '労務の無料セルフ点検ツール一覧｜就業規則AI',
   description:
     '有給5日の取得義務、36協定の上限、残業代の計算、パート従業員の社会保険加入、柔軟な働き方の措置。中小企業の労務を自社の数字で確認できる無料ツールの一覧です。登録不要・会社データは保存しません。',
   alternates: { canonical: URL },
   openGraph: {
-    title: '労務の無料セルフ点検ツール一覧｜Kabau（カバウ）',
+    title: '労務の無料セルフ点検ツール一覧｜就業規則AI',
     description:
       '中小企業の労務を自社の数字で確認できる無料セルフ点検ツールの一覧です。登録不要・会社データは保存しません。',
     url: URL,
-    siteName: 'Kabau（カバウ）',
+    siteName: '就業規則AI',
     locale: 'ja_JP',
     type: 'website',
     images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: '労務の無料セルフ点検ツール一覧' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '労務の無料セルフ点検ツール一覧｜Kabau（カバウ）',
+    title: '労務の無料セルフ点検ツール一覧｜就業規則AI',
     description:
       '中小企業の労務を自社の数字で確認できる無料セルフ点検ツールの一覧です。登録不要・会社データは保存しません。',
     images: [`${BASE}/og-image.png`],
@@ -71,12 +71,12 @@ export const metadata: Metadata = {
 }
 
 export default function ToolsIndexPage() {
-  // BreadcrumbList（Kabau → 無料ツール）
+  // BreadcrumbList（就業規則AI → 無料ツール）
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: '無料ツール', item: URL },
     ],
   }
@@ -110,7 +110,7 @@ export default function ToolsIndexPage() {
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <span className="text-neutral-600">無料ツール</span>
       </nav>
@@ -177,7 +177,7 @@ export default function ToolsIndexPage() {
         </ul>
       </section>
 
-      {/* ===== Kabau本体への導線 ===== */}
+      {/* ===== 就業規則AI本体への導線 ===== */}
       <section className="mx-auto max-w-3xl px-6 py-12">
         <Card className="bg-brand-600 text-center">
           <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">

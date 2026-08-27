@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card'
 import { Button, buttonClass } from '@/components/ui/Button'
 
 // ============================================================================
-// ErrorState — セグメント error.tsx 共通の美しいエラー面（Kabauデザインシステム準拠）。
+// ErrorState — セグメント error.tsx 共通の美しいエラー面（就業規則AIデザインシステム準拠）。
 //   Card + brand アイコン + 「もう一度試す(reset)」/「戻る」の2アクション。
 //   error.tsx は各セグメントに置く薄いラッパにし、見た目はここへ集約する
 //   （global-error.tsx はレイアウトごと落ちた最後の砦なので別実装＝インライン）。

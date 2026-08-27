@@ -29,7 +29,7 @@ import { CommandPalette } from './CommandPalette'
 
 // ============================================================================
 // AppShell — Kabau（旧・番頭）会社版の共通アプリシェル。
-//   上部ヘッダ: Kabau ワードマーク + CompanySwitcher 常設（モバイルも同一行=1段・D21）
+//   上部ヘッダ: 就業規則AI ワードマーク + CompanySwitcher 常設（モバイルも同一行=1段・D21）
 //   左サイドナビ(>=lg): D01 情報設計を「相談する / 気づく / つくる / 覚える」の
 //     4柱グループで再編（URLは全て既存のまま・表示だけ再構成）。
 //   モバイル(<lg): 下部タブは「ホーム/相談/気づく/つくる/記憶」の5枠（D02: 記憶を復帰）。
@@ -131,14 +131,14 @@ function Wordmark({ locale }: { locale: import('@/lib/locale').Locale }) {
     <Link
       href={withLocale('/company', locale)}
       className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-      aria-label={t(locale, 'Kabauホーム', 'Kabau home')}
+      aria-label={t(locale, '就業規則AIホーム', '就業規則AI home')}
     >
       {/* 2026-08-26 Kabau×番頭 1本化 Phase 1-1: タイル字は旧「番」→頭文字「K」。
           タイル・配色（brand-600）は承認済みビジュアルのまま。 */}
       <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-        K
+        規
       </span>
-      <span className="text-base font-bold tracking-tight text-neutral-900">Kabau</span>
+      <span className="text-base font-bold tracking-tight text-neutral-900">就業規則AI</span>
     </Link>
   )
 }

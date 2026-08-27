@@ -26,7 +26,7 @@ export async function DELETE() {
   await admin.from('memoly_users').delete().eq('id', user.id)
 
   // 退会後の会社データ残存対策（CTO P2-2）:
-  //   Kabau(company_*)側は company_id をキーに companies へ CASCADE する設計で、
+  //   就業規則AI(company_*)側は company_id をキーに companies へ CASCADE する設計で、
   //   auth.users への user_id FK を持つのは company_members（ON DELETE CASCADE）と
   //   company_conversations.user_id（ON DELETE SET NULL）のみ。よって auth ユーザー削除で
   //   「この人の席」は自動で消えるが、会社本体と会社スコープの記憶/書類/期限等は残る。

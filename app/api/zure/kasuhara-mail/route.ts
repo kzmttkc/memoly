@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
       draft,
       '',
       '──',
-      'Kabau（カバウ）｜労務コンプライアンスAI https://banto-roumu.com/zure',
+      '就業規則AI https://banto-roumu.com/zure',
       'このメールは、診断画面でご本人が入力したアドレスに1回だけ送信しています。',
     ].join('\n')
     try {
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           from: FROM,
           to: [email],
-          subject: 'カスハラ10措置の照合結果（控え）| Kabau',
+          subject: 'カスハラ10措置の照合結果（控え）| 就業規則AI',
           text,
         }),
       })

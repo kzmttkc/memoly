@@ -43,7 +43,7 @@ function HomeInner() {
         <MemoryBalanceMeter companyId={companyId} />
       </div>
 
-      {/* E02: Kabauが肩代わりした時間（推定）。記憶メーターの直下＝価値の翻訳。
+      {/* E02: 就業規則AIが肩代わりした時間（推定）。記憶メーターの直下＝価値の翻訳。
           相談2回未満・取得失敗時は何も出ない。C10 活性化v2 の計測もこの中で行う。 */}
       <div className="mb-6">
         <TimeSavedEstimate companyId={companyId} />

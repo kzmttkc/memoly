@@ -144,7 +144,7 @@ export function sanitizeAttributes(input: CompanyAttributesInput): CompanyAttrib
  *   5問の保存先は company_attributes だが、チャットが読む loadCompanyContext は
  *   company_profiles と company_memories しか見ておらず、system プロンプトに
  *   attributes が渡る経路が存在しなかった（grep -c "attributes" lib/prompts.ts → 0）。
- *   その一方でチャット画面は「Kabauはこの前提で答えます：建設業・30〜49人・36協定なし」と
+ *   その一方でチャット画面は「就業規則AIはこの前提で答えます：建設業・30〜49人・36協定なし」と
  *   表示していた＝**表示は前提を踏まえると言い、実挙動はモデルに何も渡していない**。
  *   結果、5問に答えた直後の初回相談が業種も人数も知らない一般論で返り、
  *   「会社を覚える」という製品の看板が実装で裏切られていた。

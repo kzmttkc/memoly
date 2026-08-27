@@ -12,12 +12,12 @@ const SUPPORT_EMAIL = 'support@banto-roumu.com'
 // 2026-08-09 SEO/AEO/LLMO監査で発見: canonical/OG/Twitterを一切定義しておらず、
 //   ルートlayout.tsx(消費者Memoly向けの既定値)がそのまま出ていた
 //   （実測: 本番HTMLの canonical が /contact ではなく https://banto-roumu.com
-//   ＝重複コンテンツ扱いのリスク、og:title/descriptionも「Kabau — 会社を覚える労務AI」の
+//   ＝重複コンテンツ扱いのリスク、og:title/descriptionも「就業規則AI — 会社を覚える労務AI」の
 //   トップページ用文言のまま）。他の主要ページ(/faq等)と同じ構造に揃える。
 const BASE = 'https://banto-roumu.com'
 const URL = `${BASE}/contact`
-const TITLE = 'お問い合わせ｜Kabau（カバウ）'
-const DESC = 'Kabau（カバウ）へのお問い合わせ窓口です。サービスに関するご質問・不具合のご報告は、下記メールアドレス宛にご連絡ください。'
+const TITLE = 'お問い合わせ｜就業規則AI'
+const DESC = '就業規則AIへのお問い合わせ窓口です。サービスに関するご質問・不具合のご報告は、下記メールアドレス宛にご連絡ください。'
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -27,10 +27,10 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESC,
     url: URL,
-    siteName: 'Kabau（カバウ）',
+    siteName: '就業規則AI',
     locale: 'ja_JP',
     type: 'website',
-    images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: 'Kabau（カバウ） お問い合わせ' }],
+    images: [{ url: `${BASE}/og-image.png`, width: 1200, height: 630, alt: '就業規則AI お問い合わせ' }],
   },
   twitter: {
     card: 'summary_large_image',

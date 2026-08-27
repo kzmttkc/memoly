@@ -18,7 +18,7 @@ import LeadCapture from '@/app/business/_components/LeadCapture'
 
 export const metadata: Metadata = buildToolMetadata({
   slug: '36kyotei-jougen-check',
-  title: '36協定の時間外・休日労働の上限を無料でセルフ点検｜Kabau（カバウ）',
+  title: '36協定の時間外・休日労働の上限を無料でセルフ点検｜就業規則AI',
   description:
     '36協定の時間外労働の上限（月45時間・年360時間・特別条項の年720時間・単月100時間未満・複数月平均80時間・年6か月）に自社の残業実績が収まっているか、無料でセルフ点検できるツールです。分かる範囲の数字を入れると、確認が要りそうな箇所を画面で整理できます。登録不要・会社データは保存しません。',
   ogDescription:

@@ -1,7 +1,7 @@
 import { NotFoundState } from '@/components/ui/NotFoundState'
 
 // ルート 404（どのセグメントにも該当しない未マッチURL）。ルートレイアウトは消費者向け
-// ダーク基調のため、Kabauの白基調カードが読めるよう company-light + 白背景でラップする。
+// ダーク基調のため、就業規則AIの白基調カードが読めるよう company-light + 白背景でラップする。
 //
 // 2026-07-30 UX監査 #2（重大）: 出口が「トップへ戻る」1本だけの行き止まりだった。
 //   実測で 404 に落ちる典型URL（/pricing /plans /price /ryokin）は「料金を知りたい」

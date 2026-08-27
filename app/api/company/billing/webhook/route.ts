@@ -10,7 +10,7 @@ import {
 import type Stripe from 'stripe'
 
 // ============================================================================
-// /api/company/billing/webhook — Stripe → Kabau（カバウ） の課金状態反映
+// /api/company/billing/webhook — Stripe → 就業規則AI の課金状態反映
 // ----------------------------------------------------------------------------
 //   購読すべき Stripe イベント（Takeshi が Stripe ダッシュボードで設定）:
 //     - checkout.session.completed         → plan/seats 付与・customer/sub 保存
@@ -48,7 +48,7 @@ import type Stripe from 'stripe'
 //        （transition.ts の resolveCheckoutProduct）。
 //        ★2026-08-21 に作り直した。旧実装はここに「三重ガード」と書きながら
 //        `if (!isBanto && !priceMatch && !amountMatch)` という **OR**（1つでも
-//        当たれば通る）で、しかも amount は製品間で衝突する（¥9,800 = Kabau
+//        当たれば通る）で、しかも amount は製品間で衝突する（¥9,800 = 就業規則AI
 //        Standard / sharoushi Business / UITruth Pro 等）。実害が出ていなかったのは
 //        metadata.company_id を他製品が偶然使っていないおかげで、ガードの強さでは
 //        なかった。この記述を手本として引用した Agentrix まで巻き込む誤りだった。
@@ -59,7 +59,7 @@ import type Stripe from 'stripe'
 //         全て env のみ（git不可・.env* は .gitignore 済）。
 //
 //   [[project_billing_lifecycle_state]] 既知失敗モードのガード:
-//     - amount0（トライアル0円）: Kabauはトライアル無し。付与は price 一致でのみ決まり、
+//     - amount0（トライアル0円）: 就業規則AIはトライアル無し。付与は price 一致でのみ決まり、
 //       未入金の checkout は isCheckoutPaid で弾く。将来トライアル導入時は要見直し。
 //     - masked鍵/env反映ラグ: 鍵は env を CLI set → デプロイ → 実トランザクションで検証。
 //     - service role: webhook は cookie 無しのため anon ではなく service role で DB 更新。
@@ -202,7 +202,7 @@ export async function POST(req: NextRequest) {
       //     if (!isBanto && !priceMatch && !amountMatch)
       // と書かれていて、コメントは「三重ガード」と称していたが実体は
       // **1つでも当たれば通る OR** だった。しかも金額は製品をまたいで衝突する
-      // （¥9,800 = Kabau Standard / sharoushi Business / UITruth Pro など）ので、
+      // （¥9,800 = 就業規則AI Standard / sharoushi Business / UITruth Pro など）ので、
       // amount 一致は「他製品でない」ことを保証しない。判定は price 一致中心にし、
       // 他製品を名乗るイベントは price が偶然一致しても拒否する。
       let pricePlan: PlanId | null = null
@@ -250,7 +250,7 @@ export async function POST(req: NextRequest) {
       }
 
       // 反映する plan は price から確定したものを使う。metadata.plan は根拠にしない
-      // （'standard' はKabauにも UITruth にも実在し、amount も製品間で衝突する）。
+      // （'standard' は就業規則AIにも UITruth にも実在し、amount も製品間で衝突する）。
       const plan: PlanId = product.plan
 
       // 席数: metadata.seats（checkout 作成時に quantity と同値で載せている）。
@@ -401,7 +401,7 @@ export async function POST(req: NextRequest) {
       const subId = typeof invoice.subscription === 'string' ? invoice.subscription : null
       if (!subId) return new Response('ignored: invoice without subscription', { status: 200 })
 
-      // クロス配信ガード: この subscription がKabauの会社に紐づくか。companies に
+      // クロス配信ガード: この subscription が就業規則AIの会社に紐づくか。companies に
       // stripe_subscription_id が在る＝自製品の課金。無ければ他製品の invoice として無視。
       const { data: company } = await supabase
         .from('companies')

@@ -5,7 +5,7 @@ import { track } from '@/lib/analytics'
 
 // ============================================================================
 // AnswerSources — チャット回答末尾の「参照した法令・指針（一次情報）」と
-//   カスハラ文脈の Kabau 実務パック導線を構造化して描画する。
+//   カスハラ文脈の 就業規則AI 実務パック導線を構造化して描画する。
 //   (WORK_ORDERS.md Trust Stack v2 #3/#4・2026-08-21)
 //
 //   入力はサーバ（/api/company/chat → lib/law-citations.ts formatSourcesTrailer）が

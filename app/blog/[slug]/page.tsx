@@ -39,14 +39,14 @@ export async function generateMetadata({
   if (!p) return {}
   const url = `${BASE}/blog/${p.slug}`
   return {
-    title: `${p.title}｜Kabau（カバウ）`,
+    title: `${p.title}｜就業規則AI`,
     description: p.description,
     alternates: { canonical: url },
     openGraph: {
       title: p.title,
       description: p.description,
       url,
-      siteName: 'Kabau（カバウ）',
+      siteName: '就業規則AI',
       locale: 'ja_JP',
       type: 'article',
       publishedTime: p.publishedAt,
@@ -86,7 +86,7 @@ export default async function BlogPostPage({
     author: { '@type': 'Organization', name: 'KIZUNA Creation' },
     publisher: {
       '@type': 'Organization',
-      name: 'Kabau（カバウ）',
+      name: '就業規則AI',
       logo: { '@type': 'ImageObject', url: `${BASE}/icon-512.png` },
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
@@ -97,7 +97,7 @@ export default async function BlogPostPage({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Kabau（カバウ）', item: `${BASE}/zure` },
+      { '@type': 'ListItem', position: 1, name: '就業規則AI', item: `${BASE}/zure` },
       { '@type': 'ListItem', position: 2, name: 'ブログ', item: `${BASE}/blog` },
       { '@type': 'ListItem', position: 3, name: p.title, item: url },
     ],
@@ -112,7 +112,7 @@ export default async function BlogPostPage({
 
       {/* ===== パンくず ===== */}
       <nav aria-label="パンくず" className="mx-auto max-w-3xl px-6 pt-5 text-xs text-neutral-500">
-        <Link href="/zure" className="hover:text-brand-700">Kabau</Link>
+        <Link href="/zure" className="hover:text-brand-700">就業規則AI</Link>
         <span className="mx-1.5">/</span>
         <Link href="/blog" className="hover:text-brand-700">ブログ</Link>
         <span className="mx-1.5">/</span>
@@ -149,14 +149,14 @@ export default async function BlogPostPage({
           </div>
         </section>
 
-        {/* ===== Kabauがどう役立つか ===== */}
+        {/* ===== 就業規則AIがどう役立つか ===== */}
         <section className="mx-auto max-w-3xl px-6 py-10">
           <Card padded className="space-y-3">
             <div className="flex items-start gap-2">
               <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-md bg-brand-600 text-white">
                 <BantoMark className="h-3.5 w-3.5" aria-hidden />
               </span>
-              <p className="text-sm font-semibold text-neutral-900">Kabauはこの課題にこう接続します</p>
+              <p className="text-sm font-semibold text-neutral-900">就業規則AIはこの課題にこう接続します</p>
             </div>
             {p.productTieIn.map((t, i) => (
               <p key={i} className="text-sm leading-relaxed text-neutral-600">{t}</p>

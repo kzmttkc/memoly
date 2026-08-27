@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
   ])
 
   // 過去判断 × 最新法令の確認対象を決定的に検知（LLM不要）。今回の相談に関連トピックが
-  //   出たとき、Kabauが「過去判断が最新改正より古い可能性」を断定せず指摘できるよう注入する。
+  //   出たとき、就業規則AIが「過去判断が最新改正より古い可能性」を断定せず指摘できるよう注入する。
   const decisionConflicts = detectDecisionConflicts(ctx.decisions).map(c => ({
     topicLabel: c.topicLabel,
     decisionSummary: c.decisionSummary,

@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 //
 // このエンドポイントは旧「Memoly」消費者版の残骸だった。ユーザーからの
 // 通報内容 (memoly_reports) を認証済みユーザーIDに紐付けて保存していた。
-// 現在このリポジトリは「Kabau」SaaSであり、会社スコープの通報は
+// 現在このリポジトリは「就業規則AI」SaaSであり、会社スコープの通報は
 // /api/company/reports が正規に担っている。この個人版は既存ユーザー0
 // （未使用）で、放置すると認証済みユーザーなら誰でも書き込める任意データ
 // 挿入口として攻撃面が残り続ける。よって保存ロジックを全撤去し、常に
@@ -17,7 +17,7 @@ function gone() {
     {
       error: 'Gone',
       detail:
-        '/api/report は廃止されました。Kabauの通報機能は /api/company/reports を使用してください。',
+        '/api/report は廃止されました。就業規則AIの通報機能は /api/company/reports を使用してください。',
     },
     { status: 410 }
   )

@@ -10,7 +10,7 @@
 //        「自動確認ができなかった」と明示する（黙って捏造しない・黙って省かない）。
 //     4. 確定ファクトに当たらない質問は「一般的な情報提供（出典なし）」と明示し、
 //        専門家相談を促す。
-//     5. カスハラ文脈の回答にだけ Kabau 実務パック導線が付く（他の話題には付かない）。
+//     5. カスハラ文脈の回答にだけ 就業規則AI 実務パック導線が付く（他の話題には付かない）。
 //
 //   ネットワークには出ない（fetch はフェイク）。実APIの疎通は
 //   scripts/verify_egov_citations.mjs で別途確認する。
@@ -171,7 +171,7 @@ test('buildAnswerSources: 36協定の質問で労働基準法第36条が e-Gov �
   const trailer = formatSourcesTrailer(s)
   assert.ok(trailer.includes(SOURCES_HEADING))
   assert.ok(trailer.includes('労働基準法 第36条'))
-  assert.ok(!trailer.includes(KABAU_PACK_URL), 'カスハラ以外にはKabau導線を付けない')
+  assert.ok(!trailer.includes(KABAU_PACK_URL), 'カスハラ以外には就業規則AI導線を付けない')
 })
 
 test('buildAnswerSources: 条が実在しない（missing）なら条番号を落とし、法令名だけ残す', async () => {
@@ -244,9 +244,9 @@ test('buildAnswerSources: 条文以外の一次情報の表示名から未確認
 })
 
 // ----------------------------------------------------------------------------
-// 4) カスハラ文脈 → Kabau 実務パック導線（1箇所・Kabau側の既存CTA文を流用）
+// 4) カスハラ文脈 → 就業規則AI 実務パック導線（1箇所・就業規則AI側の既存CTA文を流用）
 // ----------------------------------------------------------------------------
-test('buildAnswerSources: カスハラの質問には Kabau 実務パック導線が1箇所付く（utm付き）', async () => {
+test('buildAnswerSources: カスハラの質問には 就業規則AI 実務パック導線が1箇所付く（utm付き）', async () => {
   const s = await buildAnswerSources('カスハラ対策で就業規則に何を書けばいいですか', {
     fetchImpl: fakeFetch('exists'),
     cache: new Map(),
@@ -254,15 +254,15 @@ test('buildAnswerSources: カスハラの質問には Kabau 実務パック導�
   assert.equal(s.kasuhara, true)
   const trailer = formatSourcesTrailer(s)
   assert.ok(trailer.includes(KABAU_BLOCK_HEADING))
-  assert.equal(trailer.split(KABAU_PACK_URL).length - 1, 1, 'Kabau URL は1箇所だけ')
+  assert.equal(trailer.split(KABAU_PACK_URL).length - 1, 1, '就業規則AI URL は1箇所だけ')
   assert.ok(KABAU_PACK_URL.includes('utm_source=banto'))
   assert.ok(KABAU_PACK_URL.includes('utm_campaign=kabau_set'))
-  // Kabau側（site/kasuhara-*-guide.html の pack CTA）の既存文をそのまま使う。新規コピーではない。
+  // 就業規則AI側（site/kasuhara-*-guide.html の pack CTA）の既存文をそのまま使う。新規コピーではない。
   assert.ok(trailer.includes('足りない措置の書式は、Wordで渡せます'))
   assert.ok(trailer.includes('実務パックの中身を見る（19,800円）'))
 })
 
-test('buildAnswerSources: セクハラ/パワハラだけの質問には Kabau 導線を付けない（カスハラ限定）', async () => {
+test('buildAnswerSources: セクハラ/パワハラだけの質問には 就業規則AI 導線を付けない（カスハラ限定）', async () => {
   const s = await buildAnswerSources('パワハラ防止の措置義務について教えてください', {
     fetchImpl: fakeFetch('exists'),
     cache: new Map(),
