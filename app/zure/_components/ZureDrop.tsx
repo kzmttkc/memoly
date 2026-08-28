@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { FileUp, LoaderCircle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
-import { track } from '@/lib/analytics'
+import { track, trackOncePerVisit } from '@/lib/analytics'
 import { KasuharaGap } from './KasuharaGap'
 import { HERO, HERO_EN, KABAU_LINE, OFFER } from '@/lib/offer'
 import { createClient } from '@/lib/supabase'
@@ -77,6 +77,24 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
     setRestored(true)
     setRemainHours(pendingRemainingHours(pending))
   }, [])
+
+  const utmSource = params.get('utm_source') ?? ''
+  const utmMedium = params.get('utm_medium') ?? ''
+  const fromReferral = !!utmSource || utmMedium === 'cta'
+
+  useEffect(() => {
+    const props: Record<string, string> = {}
+    if (utmSource) props.source = utmSource.slice(0, 60)
+    if (utmMedium) props.medium = utmMedium.slice(0, 60)
+    trackOncePerVisit('zure_landing', Object.keys(props).length ? props : undefined)
+  }, [utmSource, utmMedium])
+
+  useEffect(() => {
+    if (sheet || restored || busy) return
+    if (!fromReferral) return
+    const box = pasteBoxRef.current
+    if (box) box.open = true
+  }, [sheet, restored, busy, fromReferral])
 
   useEffect(() => {
     if (!sheet || restored) return
@@ -478,6 +496,12 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
       )}
 
       <div className="zure-drop-chrome">
+      {fromReferral && !sheet && (
+        <p className="mt-6 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm leading-relaxed text-neutral-800">
+          ファイルが手元にない場合は、下の「テキストを貼る」から始められます。PDF・Wordがあれば、ここに置いてください。
+        </p>
+      )}
+
       <div
         role="group"
         aria-labelledby="zure-drop-label"

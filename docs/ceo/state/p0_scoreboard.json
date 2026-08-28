@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-28T00:10:53.919Z",
+  "generatedAt": "2026-08-28T11:23:46.212Z",
   "brand": "就業規則AI",
   "northStar": {
     "metric": "zure_sheet_shown",
@@ -13,7 +13,6 @@
     "zureSource": "plausible_snapshot:2026-08-28",
     "expectedByToday": 0.29,
     "onTrack": true,
-    "onTrackNote": "P0開始日基準の線形ペースでは到達。7〜8月累計2本は密度不足。絶対ゲートは10/01までにfile≥10。",
     "progress": 0.2
   },
   "commercial": {

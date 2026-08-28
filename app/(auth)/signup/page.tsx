@@ -626,6 +626,11 @@ function SignupForm() {
           中小企業の総務担当にGitHubは無縁で、「開発者向け製品では」という違和感を生む）。
           英語圏（?lang=en / /business/en 経由）の流入にだけ従来どおり出す。
           既存のGitHub連携アカウントは /login で従来どおりログインできる（そちらは不変）。 */}
+      {fromZure && !isEn && (
+        <p className="mb-3 text-center text-xs leading-relaxed text-neutral-600">
+          Googleで続ける場合、下のチェックボックスは不要です。
+        </p>
+      )}
       <OAuthButtons next={nextDest} isEn={isEn} showGithub={isEn} />
       <p className="mt-2 text-center text-xs text-neutral-500">
         {isEn

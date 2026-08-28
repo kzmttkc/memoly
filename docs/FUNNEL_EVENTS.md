@@ -10,6 +10,7 @@
 
 | イベント | 面 | 定義 | 備考 |
 |---|---|---|---|
+| `zure_landing` | banto `/zure` | 入口到達（1訪問1回） | props `source` / `medium` で送客元を区別。`zure_sheet_shown` との落差＝置く前離脱 |
 | `zure_sheet_shown` | banto `/zure` | ファイルまたは貼付からずれ1枚が表示された | **fileTarget の代理指標**。props `rows` は件数のみ |
 | （将来）`zure_file_accepted` | 同上 | サーバが extract 200 を返した瞬間 | 必要になるまで増やさない |
 
