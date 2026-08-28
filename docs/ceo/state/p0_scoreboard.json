@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-08-28T11:23:46.212Z",
+  "generatedAt": "2026-08-28T22:09:25.672Z",
   "brand": "就業規則AI",
   "northStar": {
     "metric": "zure_sheet_shown",
     "fileTarget": 10,
     "kabauFileTarget": 3,
     "killDate": "2026-10-01",
-    "daysLeft": 35,
-    "elapsedDays": 1,
+    "daysLeft": 34,
+    "elapsedDays": 2,
     "totalWindowDays": 35,
     "zureShown": 2,
     "zureSource": "plausible_snapshot:2026-08-28",
-    "expectedByToday": 0.29,
+    "expectedByToday": 0.57,
     "onTrack": true,
     "progress": 0.2
   },
@@ -30,9 +30,10 @@
     "offerLive": true,
     "w2TwostepCtaLive": true,
     "funnelFixLive": true,
-    "note": "2026-08-28: sharoushi W2本番 + banto /zure貼付自動展開 + signup Google案内"
+    "samplePasteLive": true,
+    "note": "2026-08-29: /zureサンプル1クリック + gap-board CTA「ファイルを置く」"
   },
   "nextActions": [
-    "zure_landing vs zure_sheet_shown の落差を週次で見る。改善が効かなければサンプル貼付1クリックを検討"
+    "zure_landing vs zure_sheet_shown(source!=sample) を週次で見る。外部fileが停滞なら会社意図面の流入を足す"
   ]
 }

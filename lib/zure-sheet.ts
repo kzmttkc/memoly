@@ -34,6 +34,7 @@ const DISCLAIMER =
 
 export function sheetTitle(filename: string): string {
   if (/^pasted(\.txt)?$/i.test(filename)) return '貼った本文のずれ1枚'
+  if (/^sample-rules(\.txt)?$/i.test(filename)) return 'サンプル本文のずれ1枚'
   const base = filename.replace(/\.[^.]+$/, '') || filename
   const short = Array.from(base).length > 40 ? `${Array.from(base).slice(0, 40).join('')}…` : base
   return `${short}のずれ1枚`

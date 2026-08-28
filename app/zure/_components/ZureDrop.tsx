@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase'
 import { fileFromPastedText, sniffKind, unreadNoteForUnsupported, plainTextFromClipboardData, emptyOrFolderNote } from '@/lib/document-extract'
 import { savePendingZure, readPendingZure, clearPendingZure, pendingRemainingHours } from '@/lib/zure-pending'
 import { retryUntilMs, retryWaitMessage } from '@/lib/zure-rate-limit'
+import { ZURE_SAMPLE_FILENAME, ZURE_SAMPLE_TEXT, isZureSampleFilename } from '@/lib/zure-sample'
 import { buildZureSheet, zureKindLabel, type ZureSheet } from '@/lib/zure-sheet'
 import type { LpVariant } from '@/app/business/_lib/variant-shared'
 
@@ -136,7 +137,7 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
     setCopied(false)
     setClearAsk(false)
     setRemainHours(null)
-    if (file.name !== 'pasted.txt') setPasteNote(null)
+    if (file.name !== 'pasted.txt' && !isZureSampleFilename(file.name)) setPasteNote(null)
     try {
       const form = new FormData()
       form.set('file', file)
@@ -159,7 +160,12 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
       })
       setStorageWarn(!saved)
       if (saved) setRemainHours(pendingRemainingHours({ savedAt: Date.now() }))
-      track('zure_sheet_shown', { rows: nextSheet.rows.length })
+      const source = isZureSampleFilename(file.name)
+        ? 'sample'
+        : file.name === 'pasted.txt'
+          ? 'paste'
+          : 'file'
+      track('zure_sheet_shown', { rows: nextSheet.rows.length, source })
     } catch {
       setError('通信を確認してください。同じファイルをもう一度置くか、本文を貼ってください。')
     } finally {
@@ -167,15 +173,29 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
     }
   }, [busy])
 
-  function submitPaste(raw: string) {
+  function submitPaste(raw: string, filename = 'pasted.txt') {
     const result = fileFromPastedText(raw)
     if (!result.ok) {
       setError(result.error)
       return
     }
-    setPasteNote(result.truncated ? '先頭10万字まで使いました。' : null)
+    setPasteNote(
+      isZureSampleFilename(filename)
+        ? 'これは架空のサンプル本文です。自社のファイルや本文に差し替えられます。'
+        : result.truncated
+          ? '先頭10万字まで使いました。'
+          : null,
+    )
     setPaste('')
-    void onFile(result.file)
+    const file = isZureSampleFilename(filename)
+      ? new File([raw.replace(/^\uFEFF/, '').trim()], filename, { type: 'text/plain' })
+      : result.file
+    void onFile(file)
+  }
+
+  function runSample() {
+    track('zure_sample_clicked')
+    submitPaste(ZURE_SAMPLE_TEXT, ZURE_SAMPLE_FILENAME)
   }
 
   function ingestClipboard(data: DataTransfer | null): boolean {
@@ -617,6 +637,20 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
 
       {!sheet && (
         <>
+          <div className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4">
+            <p className="text-sm font-medium text-neutral-900">ファイルが手元にないとき</p>
+            <p className="mt-1 text-sm leading-relaxed text-neutral-600">
+              架空の短い本文で、ずれ1枚の見え方だけ先に確認できます。自社のファイルではありません。
+            </p>
+            <button
+              type="button"
+              className={buttonClass({ variant: 'secondary', size: 'sm', className: 'mt-3' })}
+              disabled={busy}
+              onClick={runSample}
+            >
+              サンプルの本文で1枚にする
+            </button>
+          </div>
           <details className="mt-6 text-sm leading-relaxed text-neutral-700">
             <summary className="cursor-pointer text-brand-700 underline-offset-2 hover:underline">
               1枚の例を見る

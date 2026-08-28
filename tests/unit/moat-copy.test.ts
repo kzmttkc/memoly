@@ -33,6 +33,8 @@ test('入口はファイルに加えて本文の貼り付けができる', () =>
   assert.match(src, /テキストを貼る/)
   assert.match(src, /fileFromPastedText/)
   assert.match(src, /zure-paste/)
+  assert.match(src, /サンプルの本文で1枚にする/)
+  assert.match(src, /zure_sample_clicked/)
 })
 
 test('説明ページの比較は登録直後の相談を約束しない', () => {
