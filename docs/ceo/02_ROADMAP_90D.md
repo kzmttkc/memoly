@@ -39,7 +39,7 @@
 - [x] `scripts/p0_scoreboard.mjs` 日次実行可能
 - [x] 公開 `/offer`（境界1枚）
 - [x] FUNNEL_EVENTS 追記（zure 北の星）
-- [ ] hoken-sim 系CTA二段化（sharoushi側）
+- [x] hoken-sim 系CTA二段化（sharoushi側・5ツール本番 2026-08-28）
 - [ ] DPA方針メモ更新
 - [ ] BILLING 解禁チェックリスト
 

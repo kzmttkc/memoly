@@ -69,6 +69,7 @@ async function main() {
 
   let zureShown = null
   let zureSource = 'MANUAL_REQUIRED'
+  let funnel = null
   const apiKey = process.env.PLAUSIBLE_API_KEY
   const siteId = process.env.PLAUSIBLE_SITE_ID || 'banto-roumu.com'
   if (apiKey) {
@@ -77,6 +78,27 @@ async function main() {
       zureSource = 'plausible_v1_aggregate'
     } catch (e) {
       zureSource = `PLAUSIBLE_ERROR: ${e.message}`
+    }
+  }
+  // review.py 正典スナップショット（site_id=sharoushi + hostname=banto）があれば優先採用
+  const snapPath = path.join(OUT_DIR, 'plausible_snapshot.json')
+  if (zureShown == null && fs.existsSync(snapPath)) {
+    try {
+      const snap = JSON.parse(fs.readFileSync(snapPath, 'utf8'))
+      const z = snap?.data?.zure_sheet_shown?.results
+      if (typeof z?.events?.value === 'number') {
+        zureShown = z.events.value
+        zureSource = `plausible_snapshot:${snap.queriedAt || 'unknown'}`
+      }
+      funnel = {
+        windowNote: snap.plausibleNote || snap.site || null,
+        zureVisitors: z?.visitors?.value ?? null,
+        signupStartedVisitors: snap?.data?.signup_started?.results?.visitors?.value ?? null,
+        signupCompletedVisitors: snap?.data?.signup_completed?.results?.visitors?.value ?? null,
+        offerViewVisitors: snap?.data?.offer_view?.results?.visitors?.value ?? null,
+      }
+    } catch (e) {
+      zureSource = `SNAPSHOT_ERROR: ${e.message}`
     }
   }
 
@@ -107,11 +129,17 @@ async function main() {
       paidCompanies: null,
       note: 'Stripe/Supabaseで手計測。subscription_started を突合',
     },
+    funnel,
+    deploy: {
+      offerLive: true,
+      w2TwostepCtaLive: true,
+      note: '2026-08-28: /offer + roumu→zure + sharoushi 5ツール二段CTA本番',
+    },
     nextActions: [
       zureShown == null
         ? 'Plausibleで zure_sheet_shown を手計測するか PLAUSIBLE_API_KEY を設定'
         : zureShown < offer.fileTarget
-          ? '記事・ツール→/zure 閉ループの1箇所を修理（流入を足さない）'
+          ? '会社意図面（36・カスハラ・規程ガイド）のzure到達を1箇所強化。個人ツールは二段済み'
           : '有料1社の決裁カード（BILLING）へ進む',
     ],
   }

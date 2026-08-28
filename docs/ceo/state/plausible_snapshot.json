@@ -1,0 +1,56 @@
+{
+  "queriedAt": "2026-08-28",
+  "site": "sharoushi-agent.com",
+  "data": {
+    "zure_sheet_shown": {
+      "results": {
+        "events": {
+          "value": 2
+        },
+        "visitors": {
+          "value": 2
+        }
+      }
+    },
+    "signup_completed": {
+      "results": {
+        "events": {
+          "value": 6
+        },
+        "visitors": {
+          "value": 3
+        }
+      }
+    },
+    "signup_started": {
+      "results": {
+        "events": {
+          "value": 88
+        },
+        "visitors": {
+          "value": 11
+        }
+      }
+    },
+    "offer_view": {
+      "results": {
+        "events": {
+          "value": 0
+        },
+        "visitors": {
+          "value": 0
+        }
+      }
+    },
+    "pageviews": {
+      "results": {
+        "events": {
+          "value": 0
+        },
+        "visitors": {
+          "value": 0
+        }
+      }
+    }
+  }
+}
