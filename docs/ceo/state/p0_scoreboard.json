@@ -29,9 +29,10 @@
   "deploy": {
     "offerLive": true,
     "w2TwostepCtaLive": true,
-    "note": "2026-08-28: /offer + roumu→zure + sharoushi 5ツール二段CTA本番"
+    "funnelFixLive": true,
+    "note": "2026-08-28: sharoushi W2本番 + banto /zure貼付自動展開 + signup Google案内"
   },
   "nextActions": [
-    "会社意図面（36・カスハラ・規程ガイド）のzure到達を1箇所強化。個人ツールは二段済み"
+    "zure_landing vs zure_sheet_shown の落差を週次で見る。改善が効かなければサンプル貼付1クリックを検討"
   ]
 }
