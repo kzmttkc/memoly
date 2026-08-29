@@ -325,9 +325,28 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
           <p className="mt-4 text-base leading-relaxed text-neutral-700">
             登録の前に、PDF・Word・テキストを置けます。ファイルが無いときは、本文を貼れます。読めなかったページは未読として残します。相談は、この1枚のあとです。
           </p>
+          {/* 2026-08-29 P0: 第一面の信頼行を1変数追加（所要・登録・カード）。
+              仮説: 着地→sheet_shown 落差は「何が起きるか不明」が主因。評価軸3（LPトップ性）。 */}
+          <p className="mt-3 text-sm font-medium leading-relaxed text-neutral-800">
+            約30秒で1枚になります。登録不要・クレジットカード不要。
+          </p>
           <p className="mt-2 text-sm leading-relaxed text-neutral-600">
             置いたファイルは、残す操作の前にサーバへ保存しません。このブラウザに24時間だけ控え、残す操作のあとで会社の書類へ移します。同じ回線から1時間に8回まで置けます。共有のパソコンでは、残す操作までこの画面を閉じないでください。
           </p>
+          <div className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4">
+            <p className="text-sm font-medium text-neutral-900">ファイルが手元にないとき</p>
+            <p className="mt-1 text-sm leading-relaxed text-neutral-600">
+              架空の短い本文で、ずれ1枚の見え方だけ先に確認できます。自社のファイルではありません。
+            </p>
+            <button
+              type="button"
+              className={buttonClass({ variant: 'secondary', size: 'sm', className: 'mt-3' })}
+              disabled={busy}
+              onClick={runSample}
+            >
+              サンプルの本文で1枚にする
+            </button>
+          </div>
         </>
       )}
       {!sheet && manyFiles && (
@@ -637,20 +656,6 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
 
       {!sheet && (
         <>
-          <div className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4">
-            <p className="text-sm font-medium text-neutral-900">ファイルが手元にないとき</p>
-            <p className="mt-1 text-sm leading-relaxed text-neutral-600">
-              架空の短い本文で、ずれ1枚の見え方だけ先に確認できます。自社のファイルではありません。
-            </p>
-            <button
-              type="button"
-              className={buttonClass({ variant: 'secondary', size: 'sm', className: 'mt-3' })}
-              disabled={busy}
-              onClick={runSample}
-            >
-              サンプルの本文で1枚にする
-            </button>
-          </div>
           <details className="mt-6 text-sm leading-relaxed text-neutral-700">
             <summary className="cursor-pointer text-brand-700 underline-offset-2 hover:underline">
               1枚の例を見る

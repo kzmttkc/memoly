@@ -1,6 +1,6 @@
 # FUNNEL_EVENTS — 就業規則AI 計測正典
 
-最終更新: 2026-08-28（CEO P0）
+最終更新: 2026-08-29（CEO P0・評価3軸PDCA）
 
 原則: **新イベントは最小**。既存名を優先。PII禁止。hostname は `banto-roumu.com` と `sharoushi-agent.com` を混ぜて解釈しない。
 
@@ -28,6 +28,7 @@
 | `signup_started` | 登録画面到達（1訪問1回・trackOncePerVisit） |
 | `signup_completed` | 登録完了 |
 | `signup_cta_clicked` | CTAクリック。`location` で面を区別（`zure_save` / `offer_zure` 等） |
+| `signup_blocked_age` / `signup_blocked_consent` | 送信時に年齢・規約チェック未完で止まった（11→3崖の内訳） |
 | `subscription_started` | Checkout成功後。props `plan` |
 | `churned` / `payment_failed` / `payment_recovered` | 課金コホート（analytics.ts） |
 

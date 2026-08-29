@@ -314,6 +314,7 @@ function SignupForm() {
       // （L1監査#12: 一括表示化。区切り文字に依存した split はしない）。
       setError(errors.join('\n'))
       if (!ageOk) track('signup_blocked_age', Object.keys(attribution).length ? attribution : undefined)
+      if (!consentOk) track('signup_blocked_consent', Object.keys(attribution).length ? attribution : undefined)
       return
     }
 
@@ -628,7 +629,7 @@ function SignupForm() {
           既存のGitHub連携アカウントは /login で従来どおりログインできる（そちらは不変）。 */}
       {fromZure && !isEn && (
         <p className="mb-3 text-center text-xs leading-relaxed text-neutral-600">
-          Googleで続ける場合、下のチェックボックスは不要です。
+          いちばん早い残し方は Google です。この場合、下のチェックボックスは不要です。
         </p>
       )}
       <OAuthButtons next={nextDest} isEn={isEn} showGithub={isEn} />

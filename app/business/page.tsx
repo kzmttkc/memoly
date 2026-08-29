@@ -614,7 +614,7 @@ export default async function BusinessLandingPage({
             <p className="mx-auto mt-5 flex max-w-xl items-start justify-center gap-1.5 text-sm leading-relaxed text-neutral-500 lg:mx-0 lg:justify-start">
               <Database className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden />
               <span>
-                SmartHR・freeeなどの既存システムはそのまま。就業規則AIは「自社ルールの相談窓口」を1つ足す使い方です。
+                SmartHR・freeeなどの既存システムはそのまま。就業規則のファイルを置く使い方を1つ足します。
               </span>
             </p>
             {/* 2026-07-24 P10(英語選好の外資HR): 就業規則AIのチャットは英語質問に英語で
@@ -806,7 +806,7 @@ export default async function BusinessLandingPage({
             </span>
             <div>
               <h3 className="text-lg font-semibold text-neutral-900">
-                担当者が代わる日も、会社の記憶はそのまま
+                担当者が代わる日も、残した前提はそのまま
               </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
                 担当交代のときは「引き継ぎビュー」で、確定した自社ルール・過去の判断の経緯・関係者ごとの状況・労務リスクの要点を1画面にまとめて確認できます。

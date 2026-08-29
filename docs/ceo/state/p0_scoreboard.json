@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T07:30:59.420Z",
+  "generatedAt": "2026-08-29T07:53:30.897Z",
   "brand": "就業規則AI",
   "northStar": {
     "metric": "zure_sheet_shown",
@@ -32,9 +32,18 @@
     "funnelFixLive": true,
     "samplePasteLive": true,
     "kasuharaZureBridgeLive": true,
-    "note": "2026-08-29: カスハラ上位ガイド sister→ファイルを置く + mid CTA（kitei/manual）"
+    "zureTrustLineLive": true,
+    "note": "2026-08-29: /zure信頼行+サンプル第一面 / signup Google明示 / business FV語彙"
+  },
+  "evalAxes": {
+    "integration": 3.3,
+    "competitiveEdge": 3.6,
+    "lpTopTier": 3.1,
+    "note": "信頼行追加後の自己採点（戦果は週次で再採点）"
   },
   "nextActions": [
-    "kasuhara_kitei_zure_mid / sister_zure の banto_cta を週次で見る。zure_landing→sheet_shown(source!=sample) 落差が続くなら流入より着地摩擦を再修理"
+    "zure_landing→sheet_shown(source!=sample) と sample_clicked を週次で見る",
+    "signup_blocked_consent/age を見て崖の内訳を確定",
+    "9/15までに Dify DPA 決裁カード"
   ]
 }
