@@ -4,7 +4,7 @@
 > 「契約上の定めの有無と内容を確認し、確認日とともに記録しています」と書いている、その記録の実体。
 > この台帳が無いと当該記述は裏付けを持たない。
 >
-> 最終確認日: **2026-08-12** / 次回確認予定: **2027-08-12**（年1回・ポリシー記載の頻度）
+> 最終確認日: **2026-08-29** / 次回確認予定: **2027-08-12**（年1回・ポリシー記載の頻度）
 
 ## なぜこれが要るか
 
@@ -22,7 +22,7 @@
 |---|---|---|---|---|---|
 | Anthropic | Anthropic, PBC（米国・デラウェア） | https://www.anthropic.com/legal/data-processing-addendum | 規約に自動組込み | Yes | **有効** |
 | OpenAI | OpenAI OpCo, LLC（米国・デラウェア） | https://cdn.openai.com/pdf/openai-data-processing-addendum.pdf （v.010126） | 規約に自動組込み（署名版フォームは任意） | Yes | **有効** |
-| Dify | LangGenius, Inc.（米国・デラウェア File No. 7358523） | https://dify.ai/assets/legal/data-protection-agreement.pdf | **別途署名・メール送付が必要** | Yes | **未締結（要対応）** |
+| Dify | LangGenius, Inc.（米国・デラウェア File No. 7358523） | https://dify.ai/assets/legal/data-protection-agreement.pdf | **別途署名・メール送付が必要** | Yes | **未締結（Owner決裁A・送付手続中 2026-08-29）** |
 | Supabase | Supabase, Inc.（米国） | https://supabase.com/legal/dpa （Version 1・2026-08-01） | 規約に自動組込み | Yes | **有効** |
 | Vercel | Vercel Inc.（米国・カリフォルニア） | https://vercel.com/legal/dpa | 規約に自動組込み**だが Enterprise / Pro プラン限定** | Yes | **未適用の疑い（要対応）**／番頭は team `gokaku` = **Hobby（無料）** |
 | Resend | Plus Five Five, Inc.（米国） | https://resend.com/legal/dpa | 規約に自動組込み（署名済版はダッシュボードで取得可） | Yes | **有効** |
@@ -57,12 +57,15 @@
 
 ## 見送り（Takeshi 裁定・2026-08-12。詳細は `.company/decisions/2026-08.md` 08-12）
 
-### 1. Dify の DPA が未締結
+### 1. Dify の DPA（2026-08-29 Owner決裁で方針変更）
 
 9社中ここだけ、手続をしなければ DPA が発効しない。`https://dify.ai/assets/legal/data-protection-agreement.pdf` の
 Exhibit B（data exporter 欄）に記入・署名し `privacy@dify.ai` へ送付すれば発効する
 （"Upon receipt of the validly completed Addendum … this DPA will become legally binding."）。
-**記入済みPDFを用意しTakeshiへ提示したが、対応不要と裁定。** 未締結のまま据え置く。
+
+- **2026-08-12**: 記入済みPDF提示に対し「対応不要」裁定 → 未締結のまま据え置きだった。  
+- **2026-08-29**: Owner決裁 **A（署名）**。上記裁定を上書き。手順は `docs/ceo/cards/DIFY_DPA_SIGNING_RUNBOOK.md`。  
+- **現状**: 送付前。送付・受領後に本行を「有効」へ更新する。
 
 ### 2. Vercel の DPA がプラン条件を満たしていない疑い
 
