@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { extractDocumentText } from '@/lib/document-extract'
 import { buildZureSheet } from '@/lib/zure-sheet'
 import { retryAfterSeconds, retainHits, ZURE_RL_MAX } from '@/lib/zure-rate-limit'
+import { createAnthropicClient } from '@/lib/gap-engine/engine/anthropicClient'
+import { runGapSheet, PROMPT_VERSION } from '@/lib/gap-engine/engine/runGapSheet'
+import { redactPii } from '@/lib/gap-engine/anonymize/redact'
+import { heuristicGapSheet } from '@/lib/gap-engine/fallback'
+import { CHAT_MODEL } from '@/lib/claude'
+import type { GapSheet } from '@/lib/gap-engine/engine/types'
 
 export const runtime = 'nodejs'
+export const maxDuration = 60
 
 const MAX_BYTES = 8 * 1024 * 1024
 const rlHits = new Map<string, number[]>()
@@ -24,6 +31,43 @@ function takeRateLimit(ip: string): number | null {
     }
   }
   return null
+}
+
+async function buildGapSheet(args: {
+  text: string
+  filename: string
+  pageCount: number | null
+  unreadNote: string | null
+}): Promise<{ sheet: GapSheet; engine: 'claude' | 'heuristic' }> {
+  const pagesUnread: number[] = []
+  const text = redactPii(args.text)
+  const input = {
+    text,
+    pageCount: args.pageCount ?? undefined,
+    pagesUnread,
+    titleGuess: args.filename,
+  }
+
+  const key = process.env.ANTHROPIC_API_KEY
+  if (key && text.trim().length >= 80) {
+    try {
+      const sheet = await runGapSheet(createAnthropicClient(key, CHAT_MODEL), input)
+      if (args.unreadNote) {
+        sheet.summary.unread_note = [sheet.summary.unread_note, args.unreadNote]
+          .filter(Boolean)
+          .join(' ')
+      }
+      return { sheet, engine: 'claude' }
+    } catch (e) {
+      console.error('[zure/extract] runGapSheet failed, heuristic fallback', e)
+    }
+  }
+
+  const sheet = heuristicGapSheet(input)
+  if (args.unreadNote) {
+    sheet.summary.unread_note = args.unreadNote
+  }
+  return { sheet, engine: 'heuristic' }
 }
 
 export async function POST(req: NextRequest) {
@@ -56,16 +100,31 @@ export async function POST(req: NextRequest) {
     filename: file.name,
     mime: file.type || 'application/octet-stream',
   })
-  const sheet = buildZureSheet({
+
+  const started = Date.now()
+  const { sheet, engine } = await buildGapSheet({
+    text: extracted.text,
+    filename: extracted.filename,
+    pageCount: extracted.pageCount,
+    unreadNote: extracted.unreadNote,
+  })
+
+  // 既存 pending / 計測互換のため旧形も返す（UIは gapSheet を優先）
+  const legacy = buildZureSheet({
     filename: extracted.filename,
     text: extracted.text,
     unreadNote: extracted.unreadNote,
   })
 
   return NextResponse.json({
+    persisted: false,
+    prompt_version: PROMPT_VERSION,
+    engine,
+    ms: Date.now() - started,
     filename: extracted.filename,
     text: extracted.text,
     unreadNote: extracted.unreadNote,
-    sheet,
+    sheet: legacy,
+    gapSheet: sheet,
   })
 }

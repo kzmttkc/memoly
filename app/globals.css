@@ -428,11 +428,73 @@ body {
   }
 }
 
-/* 2026-08-29 LPトップ性: 獲得面の大気＋第一面の入場。 */
+/* 2026-08-29 LP: 紙地・墨・朱。AI紫グラデは使わない。明朝見出しはOSスタック。 */
 .zure-surface {
+  --zure-paper: #f4efe6;
+  --zure-paper-card: #fffcf6;
+  --zure-ink: #1a1814;
+  --zure-ink-soft: #4a453c;
+  --zure-line: #d4cdc0;
+  --zure-vermilion: #c23a2b;
+  --zure-vermilion-soft: #f3e0dc;
   background:
-    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--color-brand-100, #dbeafe) 70%, white), transparent 55%),
-    linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #ffffff 100%);
+    radial-gradient(1200px 600px at 10% -10%, #fffdf8 0%, transparent 55%),
+    linear-gradient(180deg, var(--zure-paper) 0%, #efe8db 100%);
+  color: var(--zure-ink);
+}
+.zure-lp-serif {
+  font-family: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", "YuMincho",
+    "Noto Serif JP", "Shippori Mincho", serif;
+}
+.zure-lp-tag {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.12rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  vertical-align: 0.05em;
+}
+.zure-lp-tag-miss {
+  background: var(--zure-vermilion-soft);
+  color: var(--zure-vermilion);
+}
+.zure-lp-tag-ok {
+  background: #e4efe6;
+  color: #2f5d3a;
+}
+.zure-lp-tag-ops {
+  background: #efe8d8;
+  color: #6b5420;
+}
+.zure-deadline-band {
+  background: var(--zure-ink);
+  color: #f7f2ea;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 0.65rem 1rem;
+}
+.zure-deadline-band strong {
+  color: #ffb4a8;
+  font-weight: 600;
+}
+.zure-sticky-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: none;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--zure-line);
+  background: color-mix(in srgb, var(--zure-paper) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+@media (max-width: 639px) {
+  .zure-sticky-cta {
+    display: block;
+  }
 }
 .zure-hero-enter {
   animation: zureHeroIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;

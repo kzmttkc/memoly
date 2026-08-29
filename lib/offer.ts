@@ -14,28 +14,42 @@ export const OFFER = {
   kabauFileTarget: 3,
 } as const
 
-// ヒーローA/Bの勝ち: B を焼き戻し。2026-08-29 CEO裁定 → 同日 Owner指摘で文言を明瞭化。
-//   「書いてある／ない」は抽象すぎて伝わらない。「足りない条項と矛盾」に具体化。
-//   新規割当はB固定。既存cookieは維持（バケット安定）。
+// ヒーロー: 2026-08-29 LP（紙地・機能そのもの）へ焼き戻し。
+//   「方針・窓口・手順」は正しいが長い。第一声はジョブ「ずれが1枚」。
 export const HERO_WINNER = 'B' as 'A' | 'B' | null
 
 export const HERO = {
   A: '就業規則のファイルを置くと、ずれが1枚になります',
-  B: '就業規則のファイルを置くと、足りない条項と矛盾が1枚になります',
+  B: 'ファイルを置くと、ずれが1枚になる。',
 } as const
+
+/** /zure 第一面の義務化行（見出しの直前）。docs/gap-engine/11-ZURE-COPY.md */
+export const ZURE_OBLIGATION =
+  '2026年10月1日から、カスハラ対策はすべての事業主の義務です。'
+
+export const ZURE_LEAD =
+  'PDF・Word・テキストを置くか、本文を貼ると、書いてあること／書いてないこと／運用の書き方がまだないことが1枚になります。登録・クレジットカードは不要です。この1枚は不足の断定ではありません。'
 
 export const HERO_EN = {
   A: 'Place a work rules file, and the gaps become one page',
-  B: 'Place a work rules file, and missing clauses and conflicts become one page',
+  B: 'Place the file, and the gaps become one page.',
 } as const
 
 export const TOOL_NEXT = {
   title: '次は、就業規則のファイルを置く',
-  body: '点検の数字は画面に残っています。就業規則AIの入口は登録ではなく、就業規則のPDF・Word、または本文の貼り付けです。置くと、足りない条項と矛盾が1枚になります。',
+  body: '点検の数字は画面に残っています。就業規則AIの入口は登録ではなく、就業規則のPDF・Word、または本文の貼り付けです。置くと、ずれが1枚になります。',
 } as const
 
 export const KABAU_LINE =
   'パックの次は、店の就業規則のファイルです。置くと、ずれが1枚になります。'
+
+/** killDate までの残日（JST暦日）。帯表示用。 */
+export function daysUntilKill(now = new Date()): number {
+  const [y, m, d] = OFFER.killDate.split('-').map(Number)
+  const kill = Date.UTC(y, m - 1, d)
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.max(0, Math.round((kill - today) / 86_400_000))
+}
 
 const FORBIDDEN = [
   /顧問.{0,8}2\s*万/,

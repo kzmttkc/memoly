@@ -3,32 +3,7 @@ import { PLANS, PAID_PLAN_IDS, billingEnabled } from '@/lib/plans'
 import { SEIDO_KIT_NAME, SEIDO_KIT_PRICE_JPY } from '@/lib/seido-kit'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
-
-// ============================================================================
-// 特定商取引法に基づく表記 — 8/5 課金解禁前の法的必須ページ（W3.5a-1）
-// ----------------------------------------------------------------------------
-// 一次情報照合の記録（2026-07-23 CTO）:
-//   消費者庁「特定商取引法ガイド」通信販売の広告表示事項
-//   （https://www.no-trouble.caa.go.jp/what/mailorder/ の「広告に表示すべき事項」）
-//   と本ページの記載項目を照合済み。網羅する必須項目:
-//   1) 販売価格（役務の対価）＝お支払い総額で表示（総額表示義務に対応。
-//      Stripe Checkout の請求額 = lib/plans.ts の monthlyJpy/yearlyJpy と同額で、
-//      表示価格以外の追加請求は発生しない）
-//   2) 代金の支払時期・方法 3) 役務の提供時期 4) 申込みの撤回・解除（解約・返金）
-//   5) 事業者の氏名・住所・電話番号 → 特商法第11条ただし書・同施行規則の
-//      「消費者からの請求により遅滞なく開示する」省略特例の構成を採用
-//      （個人事業者の氏名・住所・電話の常時掲載は Takeshi 決裁が出るまで行わない既定。
-//        請求があれば遅滞なく電磁的方法で提供する旨と請求方法を明記＝特例の要件）
-//   6) ソフトウェアの動作環境 7) 2回以上継続して契約する場合の販売条件（自動更新）
-//   8) 送料（オンラインサービスのため無し）を明記
-// 価格の SSOT は lib/plans.ts（2026-06-29 Takeshi 承認の確定構造）。
-// 本ページはハードコードせず PLANS を参照し、価格改定時の乖離を構造的に防ぐ。
-// 解約条件は実装事実に一致させる: webhook は請求期間中 plan を維持し、
-// subscription 終了（customer.subscription.deleted）で free へ降格するため、
-// 「請求期間の末日まで利用可・日割り返金なし」が実装と整合する記載。
-// ============================================================================
-
-const SUPPORT_EMAIL = 'support@banto-roumu.com'
+import { SERVICE_LEGAL_NAME, SUPPORT_EMAIL } from '@/lib/brand'
 
 /** 表形式の1行。特商法の必須項目を dl で列挙する。 */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -67,7 +42,7 @@ export default function TokushohoPage() {
             入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">特定商取引法に基づく表記</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年7月30日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月29日</p>
         </div>
 
         {/* 2026-07-28 CTO修正（L1監査#10）: BILLING_ENABLED は現在 false（意図的に
@@ -99,6 +74,8 @@ export default function TokushohoPage() {
 
         <dl>
           <Row label="事業者名">KIZUNA Creation（個人事業者）</Row>
+
+          <Row label="販売サービス名">{SERVICE_LEGAL_NAME}</Row>
 
           {/* 2026-07-28 CTO修正（L2監査#4）: /terms・/privacy には代表者名
               「Kazumoto Takeshi」を既に明記しているのに、本ページだけ氏名まで

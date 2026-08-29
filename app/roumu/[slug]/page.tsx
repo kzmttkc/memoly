@@ -42,7 +42,7 @@ const BASE = 'https://banto-roumu.com'
 const CTA_SUBCOPY = [
   '次は就業規則のファイルを置くだけです。ずれが1枚になります。',
   '登録の前に、PDF・Wordを置くか、本文を貼れます。相談はそのあとです。',
-  '足りない条項と矛盾が、1枚になります。',
+  '方針・窓口・手順があるかが、1枚になります。',
 ]
 
 export function generateStaticParams() {

@@ -1,0 +1,12 @@
+export { TAXONOMY, DISCLAIMER, ADVICE_FOOTER } from "./taxonomy/items";
+export { runGapSheet, emptySheet, toAnonymousStats, PROMPT_VERSION } from "./engine/runGapSheet";
+export { createAnthropicClient } from "./engine/anthropicClient";
+export { enforceTaxonomy, parseSheetJson, quoteExists } from "./engine/validateSheet";
+export { rejectFile, markSparsePages } from "./engine/extractText";
+export { buildMemo } from "./memo/buildMemo";
+export { redactPii, memoryValueAllowed } from "./anonymize/redact";
+export { CONSTITUTION, GAP_SYSTEM } from "./prompts/constitution";
+export { heuristicGapSheet } from "./fallback";
+export { sortBlocks, blockLine } from "./ui/renderSheet";
+export { EVENTS as GAP_EVENTS } from "./gtm/events";
+export type { GapSheet, AnalyzeInput, MemoryRecord, LlmClient, GapBlock } from "./engine/types";

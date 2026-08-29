@@ -58,7 +58,7 @@ import { PublicFooter } from '@/components/ui/PublicFooter'
 export const metadata: Metadata = {
   title: '就業規則AI｜就業規則のファイルを置くと、ずれが1枚になります',
   description:
-    '就業規則のPDF・Wordを置くと、足りない条項と矛盾が1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
+    '就業規則のPDF・Wordを置くと、カスハラの方針・窓口・手順があるかが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
   // 2026-07-30 PMF修理#3: 日英の対応関係(hreflang)がサイト全体で0件だった。
   //   英語版 /business/en は本文・titleとも英語で配信されているのに、日本語版との
   //   関係を検索エンジンに一切伝えていない＝英語圏の検索結果に出る根拠が無い状態。
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: '就業規則AI｜就業規則のファイルを置くと、ずれが1枚になります',
     description:
-      '就業規則のPDF・Wordを置くと、足りない条項と矛盾が1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
+      '就業規則のPDF・Wordを置くと、カスハラの方針・窓口・手順があるかが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
     url: 'https://banto-roumu.com/business',
     siteName: '就業規則AI',
     locale: 'ja_JP',
@@ -92,7 +92,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '就業規則AI｜就業規則のファイルを置くと、ずれが1枚になります',
     description:
-      '就業規則のPDF・Wordを置くと、足りない条項と矛盾が1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
+      '就業規則のPDF・Wordを置くと、カスハラの方針・窓口・手順があるかが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
     images: ['https://banto-roumu.com/og-banto-main.png'],
   },
 }
@@ -161,7 +161,7 @@ const FAQ = [
 //   JSON-LDの内容を必ず一致させる＝他の構造化データと同じ方針）。
 const ONBOARDING_STEPS = [
   { step: '1', title: '就業規則のファイルを置く', body: 'PDF・Word・テキストを置きます。登録の前に、ずれが1枚になります。' },
-  { step: '2', title: '1枚を確認する', body: '足りない条項と矛盾が並びます。この画面で保存もできます。' },
+  { step: '2', title: '1枚を確認する', body: '方針・窓口・手順と触れていない論点が並びます。この画面で保存もできます。' },
   { step: '3', title: '残すときに登録する', body: '会社の書類に残すときだけ、メールで登録します。チャットはまだ開きません。' },
 ]
 
@@ -181,7 +181,7 @@ const FEATURES = [
     icon: BantoMark,
     title: '1枚にする',
     body:
-      '就業規則のPDF・Word（.docx）・テキストを置くと、足りない条項と矛盾が1枚になります。スキャン画像など本文が取れないページは未読として残します。残す操作のあと、相談では自社の条文を引いて答えます。',
+      '就業規則のPDF・Word（.docx）・テキストを置くと、カスハラの方針・窓口・手順があるかが1枚になります。スキャン画像など本文が取れないページは未読として残します。残す操作のあと、相談では自社の条文を引いて答えます。',
   },
   {
     icon: MessageSquareText,

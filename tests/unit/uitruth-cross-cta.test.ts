@@ -36,8 +36,12 @@ test('PublicFooter はサーバーコンポーネントのまま（枠だけを�
     "PublicFooter に 'use client' が入るとフッタ全体がクライアント化する。枠だけを切り出すこと",
   )
   assert.ok(
-    footer.includes('<UitruthCrossCta />'),
-    'PublicFooter は UitruthCrossCta を描画すること',
+    footer.includes('showCrossCta') && footer.includes('<UitruthCrossCta />'),
+    'PublicFooter は opt-in で UitruthCrossCta を描画できること（既定オフ）',
+  )
+  assert.ok(
+    /showCrossCta\s*=\s*false/.test(footer),
+    '労務面の焦点のため showCrossCta の既定は false（外部評価 2026-08-29）',
   )
   assert.ok(
     !footer.includes('uitruth.app'),

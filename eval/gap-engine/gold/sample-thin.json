@@ -1,0 +1,18 @@
+{
+  "id": "thin-restaurant-2020",
+  "industry": "飲食",
+  "headcount_band": "10-20",
+  "text": "第1条 この規則は株式会社見本食堂の職員の就業に関する事項を定める。\n第2条 始業は午前9時、終業は午後6時とする。\n第3条 休憩は正午から1時間とする。\n第4条 休日は日曜日とする。\n第5条 賃金は毎月末日締め翌月15日払いとする。\n第6条 退職する者は30日前に届け出ること。",
+  "expect": {
+    "abs.hours_start_end": "written",
+    "abs.break": "written",
+    "abs.holidays": "written",
+    "abs.wage_cutoff_paydate": "written",
+    "abs.leave": "unmentioned",
+    "abs.raise": "unmentioned",
+    "abs.dismissal": "unmentioned",
+    "kasuhara.policy": "unmentioned",
+    "kasuhara.window": "unmentioned",
+    "ops.annual_leave_5days": "unmentioned"
+  }
+}

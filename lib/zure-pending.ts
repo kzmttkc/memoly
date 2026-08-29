@@ -10,6 +10,8 @@ export interface PendingZure {
   filename: string
   text: string
   unreadNote: string | null
+  /** gap-engine の1枚。無い古い控えは UI 側で再生成する */
+  gapSheet?: unknown
   savedAt?: number
 }
 
@@ -33,6 +35,7 @@ export function parsePendingRaw(raw: string | null, now = Date.now()): PendingZu
       filename: parsed.filename.slice(0, 200),
       text: parsed.text.slice(0, 100_000),
       unreadNote: typeof parsed.unreadNote === 'string' ? parsed.unreadNote : null,
+      gapSheet: parsed.gapSheet,
       savedAt: typeof parsed.savedAt === 'number' ? parsed.savedAt : undefined,
     }
   } catch {

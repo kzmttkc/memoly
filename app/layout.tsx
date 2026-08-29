@@ -20,7 +20,7 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://banto-roumu.com'
 // 2026-08-26 Kabau×番頭 1本化 Phase 1-1: 表示ブランドを Kabau へ（lib/brand.ts が正典）。
 const TITLE = `${BRAND_NAME_JA}｜${BRAND_TAGLINE}`
-const DESC = '就業規則のファイルを置くと、足りない条項と矛盾が1枚になります。登録はそのあとです。企業ごとにデータを分けて保管します。'
+const DESC = '就業規則のファイルを置くと、カスハラの方針・窓口・手順があるかが1枚になります。登録はそのあとです。企業ごとにデータを分けて保管します。'
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

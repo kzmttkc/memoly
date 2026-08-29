@@ -187,7 +187,7 @@ export async function GET(req: Request) {
           subject: '就業規則を貼り付けると、明日から自社の条文で答えます｜就業規則AI',
           // ワンクリック配信停止（RFC 8058）。署名付きURLへ POST するだけで止まる。
           headers: unsubscribeHeaders(unsub.oneClick),
-          text: `${bodyText}\n\n→ 就業規則を貼り付ける: ${BANTO_URL}/company/documents\n\n――\n同じ運営のサービスです。ChatGPTはあなたの会社をどう紹介していますか？ 登録不要・無料で計測できます: https://uitruth.app/?utm_source=banto&utm_medium=email&utm_campaign=day2_reminder\n\n配信停止: ${unsub.page}`,
+          text: `${bodyText}\n\n→ 就業規則を貼り付ける: ${BANTO_URL}/company/documents\n\n配信停止: ${unsub.page}`,
           html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
             <h2 style="color:#324a8a;font-size:18px;margin:0 0 12px">就業規則を貼り付けると、自社の条文で答えます</h2>
             <p style="color:#374151;line-height:1.8;font-size:14px">就業規則AIにご登録いただき、ありがとうございます。</p>
@@ -195,8 +195,6 @@ export async function GET(req: Request) {
             <p style="color:#6b7280;line-height:1.8;font-size:13px">貼り付けでも、PDF・Wordの取り込みでも構いません。スキャン画像で本文が取れないページは、貼り付けで補えます。</p>
             <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
             <a href="${BANTO_URL}/company/documents" style="background:#324a8a;color:#ffffff;padding:12px 24px;border-radius:12px;text-decoration:none;display:inline-block;font-size:14px">就業規則を貼り付ける</a>
-            <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-            <p style="color:#6b7280;line-height:1.8;font-size:12px">同じ運営のサービスです。ChatGPTはあなたの会社をどう紹介していますか？ 登録不要・無料で計測できます。<a href="https://uitruth.app/?utm_source=banto&amp;utm_medium=email&amp;utm_campaign=day2_reminder" style="color:#324a8a">uitruth.app で計測する →</a></p>
             <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
             <p style="color:#9ca3af;font-size:11px;line-height:1.8">
               【送信者情報】<br>

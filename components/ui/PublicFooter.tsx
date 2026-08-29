@@ -40,6 +40,7 @@ const SERVICE_LINKS: { href: string; label: string }[] = [
 
 /** 事業者・規約側の導線（読者が「預けて大丈夫か」を確かめる） */
 const LEGAL_LINKS: { href: string; label: string }[] = [
+  { href: '/about', label: '運営者情報' },
   { href: '/security', label: 'セキュリティとデータ保護' },
   { href: '/tokushoho', label: '特定商取引法に基づく表記' },
   { href: '/terms', label: '利用規約' },
@@ -53,7 +54,9 @@ const LINK_CLASS =
 
 export function PublicFooter({
   ctaLocation,
-  showCrossCta = true,
+  // 2026-08-29: 外部評価どおり労務面の焦点を死なせないため、uitruth 常設枠は既定オフ。
+  // 明示的に showCrossCta を渡した面だけ出す（コンポーネントと計測契約は残す）。
+  showCrossCta = false,
   omitServiceHrefs = [],
 }: {
   ctaLocation?: string
@@ -63,20 +66,15 @@ export function PublicFooter({
   return (
     <footer className="border-t border-neutral-200 bg-neutral-50">
       <div className="mx-auto max-w-5xl px-6 py-10">
-        {/* 2026-08-20 常設クロス送客枠（同じ運営のUITruthへ）。utm_source=banto で効果測定。
-            表示計測(uitruth_cta_view)に useEffect が要るため、この枠だけを
-            クライアント境界へ切り出している（フッタ本体はサーバーコンポーネントのまま）。
-            クリックは Plausible の Outbound Link 自動計測に乗る＝明示イベントは持たない。 */}
+        {/* 任意のクロス送客枠（UITruth）。表示計測は UitruthCrossCta 側。
+            クリックは Plausible Outbound Link 自動計測。 */}
         {showCrossCta && <UitruthCrossCta />}
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <Link href="/zure" className="flex min-h-11 shrink-0 items-center gap-2 sm:min-h-0">
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-white">
               <BantoMark className="h-3.5 w-3.5" aria-hidden />
             </span>
-            <span className="font-semibold text-neutral-900">
-              就業規則AI
-              <span className="ml-2 text-xs font-normal text-neutral-500">旧・Kabau／番頭</span>
-            </span>
+            <span className="font-semibold text-neutral-900">就業規則AI</span>
           </Link>
 
           <nav aria-label="フッタ" className="flex flex-col gap-2 text-sm text-neutral-600 sm:items-end">

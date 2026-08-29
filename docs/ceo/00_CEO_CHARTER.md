@@ -100,6 +100,10 @@ Ownerの選択肢: 承認 / 却下 / 条件付き
 | 売り物境界（仕様） | `docs/ceo/04_OFFER_BOUNDARY_SPEC.md` |
 | 計測正典 | `docs/FUNNEL_EVENTS.md` |
 | P0実装計画 | `docs/superpowers/plans/2026-08-28-p0-acquisition-path.md` |
+| 評価3軸PDCA | `docs/ceo/08_EVAL_AXES_PDCA.md` |
+| 外部評価の消化 | `docs/ceo/10_EXTERNAL_EVAL_DIGEST_2026-08-29.md` |
+| Gap engine 接続 | `docs/ceo/11_GAP_ENGINE_WIRED.md` |
+| 集客×SaaS統合 | `docs/ceo/13_INTEGRATION_SHAROUSHI_AGENT.md` |
 | 会社側ミラー | `~/Takeshi_Automation/.company/products/banto/ceo/` |
 | 戦略Canvas | `canvases/acquisition-top-market-strategy.canvas.tsx` |
 

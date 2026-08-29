@@ -30,14 +30,20 @@ test('料金と説明の本文は労務記憶AIと名乗らない', () => {
 
 test('入口はファイルに加えて本文の貼り付けができる', () => {
   const src = read('app/zure/_components/ZureDrop.tsx')
+  const offer = read('lib/offer.ts')
   assert.match(src, /テキストを貼る/)
   assert.match(src, /fileFromPastedText/)
   assert.match(src, /zure-paste/)
   assert.match(src, /サンプルで見え方だけ確かめる/)
   assert.match(src, /zure_sample_clicked/)
-  assert.match(src, /約30秒で1枚になります/)
+  assert.match(src, /ZURE_LEAD/)
+  assert.match(offer, /登録・クレジットカードは不要|不足の断定ではありません/)
   assert.match(src, /就業規則AI/)
   assert.match(src, /href=\"\/offer\"/)
+  assert.match(src, /ZureLpBelow/)
+  assert.match(src, /zure-sticky-cta/)
+  const below = read('app/zure/_components/ZureLpBelow.tsx')
+  assert.match(below, /無料の点検/)
 })
 
 test('説明ページの比較は登録直後の相談を約束しない', () => {
@@ -59,7 +65,7 @@ test('説明ページのヒーローはファイルが先。アイブローに�
   assert.match(src, /HERO\.B/)
   assert.doesNotMatch(src, /会社を覚える労務AI/)
   assert.equal(HERO_WINNER, 'B')
-  assert.match(HERO.B, /足りない条項と矛盾/)
+  assert.match(HERO.B, /ずれが1枚/)
 })
 
 test('記事の締めは覚えるAIではなくファイルを置く', () => {
@@ -209,11 +215,11 @@ test('獲得面は実ユーザー数を名乗らず、ヒーロー勝ちはBに�
   assert.equal(HERO_WINNER, 'B')
   const llms = read('public/llms.txt')
   assert.match(llms, /ヒーロー文はB/)
-  assert.match(llms, /足りない条項と矛盾/)
+  assert.match(llms, /ずれが1枚|方針・窓口・手順/)
   assert.doesNotMatch(llms, /導入実績/)
   const offer = read('lib/offer.ts')
   assert.match(offer, /HERO_WINNER = 'B'/)
-  assert.match(offer, /足りない条項と矛盾が1枚/)
+  assert.match(offer, /ずれが1枚になる/)
   assert.doesNotMatch(offer, /書いてあることと書いてないことを1枚にします/)
   const ratio = read('app/business/_lib/variant-shared.ts')
   assert.match(ratio, /VARIANT_B_RATIO = 1(?:\.0)?/)

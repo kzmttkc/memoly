@@ -10,6 +10,7 @@
     "test:unit": "node --test tests/unit/*.test.ts",
     "ceo:scoreboard": "node scripts/p0_scoreboard.mjs",
     "ceo:pdca": "node scripts/ceo_weekly_pdca.mjs",
+    "eval:gap-offline": "npx --yes tsx eval/gap-engine/offline.test.ts && npx --yes tsx --test tests/unit/gap-engine-sanitize.test.ts",
     "verify:prod": "node scripts/verify_production_state.mjs"
   },
   "overrides": {

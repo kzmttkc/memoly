@@ -16,8 +16,21 @@ export const BRAND_NAME_JA = '就業規則AI'
 /** サブタイトル。名称が既に機能を語るため、範囲の補足だけを担う。 */
 export const BRAND_TAGLINE = '就業規則のファイルを置くと、ずれが1枚に'
 
-/** 旧名。SEOの連続性（alternateName）と移行注記にだけ使う。 */
+/** 旧名。SEOの連続性（alternateName）と /about の1段落にだけ使う。表のフッタには出さない。 */
 export const BRAND_LEGACY_NAME = 'Kabau（カバウ）・番頭(Banto)'
+
+/** 契約主体（会計・特商法） */
+export const LEGAL_ENTITY = 'KIZUNA Creation（Kazumoto Takeshi 個人事業）'
+
+/** 問い合わせ一本化（集客面・SaaS面共通） */
+export const SUPPORT_EMAIL = 'support@banto-roumu.com'
+
+/** 提供ドメイン（規約・特商法の共通文面） */
+export const SERVICE_DOMAINS = 'banto-roumu.com（SaaS）および sharoushi-agent.com（集客・書式）'
+
+/** 規約・特商法のサービス名一行 */
+export const SERVICE_LEGAL_NAME =
+  '就業規則AI（旧称: Kabau（カバウ）・番頭(Banto)。提供ドメイン: banto-roumu.com / sharoushi-agent.com）'
 
 /** 移行注記（ログイン画面・3ヶ月掲示。掲示終了予定 2026-11-27）。 */
 export const BRAND_TRANSITION_NOTE =

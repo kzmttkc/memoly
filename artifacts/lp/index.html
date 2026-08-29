@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>就業規則のファイルを置く｜就業規則AI</title>
+<meta name="description" content="2026年10月1日からカスハラ対策は全事業主の義務です。就業規則のファイルを置くと、ずれが1枚になります。登録の前に置けます。">
+<link rel="canonical" href="https://banto-roumu.com/zure">
+<style>
+  :root {
+    --paper: #f4efe6;
+    --paper-2: #ebe4d7;
+    --ink: #1a1814;
+    --ink-soft: #4a453c;
+    --line: #d4cdc0;
+    --vermilion: #c23a2b;
+    --vermilion-soft: #f3e0dc;
+    --ok: #2f5d3a;
+    --serif: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", "YuMincho", "Noto Serif JP", "Shippori Mincho", serif;
+    --sans: "Helvetica Neue", Helvetica, Arial, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #fffdf8 0%, transparent 55%),
+      linear-gradient(180deg, var(--paper) 0%, #efe8db 100%);
+    line-height: 1.65;
+  }
+  a { color: inherit; }
+  .wrap { width: min(720px, calc(100% - 2rem)); margin: 0 auto; }
+  .deadline {
+    background: var(--ink);
+    color: #f7f2ea;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-align: center;
+    padding: 0.65rem 1rem;
+  }
+  .deadline strong { color: #ffb4a8; font-weight: 600; }
+  header.top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.1rem 0 0.5rem;
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    font-weight: 650; letter-spacing: 0.02em; text-decoration: none;
+  }
+  .mark {
+    width: 1.7rem; height: 1.7rem; border-radius: 0.35rem;
+    background: var(--ink); color: var(--paper);
+    display: grid; place-items: center; font-family: var(--serif); font-size: 0.95rem;
+  }
+  .nav a { font-size: 0.85rem; color: var(--ink-soft); text-decoration: none; margin-left: 1rem; }
+  .hero { padding: 1.75rem 0 2.5rem; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(2rem, 5.5vw, 3.15rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin: 0.85rem 0 0.9rem;
+  }
+  .lede { margin: 0; color: var(--ink-soft); font-size: 1.02rem; max-width: 36em; }
+  .drop {
+    margin-top: 1.75rem;
+    border: 1.5px dashed #9a9080;
+    background: rgba(255,252,246,0.72);
+    min-height: 12.5rem;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 1.75rem 1.25rem; gap: 0.55rem;
+    cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  .drop:hover, .drop:focus-within { border-color: var(--vermilion); background: #fffaf3; }
+  .drop strong { font-size: 1.05rem; }
+  .drop span { font-size: 0.88rem; color: var(--ink-soft); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--vermilion); color: #fff; text-decoration: none;
+    border: 0; padding: 0.85rem 1.25rem; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; min-height: 2.75rem;
+  }
+  .btn:hover { filter: brightness(0.95); }
+  .btn-ghost {
+    background: transparent; color: var(--ink);
+    border: 1px solid var(--line); padding: 0.7rem 1rem;
+  }
+  section { padding: 2.75rem 0; border-top: 1px solid var(--line); }
+  h2 {
+    font-family: var(--serif); font-weight: 600;
+    font-size: clamp(1.35rem, 3vw, 1.75rem); margin: 0 0 1rem; letter-spacing: -0.01em;
+  }
+  .sample { border: 1px solid var(--line); background: #fffcf6; }
+  .sample-row { padding: 1rem 1.1rem; border-top: 1px solid var(--line); }
+  .sample-row:first-child { border-top: 0; }
+  .tag {
+    display: inline-block; font-size: 0.72rem; font-weight: 650;
+    letter-spacing: 0.04em; padding: 0.15rem 0.45rem; margin-right: 0.45rem;
+  }
+  .tag-miss { background: var(--vermilion-soft); color: var(--vermilion); }
+  .tag-ok { background: #e4efe6; color: var(--ok); }
+  .tag-ops { background: #efe8d8; color: #6b5420; }
+  .sample-row p { margin: 0.35rem 0 0; color: var(--ink-soft); font-size: 0.92rem; }
+  .steps { display: grid; gap: 1rem; }
+  @media (min-width: 720px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+  .step { padding: 1rem 1.05rem; background: rgba(255,252,246,0.65); border: 1px solid var(--line); }
+  .step .n { font-family: var(--serif); color: var(--vermilion); font-size: 1.25rem; }
+  .step h3 { margin: 0.35rem 0; font-size: 1rem; }
+  .step p { margin: 0; font-size: 0.9rem; color: var(--ink-soft); }
+  .compare { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .compare th, .compare td { text-align: left; padding: 0.75rem 0.55rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .compare th { font-weight: 650; width: 28%; }
+  .price-free { font-family: var(--serif); font-size: 1.6rem; margin: 0 0 0.5rem; }
+  .notes { font-size: 0.88rem; color: var(--ink-soft); }
+  .notes li { margin: 0.35rem 0; }
+  footer.site {
+    border-top: 1px solid var(--line); padding: 2rem 0 6.5rem; font-size: 0.82rem; color: var(--ink-soft);
+  }
+  footer.site a { color: var(--ink-soft); }
+  .sticky {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: rgba(244,239,230,0.92); backdrop-filter: blur(8px);
+    border-top: 1px solid var(--line); display: none;
+  }
+  @media (max-width: 719px) { .sticky { display: block; } .sticky .btn { width: 100%; } }
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+  <div class="deadline">2026年10月1日のカスハラ対策義務化まで <strong id="days">—</strong>日 · まず自社のファイルを置く</div>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="https://banto-roumu.com/zure"><span class="mark" aria-hidden="true">就</span>就業規則AI</a>
+      <nav class="nav" aria-label="補助">
+        <a href="https://banto-roumu.com/offer">無料と有料</a>
+        <a href="https://banto-roumu.com/pricing">料金</a>
+      </nav>
+    </header>
+
+    <section class="hero" aria-labelledby="hero-h">
+      <p style="margin:0;font-size:0.9rem;color:var(--ink-soft);letter-spacing:0.06em;">登録不要 · クレジットカード不要</p>
+      <h1 id="hero-h">ファイルを置くと、<br>ずれが1枚になる。</h1>
+      <p class="lede">PDF・Word・テキストを置くか、本文を貼ると、書いてあること／書いてないこと／運用の書き方がまだないことが1枚になります。この1枚は不足の断定ではありません。</p>
+
+      <label class="drop" id="drop" for="file">
+        <strong>就業規則のファイルをここに置く</strong>
+        <span>PDF・Word（.docx）・テキスト。8MBまで。</span>
+        <span class="btn" style="margin-top:0.85rem;pointer-events:none;">ファイルを選ぶ</span>
+      </label>
+      <input id="file" type="file" accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+      <p style="margin:0.85rem 0 0;font-size:0.85rem;color:var(--ink-soft);">選択後は本番の入口（banto-roumu.com/zure）で1枚を作ります。置いたファイルは、残す操作の前にサーバへ保存しません。</p>
+    </section>
+
+    <section aria-labelledby="sample-h">
+      <h2 id="sample-h">ずれ1枚の見本</h2>
+      <p class="notes" style="margin-top:0;">これは表示の例です。置いたファイルの内容ではありません。</p>
+      <div class="sample" style="margin-top:1rem;">
+        <div class="sample-row">
+          <span class="tag tag-miss">触れていない</span><strong>カスタマーハラスメントの方針</strong>
+          <p>このファイルからは読み取れませんでした。不足の断定ではありません。期限 2026-10-01</p>
+        </div>
+        <div class="sample-row">
+          <span class="tag tag-ok">規程にある</span><strong>始業・終業の時刻</strong>
+          <p>規程には記載があります。運用の書き方は、このファイルからはまだありません。</p>
+        </div>
+        <div class="sample-row">
+          <span class="tag tag-ops">運用不足</span><strong>年5日の有給取得</strong>
+          <p>制度の記載は読めます。取得の進め方・記録の書き方は、このファイルからはまだありません。</p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="flow-h">
+      <h2 id="flow-h">置く → 見る → 残す</h2>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>置く</h3><p>登録の前にファイルを置きます。読めないページは未読として残します。</p></div>
+        <div class="step"><div class="n">2</div><h3>見る</h3><p>カスハラなど期限の近い論点を先に、書いてある／ない／運用不足を1枚にします。</p></div>
+        <div class="step"><div class="n">3</div><h3>残す</h3><p>残す操作のあと、会社の前提として続きの相談ができます。チャットはまだ開きません。</p></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="line-h">
+      <h2 id="line-h">何で、何ではないか</h2>
+      <table class="compare">
+        <tbody>
+          <tr><th>SmartHR / freee</th><td>入退社・手続きの基盤。こちらは置き換えません。規程の穴を見る前工程です。</td></tr>
+          <tr><th>ChatGPT / Claude</th><td>毎回ファイルを貼り直し、社内前提が残りません。こちらは1枚と会社記憶が続きます。</td></tr>
+          <tr><th>社労士</th><td>届出・完成品・個別助言は専門家の仕事です。こちらは渡す前の論点の1枚です。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section aria-labelledby="price-h">
+      <h2 id="price-h">料金</h2>
+      <p class="price-free">登録前の1枚は 0円</p>
+      <p class="notes">登録してもクレジットカードは不要です。有料は、残して相談を続けるときだけです。Entry 3,980円／月（会社単位）。</p>
+      <p style="margin-top:1rem;"><a class="btn-ghost btn" href="https://banto-roumu.com/offer">無料と有料の違い</a></p>
+    </section>
+
+    <section aria-labelledby="safe-h">
+      <h2 id="safe-h">先に言っておくこと</h2>
+      <ul class="notes">
+        <li>違法判定をしません。不足の断定もしません。</li>
+        <li>届出用の完成書類は出しません。社労士の代わりを名乗りません。</li>
+        <li>API入力は学習に使いません（Anthropic / OpenAI の既定）。</li>
+        <li>残す操作の前に、置いた本文をサーバへ保存しません。</li>
+      </ul>
+    </section>
+
+    <footer class="site">
+      <p><a href="https://banto-roumu.com/zure">就業規則AI</a> · <a href="https://banto-roumu.com/about">運営者情報</a> · <a href="https://banto-roumu.com/tokushoho">特商法</a> · <a href="https://banto-roumu.com/privacy">プライバシー</a></p>
+      <p style="margin-top:0.6rem;">旧称: Kabau（カバウ）・番頭(Banto)。提供ドメイン: banto-roumu.com / sharoushi-agent.com</p>
+      <p style="margin-top:0.6rem;">© KIZUNA Creation</p>
+    </footer>
+  </div>
+
+  <div class="sticky">
+    <a class="btn" href="https://banto-roumu.com/zure">ファイルを置く</a>
+  </div>
+
+  <script>
+    (function () {
+      var kill = new Date('2026-10-01T00:00:00+09:00');
+      var now = new Date();
+      var days = Math.max(0, Math.ceil((kill - now) / 86400000));
+      var el = document.getElementById('days');
+      if (el) el.textContent = String(days);
+      var input = document.getElementById('file');
+      var drop = document.getElementById('drop');
+      function go() {
+        window.location.href = 'https://banto-roumu.com/zure?utm_source=lp_artifact&utm_medium=drop&utm_campaign=oct_deadline';
+      }
+      if (input) input.addEventListener('change', go);
+      if (drop) {
+        drop.addEventListener('dragover', function (e) { e.preventDefault(); });
+        drop.addEventListener('drop', function (e) { e.preventDefault(); go(); });
+      }
+    })();
+  </script>
+</body>
+</html>
