@@ -133,9 +133,9 @@ function nextHand(axes, funnel, board) {
     }
     if ((funnel?.banto_cta?.visitors ?? 0) < 20) {
       return {
-        hand: 'カスハラ上位ガイド mid CTA の文言/位置を1変数修理',
+        hand: '残る「覚えるAI」系CTAを「ファイルを置く」に焼き戻す（tools/個人ツール二次）',
         axis: 'competitiveEdge',
-        why: '会社向け送客クリックが細い',
+        why: '会社向け送客クリックが細い・オファー正典と不一致',
       }
     }
     return {

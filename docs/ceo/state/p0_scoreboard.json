@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T08:12:15.613Z",
+  "generatedAt": "2026-08-29T10:26:52.735Z",
   "brand": "就業規則AI",
   "northStar": {
     "metric": "zure_sheet_shown",
@@ -29,9 +29,11 @@
   "deploy": {
     "offerLive": true,
     "w2TwostepCtaLive": true,
-    "note": "2026-08-28: /offer + roumu→zure + sharoushi 5ツール二段CTA本番"
+    "kasuharaZureBridgeLive": true,
+    "zureTrustLineLive": true,
+    "note": "2026-08-29: mid CTA前倒し・tools/個人ツールCTAをファイル置きに焼き戻し・DPA=A後回し"
   },
   "nextActions": [
-    "会社意図面（36・カスハラ・規程ガイド）のzure到達を1箇所強化。個人ツールは二段済み"
+    "banto_cta CTRとzure_sheet_shownを週次で見る。fileが伸びなければ/zure第一面を1変数"
   ]
 }
