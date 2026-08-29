@@ -100,7 +100,7 @@ export default function OfferBoundaryPage() {
         <section className="mt-10">
           <h2 className="text-lg font-semibold">最初にやること</h2>
           <p className="mt-2 text-sm leading-relaxed text-neutral-700">
-            登録の前に、就業規則の PDF・Word、または本文を置けます。書いてあることと書いてないことが1枚になります。相談は、そのあとの話です。
+            登録の前に、就業規則の PDF・Word、または本文を置けます。足りない条項と矛盾が1枚になります。相談は、そのあとの話です。
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <TrackedCTA
