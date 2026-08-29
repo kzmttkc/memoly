@@ -40,8 +40,8 @@
 - [x] BILLING 決裁カード草案（提出は file ゲート後）
 - [x] 自律PDCA発火（`scripts/ceo_weekly_pdca.mjs` + Cursor Automation / ローカルloop）
 - [ ] 外部 file≥10（総合4.5の必須）
-- [ ] 外部有料≥1（商業軸）
-- [ ] Dify DPA Owner決裁（法務軸）
+- [ ] 外部有料≥1（商業軸）— BILLINGはfile後のOwner決裁
+- [x] Dify DPA Owner決裁カード提出（**回答待ち** · Downloadsにも配布）
 
 ## 自律発火
 
