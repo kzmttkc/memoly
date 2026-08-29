@@ -214,7 +214,7 @@ const BEFORE_SCENES = [
 const AFTER_SCENES = [
   'ファイルを一度置けば、同じ規程を何度も貼らない',
   '「来週、残業できる？」と聞くだけで、自社前提の答え',
-  '前回の判断は、続きからそのまま話せる',
+  '前回の判断は、1枚のあとの続きから話せる',
 ]
 
 // 比較表（2026-07-23 B18）。「正直な土俵」原則:
@@ -454,6 +454,12 @@ export default async function BusinessLandingPage({
                 料金を比較検討したい来訪者（複数クライアント運用者等）が本文末尾まで
                 スクロールしないと料金に辿り着けなかった。ページ内アンカー(#pricing)で
                 即到達させる（専用ページの新設は本文と二重管理になるため見送り）。 */}
+            <Link
+              href="/offer"
+              className={buttonClass({ variant: 'ghost', size: 'sm', className: 'hidden sm:inline-flex' })}
+            >
+              無料と有料
+            </Link>
             <Link
               href="#pricing"
               className={buttonClass({ variant: 'ghost', size: 'sm', className: 'hidden sm:inline-flex' })}
