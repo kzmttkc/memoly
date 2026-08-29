@@ -1,26 +1,23 @@
 import type { LpVariant } from '../_lib/variant-shared'
+import { HERO } from '@/lib/offer'
 
 const HERO_H1_CLASS =
   'text-4xl font-bold leading-[1.18] tracking-tight text-neutral-900 sm:text-5xl'
 
 export function HeroHeadline({ variant }: { variant: LpVariant }) {
-  if (variant === 'B') {
+  const text = variant === 'B' ? HERO.B : HERO.A
+  // 読点で2行に割る（長い1文でも語中改行を防ぐ）
+  const comma = text.indexOf('、')
+  if (comma > 0) {
     return (
       <h1 className={HERO_H1_CLASS}>
-        <span className="inline-block">このファイルから、</span>
+        <span className="inline-block">{text.slice(0, comma + 1)}</span>
         <br className="hidden sm:block" />
-        <span className="inline-block">書いてあることと書いてないことを</span>
-        <span className="inline-block">1枚にします</span>
+        <span className="inline-block">{text.slice(comma + 1)}</span>
       </h1>
     )
   }
-  return (
-    <h1 className={HERO_H1_CLASS}>
-      <span className="inline-block">就業規則のファイルを置くと、</span>
-      <br className="hidden sm:block" />
-      <span className="inline-block">ずれが1枚になります</span>
-    </h1>
-  )
+  return <h1 className={HERO_H1_CLASS}>{text}</h1>
 }
 
 export function HeroEyebrow(_props: { variant: LpVariant }) {

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { HERO_WINNER } from '../../lib/offer.ts'
+import { HERO, HERO_WINNER } from '../../lib/offer.ts'
 
 const read = (rel: string) => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8')
 
@@ -55,8 +55,11 @@ test('公開FAQは入口での貼り付けを案内する', () => {
 
 test('説明ページのヒーローはファイルが先。アイブローに記憶SaaSと書かない', () => {
   const src = read('app/business/_components/HeroCopy.tsx')
-  assert.match(src, /ずれが1枚になります/)
+  assert.match(src, /from '@\/lib\/offer'/)
+  assert.match(src, /HERO\.B/)
   assert.doesNotMatch(src, /会社を覚える労務AI/)
+  assert.equal(HERO_WINNER, 'B')
+  assert.match(HERO.B, /足りない条項と矛盾/)
 })
 
 test('記事の締めは覚えるAIではなくファイルを置く', () => {
@@ -206,9 +209,12 @@ test('獲得面は実ユーザー数を名乗らず、ヒーロー勝ちはBに�
   assert.equal(HERO_WINNER, 'B')
   const llms = read('public/llms.txt')
   assert.match(llms, /ヒーロー文はB/)
+  assert.match(llms, /足りない条項と矛盾/)
   assert.doesNotMatch(llms, /導入実績/)
   const offer = read('lib/offer.ts')
   assert.match(offer, /HERO_WINNER = 'B'/)
+  assert.match(offer, /足りない条項と矛盾が1枚/)
+  assert.doesNotMatch(offer, /書いてあることと書いてないことを1枚にします/)
   const ratio = read('app/business/_lib/variant-shared.ts')
   assert.match(ratio, /VARIANT_B_RATIO = 1(?:\.0)?/)
 })

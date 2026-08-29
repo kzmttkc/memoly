@@ -13,11 +13,11 @@ const URL = `${BASE}${OFFER.path}`
 export const metadata: Metadata = {
   title: '就業規則のファイルを置く｜就業規則AI',
   description:
-    '就業規則のPDF・Wordを置くか、本文を貼ると、書いてあることと書いてないことが1枚になります。登録の前に置けます。相談は、そのあとです。',
+    '就業規則のPDF・Wordを置くか、本文を貼ると、足りない条項と矛盾が1枚になります。登録の前に置けます。相談は、そのあとです。',
   alternates: { canonical: OFFER.path },
   openGraph: {
     title: '就業規則のファイルを置く｜就業規則AI',
-    description: 'ファイルを置くと、ずれが1枚になります。登録はそのあとです。',
+    description: 'ファイルを置くと、足りない条項と矛盾が1枚になります。登録はそのあとです。',
     url: URL,
     siteName: '就業規則AI',
     locale: 'ja_JP',

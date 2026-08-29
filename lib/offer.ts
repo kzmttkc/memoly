@@ -14,24 +14,24 @@ export const OFFER = {
   kabauFileTarget: 3,
 } as const
 
-// ヒーローA/Bの勝ち: B（カテゴリ即解型）を焼き戻し。2026-08-29 CEO裁定。
-//   根拠: 配信70%をBに寄せた運用・/zure既定B・獲得顔は「書いてある/ないを1枚」が正典。
+// ヒーローA/Bの勝ち: B を焼き戻し。2026-08-29 CEO裁定 → 同日 Owner指摘で文言を明瞭化。
+//   「書いてある／ない」は抽象すぎて伝わらない。「足りない条項と矛盾」に具体化。
 //   新規割当はB固定。既存cookieは維持（バケット安定）。
 export const HERO_WINNER = 'B' as 'A' | 'B' | null
 
 export const HERO = {
   A: '就業規則のファイルを置くと、ずれが1枚になります',
-  B: 'このファイルから、書いてあることと書いてないことを1枚にします',
+  B: '就業規則のファイルを置くと、足りない条項と矛盾が1枚になります',
 } as const
 
 export const HERO_EN = {
   A: 'Place a work rules file, and the gaps become one page',
-  B: 'From this file, we put what is written and what is not onto one page',
+  B: 'Place a work rules file, and missing clauses and conflicts become one page',
 } as const
 
 export const TOOL_NEXT = {
   title: '次は、就業規則のファイルを置く',
-  body: '点検の数字は画面に残っています。就業規則AIの入口は登録ではなく、就業規則のPDF・Word、または本文の貼り付けです。置くと、書いてあることと書いてないことが1枚になります。',
+  body: '点検の数字は画面に残っています。就業規則AIの入口は登録ではなく、就業規則のPDF・Word、または本文の貼り付けです。置くと、足りない条項と矛盾が1枚になります。',
 } as const
 
 export const KABAU_LINE =
