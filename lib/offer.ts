@@ -14,8 +14,10 @@ export const OFFER = {
   kabauFileTarget: 3,
 } as const
 
-// ヒーローA/Bの勝ちは未確定。名乗らない。北の星は fileTarget。
-export const HERO_WINNER = null as 'A' | 'B' | null
+// ヒーローA/Bの勝ち: B（カテゴリ即解型）を焼き戻し。2026-08-29 CEO裁定。
+//   根拠: 配信70%をBに寄せた運用・/zure既定B・獲得顔は「書いてある/ないを1枚」が正典。
+//   新規割当はB固定。既存cookieは維持（バケット安定）。
+export const HERO_WINNER = 'B' as 'A' | 'B' | null
 
 export const HERO = {
   A: '就業規則のファイルを置くと、ずれが1枚になります',

@@ -35,7 +35,7 @@ test('獲得面で使わない文', () => {
 })
 
 test('ヒーローは2変種。記憶SaaSの宣伝ではない', () => {
-  assert.equal(HERO_WINNER, null)
+  assert.equal(HERO_WINNER, 'B')
   assert.match(HERO.A, /ファイル/)
   assert.match(HERO.B, /1枚/)
   assert.doesNotMatch(HERO.A + HERO.B, /労務記憶AI/)

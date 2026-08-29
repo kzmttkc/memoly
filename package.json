@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:unit": "node --test tests/unit/*.test.ts",
+    "ceo:scoreboard": "node scripts/p0_scoreboard.mjs",
+    "ceo:pdca": "node scripts/ceo_weekly_pdca.mjs",
     "verify:prod": "node scripts/verify_production_state.mjs"
   },
   "overrides": {

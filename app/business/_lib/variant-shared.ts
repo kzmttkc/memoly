@@ -12,9 +12,8 @@
 //     修正後は middleware が着地時に cookie で変種を確定し、SSR HTML の段階で
 //     変種が焼き込まれる。クライアント getVariant() も cookie を最優先で読む。
 //
-//   配信比率: B(カテゴリ即解型)を勝者候補として 70% に拡大（A=30%）。
-//   既存来訪者は既に cookie/localStorage に固定済みの変種を維持する
-//   （比率変更は新規割当のみに効く＝バケットの安定性を壊さない）。
+//   配信比率: 2026-08-29 HERO_WINNER=B 焼き戻し後、新規割当は B=100%。
+//   既存来訪者は既に cookie/localStorage に固定済みの変種を維持する。
 // ============================================================================
 
 export type LpVariant = 'A' | 'B'
@@ -25,8 +24,8 @@ export const VARIANT_KEY = 'banto_lp_variant'
 /** cookie の生存期間: 180日（従来値を踏襲） */
 export const VARIANT_COOKIE_MAX_AGE = 60 * 60 * 24 * 180
 
-/** B案（カテゴリ即解型H1）の配信比率。新規割当にのみ適用。 */
-export const VARIANT_B_RATIO = 0.7
+/** B案（カテゴリ即解型H1）の配信比率。新規割当にのみ適用。勝ち焼き戻し後は 1.0。 */
+export const VARIANT_B_RATIO = 1.0
 
 /** SSR で page.tsx へ変種を渡す内部ヘッダ名（middleware が付与） */
 export const VARIANT_HEADER = 'x-banto-lp-variant'

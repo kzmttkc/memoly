@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-29T07:53:30.897Z",
+  "generatedAt": "2026-08-29T08:12:15.613Z",
   "brand": "就業規則AI",
   "northStar": {
     "metric": "zure_sheet_shown",
@@ -29,21 +29,9 @@
   "deploy": {
     "offerLive": true,
     "w2TwostepCtaLive": true,
-    "funnelFixLive": true,
-    "samplePasteLive": true,
-    "kasuharaZureBridgeLive": true,
-    "zureTrustLineLive": true,
-    "note": "2026-08-29: /zure信頼行+サンプル第一面 / signup Google明示 / business FV語彙"
-  },
-  "evalAxes": {
-    "integration": 3.3,
-    "competitiveEdge": 3.6,
-    "lpTopTier": 3.1,
-    "note": "信頼行追加後の自己採点（戦果は週次で再採点）"
+    "note": "2026-08-28: /offer + roumu→zure + sharoushi 5ツール二段CTA本番"
   },
   "nextActions": [
-    "zure_landing→sheet_shown(source!=sample) と sample_clicked を週次で見る",
-    "signup_blocked_consent/age を見て崖の内訳を確定",
-    "9/15までに Dify DPA 決裁カード"
+    "会社意図面（36・カスハラ・規程ガイド）のzure到達を1箇所強化。個人ツールは二段済み"
   ]
 }

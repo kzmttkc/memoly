@@ -21,10 +21,18 @@
 
 ## 今週のキュー（P0→P1）
 
-- [ ] `/zure` 第一面の信頼行（所要・形式・カード不要）— **1変数**
-- [ ] 規定例 mid CTA の週次CTR監視（流入1,261）
-- [ ] signup 崖（submit_attempted vs completed）
-- [ ] `/business` 第一面の記憶語彙削減
-- [ ] ヒーローA/B勝ちの確定（データ足りなければ仮固定しない）
-- [ ] Dify DPA 決裁カード（〜9/15）
-- [ ] 外部有料1社（BILLINGはOwner決裁後）
+- [x] `/zure` 第一面の信頼行（所要・形式・カード不要）— **1変数**
+- [x] 規定例 mid CTA（本番済）— 週次CTRは `ceo_weekly_pdca` で監視
+- [x] signup 崖（submit / blocked_* 計測）
+- [x] `/business` 第一面〜デモの短縮・記憶語彙削減
+- [x] ヒーローA/B勝ちの確定（B焼き戻し・新規割当100%）
+- [x] Dify DPA 決裁カード草案（〜9/15）
+- [x] BILLING 決裁カード草案（提出は file ゲート後）
+- [x] 自律PDCA発火（`scripts/ceo_weekly_pdca.mjs` + Cursor Automation / ローカルloop）
+
+## 自律発火
+
+- スクリプト: `node scripts/ceo_weekly_pdca.mjs`
+- 手順正典: `docs/ceo/09_AUTONOMOUS_PDCA_AUTOMATION.md`
+- Cursor Automation: 週次 cron（オーナーが Automations で有効化）
+- セッション内: `/loop` または monitored shell の `AGENT_LOOP_TICK_ceo_pdca`

@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-08-29T08:12:15.628Z",
+  "brand": "就業規則AI",
+  "axes": {
+    "integration": 3,
+    "competitiveEdge": 3.8,
+    "lpTopTier": 3,
+    "fileProgress": "2/10",
+    "signupPass": 0.27,
+    "sheetPerLanding": 2
+  },
+  "northStar": {
+    "metric": "zure_sheet_shown",
+    "fileTarget": 10,
+    "kabauFileTarget": 3,
+    "killDate": "2026-10-01",
+    "daysLeft": 34,
+    "elapsedDays": 2,
+    "totalWindowDays": 35,
+    "zureShown": 2,
+    "zureSource": "plausible_snapshot:2026-08-29",
+    "expectedByToday": 0.57,
+    "onTrack": true,
+    "progress": 0.2
+  },
+  "funnel": {
+    "zure_sheet_shown": {
+      "events": 2,
+      "visitors": 2
+    },
+    "zure_landing": {
+      "events": 1,
+      "visitors": 1
+    },
+    "zure_sample_clicked": {
+      "events": 0,
+      "visitors": 0
+    },
+    "signup_started": {
+      "events": 88,
+      "visitors": 11
+    },
+    "signup_completed": {
+      "events": 6,
+      "visitors": 3
+    },
+    "offer_view": {
+      "events": 0,
+      "visitors": 0
+    }
+  },
+  "nextHand": {
+    "hand": "カスハラ上位ガイド mid CTA の文言/位置を1変数修理",
+    "axis": "competitiveEdge",
+    "why": "会社向け送客クリックが細い"
+  },
+  "ownerReport": "【就業規則AI CEO週次 2026-08-29】\n数字: file=2/10 · signupPass=0.27 · sheet/land=2 · 軸 統合3/凌駕3.8/LP3\n1手: カスハラ上位ガイド mid CTA の文言/位置を1変数修理\n決裁: なし"
+}

@@ -181,7 +181,7 @@ const FEATURES = [
     icon: BantoMark,
     title: '1枚にする',
     body:
-      '就業規則のPDF・Word（.docx）・テキストを置くと、書いてあることと書いてないことが1枚になります。スキャン画像など本文が取れないページは未読として残します。残す操作のあと、相談では自社の条文を引いて答えます。会社のプロファイルと相談の経緯も蓄積され、毎回の前提説明がなくなり、二度目からは話が早くなります。',
+      '就業規則のPDF・Word（.docx）・テキストを置くと、書いてあることと書いてないことが1枚になります。スキャン画像など本文が取れないページは未読として残します。残す操作のあと、相談では自社の条文を引いて答えます。',
   },
   {
     icon: MessageSquareText,
@@ -689,13 +689,25 @@ export default async function BusinessLandingPage({
         </div>
       </section>
 
-      {/* ===== 体験デモ（FV直下：初見客が数秒でアハに届く導線） =====
-          ヒーロー主CTA「まず無料で試す（登録不要）」の着地点。scroll-mt でスティッキー
-          ヘッダ(h-16)ぶんのオフセットを確保。スクリプト型デモ＝本物のAPIは叩かず用意済み
-          回答をタイプ表示するクライアントコンポーネント。デモ内の signup 転換CTA
-          (location="trydemo")は維持。詳細は _components/TryDemo.tsx を参照。 */}
-      <div id="demo" className="scroll-mt-20">
-        <TryDemoLazy />
+      {/* ===== 体験デモ（折りたたみ：第一面を短く保つ・2026-08-29 LP短縮） ===== */}
+      <div id="demo" className="scroll-mt-20 border-b border-neutral-200 bg-white">
+        <div className="mx-auto max-w-5xl px-6 py-10">
+          <details className="group rounded-2xl border border-neutral-200 bg-neutral-50 open:bg-white">
+            <summary className="cursor-pointer list-none px-5 py-4 text-center text-sm font-medium text-brand-700 underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+              サンプル会社で答え方を見る（任意・登録不要）
+            </summary>
+            <div className="border-t border-neutral-200">
+              <TryDemoLazy />
+            </div>
+          </details>
+          <p className="mt-4 text-center text-sm text-neutral-600">
+            本筋はデモではなく、
+            <a href="/zure" className="font-medium text-brand-700 underline underline-offset-2">
+              就業規則のファイルを置く
+            </a>
+            ことです。
+          </p>
+        </div>
       </div>
 
       {/* ===== 導入シナリオ（B02/B03の器・2026-07-23 Takeshi裁定で骨組み先行実装） =====
@@ -1204,12 +1216,11 @@ export default async function BusinessLandingPage({
               誇張なし: 無料プランの利用上限・記憶の蓄積・全削除可はいずれも本文と整合する事実。 */}
           <div className="mx-auto mb-12 max-w-2xl rounded-2xl border border-brand-200 bg-brand-50/50 p-6 text-center sm:p-8">
             <p className="text-lg font-semibold text-neutral-900">
-              無料プランから始められます。そして就業規則AIは、使うほど御社専用に育ちます。
+              無料プランから始められます。ファイルを置いた前提が残るほど、答えは自社に近づきます。
             </p>
             <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-              規程や相談の記憶が貯まるほど、答えは自社の実態に近づいていきます。
-              だからこそ先にお伝えします。合わないと感じたら、預けたデータごと全削除してやめられます。
-              無料プランのいまが、記憶を貯め始めるいちばん良いタイミングです。
+              合わないと感じたら、預けたデータごと全削除してやめられます。
+              まずは就業規則のファイルを置くところから始められます。
             </p>
           </div>
           <div className="mx-auto mb-12 max-w-2xl text-center">

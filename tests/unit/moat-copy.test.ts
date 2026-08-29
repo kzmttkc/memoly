@@ -200,11 +200,13 @@ test('社内検証は当時記録だと明示し、いまの入口を示す', ()
   assert.match(en, /\/zure\?lang=en/)
 })
 
-test('獲得面は実ユーザー数とA/Bの勝ちを名乗らない', () => {
-  assert.equal(HERO_WINNER, null)
+test('獲得面は実ユーザー数を名乗らず、ヒーロー勝ちはBに焼き戻す', () => {
+  assert.equal(HERO_WINNER, 'B')
   const llms = read('public/llms.txt')
-  assert.match(llms, /勝ちは未確定/)
+  assert.match(llms, /ヒーロー文はB/)
   assert.doesNotMatch(llms, /導入実績/)
   const offer = read('lib/offer.ts')
-  assert.match(offer, /HERO_WINNER = null/)
+  assert.match(offer, /HERO_WINNER = 'B'/)
+  const ratio = read('app/business/_lib/variant-shared.ts')
+  assert.match(ratio, /VARIANT_B_RATIO = 1(?:\.0)?/)
 })
