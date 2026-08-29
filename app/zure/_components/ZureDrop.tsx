@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { FileUp, LoaderCircle } from 'lucide-react'
+import { BantoMark } from '@/components/ui/BantoMark'
 import { buttonClass } from '@/components/ui/Button'
 import { track, trackOncePerVisit } from '@/lib/analytics'
 import { KasuharaGap } from './KasuharaGap'
@@ -284,8 +285,8 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-12 sm:py-16">
-      <div className="zure-drop-chrome">
+    <div className="mx-auto max-w-2xl px-6 py-10 sm:py-14">
+      <div className="zure-drop-chrome zure-hero-enter">
       <a
         href="#zure-file-pick"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
@@ -302,14 +303,21 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
       >
         本文を貼る場所へ
       </a>
-      <h1 className="text-3xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-4xl">
+      {/* 2026-08-29 LPトップ性: ブランドをヒーロー級に（navだけにしない）。 */}
+      <p className="flex items-center gap-2.5 text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white shadow-sm shadow-brand-600/25">
+          <BantoMark className="h-5 w-5" aria-hidden />
+        </span>
+        就業規則AI
+      </p>
+      <h1 className="mt-5 text-3xl font-bold leading-[1.15] tracking-tight text-neutral-900 sm:text-4xl">
         {headline}
       </h1>
       {fromKabau && (
         <p className="mt-4 text-sm leading-relaxed text-neutral-700">{KABAU_LINE}</p>
       )}
       {isEn && (
-        <p className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-relaxed text-neutral-700">
+        <p className="mt-4 rounded-xl border border-neutral-200 bg-white/70 px-4 py-3 text-sm leading-relaxed text-neutral-700">
           The form below is in Japanese. You can still place a PDF, Word (.docx), or text file, or paste the text. Sign-up comes after the one-page sheet.
         </p>
       )}
@@ -323,30 +331,24 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
       {!sheet && (
         <>
           <p className="mt-4 text-base leading-relaxed text-neutral-700">
-            登録の前に、PDF・Word・テキストを置けます。ファイルが無いときは、本文を貼れます。読めなかったページは未読として残します。相談は、この1枚のあとです。
+            PDF・Word・テキストを置くか、本文を貼ると、約30秒で1枚になります。登録・クレジットカードは不要です。
           </p>
-          {/* 2026-08-29 P0: 第一面の信頼行を1変数追加（所要・登録・カード）。
-              仮説: 着地→sheet_shown 落差は「何が起きるか不明」が主因。評価軸3（LPトップ性）。 */}
-          <p className="mt-3 text-sm font-medium leading-relaxed text-neutral-800">
-            約30秒で1枚になります。登録不要・クレジットカード不要。
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-            置いたファイルは、残す操作の前にサーバへ保存しません。このブラウザに24時間だけ控え、残す操作のあとで会社の書類へ移します。同じ回線から1時間に8回まで置けます。共有のパソコンでは、残す操作までこの画面を閉じないでください。
-          </p>
-          <div className="mt-5 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4">
-            <p className="text-sm font-medium text-neutral-900">ファイルが手元にないとき</p>
-            <p className="mt-1 text-sm leading-relaxed text-neutral-600">
-              架空の短い本文で、ずれ1枚の見え方だけ先に確認できます。自社のファイルではありません。
-            </p>
+          <p className="mt-3">
             <button
               type="button"
-              className={buttonClass({ variant: 'secondary', size: 'sm', className: 'mt-3' })}
+              className="text-sm font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800"
               disabled={busy}
               onClick={runSample}
             >
-              サンプルの本文で1枚にする
+              手元にファイルが無いときは、サンプルで見え方だけ確かめる
             </button>
-          </div>
+          </p>
+          <details className="mt-4 text-sm text-neutral-600">
+            <summary className="cursor-pointer font-medium text-neutral-700">置くときの扱い（保存のタイミング）</summary>
+            <p className="mt-2 leading-relaxed">
+              置いたファイルは、残す操作の前にサーバへ保存しません。このブラウザに24時間だけ控え、残す操作のあとで会社の書類へ移します。同じ回線から1時間に8回まで置けます。共有のパソコンでは、残す操作までこの画面を閉じないでください。読めなかったページは未読として残します。
+            </p>
+          </details>
         </>
       )}
       {!sheet && manyFiles && (
@@ -470,7 +472,14 @@ export function ZureDrop({ variant }: { variant: LpVariant }) {
             </p>
           )}
           <p className="zure-drop-chrome mt-2 text-center text-xs text-neutral-500">
-            {authed ? '会社の書類へ残します。' : '残すときに登録します。チャットはまだ開きません。'}
+            {authed
+              ? '会社の書類台帳の最初の1枚として残します。'
+              : '残すときに登録します。台帳が始まります。チャットはまだ開きません。'}
+          </p>
+          <p className="zure-drop-chrome mt-3 text-center text-xs text-neutral-500">
+            <Link href="/offer" className="text-brand-700 underline underline-offset-2" onClick={() => track('offer_nav_clicked', { location: 'zure_after_sheet' })}>
+              無料と有料の違い
+            </Link>
           </p>
           <div className="zure-drop-chrome">
           <button

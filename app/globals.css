@@ -428,6 +428,31 @@ body {
   }
 }
 
+/* 2026-08-29 LPトップ性: 獲得面の大気＋第一面の入場。 */
+.zure-surface {
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--color-brand-100, #dbeafe) 70%, white), transparent 55%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #ffffff 100%);
+}
+.zure-hero-enter {
+  animation: zureHeroIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes zureHeroIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zure-hero-enter {
+    animation: none;
+  }
+}
+
 @media print {
   @page {
     margin: 16mm;

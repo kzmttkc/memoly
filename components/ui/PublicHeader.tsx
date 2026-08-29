@@ -82,6 +82,12 @@ export function PublicHeader({
             </Link>
           )}
           <Link
+            href="/offer"
+            className="hidden min-h-11 items-center px-1 text-sm text-neutral-600 hover:text-brand-700 sm:inline-flex"
+          >
+            無料と有料
+          </Link>
+          <Link
             href="/login?next=/company"
             className={`${showPrimaryCta ? 'hidden sm:inline-flex' : 'inline-flex'} min-h-11 items-center px-1 text-sm text-neutral-600 hover:text-brand-700`}
           >

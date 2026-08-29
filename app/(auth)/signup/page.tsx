@@ -628,8 +628,8 @@ function SignupForm() {
           英語圏（?lang=en / /business/en 経由）の流入にだけ従来どおり出す。
           既存のGitHub連携アカウントは /login で従来どおりログインできる（そちらは不変）。 */}
       {fromZure && !isEn && (
-        <p className="mb-3 text-center text-xs leading-relaxed text-neutral-600">
-          いちばん早い残し方は Google です。この場合、下のチェックボックスは不要です。
+        <p className="mb-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-center text-sm leading-relaxed text-neutral-800">
+          いちばん早い残し方は <span className="font-semibold">Google</span> です。この場合、下のチェックボックスは不要です。
         </p>
       )}
       <OAuthButtons next={nextDest} isEn={isEn} showGithub={isEn} />

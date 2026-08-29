@@ -32,7 +32,7 @@ export default async function ZurePage() {
   const variant: LpVariant = isLpVariant(hv) ? hv : 'B'
 
   return (
-    <div className="company-light min-h-[100dvh] bg-white text-neutral-900">
+    <div className="company-light zure-surface min-h-[100dvh] text-neutral-900">
       <PublicHeader showPrimaryCta={false} />
       <main>
         <Suspense fallback={<p className="px-6 py-16 text-sm text-neutral-500">読み込み中...</p>}>
