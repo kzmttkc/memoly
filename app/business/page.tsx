@@ -908,11 +908,11 @@ export default async function BusinessLandingPage({
               <div>
                 <p className="flex items-center gap-2 text-sm font-semibold text-brand-700">
                   <UserCog className="h-4 w-4" aria-hidden />
-                  士業の方へ — 顧問先ごとに、記憶が分かれます
+                  士業の方へ — 顧問先ごとに、データが分かれます
                 </p>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600">
-                  士業プランでは複数の顧問先を切り替えて使え、記憶とデータは企業ごとに分離されます。
-                  A社で覚えた規程や経緯がB社の回答に混ざることはなく、切り替えた瞬間から、
+                  士業プランでは複数の顧問先を切り替えて使え、会社ごとにデータが分離されます。
+                  A社で置いた規程や経緯がB社の回答に混ざることはなく、切り替えた瞬間から、
                   その顧問先について残した規程で相談の続きを始められます。
                   顧問先が「社労士に渡すメモ」で論点を整理して持ち込めば、面談は前提の確認ではなく論点から始められます。
                 </p>
@@ -951,7 +951,7 @@ export default async function BusinessLandingPage({
         <Card className="mb-8">
           <DataIsolationDiagram />
           <p className="mt-6 text-center text-sm leading-relaxed text-neutral-600">
-            会社ごとに記憶もデータも分離。会社のデータは他社と混ざりません。
+            会社ごとにデータも分離。会社のデータは他社と混ざりません。
           </p>
         </Card>
         <div className="grid min-w-0 gap-5 sm:grid-cols-2">
