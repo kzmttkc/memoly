@@ -40,7 +40,7 @@
 - [x] 公開 `/offer`（境界1枚）
 - [x] FUNNEL_EVENTS 追記（zure 北の星）
 - [x] hoken-sim 系CTA二段化（sharoushi側・5ツール本番 2026-08-28）
-- [ ] DPA方針メモ更新
+- [x] DPA方針メモ更新（決裁期限 9/15 明記・2026-08-29）
 - [ ] BILLING 解禁チェックリスト
 
 ### 10/01 未達時の案B（Owner決裁）

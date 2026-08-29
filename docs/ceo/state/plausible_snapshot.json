@@ -1,56 +1,19 @@
 {
-  "queriedAt": "2026-08-28",
+  "queriedAt": "2026-08-29",
   "site": "sharoushi-agent.com",
+  "plausibleNote": "event:name 直集計（hostnameフィルタは400のため省略）。banto カスタムイベントは同一 site_id。",
+  "window": "2026-07-01..2026-08-29",
   "data": {
-    "zure_sheet_shown": {
-      "results": {
-        "events": {
-          "value": 2
-        },
-        "visitors": {
-          "value": 2
-        }
-      }
-    },
-    "signup_completed": {
-      "results": {
-        "events": {
-          "value": 6
-        },
-        "visitors": {
-          "value": 3
-        }
-      }
-    },
-    "signup_started": {
-      "results": {
-        "events": {
-          "value": 88
-        },
-        "visitors": {
-          "value": 11
-        }
-      }
-    },
-    "offer_view": {
-      "results": {
-        "events": {
-          "value": 0
-        },
-        "visitors": {
-          "value": 0
-        }
-      }
-    },
-    "pageviews": {
-      "results": {
-        "events": {
-          "value": 0
-        },
-        "visitors": {
-          "value": 0
-        }
-      }
-    }
-  }
+    "zure_sheet_shown": { "results": { "events": { "value": 2 }, "visitors": { "value": 2 } } },
+    "zure_landing": { "results": { "events": { "value": 1 }, "visitors": { "value": 1 } } },
+    "zure_sample_clicked": { "results": { "events": { "value": 0 }, "visitors": { "value": 0 } } },
+    "signup_started": { "results": { "events": { "value": 88 }, "visitors": { "value": 11 } } },
+    "signup_completed": { "results": { "events": { "value": 6 }, "visitors": { "value": 3 } } },
+    "offer_view": { "results": { "events": { "value": 0 }, "visitors": { "value": 0 } } }
+  },
+  "sharoushiTop30d": [
+    { "page": "/kasuhara-shugyokisoku-kitei-guide.html", "visitors": 1261 },
+    { "page": "/kasuhara-manual-kihonhoshin-guide.html", "visitors": 565 },
+    { "page": "/roumu/kasuhara-gimuka-2026", "visitors": 260 }
+  ]
 }

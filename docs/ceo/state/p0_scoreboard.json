@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-28T22:09:25.672Z",
+  "generatedAt": "2026-08-29T07:30:59.420Z",
   "brand": "就業規則AI",
   "northStar": {
     "metric": "zure_sheet_shown",
@@ -10,7 +10,7 @@
     "elapsedDays": 2,
     "totalWindowDays": 35,
     "zureShown": 2,
-    "zureSource": "plausible_snapshot:2026-08-28",
+    "zureSource": "plausible_snapshot:2026-08-29",
     "expectedByToday": 0.57,
     "onTrack": true,
     "progress": 0.2
@@ -20,7 +20,7 @@
     "note": "Stripe/Supabaseで手計測。subscription_started を突合"
   },
   "funnel": {
-    "windowNote": "sharoushi-agent.com",
+    "windowNote": "event:name 直集計（hostnameフィルタは400のため省略）。banto カスタムイベントは同一 site_id。",
     "zureVisitors": 2,
     "signupStartedVisitors": 11,
     "signupCompletedVisitors": 3,
@@ -31,9 +31,10 @@
     "w2TwostepCtaLive": true,
     "funnelFixLive": true,
     "samplePasteLive": true,
-    "note": "2026-08-29: /zureサンプル1クリック + gap-board CTA「ファイルを置く」"
+    "kasuharaZureBridgeLive": true,
+    "note": "2026-08-29: カスハラ上位ガイド sister→ファイルを置く + mid CTA（kitei/manual）"
   },
   "nextActions": [
-    "zure_landing vs zure_sheet_shown(source!=sample) を週次で見る。外部fileが停滞なら会社意図面の流入を足す"
+    "kasuhara_kitei_zure_mid / sister_zure の banto_cta を週次で見る。zure_landing→sheet_shown(source!=sample) 落差が続くなら流入より着地摩擦を再修理"
   ]
 }
