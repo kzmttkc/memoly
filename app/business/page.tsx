@@ -92,7 +92,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '就業規則AI｜就業規則のファイルを置くと、ずれが1枚になります',
     description:
-      '就業規則のPDF・Wordを置くと、書いてあることと書いてないことが1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
+      '就業規則のPDF・Wordを置くと、足りない条項と矛盾が1枚になります。登録はそのあとです。中小企業の総務・経営者向けです。',
     images: ['https://banto-roumu.com/og-banto-main.png'],
   },
 }
@@ -181,7 +181,7 @@ const FEATURES = [
     icon: BantoMark,
     title: '1枚にする',
     body:
-      '就業規則のPDF・Word（.docx）・テキストを置くと、書いてあることと書いてないことが1枚になります。スキャン画像など本文が取れないページは未読として残します。残す操作のあと、相談では自社の条文を引いて答えます。',
+      '就業規則のPDF・Word（.docx）・テキストを置くと、足りない条項と矛盾が1枚になります。スキャン画像など本文が取れないページは未読として残します。残す操作のあと、相談では自社の条文を引いて答えます。',
   },
   {
     icon: MessageSquareText,
