@@ -562,7 +562,8 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                   void onFile(files[0])
                 }}
                 onDragOver={e => e.preventDefault()}
-                className="flex min-h-0 cursor-pointer flex-col items-center justify-center border border-dashed border-[var(--lh-line)] px-6 py-6 text-center"
+                data-drop
+                className="flex min-h-0 cursor-pointer flex-col items-center justify-center border border-solid border-transparent px-6 py-6 text-center"
               >
                 <p id="zure-drop-label" className="text-sm font-semibold text-[var(--lh-ink)]">
                   {busy ? '読んでいます…' : '別のファイルを置く'}
@@ -572,7 +573,7 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                   id="zure-file-pick"
                   type="button"
                   data-cta="place"
-                  className="lh-btn lh-btn-ink mt-4"
+                  className="lh-btn lh-btn-ink mt-4 h-10 rounded-[12px] px-3.5"
                   disabled={busy}
                   onClick={() => fileRef.current?.click()}
                 >
@@ -740,7 +741,7 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
           <button
             type="button"
             data-cta="place"
-            className="lh-btn lh-btn-ink w-full"
+            className="lh-btn lh-btn-ink h-10 w-full rounded-[12px] px-3.5"
             disabled={busy}
             onClick={() => fileRef.current?.click()}
           >

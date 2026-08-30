@@ -1,8 +1,8 @@
 /* Linear House lock — グローバルの最後に読む。家のトークンを上書きで崩さない */
-.zure-surface button,
-.zure-surface a.btn,
-.zure-surface [data-cta='place'],
-.zure-surface .lh-btn {
+
+/* CTA だけ固定。下線テキスト（本文を貼る）は触らない */
+.zure-surface .lh-btn,
+.zure-surface [data-cta='place'] {
   height: 40px !important;
   min-height: 40px !important;
   border-radius: 12px !important;
@@ -20,6 +20,20 @@
   display: none !important;
 }
 
-/* Cookie は法務で残すが、固定帯の上に乗らないよう zure 面では控えめに */
-.zure-surface ~ /* noop */ {
+/* round2 */
+.zure-hero button[data-cta='place'],
+.zure-hero .lh-btn,
+.zure-hero [data-cta='place'] {
+  height: 40px;
+  border-radius: 12px !important;
+  padding-inline: 14px;
+}
+
+.zure-hero [data-drop] {
+  border-style: solid !important;
+  border-color: transparent !important;
+}
+
+.zure-hero [data-sample-link] {
+  display: none;
 }

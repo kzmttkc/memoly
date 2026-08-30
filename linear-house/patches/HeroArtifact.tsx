@@ -27,7 +27,7 @@ type HeroArtifactProps = {
 
 /**
  * 約束の下に、ドロップと見本を同じ12px枠へ入れる。
- * 施行日数は見本メタ。規約は details（選択後のみ開く）。
+ * 規約はドロップと見本の間（選択前は閉じたまま）。
  * 本文を貼るは枠の外。
  */
 export function HeroArtifact({
@@ -49,13 +49,16 @@ export function HeroArtifact({
   pastePanel,
 }: HeroArtifactProps) {
   return (
-    <div className="zure-hero-enter">
-      <h1 className="text-[2rem] font-semibold leading-[1.3] tracking-tight sm:text-4xl">{headline}</h1>
+    <div className="zure-hero zure-hero-enter">
+      <h1 className="text-[2rem] font-semibold leading-[1.3] tracking-tight text-[#171717] sm:text-4xl">
+        {headline}
+      </h1>
       {lead ? <p className="mt-3 text-sm leading-relaxed text-[var(--lh-muted)]">{lead}</p> : null}
       {status}
 
       <div className="lh-frame zure-drop-chrome mt-8">
         <div
+          data-drop
           role="group"
           aria-labelledby="zure-drop-label"
           aria-busy={busy}
@@ -93,8 +96,8 @@ export function HeroArtifact({
             const files = e.dataTransfer.files
             onDropFile(files[0], files.length > 1)
           }}
-          className={`flex min-h-52 cursor-pointer flex-col items-center justify-center border border-dashed px-6 text-center outline-none transition-colors focus-visible:border-[var(--lh-ink)] focus-visible:ring-2 focus-visible:ring-[var(--lh-ink)]/10 ${
-            drag ? 'border-[var(--lh-ink)] bg-[var(--lh-fill)]' : 'border-[var(--lh-line)] bg-[var(--lh-canvas)]'
+          className={`flex min-h-52 cursor-pointer flex-col items-center justify-center border border-solid border-transparent px-6 text-center outline-none transition-colors focus-visible:border-[var(--lh-ink)] focus-visible:ring-2 focus-visible:ring-[var(--lh-ink)]/10 ${
+            drag ? 'bg-[var(--lh-fill)]' : 'bg-[var(--lh-canvas)]'
           }`}
         >
           <FileUp className="h-7 w-7 text-[var(--lh-ink)]" aria-hidden />
@@ -107,7 +110,7 @@ export function HeroArtifact({
             id="zure-file-pick"
             type="button"
             data-cta="place"
-            className="lh-btn lh-btn-ink mt-4"
+            className="lh-btn lh-btn-ink mt-4 h-10 rounded-[12px] px-3.5"
             disabled={busy}
             onClick={onPick}
           >
@@ -115,6 +118,8 @@ export function HeroArtifact({
           </button>
           {busy && <LoaderCircle className="mt-3 h-5 w-5 animate-spin text-[var(--lh-ink)]" aria-hidden />}
         </div>
+
+        <LegalFold open={legalOpen} />
 
         <div className="mt-6 border-t border-[var(--lh-line)] pt-6">
           <p className="text-xs text-[var(--lh-muted)]">
@@ -138,6 +143,7 @@ export function HeroArtifact({
           <p className="mt-3">
             <button
               type="button"
+              data-sample-link
               className="text-sm text-[var(--lh-ink)] underline underline-offset-2 hover:opacity-80"
               disabled={busy}
               onClick={onSample}
@@ -146,8 +152,6 @@ export function HeroArtifact({
             </button>
           </p>
         </div>
-
-        <LegalFold open={legalOpen} />
       </div>
 
       <p className="zure-drop-chrome mt-4">

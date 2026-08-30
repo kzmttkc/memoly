@@ -65,8 +65,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // 2026-07-23 Takeshi承認ブランド(G05): 藍 #243B6E
-  themeColor: "#243B6E",
+  // Linear House: 白地の家に合わせる（旧藍 #243B6E から）
+  themeColor: "#ffffff",
 };
 
 // 2026-07-29 CTO修正（UX監査Round4#1・最重要）: Round1(L1)で横スクロール

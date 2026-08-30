@@ -1,0 +1,17 @@
+/* round2 — ピル抑止・内側破線消し・見本再掲隠し（ヒーロー再構築不要） */
+.zure-hero button[data-cta='place'],
+.zure-hero .lh-btn,
+.zure-hero [data-cta='place'] {
+  height: 40px;
+  border-radius: 12px !important;
+  padding-inline: 14px;
+}
+
+.zure-hero [data-drop] {
+  border-style: solid !important;
+  border-color: transparent !important;
+}
+
+.zure-hero [data-sample-link] {
+  display: none;
+}
