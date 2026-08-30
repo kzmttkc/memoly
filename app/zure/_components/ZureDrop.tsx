@@ -38,6 +38,7 @@ import type { LpVariant } from '@/app/business/_lib/variant-shared'
 import { ZureLpBelow } from './ZureLpBelow'
 import { LegalFold } from '@/linear-house/components/LegalFold'
 import { GapSheetView } from '@/linear-house/components/GapSheet'
+import { HeroArtifact } from '@/linear-house/patches/HeroArtifact'
 
 const ACCEPT =
   '.pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain'
@@ -379,373 +380,357 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
 
   const legalOpen = picked || busy || !!sheet
 
+  const headlineNode = headline.includes('。') ? (
+    <>
+      {headline.replace(/。$/, '').split('、')[0]}、
+      <br />
+      {headline.replace(/。$/, '').split('、').slice(1).join('、') || 'ずれが1枚になる'}
+      。
+    </>
+  ) : (
+    headline
+  )
+
+  const fileInput = (
+    <input
+      id="zure-file"
+      ref={fileRef}
+      type="file"
+      accept={ACCEPT}
+      className="sr-only"
+      tabIndex={-1}
+      aria-hidden
+      disabled={busy}
+      onChange={e => {
+        setManyFiles(false)
+        void onFile(e.target.files?.[0])
+        e.target.value = ''
+      }}
+    />
+  )
+
+  const pastePanel = (
+    <details ref={pasteBoxRef} className="zure-drop-chrome mt-3 text-sm leading-relaxed text-[var(--lh-muted)]">
+      <summary className="sr-only">本文の貼り付け欄</summary>
+      <label htmlFor="zure-paste" className="mt-2 block text-sm font-medium text-[var(--lh-ink)]">
+        就業規則の本文
+      </label>
+      <textarea
+        id="zure-paste"
+        ref={pasteRef}
+        value={paste}
+        rows={8}
+        disabled={busy}
+        onChange={e => setPaste(e.target.value)}
+        onKeyDown={e => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            e.preventDefault()
+            submitPaste(paste)
+          }
+        }}
+        className="mt-2 w-full rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-canvas)] px-3 py-2 text-sm leading-relaxed text-[var(--lh-ink)] outline-none focus-visible:border-[var(--lh-ink)] focus-visible:ring-2 focus-visible:ring-[var(--lh-ink)]/10 disabled:opacity-60"
+        placeholder="ここに本文を貼る"
+      />
+      <p className="mt-1 text-xs text-[var(--lh-muted)]">
+        {paste.length.toLocaleString('ja-JP')}字。先頭10万字まで使います。
+      </p>
+      <button
+        type="button"
+        className="lh-btn lh-btn-ghost mt-3"
+        disabled={busy}
+        onClick={() => submitPaste(paste)}
+      >
+        このテキストから1枚にする
+      </button>
+      <p className="mt-2 text-xs text-[var(--lh-muted)]">⌘Enter または Ctrl+Enter でも進めます。</p>
+    </details>
+  )
+
+  const statusBits = (
+    <>
+      {fromKabau && (
+        <p className="mt-4 text-sm leading-relaxed text-[var(--lh-muted)]">{KABAU_LINE}</p>
+      )}
+      {isEn && (
+        <p className="mt-4 rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-fill)] px-4 py-3 text-sm leading-relaxed text-[var(--lh-muted)]">
+          The form below is in Japanese. You can still place a PDF, Word (.docx), or text file, or paste
+          the text. Sign-up comes after the one-page sheet.
+        </p>
+      )}
+      {restored && sheet && (
+        <p
+          className="mt-4 rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-fill)] px-4 py-3 text-sm leading-relaxed text-[var(--lh-ink)]"
+          role="status"
+        >
+          このブラウザに控えていた1枚です。
+          {remainHours != null
+            ? `あと約${remainHours}時間、この端末に残ります。`
+            : '24時間を過ぎた場合は、もう一度ファイルを置いてください。'}
+          確認メールのリンクは、同じブラウザで開いてください。別の端末では、もう一度ファイルを置いてください。
+        </p>
+      )}
+      {manyFiles && (
+        <p className="mt-4 text-sm text-[var(--lh-muted)]" role="status">
+          一度に置けるのは1ファイルです。先頭のファイルを読みました。
+        </p>
+      )}
+      {pasteNote && (
+        <p className="mt-4 text-sm text-[var(--lh-muted)]" role="status">
+          {pasteNote}
+        </p>
+      )}
+      {error && !sheet && (
+        <p className="mt-4 text-sm text-[var(--lh-danger)]" role="alert">
+          {error}
+        </p>
+      )}
+      {storageWarn && !sheet && (
+        <p className="mt-4 text-sm text-[var(--lh-muted)]" role="alert">
+          この端末では一時控えを持てませんでした。画面の1枚は残っています。登録のあとに、同じファイルを書類へ置いてください。
+        </p>
+      )}
+    </>
+  )
+
   return (
     <div className="zure-lp">
       <div className="mx-auto max-w-2xl px-6 py-10 sm:py-16">
-        <div className="zure-drop-chrome zure-hero-enter">
-          <a
-            href="#zure-file-pick"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[var(--lh-radius)] focus:bg-[var(--lh-ink)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
-          >
-            ファイルを置く場所へ
-          </a>
-          <a
-            href="#zure-paste"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-16 focus:z-50 focus:rounded-[var(--lh-radius)] focus:bg-[var(--lh-ink)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
-            onClick={e => {
-              e.preventDefault()
-              openPaste()
-            }}
-          >
-            本文を貼る場所へ
-          </a>
-          <p className="text-sm text-[var(--lh-muted)]">登録不要 · クレジットカード不要</p>
-          <h1 className="mt-3 text-[2rem] font-semibold leading-[1.3] tracking-tight text-[var(--lh-ink)] sm:text-4xl">
-            {headline.includes('。') ? (
-              <>
-                {headline.replace(/。$/, '').split('、')[0]}、
-                <br />
-                {headline.replace(/。$/, '').split('、').slice(1).join('、') || 'ずれが1枚になる'}
-                。
-              </>
-            ) : (
-              headline
-            )}
-          </h1>
-          {fromKabau && (
-            <p className="mt-4 text-sm leading-relaxed text-[var(--lh-muted)]">{KABAU_LINE}</p>
-          )}
-          {isEn && (
-            <p className="mt-4 rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-fill)] px-4 py-3 text-sm leading-relaxed text-[var(--lh-muted)]">
-              The form below is in Japanese. You can still place a PDF, Word (.docx), or text file, or paste
-              the text. Sign-up comes after the one-page sheet.
-            </p>
-          )}
-          {restored && sheet && (
-            <p
-              className="mt-4 rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-fill)] px-4 py-3 text-sm leading-relaxed text-[var(--lh-ink)]"
-              role="status"
-            >
-              このブラウザに控えていた1枚です。
-              {remainHours != null
-                ? `あと約${remainHours}時間、この端末に残ります。`
-                : '24時間を過ぎた場合は、もう一度ファイルを置いてください。'}
-              確認メールのリンクは、同じブラウザで開いてください。別の端末では、もう一度ファイルを置いてください。
-            </p>
-          )}
-          {!sheet && (
-            <>
-              <p className="mt-4 text-base leading-relaxed text-[var(--lh-muted)]">{ZURE_LEAD}</p>
-              <p className="mt-3">
-                <button
-                  type="button"
-                  className="text-sm font-medium text-[var(--lh-ink)] underline underline-offset-2 hover:opacity-80"
-                  disabled={busy}
-                  onClick={runSample}
-                >
-                  手元にファイルが無いときは、サンプルで見え方だけ確かめる
-                </button>
-              </p>
-            </>
-          )}
-          {!sheet && manyFiles && (
-            <p className="mt-4 text-sm text-[var(--lh-muted)]" role="status">
-              一度に置けるのは1ファイルです。先頭のファイルを読みました。
-            </p>
-          )}
-          {!sheet && pasteNote && (
-            <p className="mt-4 text-sm text-[var(--lh-muted)]" role="status">
-              {pasteNote}
-            </p>
-          )}
-          {!sheet && error && (
-            <p className="mt-4 text-sm text-[var(--lh-danger)]" role="alert">
-              {error}
-            </p>
-          )}
-          {!sheet && storageWarn && (
-            <p className="mt-4 text-sm text-[var(--lh-muted)]" role="alert">
-              この端末では一時控えを持てませんでした。画面の1枚は残っています。登録のあとに、同じファイルを書類へ置いてください。
-            </p>
-          )}
-        </div>
+        <a
+          href="#zure-file-pick"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[var(--lh-radius)] focus:bg-[var(--lh-ink)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+        >
+          ファイルを置く場所へ
+        </a>
+        <a
+          href="#zure-paste"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-16 focus:z-50 focus:rounded-[var(--lh-radius)] focus:bg-[var(--lh-ink)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+          onClick={e => {
+            e.preventDefault()
+            openPaste()
+          }}
+        >
+          本文を貼る場所へ
+        </a>
 
-        <div className="lh-frame zure-drop-chrome mt-8">
-          {fromReferral && !sheet && (
-            <p className="mb-4 rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-fill)] px-4 py-3 text-sm leading-relaxed text-[var(--lh-ink)]">
-              ファイルが手元にない場合は、下の「テキストを貼る」から始められます。PDF・Wordがあれば、ここに置いてください。
-            </p>
-          )}
-
-          <div
-            role="group"
-            aria-labelledby="zure-drop-label"
-            aria-busy={busy}
-            tabIndex={0}
-            onDragEnter={e => {
-              e.preventDefault()
-              dragDepth.current += 1
-              setDrag(true)
+        {!sheet ? (
+          <HeroArtifact
+            days={days}
+            headline={headlineNode}
+            lead={ZURE_LEAD}
+            busy={busy}
+            drag={drag}
+            legalOpen={legalOpen}
+            fileInput={fileInput}
+            onPick={() => fileRef.current?.click()}
+            onSample={runSample}
+            onOpenPaste={openPaste}
+            onDropFile={(file, many) => {
+              setManyFiles(many)
+              void onFile(file)
             }}
-            onDragOver={e => {
-              e.preventDefault()
-              setDrag(true)
-            }}
-            onDragLeave={() => {
-              dragDepth.current = Math.max(0, dragDepth.current - 1)
-              if (dragDepth.current === 0) setDrag(false)
-            }}
-            onClick={e => {
-              if ((e.target as HTMLElement).closest('button')) return
-              fileRef.current?.click()
-            }}
-            onKeyDown={e => {
-              if (e.key !== 'Enter' && e.key !== ' ') return
-              if ((e.target as HTMLElement).closest('button')) return
-              e.preventDefault()
-              fileRef.current?.click()
-            }}
-            onPaste={e => {
-              if (ingestClipboard(e.clipboardData)) e.preventDefault()
-            }}
-            onDrop={e => {
-              e.preventDefault()
-              dragDepth.current = 0
-              setDrag(false)
-              const files = e.dataTransfer.files
-              setManyFiles(files.length > 1)
-              void onFile(files[0])
-            }}
-            className={`flex cursor-pointer flex-col items-center justify-center border border-dashed px-6 text-center outline-none transition-colors focus-visible:border-[var(--lh-ink)] focus-visible:ring-2 focus-visible:ring-[var(--lh-ink)]/10 ${
-              sheet ? 'min-h-0 py-6' : 'min-h-52'
-            } ${drag ? 'border-[var(--lh-ink)] bg-[var(--lh-fill)]' : 'border-[var(--lh-line)] bg-[var(--lh-canvas)]'}`}
-          >
-            <FileUp className="h-7 w-7 text-[var(--lh-ink)]" aria-hidden />
-            <p id="zure-drop-label" className="mt-3 text-sm font-semibold text-[var(--lh-ink)]">
-              {busy ? '読んでいます…' : sheet ? '別のファイルを置く' : '就業規則のファイルをここに置く'}
-            </p>
-            <p className="mt-1 text-xs text-[var(--lh-muted)]">
-              PDF・Word（.docx）・テキスト。8MBまで。画像やPagesは置けません。本文の貼り付けでも1枚にできます。
-            </p>
-            <input
-              id="zure-file"
-              ref={fileRef}
-              type="file"
-              accept={ACCEPT}
-              className="sr-only"
-              tabIndex={-1}
-              aria-hidden
-              disabled={busy}
-              onChange={e => {
-                setManyFiles(false)
-                void onFile(e.target.files?.[0])
-                e.target.value = ''
-              }}
-            />
-            <button
-              id="zure-file-pick"
-              type="button"
-              className="lh-btn lh-btn-ink mt-4"
-              disabled={busy}
-              onClick={() => fileRef.current?.click()}
-            >
-              ファイルを選ぶ
-            </button>
-            {busy && <LoaderCircle className="mt-3 h-5 w-5 animate-spin text-[var(--lh-ink)]" aria-hidden />}
-          </div>
-
-          <LegalFold open={legalOpen} />
-
-          <details ref={pasteBoxRef} className="mt-4 text-sm leading-relaxed text-[var(--lh-muted)]">
-            <summary className="cursor-pointer text-[var(--lh-ink)] underline-offset-2 hover:underline">
-              テキストを貼る
-            </summary>
-            <p className="mt-3 text-sm text-[var(--lh-muted)]">
-              Googleドキュメントや社内ポータルから、本文を貼れます。ファイルが手元にないときも、1枚にできます。
-            </p>
-            <label htmlFor="zure-paste" className="mt-4 block text-sm font-medium text-[var(--lh-ink)]">
-              就業規則の本文
-            </label>
-            <textarea
-              id="zure-paste"
-              ref={pasteRef}
-              value={paste}
-              rows={8}
-              disabled={busy}
-              onChange={e => setPaste(e.target.value)}
-              onKeyDown={e => {
-                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            onPasteClipboard={ingestClipboard}
+            setDrag={setDrag}
+            dragDepth={dragDepth}
+            status={statusBits}
+            pastePanel={pastePanel}
+          />
+        ) : (
+          <>
+            <h1 className="text-[2rem] font-semibold leading-[1.3] tracking-tight text-[var(--lh-ink)] sm:text-4xl">
+              {headlineNode}
+            </h1>
+            {statusBits}
+            <div className="lh-frame zure-drop-chrome mt-8">
+              <div
+                role="group"
+                aria-labelledby="zure-drop-label"
+                aria-busy={busy}
+                tabIndex={0}
+                onClick={e => {
+                  if ((e.target as HTMLElement).closest('button')) return
+                  fileRef.current?.click()
+                }}
+                onKeyDown={e => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return
                   e.preventDefault()
-                  submitPaste(paste)
-                }
-              }}
-              className="mt-2 w-full rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-canvas)] px-3 py-2 text-sm leading-relaxed text-[var(--lh-ink)] outline-none focus-visible:border-[var(--lh-ink)] focus-visible:ring-2 focus-visible:ring-[var(--lh-ink)]/10 disabled:opacity-60"
-              placeholder="ここに本文を貼る"
-            />
-            <p className="mt-1 text-xs text-[var(--lh-muted)]">
-              {paste.length.toLocaleString('ja-JP')}字。先頭10万字まで使います。
-            </p>
-            <button
-              type="button"
-              className="lh-btn lh-btn-ghost mt-3"
-              disabled={busy}
-              onClick={() => submitPaste(paste)}
-            >
-              このテキストから1枚にする
-            </button>
-            <p className="mt-2 text-xs text-[var(--lh-muted)]">⌘Enter または Ctrl+Enter でも進めます。</p>
-          </details>
-
-          {sheet && (
-            <div className="mt-8 border-t border-[var(--lh-line)] pt-8">
-              <section ref={sheetRef}>
-                <GapSheetView
-                  sheet={sheet}
-                  days={days}
-                  footer={
-                    <>
-                      {busy && (
-                        <p className="zure-drop-chrome mt-4 text-sm text-[var(--lh-muted)]" role="status">
-                          読んでいます…
-                        </p>
-                      )}
-                      {error && (
-                        <p className="zure-drop-chrome mt-4 text-sm text-[var(--lh-danger)]" role="alert">
-                          {error}
-                        </p>
-                      )}
-                      <div className="zure-drop-chrome mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                        <Link
-                          href={saveHref}
-                          className={buttonClass({
-                            variant: 'primary',
-                            size: 'lg',
-                            className: 'w-full whitespace-normal text-center sm:flex-1',
-                          })}
-                          onClick={onSaveClick}
-                        >
-                          {authed ? 'この1枚を会社に残す' : OFFER.saveCta}
-                        </Link>
-                        <button
-                          type="button"
-                          className={buttonClass({
-                            variant: 'secondary',
-                            size: 'lg',
-                            className: 'w-full sm:w-auto',
-                          })}
-                          onClick={downloadSheet}
-                        >
-                          1枚を保存
-                        </button>
-                        <button
-                          type="button"
-                          className={buttonClass({
-                            variant: 'secondary',
-                            size: 'lg',
-                            className: 'w-full sm:w-auto',
-                          })}
-                          onClick={() => void copySheet()}
-                        >
-                          1枚をコピー
-                        </button>
-                        <button
-                          type="button"
-                          className={buttonClass({
-                            variant: 'secondary',
-                            size: 'lg',
-                            className: 'w-full sm:w-auto',
-                          })}
-                          onClick={printSheet}
-                        >
-                          印刷する
-                        </button>
-                      </div>
-                      {copied && (
-                        <p className="zure-drop-chrome mt-2 text-center text-sm text-[var(--lh-muted)]" role="status">
-                          コピーしました。メールやチャットに貼れます。
-                        </p>
-                      )}
-                      <p className="zure-drop-chrome mt-2 text-center text-xs text-[var(--lh-muted)]">
-                        {authed
-                          ? '会社の書類台帳の最初の1枚として残します。'
-                          : '残すときに登録します。台帳が始まります。チャットはまだ開きません。'}
-                      </p>
-                      <p className="zure-drop-chrome mt-3 text-center text-xs text-[var(--lh-muted)]">
-                        <Link
-                          href="/offer"
-                          className="underline underline-offset-2"
-                          onClick={() => track('offer_nav_clicked', { location: 'zure_after_sheet' })}
-                        >
-                          無料と有料の違い
-                        </Link>
-                      </p>
-                      <div className="zure-drop-chrome">
-                        <button
-                          type="button"
-                          className="mt-4 text-sm text-[var(--lh-ink)] underline underline-offset-2"
-                          onClick={() => fileRef.current?.click()}
-                        >
-                          別のファイルを置く
-                        </button>
-                        <button
-                          type="button"
-                          className="mt-4 ml-4 text-sm text-[var(--lh-ink)] underline underline-offset-2"
-                          onClick={openPaste}
-                        >
-                          本文を貼り直す
-                        </button>
-                        <button
-                          type="button"
-                          className="mt-4 ml-4 text-sm text-[var(--lh-ink)] underline underline-offset-2"
-                          onClick={() => void shareSheet()}
-                        >
-                          共有する
-                        </button>
-                        {clearAsk ? (
-                          <p className="mt-4 text-sm text-[var(--lh-ink)]">
-                            この控えを消しますか。消すと、この画面の1枚も消えます。
-                            <button
-                              type="button"
-                              className="ml-3 text-sm text-[var(--lh-danger)] underline underline-offset-2"
-                              onClick={() => {
-                                clearPendingZure()
-                                setSheet(null)
-                                setPendingText('')
-                                setRestored(false)
-                                setError(null)
-                                setClearAsk(false)
-                                setRemainHours(null)
-                                setPicked(false)
-                              }}
-                            >
-                              消す
-                            </button>
-                            <button
-                              type="button"
-                              className="ml-3 text-sm text-[var(--lh-muted)] underline underline-offset-2"
-                              onClick={() => setClearAsk(false)}
-                            >
-                              やめる
-                            </button>
+                  fileRef.current?.click()
+                }}
+                onDrop={e => {
+                  e.preventDefault()
+                  const files = e.dataTransfer.files
+                  setManyFiles(files.length > 1)
+                  void onFile(files[0])
+                }}
+                onDragOver={e => e.preventDefault()}
+                className="flex min-h-0 cursor-pointer flex-col items-center justify-center border border-dashed border-[var(--lh-line)] px-6 py-6 text-center"
+              >
+                <p id="zure-drop-label" className="text-sm font-semibold text-[var(--lh-ink)]">
+                  {busy ? '読んでいます…' : '別のファイルを置く'}
+                </p>
+                {fileInput}
+                <button
+                  id="zure-file-pick"
+                  type="button"
+                  data-cta="place"
+                  className="lh-btn lh-btn-ink mt-4"
+                  disabled={busy}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  ファイルを選ぶ
+                </button>
+              </div>
+              <LegalFold open={legalOpen} />
+              <div className="mt-8 border-t border-[var(--lh-line)] pt-8">
+                <section ref={sheetRef}>
+                  <GapSheetView
+                    sheet={sheet}
+                    days={days}
+                    footer={
+                      <>
+                        {busy && (
+                          <p className="zure-drop-chrome mt-4 text-sm text-[var(--lh-muted)]" role="status">
+                            読んでいます…
                           </p>
-                        ) : (
+                        )}
+                        {error && (
+                          <p className="zure-drop-chrome mt-4 text-sm text-[var(--lh-danger)]" role="alert">
+                            {error}
+                          </p>
+                        )}
+                        <div className="zure-drop-chrome mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                          <Link
+                            href={saveHref}
+                            className={buttonClass({
+                              variant: 'primary',
+                              size: 'lg',
+                              className: 'w-full whitespace-normal text-center sm:flex-1 !rounded-[12px]',
+                            })}
+                            onClick={onSaveClick}
+                          >
+                            {authed ? 'この1枚を会社に残す' : OFFER.saveCta}
+                          </Link>
                           <button
                             type="button"
-                            className="mt-4 ml-4 text-sm text-[var(--lh-muted)] underline underline-offset-2"
-                            onClick={() => setClearAsk(true)}
+                            className={buttonClass({
+                              variant: 'secondary',
+                              size: 'lg',
+                              className: 'w-full sm:w-auto !rounded-[12px]',
+                            })}
+                            onClick={downloadSheet}
                           >
-                            この控えを消す
+                            1枚を保存
                           </button>
+                          <button
+                            type="button"
+                            className={buttonClass({
+                              variant: 'secondary',
+                              size: 'lg',
+                              className: 'w-full sm:w-auto !rounded-[12px]',
+                            })}
+                            onClick={() => void copySheet()}
+                          >
+                            1枚をコピー
+                          </button>
+                          <button
+                            type="button"
+                            className={buttonClass({
+                              variant: 'secondary',
+                              size: 'lg',
+                              className: 'w-full sm:w-auto !rounded-[12px]',
+                            })}
+                            onClick={printSheet}
+                          >
+                            印刷する
+                          </button>
+                        </div>
+                        {copied && (
+                          <p className="zure-drop-chrome mt-2 text-center text-sm text-[var(--lh-muted)]" role="status">
+                            コピーしました。メールやチャットに貼れます。
+                          </p>
                         )}
-                      </div>
-                      <KasuharaGap />
-                    </>
-                  }
-                />
-              </section>
+                        <p className="zure-drop-chrome mt-2 text-center text-xs text-[var(--lh-muted)]">
+                          {authed
+                            ? '会社の書類台帳の最初の1枚として残します。'
+                            : '残すときに登録します。台帳が始まります。チャットはまだ開きません。'}
+                        </p>
+                        <p className="zure-drop-chrome mt-3 text-center text-xs text-[var(--lh-muted)]">
+                          <Link
+                            href="/offer"
+                            className="underline underline-offset-2"
+                            onClick={() => track('offer_nav_clicked', { location: 'zure_after_sheet' })}
+                          >
+                            無料と有料の違い
+                          </Link>
+                        </p>
+                        <div className="zure-drop-chrome">
+                          <button
+                            type="button"
+                            className="mt-4 text-sm text-[var(--lh-ink)] underline underline-offset-2"
+                            onClick={() => fileRef.current?.click()}
+                          >
+                            別のファイルを置く
+                          </button>
+                          <button
+                            type="button"
+                            className="mt-4 ml-4 text-sm text-[var(--lh-ink)] underline underline-offset-2"
+                            onClick={openPaste}
+                          >
+                            本文を貼り直す
+                          </button>
+                          <button
+                            type="button"
+                            className="mt-4 ml-4 text-sm text-[var(--lh-ink)] underline underline-offset-2"
+                            onClick={() => void shareSheet()}
+                          >
+                            共有する
+                          </button>
+                          {clearAsk ? (
+                            <p className="mt-4 text-sm text-[var(--lh-ink)]">
+                              この控えを消しますか。消すと、この画面の1枚も消えます。
+                              <button
+                                type="button"
+                                className="ml-3 text-sm text-[var(--lh-danger)] underline underline-offset-2"
+                                onClick={() => {
+                                  clearPendingZure()
+                                  setSheet(null)
+                                  setPendingText('')
+                                  setRestored(false)
+                                  setError(null)
+                                  setClearAsk(false)
+                                  setRemainHours(null)
+                                  setPicked(false)
+                                }}
+                              >
+                                消す
+                              </button>
+                              <button
+                                type="button"
+                                className="ml-3 text-sm text-[var(--lh-muted)] underline underline-offset-2"
+                                onClick={() => setClearAsk(false)}
+                              >
+                                やめる
+                              </button>
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              className="mt-4 ml-4 text-sm text-[var(--lh-muted)] underline underline-offset-2"
+                              onClick={() => setClearAsk(true)}
+                            >
+                              この控えを消す
+                            </button>
+                          )}
+                        </div>
+                        <KasuharaGap />
+                      </>
+                    }
+                  />
+                </section>
+              </div>
             </div>
-          )}
-        </div>
+            {pastePanel}
+          </>
+        )}
       </div>
 
       {!sheet && <ZureLpBelow />}
@@ -754,6 +739,7 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
         <div className="zure-sticky-cta zure-drop-chrome">
           <button
             type="button"
+            data-cta="place"
             className="lh-btn lh-btn-ink w-full"
             disabled={busy}
             onClick={() => fileRef.current?.click()}

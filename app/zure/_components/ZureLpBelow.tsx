@@ -1,46 +1,10 @@
 import Link from 'next/link'
 
-/** Below-fold: Linear quiet. 紙地・明朝・朱は使わない。 */
+/** Below-fold: 置く→見る→残す / 比較 / 料金 / 注意。見本はヒーロー枠内へ移した。 */
 export function ZureLpBelow() {
   return (
     <div className="zure-lp-below mx-auto max-w-2xl px-6 pb-28 pt-4 sm:pb-16">
-      <section aria-labelledby="zure-sample-h" className="border-t border-[var(--lh-line)] pt-10">
-        <h2 id="zure-sample-h" className="text-xl font-semibold tracking-tight text-[var(--lh-ink)] sm:text-2xl">
-          ずれ1枚の見本
-        </h2>
-        <p className="mt-2 text-sm text-[var(--lh-muted)]">これは表示の例です。置いたファイルの内容ではありません。</p>
-        <ol className="mt-4 divide-y divide-[var(--lh-line)] border border-[var(--lh-line)] bg-[var(--lh-canvas)]">
-          <li className="px-4 py-3">
-            <p className="text-sm font-medium text-[var(--lh-ink)]">
-              <span className="zure-lp-tag zure-lp-tag-miss">触れていない</span>
-              カスタマーハラスメントの方針
-            </p>
-            <p className="mt-1 text-sm text-[var(--lh-muted)]">
-              このファイルからは読み取れませんでした。不足の断定ではありません。期限 2026-10-01
-            </p>
-          </li>
-          <li className="px-4 py-3">
-            <p className="text-sm font-medium text-[var(--lh-ink)]">
-              <span className="zure-lp-tag zure-lp-tag-ok">規程にある</span>
-              始業・終業の時刻
-            </p>
-            <p className="mt-1 text-sm text-[var(--lh-muted)]">
-              規程には記載があります。運用の書き方は、このファイルからはまだありません。
-            </p>
-          </li>
-          <li className="px-4 py-3">
-            <p className="text-sm font-medium text-[var(--lh-ink)]">
-              <span className="zure-lp-tag zure-lp-tag-ops">運用不足</span>
-              年5日の有給取得
-            </p>
-            <p className="mt-1 text-sm text-[var(--lh-muted)]">
-              制度の記載は読めます。取得の進め方・記録の書き方は、このファイルからはまだありません。
-            </p>
-          </li>
-        </ol>
-      </section>
-
-      <section aria-labelledby="zure-flow-h" className="mt-12 border-t border-[var(--lh-line)] pt-10">
+      <section aria-labelledby="zure-flow-h" className="border-t border-[var(--lh-line)] pt-10">
         <h2 id="zure-flow-h" className="text-xl font-semibold tracking-tight text-[var(--lh-ink)] sm:text-2xl">
           置く → 見る → 残す
         </h2>
@@ -94,10 +58,7 @@ export function ZureLpBelow() {
           登録してもクレジットカードは不要です。有料は、残して相談を続けるときだけです。Entry 3,980円／月（会社単位）。
         </p>
         <p className="mt-4">
-          <Link
-            href="/offer"
-            className="lh-btn lh-btn-ghost inline-flex min-h-11 items-center"
-          >
+          <Link href="/offer" className="lh-btn lh-btn-ghost inline-flex items-center">
             無料と有料の違い
           </Link>
         </p>

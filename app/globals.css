@@ -593,3 +593,31 @@ body {
     display: none !important;
   }
 }
+
+/* === house-lock (inlined; @import must be top-of-file) === */
+/* Linear House lock — グローバルの最後に読む。家のトークンを上書きで崩さない */
+.zure-surface button,
+.zure-surface a.btn,
+.zure-surface [data-cta='place'],
+.zure-surface .lh-btn {
+  height: 40px !important;
+  min-height: 40px !important;
+  border-radius: 12px !important;
+  padding-inline: 14px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.zure-surface h1 {
+  color: #171717 !important;
+}
+
+.zure-surface [data-deadline-bar],
+[data-deadline-bar] {
+  display: none !important;
+}
+
+/* Cookie は法務で残すが、固定帯の上に乗らないよう zure 面では控えめに */
+.zure-surface ~ /* noop */ {
+}
+

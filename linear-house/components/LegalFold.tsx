@@ -1,14 +1,8 @@
 'use client'
 
-/** Clerk型: 送る直前まで閉じる。ファイル選択後だけ開く。 */
+/** Clerk型: 送る直前まで閉じる。閉じているときは何も出さない。 */
 export function LegalFold({ open }: { open: boolean }) {
-  if (!open) {
-    return (
-      <p className="mt-4 text-xs text-[var(--lh-muted)]">
-        送る直前の扱い（保存のタイミング）は、ファイルを選んだあとに表示します。
-      </p>
-    )
-  }
+  if (!open) return null
   return (
     <details className="mt-4 text-sm text-[var(--lh-muted)]" open>
       <summary className="cursor-pointer font-medium text-[var(--lh-ink)]">

@@ -28,7 +28,7 @@ export const ZURE_OBLIGATION =
   '2026年10月1日から、カスハラ対策はすべての事業主の義務です。'
 
 export const ZURE_LEAD =
-  'PDF・Word・テキストを置くか、本文を貼ると、書いてあること／書いてないこと／運用の書き方がまだないことが1枚になります。登録・クレジットカードは不要です。この1枚は不足の断定ではありません。'
+  'PDF・Word・テキストを置くか、本文を貼ると、ずれが1枚になります。'
 
 export const HERO_EN = {
   A: 'Place a work rules file, and the gaps become one page',

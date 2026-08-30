@@ -35,8 +35,9 @@ export default async function ZurePage() {
 
   return (
     <div className="company-light zure-surface min-h-[100dvh]">
-      <p className="zure-deadline-band">
-        2026年10月1日のカスハラ対策義務化まで <strong>{days}</strong>日 · まず自社のファイルを置く
+      {/* 期限はヒーロー見本メタへ。帯は出さない（data-deadline-bar は lock で非表示） */}
+      <p className="sr-only" data-deadline-bar>
+        2026年10月1日のカスハラ対策義務化まで {days}日
       </p>
       <LinearNav />
       <main>
