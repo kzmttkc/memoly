@@ -46,9 +46,9 @@ const ROWS: { layer: string; what: string; price: string; where: string }[] = [
   },
   {
     layer: '記録台帳',
-    what: '店舗と本部で発生・研修記録を共有',
-    price: '¥1,980/月',
-    where: 'sharoushi-agent.com',
+    what: '店舗と本部で発生・研修記録を共有（既存契約のみ）',
+    price: '¥1,980/月・新規受付停止',
+    where: 'sharoushi-agent.com/kasuhara-ledger.html',
   },
   {
     layer: '会社記憶SaaS',
