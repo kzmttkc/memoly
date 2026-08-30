@@ -33,28 +33,22 @@ const SHIGYO = PLANS.shigyo.monthlyJpy.toLocaleString()
 
 const ROWS: { layer: string; what: string; price: string; where: string }[] = [
   {
-    layer: '無料ツール・記事・相談AI',
+    layer: '登録前',
     what: '計算・ガイド・ひな形・その場のずれ1枚',
     price: '¥0（登録不要。保存は登録）',
     where: 'sharoushi-agent.com / 本サイト /zure',
+  },
+  {
+    layer: '会社記憶SaaS',
+    what: '保存・継続相談・規程本数に応じたプラン',
+    price: `無料枠あり / Entry ¥${ENTRY} / Standard ¥${STANDARD} / 士業 ¥${SHIGYO}`,
+    where: '本サイト /pricing',
   },
   {
     layer: 'カスハラ実務パック',
     what: 'Word書式一式（10措置対応）',
     price: '¥19,800 一括',
     where: 'sharoushi-agent.com/kasuhara-pack.html',
-  },
-  {
-    layer: '記録台帳',
-    what: '店舗と本部で発生・研修記録を共有（既存契約のみ）',
-    price: '¥1,980/月・新規受付停止',
-    where: 'sharoushi-agent.com/kasuhara-ledger.html',
-  },
-  {
-    layer: '会社記憶SaaS',
-    what: '保存・継続相談・規程本数に応じたプラン',
-    price: `無料枠あり / Entry ¥${ENTRY}〜 / Standard ¥${STANDARD} / 士業 ¥${SHIGYO}`,
-    where: '本サイト /pricing',
   },
 ]
 
@@ -71,7 +65,7 @@ export default function OfferBoundaryPage() {
         <p className="mt-4 text-sm leading-relaxed text-neutral-700">
           初見でも「何がいくらで、どこで始めるか」が分かるようにまとめています。
           手続きシステム（入退社・給与・電子申請）の代替ではありません。SmartHR や freee
-          などと併用できます。
+          などと併用できます。記録台帳（¥1,980/月）の新規受付は停止しています（既存契約はポータルで解約可）。
         </p>
 
         <div className="mt-8 overflow-x-auto rounded-lg border border-neutral-200">

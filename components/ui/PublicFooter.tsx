@@ -107,6 +107,7 @@ export function PublicFooter({
         <p className="mt-2 text-xs text-neutral-600">
           © {new Date().getFullYear()} 就業規則AI（KIZUNA Creation）
         </p>
+        <p className="mt-1 text-xs text-neutral-500">旧称: Kabau（カバウ）・番頭(Banto)</p>
       </div>
     </footer>
   )

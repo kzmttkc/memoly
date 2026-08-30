@@ -55,9 +55,13 @@
 - `contact@sharoushi-agent.com` を公開HTMLから `support@banto-roumu.com` へ置換（転送はOwner）  
 - 台帳1,980は価格・特商法に残しつつ「新規受付停止」を明示。主CTAはファイル置き  
 - success.html / pack-access.js の次手は `/zure`  
+- **one-product**: 契約第1文統一・SKU3系統・Agentヒーロー主CTA一本・パック→Free招待 webhook（`one-product/`）
 
 ## Owner作業（コード外）
 
 - Stripe商品名をすべて「就業規則AI …」に揃える  
+- 台帳 Price をアーカイブ（新規 Payment Link 無効）  
 - Payment Link 成功URLを pack-access → 次画面 zure 誘導に寄せる（可能なら）  
-- contact@ を support@ へ転送
+- contact@ を support@ へ転送  
+- Supabase に `supabase/pack_invites.sql` を適用  
+- Resend（DIGEST_FROM_EMAIL）がパック招待で使えることを確認

@@ -7,6 +7,7 @@ import {
   resolveCheckoutProduct,
   resolveSubscriptionTransition,
 } from './transition'
+import { handlePackInvite, isPackCheckout } from '@/lib/pack-invite'
 import type Stripe from 'stripe'
 
 // ============================================================================
@@ -206,9 +207,11 @@ export async function POST(req: NextRequest) {
       // amount 一致は「他製品でない」ことを保証しない。判定は price 一致中心にし、
       // 他製品を名乗るイベントは price が偶然一致しても拒否する。
       let pricePlan: PlanId | null = null
+      let priceId: string | null = null
       try {
         const items = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 })
-        pricePlan = planIdForPriceId(items.data[0]?.price?.id)
+        priceId = items.data[0]?.price?.id ?? null
+        pricePlan = planIdForPriceId(priceId)
       } catch (e) {
         // line item を引けないと自製品判定ができない。ここで 200 を返すと、
         // Stripe API の一時障害だけで正規顧客が無付与のまま確定する（再送も来ない）。
@@ -218,6 +221,48 @@ export async function POST(req: NextRequest) {
           { session_id: session.id, msg: (e as Error).message },
         )
         return new Response('line items unavailable', { status: 500 })
+      }
+
+      // one-product: パックはプラン付与せず Free 招待（Word配信は Agent のまま）
+      const paymentLinkId =
+        typeof session.payment_link === 'string'
+          ? session.payment_link
+          : session.payment_link && typeof session.payment_link === 'object'
+            ? session.payment_link.id
+            : null
+      if (
+        isPackCheckout({
+          priceId,
+          amountTotal: session.amount_total,
+          mode: session.mode,
+          paymentLinkId,
+        })
+      ) {
+        if (!isCheckoutPaid(session.payment_status)) {
+          return new Response('ignored: pack checkout not paid', { status: 200 })
+        }
+        const invite = await handlePackInvite({
+          admin: supabase,
+          eventId: event.id,
+          sessionId: session.id,
+          email: session.customer_details?.email ?? session.customer_email,
+          amountTotal: session.amount_total,
+        })
+        try {
+          await recordEvent(supabase, {
+            event_id: event.id,
+            company_id: null,
+            event_type: event.type,
+            plan: null,
+            seats: null,
+            amount: session.amount_total ?? null,
+            stripe_customer_id: (session.customer as string) ?? null,
+            stripe_subscription_id: null,
+          })
+        } catch {
+          // 監査行は best-effort（company_id null が制約で落ちても招待は済んでいる）
+        }
+        return new Response(`ok: ${invite.detail}`, { status: 200 })
       }
 
       const product = resolveCheckoutProduct({ metadata: md, pricePlan })

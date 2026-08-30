@@ -28,9 +28,9 @@ export const SUPPORT_EMAIL = 'support@banto-roumu.com'
 /** 提供ドメイン（規約・特商法の共通文面） */
 export const SERVICE_DOMAINS = 'banto-roumu.com（SaaS）および sharoushi-agent.com（集客・書式）'
 
-/** 規約・特商法のサービス名一行 */
+/** 規約・特商法のサービス名一行（one-product 正典） */
 export const SERVICE_LEGAL_NAME =
-  '就業規則AI（旧称: Kabau（カバウ）・番頭(Banto)。提供ドメイン: banto-roumu.com / sharoushi-agent.com）'
+  'KIZUNA Creation が banto-roumu.com および sharoushi-agent.com で提供する「就業規則AI」（旧称 Kabau / 番頭）'
 
 /** 移行注記（ログイン画面・3ヶ月掲示。掲示終了予定 2026-11-27）。 */
 export const BRAND_TRANSITION_NOTE =

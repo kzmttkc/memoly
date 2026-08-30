@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
+import { SERVICE_LEGAL_NAME, SUPPORT_EMAIL } from '@/lib/brand'
 
 export default function PrivacyPage() {
   return (
@@ -15,10 +16,21 @@ export default function PrivacyPage() {
             入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">プライバシーポリシー</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月22日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月30日</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
+          <section>
+            <p>
+              {SERVICE_LEGAL_NAME}
+              （以下「本サービス」）は、利用者のプライバシーを尊重し、個人情報の適切な取り扱いに努めます。本ポリシーは、本サービスにおける個人情報の収集・利用・管理方針を定めます。お問い合わせは{' '}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-brand-600 underline">
+                {SUPPORT_EMAIL}
+              </a>
+              です。
+            </p>
+          </section>
+
           <section>
             <h2 className="mb-3 text-base font-semibold text-neutral-900">事業者情報</h2>
             <ul className="space-y-1 text-neutral-600">

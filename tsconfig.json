@@ -23,6 +23,7 @@
       "@/*": ["./*"]
     }
   },
+  "exclude": ["one-product/code/**"],
   "include": [
     "next-env.d.ts",
     "**/*.ts",

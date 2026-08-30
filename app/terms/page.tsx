@@ -16,7 +16,7 @@ export default function TermsPage() {
             入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">利用規約</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月29日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月30日</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
