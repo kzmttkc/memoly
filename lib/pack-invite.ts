@@ -6,14 +6,14 @@ import { isPackPriceId } from './sku.ts'
 
 const BASE = 'https://banto-roumu.com'
 const ZURE_URL = `${BASE}/zure?from=pack&utm_source=pack&utm_campaign=one_product`
-const SIGNUP_URL = `${BASE}/signup?from=pack&utm_source=pack&utm_campaign=one_product`
+const SIGNUP_URL = `${BASE}/invite?from=pack&utm_source=pack&utm_campaign=one_product`
 
 export const PACK_MAIL_SUBJECT = '就業規則AI — パックの次は、ずれを1枚にする'
 
 export function packMailHtml(opts: { existingUser: boolean; zureUrl: string; signupUrl: string }): string {
   const action = opts.existingUser
     ? `<p><a href="${opts.zureUrl}">就業規則のファイルを置く（ずれ1枚）</a></p>`
-    : `<p><a href="${opts.signupUrl}">無料で始める（登録）</a></p>
+    : `<p><a href="${opts.signupUrl}">同じメールで就業規則AIに入る（無料）</a></p>
        <p>登録のあと、<a href="${opts.zureUrl}">ファイルを置く</a>とずれが1枚になります。</p>`
   return `<!doctype html><html lang="ja"><body style="font-family:sans-serif;line-height:1.6;color:#171717">
 <p>実務パックのご購入ありがとうございます。</p>

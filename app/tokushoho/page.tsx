@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { PLANS, PAID_PLAN_IDS, billingEnabled } from '@/lib/plans'
-import { SEIDO_KIT_NAME, SEIDO_KIT_PRICE_JPY } from '@/lib/seido-kit'
+import { SEIDO_KIT_PRICE_JPY } from '@/lib/seido-kit'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
 import { SERVICE_LEGAL_NAME, SUPPORT_EMAIL } from '@/lib/brand'
@@ -42,7 +42,7 @@ export default function TokushohoPage() {
             入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">特定商取引法に基づく表記</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月29日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月30日</p>
         </div>
 
         {/* 2026-07-28 CTO修正（L1監査#10）: BILLING_ENABLED は現在 false（意図的に
@@ -66,7 +66,8 @@ export default function TokushohoPage() {
                 現在お申し込みの受付を一時的に停止しています。有料プランのお申し込み手続き
                 （クレジットカード情報の入力を含むStripe決済画面での操作）を実際に完了した場合にのみ課金が発生する仕組みで、
                 お申し込みの操作をしない限り課金が発生することはありません。受付を再開する際は、このページと料金ページでお知らせします。
-                なお、買い切りのデジタルコンテンツ（インボイス対応キット等）はこの受付停止の対象外で、引き続きご購入いただけます。
+                なお、カスハラ実務パック（&yen;19,800・一括）の購入はこの受付停止の対象外です。
+                記録台帳とインボイス対応キットは新規の販売導線を置いていません。
               </>
             )}
           </p>
@@ -106,6 +107,7 @@ export default function TokushohoPage() {
 
           <Row label="販売価格">
             <ul className="list-disc space-y-1 pl-5">
+              <li>登録前（ずれ1枚・計算・ガイド・ひな形）：&yen;0（登録不要。保存は登録後）</li>
               {PAID_PLAN_IDS.map(id => {
                 const p = PLANS[id]
                 return (
@@ -122,20 +124,16 @@ export default function TokushohoPage() {
                   </li>
                 )
               })}
-            </ul>
-            {/* 2026-08-13 制度対応部（AQ-023承認）: 買い切りデジタルコンテンツの追加。
-                価格の SSOT は lib/seido-kit.ts（プラン価格の lib/plans.ts と同じ構造）。 */}
-            <p className="mt-3 font-medium text-neutral-900">買い切りのデジタルコンテンツ</p>
-            <ul className="mt-1 list-disc space-y-1 pl-5">
               <li>
-                {SEIDO_KIT_NAME}：&yen;{SEIDO_KIT_PRICE_JPY.toLocaleString()}（買い切り。
-                再交渉文面ひな形・影響額計算ツール・実務チェックリストをサイト上で提供）
+                カスハラ実務パック：&yen;19,800（一括・買い切り。書式は sharoushi-agent.com
+                で提供。SaaSの月額プランとは別商品です）
               </li>
             </ul>
+            <p className="mt-3 text-neutral-600">
+              記録台帳（月額 &yen;1,980）とインボイス対応キット（&yen;{SEIDO_KIT_PRICE_JPY.toLocaleString()}
+              ）は<strong>新規の販売導線を置いていません</strong>（既存契約・過去購入者向けの案内のみ）。
+            </p>
             <p className="mt-2">
-              {/* 2026-08-20 正典整合（business-facts.md 2026-07-30 Takeshi確定）: 免税事業者のため
-                  価格の表示に消費税区分を名乗らない。支払総額（追加料金なし）である事実は不変。
-                  税の扱いは下の「適格請求書（インボイス）の発行」欄が開示する。 */}
               表示価格はいずれもお支払い総額です。表示価格以外の追加料金はかかりません。
               オンラインサービスのため送料はかかりません。
             </p>

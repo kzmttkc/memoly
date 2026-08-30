@@ -27,20 +27,22 @@ test('パック Price と 19800 payment を判定する', () => {
   )
 })
 
-test('パック招待メールは就業規則AIと zure / signup だけを案内する', () => {
+test('パック招待メールは就業規則AIと zure / invite を案内する', () => {
   assert.match(PACK_MAIL_SUBJECT, /就業規則AI/)
   const html = packMailHtml({
     existingUser: false,
     zureUrl: 'https://banto-roumu.com/zure?from=pack',
-    signupUrl: 'https://banto-roumu.com/signup?from=pack',
+    signupUrl: 'https://banto-roumu.com/invite?from=pack',
   })
   assert.match(html, /zure\?from=pack/)
-  assert.match(html, /signup\?from=pack/)
+  assert.match(html, /invite\?from=pack/)
   assert.doesNotMatch(html, /Kabau/)
   assert.doesNotMatch(html, /番頭/)
+  const invite = read('app/invite/page.tsx')
+  assert.match(invite, /redirect\(`\/signup/)
 })
 
-test('契約名とSKU境界が one-product に揃う', () => {
+test('契約名・SKU・特商法が one-product に揃う', () => {
   const brand = read('lib/brand.ts')
   assert.match(brand, /KIZUNA Creation が banto-roumu.com および sharoushi-agent.com/)
   assert.match(brand, /旧称 Kabau \/ 番頭/)
@@ -53,4 +55,8 @@ test('契約名とSKU境界が one-product に揃う', () => {
   const webhook = read('app/api/company/billing/webhook/route.ts')
   assert.match(webhook, /handlePackInvite/)
   assert.match(webhook, /isPackCheckout/)
+  const tokusho = read('app/tokushoho/page.tsx')
+  assert.match(tokusho, /カスハラ実務パック/)
+  assert.match(tokusho, /登録前/)
+  assert.match(tokusho, /新規の販売導線を置いていません/)
 })
