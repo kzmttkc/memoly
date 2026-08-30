@@ -1,0 +1,23 @@
+/* Linear House tokens — 増やさない */
+:root {
+  --lh-canvas: #ffffff;
+  --lh-ink: #171717;
+  --lh-muted: #6b7280;
+  --lh-line: #e5e7eb;
+  --lh-fill: #f9fafb;
+  --lh-danger: #b91c1c;
+  --lh-radius: 12px;
+  --lh-space-1: 8px;
+  --lh-space-2: 16px;
+  --lh-space-3: 24px;
+  --lh-space-4: 40px;
+  --lh-space-5: 64px;
+  --lh-nav-h: 64px;
+  --lh-control-h: 40px;
+  --lh-content: 1120px;
+  --lh-gutter: 24px;
+  --lh-section-y: 80px;
+  --lh-section-y-sm: 48px;
+  --lh-font: var(--font-geist-sans), "Noto Sans JP", "Hiragino Sans", "Yu Gothic",
+    "YuGothic", sans-serif;
+}

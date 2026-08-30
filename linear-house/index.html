@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ファイルを置くと、ずれが1枚になる。｜就業規則AI</title>
+<link rel="stylesheet" href="./tokens.css" />
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--lh-font);
+    color: var(--lh-ink);
+    background: var(--lh-canvas);
+  }
+  .lh-shell { max-width: var(--lh-content); margin: 0 auto; padding: 0 var(--lh-gutter); }
+  .lh-nav { height: var(--lh-nav-h); border-bottom: 1px solid var(--lh-line); display: flex; align-items: center; }
+  .lh-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: var(--lh-control-h); padding: 0 16px; border-radius: var(--lh-radius);
+    font-size: 14px; font-weight: 600; border: 0; cursor: pointer;
+  }
+  .lh-btn-ink { background: var(--lh-ink); color: #fff; }
+  .lh-frame {
+    margin-top: 24px; border: 1px solid var(--lh-line); border-radius: var(--lh-radius);
+    padding: 24px; background: var(--lh-canvas);
+  }
+  .lh-drop {
+    min-height: 208px; border: 1px dashed var(--lh-line); border-radius: var(--lh-radius);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+  }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+  .metric { border: 1px solid var(--lh-line); border-radius: var(--lh-radius); padding: 8px 12px; }
+  .metric dt { font-size: 12px; color: var(--lh-muted); }
+  .metric dd { margin: 2px 0 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+  <header class="lh-nav">
+    <div class="lh-shell" style="display:flex;width:100%;justify-content:space-between;align-items:center;">
+      <strong>就業規則AI</strong>
+      <span style="color:var(--lh-muted);font-size:14px;">料金 · ログイン</span>
+    </div>
+  </header>
+  <main class="lh-shell" style="padding-top:48px;padding-bottom:80px;max-width:720px;">
+    <p style="font-size:13px;color:var(--lh-muted);">2026年10月1日のカスハラ対策義務化まで <strong style="color:var(--lh-ink);">33</strong>日</p>
+    <h1 style="margin:16px 0 0;font-size:32px;line-height:1.3;font-weight:600;letter-spacing:-0.02em;">
+      ファイルを置くと、<br />ずれが1枚になる。
+    </h1>
+    <p style="margin:16px 0 0;color:var(--lh-muted);font-size:15px;line-height:1.6;">
+      登録不要。PDF・Word・テキストを置くか、本文を貼れます。
+    </p>
+    <div class="lh-frame">
+      <div class="lh-drop">
+        <p style="margin:0;font-weight:600;">就業規則のファイルをここに置く</p>
+        <p style="margin:8px 0 0;font-size:12px;color:var(--lh-muted);">PDF・Word（.docx）・テキスト。8MBまで。</p>
+        <button class="lh-btn lh-btn-ink" style="margin-top:16px;" type="button"
+          onclick="location.href='https://banto-roumu.com/zure'">ファイルを選ぶ</button>
+      </div>
+      <p style="margin:16px 0 0;font-size:12px;color:var(--lh-muted);">
+        送る直前の扱い（保存のタイミング）は、ファイルを選んだあとに表示します。
+      </p>
+      <!-- 解析後はここに GapSheet（施行まで / 読めた / 未読 / 触れていない） -->
+      <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--lh-line);">
+        <p style="margin:0;font-size:13px;color:var(--lh-muted);">ずれ1枚の見本（表示の例）</p>
+        <dl class="metrics">
+          <div class="metric"><dt>施行まで</dt><dd>33日</dd></div>
+          <div class="metric"><dt>読めたページ</dt><dd>12</dd></div>
+          <div class="metric"><dt>未読</dt><dd>2</dd></div>
+          <div class="metric"><dt>触れていない</dt><dd>3</dd></div>
+        </dl>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

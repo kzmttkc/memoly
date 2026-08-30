@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { Suspense } from 'react'
-import { PublicHeader } from '@/components/ui/PublicHeader'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { VARIANT_HEADER, type LpVariant, isLpVariant } from '@/app/business/_lib/variant-shared'
 import { BRAND_LEGACY_NAME, SUPPORT_EMAIL } from '@/lib/brand'
 import { OFFER, daysUntilKill } from '@/lib/offer'
+import { LinearNav } from '@/linear-house/components/Nav'
 import { ZureDrop } from './_components/ZureDrop'
 
 const BASE = 'https://banto-roumu.com'
@@ -34,18 +34,18 @@ export default async function ZurePage() {
   const days = daysUntilKill()
 
   return (
-    <div className="company-light zure-surface min-h-[100dvh] text-[var(--zure-ink)]">
+    <div className="company-light zure-surface min-h-[100dvh]">
       <p className="zure-deadline-band">
         2026年10月1日のカスハラ対策義務化まで <strong>{days}</strong>日 · まず自社のファイルを置く
       </p>
-      <PublicHeader showPrimaryCta={false} />
+      <LinearNav />
       <main>
-        <Suspense fallback={<p className="px-6 py-16 text-sm text-[var(--zure-ink-soft)]">読み込み中...</p>}>
-          <ZureDrop variant={variant} />
+        <Suspense fallback={<p className="lh-shell py-16 text-sm text-[var(--lh-muted)]">読み込み中...</p>}>
+          <ZureDrop variant={variant} days={days} />
         </Suspense>
       </main>
       <PublicFooter showCrossCta={false} omitServiceHrefs={['/zure']} />
-      <p className="zure-drop-chrome mx-auto max-w-2xl px-6 pb-8 text-center text-xs text-[var(--zure-ink-soft)]">
+      <p className="mx-auto max-w-2xl px-6 pb-8 text-center text-xs text-[var(--lh-muted)]">
         旧称: {BRAND_LEGACY_NAME} · お問い合わせ{' '}
         <a className="underline underline-offset-2" href={`mailto:${SUPPORT_EMAIL}`}>
           {SUPPORT_EMAIL}

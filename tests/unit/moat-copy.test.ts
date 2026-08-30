@@ -38,9 +38,10 @@ test('入口はファイルに加えて本文の貼り付けができる', () =>
   assert.match(src, /zure_sample_clicked/)
   assert.match(src, /ZURE_LEAD/)
   assert.match(offer, /登録・クレジットカードは不要|不足の断定ではありません/)
-  assert.match(src, /就業規則AI/)
+  assert.match(src, /就業規則のファイルをここに置く/)
   assert.match(src, /href=\"\/offer\"/)
   assert.match(src, /ZureLpBelow/)
+  assert.match(src, /LegalFold/)
   assert.match(src, /zure-sticky-cta/)
   const below = read('app/zure/_components/ZureLpBelow.tsx')
   assert.match(below, /無料の点検/)
@@ -117,11 +118,12 @@ test('置き直し失敗で見えている1枚を消さない', () => {
   assert.doesNotMatch(src, /8MBまでです。[\s\S]{0,120}setSheet\(null\)/)
 })
 
-test('1枚があるときは先に1枚を見せる', () => {
+test('1枚とドロップは一つの枠に入る（Linear House）', () => {
   const src = read('app/zure/_components/ZureDrop.tsx')
-  const sheetAt = src.indexOf('{sheet && (')
+  const frameAt = src.indexOf('className="lh-frame')
   const dropAt = src.indexOf('就業規則のファイルをここに置く')
-  assert.ok(sheetAt > 0 && dropAt > 0 && sheetAt < dropAt)
+  const sheetAt = src.indexOf('<GapSheetView')
+  assert.ok(frameAt > 0 && dropAt > frameAt && sheetAt > dropAt)
 })
 
 test('英語の登録はリスク診断へ直行すると約束しない', () => {
@@ -141,7 +143,7 @@ test('1枚の操作の隣に読み込みと失敗を出す', () => {
   assert.match(src, /あと約/)
   assert.match(src, /消しますか/)
   assert.match(src, /scrollIntoView/)
-  const sheetAt = src.indexOf('className="zure-sheet')
+  const sheetAt = src.indexOf('<GapSheetView')
   const busyInSheet = src.indexOf('読んでいます…', sheetAt)
   const errInSheet = src.indexOf('role="alert"', sheetAt)
   assert.ok(sheetAt > 0 && busyInSheet > sheetAt && errInSheet > sheetAt)

@@ -428,56 +428,95 @@ body {
   }
 }
 
-/* 2026-08-29 LP: 紙地・墨・朱。AI紫グラデは使わない。明朝見出しはOSスタック。 */
+/* 2026-08-30 Linear House: 白地・沈黙。紙地・明朝・朱は家に入れない。 */
+@import "../linear-house/tokens.css";
+
 .zure-surface {
-  --zure-paper: #f4efe6;
-  --zure-paper-card: #fffcf6;
-  --zure-ink: #1a1814;
-  --zure-ink-soft: #4a453c;
-  --zure-line: #d4cdc0;
-  --zure-vermilion: #c23a2b;
-  --zure-vermilion-soft: #f3e0dc;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, #fffdf8 0%, transparent 55%),
-    linear-gradient(180deg, var(--zure-paper) 0%, #efe8db 100%);
-  color: var(--zure-ink);
+  --zure-paper: var(--lh-canvas);
+  --zure-paper-card: var(--lh-fill);
+  --zure-ink: var(--lh-ink);
+  --zure-ink-soft: var(--lh-muted);
+  --zure-line: var(--lh-line);
+  --zure-vermilion: var(--lh-ink);
+  --zure-vermilion-soft: var(--lh-fill);
+  background: var(--lh-canvas);
+  color: var(--lh-ink);
+  font-family: var(--lh-font);
+}
+.lh-shell {
+  max-width: var(--lh-content);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--lh-gutter);
+  padding-right: var(--lh-gutter);
+}
+.lh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--lh-control-h);
+  padding: 0 16px;
+  border-radius: var(--lh-radius);
+  font-size: 14px;
+  font-weight: 600;
+  border: 0;
+  cursor: pointer;
+}
+.lh-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.lh-btn-ink {
+  background: var(--lh-ink);
+  color: #fff;
+}
+.lh-btn-ink:hover:not(:disabled) {
+  background: #0a0a0a;
+}
+.lh-btn-ghost {
+  background: var(--lh-canvas);
+  color: var(--lh-ink);
+  border: 1px solid var(--lh-line);
+}
+.lh-frame {
+  border: 1px solid var(--lh-line);
+  border-radius: var(--lh-radius);
+  background: var(--lh-canvas);
+  padding: var(--lh-space-3);
 }
 .zure-lp-serif {
-  font-family: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", "YuMincho",
-    "Noto Serif JP", "Shippori Mincho", serif;
+  font-family: var(--lh-font);
 }
 .zure-lp-tag {
   display: inline-block;
   margin-right: 0.45rem;
   padding: 0.12rem 0.45rem;
   font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+  background: var(--lh-fill);
+  color: var(--lh-muted);
   vertical-align: 0.05em;
 }
-.zure-lp-tag-miss {
-  background: var(--zure-vermilion-soft);
-  color: var(--zure-vermilion);
-}
-.zure-lp-tag-ok {
-  background: #e4efe6;
-  color: #2f5d3a;
-}
+.zure-lp-tag-miss,
+.zure-lp-tag-ok,
 .zure-lp-tag-ops {
-  background: #efe8d8;
-  color: #6b5420;
+  background: var(--lh-fill);
+  color: var(--lh-ink);
 }
 .zure-deadline-band {
-  background: var(--zure-ink);
-  color: #f7f2ea;
-  font-size: 0.82rem;
-  letter-spacing: 0.04em;
+  background: var(--lh-fill);
+  color: var(--lh-muted);
+  border-bottom: 1px solid var(--lh-line);
+  font-size: 0.8125rem;
   text-align: center;
   padding: 0.65rem 1rem;
 }
 .zure-deadline-band strong {
-  color: #ffb4a8;
+  color: var(--lh-ink);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 .zure-sticky-cta {
   position: fixed;
@@ -487,8 +526,8 @@ body {
   z-index: 40;
   display: none;
   padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--zure-line);
-  background: color-mix(in srgb, var(--zure-paper) 92%, transparent);
+  border-top: 1px solid var(--lh-line);
+  background: color-mix(in srgb, var(--lh-canvas) 94%, transparent);
   backdrop-filter: blur(8px);
 }
 @media (max-width: 639px) {
@@ -497,12 +536,12 @@ body {
   }
 }
 .zure-hero-enter {
-  animation: zureHeroIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: zureHeroIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes zureHeroIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
