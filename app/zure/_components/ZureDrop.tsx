@@ -677,6 +677,16 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                             無料と有料の違い
                           </Link>
                         </p>
+                        {/* 2026-08-31 実測にもとづく配置変更。
+                            段2（名前を取る）の受け口は2つある:
+                              「この1枚を残す」→ アカウント作成 … 8/25以降 3人到達 / **送信ボタンまで0人**
+                              このメールのみの受け口          … 見た2人のうち1人が完了（lead_captured）
+                            banto-roumu.com で lead_captured を生んだ経路はこちらだけ。
+                            にもかかわらず 1枚を見た4人中2人しか到達しておらず、
+                            二次リンク（別のファイル/貼り直す/共有/消す）の後ろに埋まっていた。
+                            **コピーと主CTAの序列は変えず、位置だけ主CTA直後へ上げる。**
+                            判定は H51（2026-09-24）。効かなければ元へ戻す（この差分だけ revert）。 */}
+                        <KasuharaGap />
                         <div className="zure-drop-chrome">
                           <button
                             type="button"
@@ -736,7 +746,6 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                             </button>
                           )}
                         </div>
-                        <KasuharaGap />
                       </>
                     }
                   />
