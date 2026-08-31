@@ -1,12 +1,32 @@
 import { TAXONOMY, DISCLAIMER } from "../taxonomy/items";
 import { GAP_SYSTEM } from "../prompts/constitution";
-import type { AnalyzeInput, GapSheet, LlmClient } from "./types";
+import type { AnalyzeInput, GapBlock, GapSheet, LlmClient } from "./types";
 import { enforceTaxonomy, parseSheetJson } from "./validateSheet";
+import { heuristicGapSheet } from "../fallback";
 
-export const PROMPT_VERSION = "gap-2026-08-29.1";
+export const PROMPT_VERSION = "gap-2026-08-31.1";
 
-function buildUserPrompt(input: AnalyzeInput): string {
-  const checklist = TAXONOMY.map((t) => ({
+/**
+ * チェック項目を何分割して並列に投げるか。
+ *
+ * 2026-08-31 実測（実物大 29KB の就業規則・claude-sonnet-4-6）:
+ *   1回で34項目 … 出力 6,311tok / **87.1秒** → 関数上限60秒を超えて 504。
+ *   max_tokens=2000 に絞る … 30.1秒で stop_reason=max_tokens、JSON が途中で切れて
+ *     parse に失敗 → 例外 → ヒューリスティックへ。**上限を絞っても直らず、
+ *     失敗の形がタイムアウトから切り捨てに変わっただけだった。**
+ *   4分割を並列 … 43.9秒 / 全バッチ end_turn / 34項目そろう。→ これを採る。
+ *
+ * 分割数を増やすほど1回あたりの生成が短くなり締切内に返りやすいが、
+ * 同じ本文を何度も入力に載せるので入力トークンは分割数に比例して増える。
+ * 4 は「60秒に収まる」と「入力の重複」の折り合いとして実測から選んだ。
+ */
+const BATCHES = 4;
+
+/** 1バッチあたりの締切。関数上限（60秒）より必ず短くする。 */
+const BATCH_DEADLINE_MS = 42_000;
+
+function buildUserPrompt(input: AnalyzeInput, items: typeof TAXONOMY): string {
+  const checklist = items.map((t) => ({
     id: t.id,
     title: t.title,
     group: t.group,
@@ -65,16 +85,47 @@ export async function runGapSheet(
     return emptySheet(input, "抽出文字が少なすぎます。画像PDFや保護ファイルの可能性があります。");
   }
 
-  // 2026-08-31: 8000 は「ずれ1枚」に対して過大で、生成が長引くほど関数上限（60秒）に
-  // 近づいて 504 を招く。1枚に載る分量（論点10件前後）は 2000 で足り、
-  // 締切内に返る確率を上げるほうがユーザーに1枚が届く。
-  const raw = await client.completeJson({
-    system: GAP_SYSTEM,
-    user: buildUserPrompt({ ...input, text }),
-    maxTokens: 2000,
-  });
+  // 34項目を BATCHES 個に割って並列に投げる（理由と実測値は BATCHES の注記）。
+  // 落ちたバッチだけヒューリスティックで埋める——1バッチの失敗で
+  // 全体をヒューリスティックへ落とすと、読めていた項目まで捨てることになるため。
+  const size = Math.ceil(TAXONOMY.length / BATCHES);
+  const groups: (typeof TAXONOMY[number])[][] = [];
+  for (let i = 0; i < TAXONOMY.length; i += size) groups.push(TAXONOMY.slice(i, i + size));
 
-  const parsed = parseSheetJson(raw);
+  const settled = await Promise.all(
+    groups.map(async (g) => {
+      try {
+        const raw = await client.completeJson({
+          system: GAP_SYSTEM,
+          user: buildUserPrompt({ ...input, text }, g),
+          maxTokens: 4000,
+          timeoutMs: BATCH_DEADLINE_MS,
+        });
+        return parseSheetJson(raw);
+      } catch (e) {
+        console.error("[runGapSheet] batch failed", (e as Error)?.message);
+        return null;
+      }
+    }),
+  );
+
+  if (settled.every((s) => s === null)) {
+    throw new Error("all_batches_failed");
+  }
+
+  const fallbackById = new Map(
+    heuristicGapSheet({ ...input, text }).blocks.map((b) => [b.id, b]),
+  );
+  const byId = new Map<string, GapBlock>();
+  for (const s of settled) {
+    for (const b of s?.blocks ?? []) if (b?.id) byId.set(b.id, b);
+  }
+
+  const parsed = settled.find((s) => s !== null)!;
+  parsed.blocks = TAXONOMY.map((item) => byId.get(item.id) ?? fallbackById.get(item.id))
+    .filter((b): b is GapBlock => Boolean(b));
+  parsed.contradictions = settled.flatMap((s) => s?.contradictions ?? []);
+  parsed.followups = [...new Set(settled.flatMap((s) => s?.followups ?? []))];
   parsed.document = {
     title_guess: parsed.document?.title_guess || input.titleGuess || "",
     page_count: input.pageCount ?? parsed.document?.page_count ?? 0,

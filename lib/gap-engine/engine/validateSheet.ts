@@ -12,7 +12,39 @@ export function quoteExists(source: string, quote: string): boolean {
   return normalize(source).includes(normalize(quote));
 }
 
+/**
+ * status の語ゆれを正規化する。
+ *
+ * 2026-08-31 実測: プロンプトが written という語を一度も定義していなかったため
+ * （手順に出てくるのは ops_missing / unmentioned / unread / not_applicable だけ）、
+ * モデルは肯定側に "found" を発明して返していた。schema 外の語は下流で捨てられ、
+ * **条文を正しく見つけているのに「触れていない」と表示されていた**
+ * （正解データ 10件中 4件がこれで不一致。うち3件は語ゆれだけが原因）。
+ * プロンプト側に許可語を明記したうえで、ここでも受け止める——
+ * モデルを変えたときに同じ壊れ方を静かに繰り返さないため。
+ */
+const STATUS_ALIASES: Record<string, GapBlock["status"]> = {
+  found: "written",
+  present: "written",
+  exists: "written",
+  documented: "written",
+  covered: "written",
+  missing: "unmentioned",
+  absent: "unmentioned",
+  not_found: "unmentioned",
+  partial: "ops_missing",
+};
+
+export function normalizeStatus(s: unknown): GapBlock["status"] | null {
+  const v = String(s ?? "").trim().toLowerCase();
+  const valid = ["written", "ops_missing", "unmentioned", "unread", "not_applicable"];
+  if (valid.includes(v)) return v as GapBlock["status"];
+  return STATUS_ALIASES[v] ?? null;
+}
+
 export function sanitizeBlock(source: string, block: GapBlock): GapBlock {
+  const normalized = normalizeStatus(block.status);
+  if (normalized) block = { ...block, status: normalized };
   const citations = (block.citations ?? []).filter((c) =>
     quoteExists(source, c.quote),
   );

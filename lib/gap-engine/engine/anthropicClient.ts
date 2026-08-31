@@ -16,9 +16,10 @@ const LLM_TIMEOUT_MS = 25_000;
 
 export function createAnthropicClient(apiKey: string, model = "claude-sonnet-4-6"): LlmClient {
   return {
-    async completeJson({ system, user, maxTokens = 8000 }) {
+    async completeJson({ system, user, maxTokens = 8000, timeoutMs }) {
       const ac = new AbortController();
-      const timer = setTimeout(() => ac.abort(), LLM_TIMEOUT_MS);
+      const deadline = timeoutMs ?? LLM_TIMEOUT_MS;
+      const timer = setTimeout(() => ac.abort(), deadline);
       let res: Response;
       try {
         res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -42,7 +43,7 @@ export function createAnthropicClient(apiKey: string, model = "claude-sonnet-4-6
         // heuristicGapSheet へ落とすため、**必ず例外にして返す**（握りつぶさない）。
         throw new Error(
           (e as Error)?.name === "AbortError"
-            ? `anthropic_timeout_${LLM_TIMEOUT_MS}ms`
+            ? `anthropic_timeout_${deadline}ms`
             : `anthropic_fetch_failed:${(e as Error)?.message ?? "unknown"}`,
         );
       } finally {

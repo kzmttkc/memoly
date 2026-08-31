@@ -23,7 +23,6 @@
       "@/*": ["./*"]
     }
   },
-  "exclude": ["one-product/code/**"],
   "include": [
     "next-env.d.ts",
     "**/*.ts",
@@ -32,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "tests"]
+  "exclude": ["node_modules", "tests", "one-product/code/**"]
 }

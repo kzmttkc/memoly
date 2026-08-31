@@ -73,5 +73,7 @@ export type LlmClient = {
     system: string;
     user: string;
     maxTokens?: number;
+    /** 呼び出しの締切。関数の maxDuration より必ず短くする（未指定なら実装側の既定）。 */
+    timeoutMs?: number;
   }) => Promise<string>;
 };

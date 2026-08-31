@@ -33,9 +33,16 @@ export const GAP_SYSTEM = `${CONSTITUTION}
 仕事:
 入力の就業規則テキストを、チェック項目リストの各 id について評価し、ずれ1枚 JSON を返す。
 
+status に使える語（この5つ以外を書かない。found / present / exists などは使わない）:
+- written        … 趣旨または用語がテキストにあり、引用できる
+- ops_missing    … 制度の存在は読めるが、手続・窓口・周知・期限が無い
+- unmentioned    … 読めた範囲に趣旨も用語も無い
+- unread         … 判断材料が未読ページ側にありそう
+- not_applicable … 相対的記載で「制度を置いていない」と読める
+
 評価手順（この順）:
 1. 抽出テキストが空、またはほぼ空なら document.extracted_ok=false とし、blocks は空、unread_note に理由を書く。
-2. 各 item について、テキストから趣旨または用語を探す。
+2. 各 item について、テキストから趣旨または用語を探す。見つかって引用できるなら written。
 3. 制度の存在だけ読めて手続・窓口・周知・期限が無いときだけ ops_missing。
 4. 読めた範囲に趣旨も用語も無いとき unmentioned。
 5. 判断材料が未読ページ側にありそうなときだけ unread。
