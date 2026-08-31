@@ -541,6 +541,14 @@ body {
   .zure-sticky-cta {
     display: block;
   }
+  /* 固定CTAは fixed なので、ページ末尾のコンテンツがその裏に取り残される。
+     2026-08-31 実測: 最下部までスクロールしてもフッターの問い合わせ先
+     （support@…）が固定CTAの下敷きのままで、押せなかった。
+     帯の実高（40px + 上下0.75rem + セーフエリア）分をページ側に確保する。
+     Cookieバナー分は CookieBanner が <body> に別途積むので二重に足さない。 */
+  .zure-lp {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
 }
 .zure-hero-enter {
   animation: zureHeroIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
