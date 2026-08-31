@@ -219,7 +219,18 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
           if (until) retryUntilRef.current = until
         }
         if (!res.ok) {
-          setError(typeof data.error === 'string' ? data.error : 'ファイルを読めませんでした。')
+          // 2026-08-31: 504（関数タイムアウト）のとき本文はJSONではないので data.error が無く、
+          // 一律「ファイルを読めませんでした。」と出していた。**ファイルは読めており**、
+          // 混雑や時間切れが原因なのに、利用者は自分のファイルが悪いと誤解する。
+          // 原因の側を言い分ける（貼った本文はこの時点で消していないので、そのまま再試行できる）。
+          const serverBusy = res.status === 502 || res.status === 503 || res.status === 504
+          setError(
+            typeof data.error === 'string'
+              ? data.error
+              : serverBusy
+                ? '時間内に読み取れませんでした。ファイルの問題ではありません。もう一度お試しください。'
+                : 'ファイルを読めませんでした。',
+          )
           return
         }
         const nextSheet = isGapSheet(data.gapSheet)
@@ -229,6 +240,8 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
               titleGuess: String(data.filename ?? file.name),
             })
         setSheet(nextSheet)
+        // 成功が確定してから貼り付け欄を空にする（失敗時は残して貼り直しを不要にする）
+        setPaste('')
         setPendingText(String(data.text ?? ''))
         const saved = savePendingZure({
           filename: String(data.filename ?? file.name),
@@ -269,7 +282,8 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
           ? '先頭10万字まで使いました。'
           : null,
     )
-    setPaste('')
+    // 2026-08-31: ここで消していたため、送信が失敗すると**貼った就業規則が消えた**。
+    // 長文を貼り直させるのは実害が大きい。クリアは成功が確定してから（onFile 内）行う。
     const file = isZureSampleFilename(filename)
       ? new File([raw.replace(/^\uFEFF/, '').trim()], filename, { type: 'text/plain' })
       : result.file
