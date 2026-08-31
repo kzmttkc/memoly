@@ -9,7 +9,36 @@ function normalize(s: string): string {
 
 export function quoteExists(source: string, quote: string): boolean {
   if (!quote || quote.length < 4) return false;
-  return normalize(source).includes(normalize(quote));
+  const src = normalize(source);
+  if (src.includes(normalize(quote))) return true;
+  // 2026-08-31 実測: モデルは逐語の抜き出しに出典を足して
+  // 「始業は午前9時、終業は午後6時とする。（第2条）」と返すことがある。
+  // 本文にその括弧書きは無いので一致せず、正しい引用が捨てられていた。
+  // 末尾の括弧注記だけ落としてもう一度照合する（本文側は触らない）。
+  const trimmed = quote.replace(/[（(][^（()）]*[)）]\s*$/, "").trim();
+  return trimmed.length >= 4 && src.includes(normalize(trimmed));
+}
+
+/**
+ * 根拠の項目名ゆれを citations に寄せる。
+ *
+ * 2026-08-31 実測: プロンプトが出力の項目名を一度も示していなかった
+ * （「スキーマどおりの JSON」とだけ書いてあり、そのスキーマが無かった）。
+ * モデルは根拠を citations ではなく quote、要約を what_found ではなく note で返し、
+ * citations が空 → sanitizeBlock が written を unmentioned へ格下げ → **条文を
+ * 正しく引用しているのに「触れていない」と表示されていた**（本番実測 6/10）。
+ * プロンプトに項目名を明記したうえで、ここでも受け止める。
+ */
+function coerceEvidence(block: GapBlock): GapBlock {
+  const b = block as GapBlock & { quote?: unknown; note?: unknown };
+  let out = block;
+  if ((!out.citations || out.citations.length === 0) && typeof b.quote === "string" && b.quote) {
+    out = { ...out, citations: [{ quote: b.quote }] };
+  }
+  if (!out.what_found && typeof b.note === "string" && b.note) {
+    out = { ...out, what_found: b.note };
+  }
+  return out;
 }
 
 /**
@@ -45,6 +74,7 @@ export function normalizeStatus(s: unknown): GapBlock["status"] | null {
 export function sanitizeBlock(source: string, block: GapBlock): GapBlock {
   const normalized = normalizeStatus(block.status);
   if (normalized) block = { ...block, status: normalized };
+  block = coerceEvidence(block);
   const citations = (block.citations ?? []).filter((c) =>
     quoteExists(source, c.quote),
   );

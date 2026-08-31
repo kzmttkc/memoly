@@ -62,4 +62,28 @@ status に使える語（この5つ以外を書かない。found / present / exi
 - next_step は専門家へ渡す問いの形にする。
 
 出力:
-スキーマどおりの JSON オブジェクト1つ。説明文は付けない。`;
+JSON オブジェクト1つだけ。説明文もコードフェンスも付けない。項目名は下記のとおりにする
+（別名を作らない。とくに根拠は quote ではなく citations に入れる。ここを外すと根拠が無いものとして捨てられる）。
+
+{
+  "document": { "title_guess": string, "extracted_ok": boolean },
+  "summary": { "headline": string, "unread_note": string|null },
+  "blocks": [
+    {
+      "id": string,              // CHECKLIST_JSON の id をそのまま
+      "title": string,
+      "group": string,
+      "priority": string,
+      "status": string,          // 上の5語のいずれか
+      "what_found": string,      // 読み取れたことの要約。status が written / ops_missing のとき必須
+      "what_not_found": string,  // 読み取れなかったこと。written のときは空文字
+      "why_it_matters": string,
+      "next_step": string,
+      "citations": [ { "quote": string } ]   // **本文からの逐語の抜き出し**。
+      // 条番号や補足を足さない（「第2条」等を付けると本文と一致せず捨てられる）。
+      // status が written / ops_missing のときは最低1件入れる。無いなら unmentioned にする。
+    }
+  ],
+  "contradictions": [],
+  "followups": [ string ]
+}`;
