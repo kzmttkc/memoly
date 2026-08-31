@@ -522,7 +522,14 @@ body {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  /* Cookieバナー（position:fixed・z-50・実測49px）の分だけ持ち上げる。
+     2026-08-31 実測: bottom:0 だと 390px 幅でこの帯（y=792..832）が
+     バナー（y=795..844）の真下に入り、z-index で負けて **押せなかった**。
+     バナー側は <body> に padding-bottom を積んで裏に隠れる要素を救っているが、
+     この帯は fixed なのでその救済が効かず、**スクロールしても永久に届かない**。
+     Cookie未同意＝初回訪問者なので、獲得で来た人だけが押せない状態だった。
+     CookieBanner が --cookie-banner-h を :root に載せる。未表示なら 0px。 */
+  bottom: var(--cookie-banner-h, 0px);
   z-index: 40;
   display: none;
   padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));

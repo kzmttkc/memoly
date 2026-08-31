@@ -42,6 +42,7 @@ export function CookieBanner() {
   useLayoutEffect(() => {
     if (!show || !ref.current) {
       document.body.style.paddingBottom = ''
+      document.documentElement.style.removeProperty('--cookie-banner-h')
       return
     }
     const el = ref.current
@@ -52,6 +53,16 @@ export function CookieBanner() {
       const tabbar = document.getElementById('banto-mobile-tabbar')
       setTabbarOffset(tabbar?.offsetHeight ?? 0)
       document.body.style.paddingBottom = `${el.offsetHeight + (tabbar?.offsetHeight ?? 0)}px`
+      // 2026-08-31: body の padding-bottom は「流れの中にある」最下部コンテンツしか救えない。
+      //   position:fixed の要素は padding では動かないので、バナーの裏に入ったまま
+      //   スクロールしても永久に届かない。実際 /zure のモバイル固定CTA（.zure-sticky-cta・
+      //   z-40）がバナー（z-50）の下敷きになり、Cookie未同意＝初回訪問者だけが
+      //   「ファイルを置く」を押せなかった（390px 実測）。
+      //   自分の高さを :root に載せ、下端に居座る側が自力で退避できるようにする。
+      document.documentElement.style.setProperty(
+        '--cookie-banner-h',
+        `${el.offsetHeight + (tabbar?.offsetHeight ?? 0)}px`,
+      )
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -63,6 +74,7 @@ export function CookieBanner() {
       ro.disconnect()
       window.removeEventListener('resize', measure)
       document.body.style.paddingBottom = ''
+      document.documentElement.style.removeProperty('--cookie-banner-h')
     }
   }, [show])
 
