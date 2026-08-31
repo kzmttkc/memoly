@@ -24,7 +24,7 @@
 
 - [x] Owner: Supabase に `supabase/pack_invites.sql` を適用（2026-08-31 Owner完了）
 - [x] banto webhook が pack checkout を招待処理（Word配信は触らない）
-- [ ] Owner: Resend（DIGEST_FROM_EMAIL）確認後、購入翌日に同じメールで /zure または invite が届く
+- [x] Owner: Resend（DIGEST_FROM_EMAIL）確認（2026-08-31・Vercel Production に RESEND_API_KEY / DIGEST_FROM_EMAIL あり）
 
 ## 完了の定義
 
