@@ -542,11 +542,13 @@ body {
     display: block;
   }
   /* 固定CTAは fixed なので、ページ末尾のコンテンツがその裏に取り残される。
-     2026-08-31 実測: 最下部までスクロールしてもフッターの問い合わせ先
+     2026-08-31 実測: 最下部までスクロールしてもページ末尾の問い合わせ先
      （support@…）が固定CTAの下敷きのままで、押せなかった。
-     帯の実高（40px + 上下0.75rem + セーフエリア）分をページ側に確保する。
+     帯の実高（40px + 上下0.75rem + セーフエリア）分を確保する。
+     .zure-lp ではなく .zure-surface に置くこと——問い合わせ先は .zure-lp の
+     **外**にあり、.zure-lp へ足しても届かない（実測で1度外した）。
      Cookieバナー分は CookieBanner が <body> に別途積むので二重に足さない。 */
-  .zure-lp {
+  .zure-surface {
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
   }
 }
