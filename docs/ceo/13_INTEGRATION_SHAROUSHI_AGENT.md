@@ -59,9 +59,9 @@
 
 ## Owner作業（コード外）
 
-- Stripe商品名をすべて「就業規則AI …」に揃える  
-- 台帳 Price をアーカイブ（新規 Payment Link 無効）  
-- Payment Link 成功URLを pack-access → 次画面 zure 誘導に寄せる（可能なら）  
-- contact@ を support@ へ転送  
-- Supabase に `supabase/pack_invites.sql` を適用  
-- Resend（DIGEST_FROM_EMAIL）がパック招待で使えることを確認
+- [x] Stripe商品名を「就業規則AI …」に揃える（パック改名・2026-08-31）  
+- [x] 台帳 Price をアーカイブ（新規 Payment Link 無効・2026-08-31）  
+- [ ] Payment Link 成功URLを pack-access → 次画面 zure 誘導に寄せる（可能なら・任意）  
+- [ ] contact@ を support@ へ転送（任意）  
+- [x] Supabase に `supabase/pack_invites.sql` を適用（2026-08-31 Owner完了）  
+- [ ] Resend（DIGEST_FROM_EMAIL）がパック招待で使えることを確認
