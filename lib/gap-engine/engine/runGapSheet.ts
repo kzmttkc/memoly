@@ -65,10 +65,13 @@ export async function runGapSheet(
     return emptySheet(input, "抽出文字が少なすぎます。画像PDFや保護ファイルの可能性があります。");
   }
 
+  // 2026-08-31: 8000 は「ずれ1枚」に対して過大で、生成が長引くほど関数上限（60秒）に
+  // 近づいて 504 を招く。1枚に載る分量（論点10件前後）は 2000 で足り、
+  // 締切内に返る確率を上げるほうがユーザーに1枚が届く。
   const raw = await client.completeJson({
     system: GAP_SYSTEM,
     user: buildUserPrompt({ ...input, text }),
-    maxTokens: 8000,
+    maxTokens: 2000,
   });
 
   const parsed = parseSheetJson(raw);
