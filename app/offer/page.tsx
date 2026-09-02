@@ -93,21 +93,31 @@ export default function OfferBoundaryPage() {
 
         <section className="mt-10">
           <h2 className="text-lg font-semibold">最初にやること</h2>
+          {/* 製品定義書 v3 §7.6: 一字一句 */}
           <p className="mt-2 text-sm leading-relaxed text-neutral-700">
-            登録の前に、就業規則の PDF・Word、または本文を置けます。カスハラの方針・窓口・手順があるかが1枚になります。相談は、そのあとの話です。
+            規定例ガイドか基本方針ガイドで、自社の人数・組合・規則の有無を選ぶ。<br />
+            足す条文と届出までの順番がその場で出る。残すならメール1つ。<br />
+            ファイルが既にあるときだけ、就業規則のファイルを置く。
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <a
+              href="https://sharoushi-agent.com/kasuhara-shugyokisoku-kitei-guide.html?utm_source=banto&utm_medium=offer&utm_campaign=doc_first#pd-box"
+              className={buttonClass({ variant: 'primary', className: 'justify-center' })}
+              rel="noopener noreferrer"
+            >
+              足す条文と届出までの順番を出す（無料）
+            </a>
             <TrackedCTA
               location="offer_zure"
               href="/zure"
-              className={buttonClass({ variant: 'primary', className: 'justify-center' })}
+              className={buttonClass({ variant: 'secondary', className: 'justify-center' })}
             >
               就業規則のファイルを置く
             </TrackedCTA>
             <TrackedCTA
               location="offer_pricing"
               href="/pricing"
-              className={buttonClass({ variant: 'secondary', className: 'justify-center' })}
+              className={buttonClass({ variant: 'ghost', className: 'justify-center' })}
             >
               月額プランの詳細
             </TrackedCTA>

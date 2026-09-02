@@ -52,6 +52,7 @@ const ALLOWED_SOURCES = new Set([
   'kabau_page_doc',          // ページ内資料の送付（page-doc-mail）
   'kabau_updates',           // 更新案内オプトイン（email-updates）
   'kasuhara_gap',            // /zure の10措置照合（控えの送付・Phase 2）
+  'kabau_invoice_request',   // パックLPの請求書払い申込（invoice-request・製品定義書 v3 §12.2）
   'unknown',
 ])
 

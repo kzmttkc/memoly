@@ -120,9 +120,14 @@ export default function PricingPage() {
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl">
           就業規則AIの料金
         </h1>
-        <p className="mt-4 text-base leading-relaxed text-neutral-600">
-          就業規則のファイルからずれを1枚にする就業規則AIの料金です。ずれの1枚は登録の前に出ます。無料プランから始められ、登録にクレジットカードは要りません。
-          有料プランは月額3,980円（Entry・1社5名まで）からで、上限人数までは何人で使っても料金は変わりません。
+        {/* 製品定義書 v3 §7.6: ページ先頭に一字一句 */}
+        <p className="mt-4 text-base leading-relaxed text-neutral-700">
+          10月1日のカスハラ措置に間に合わせるだけなら、月額は不要です。<br />
+          先に条文と届出の順番を出し、必要なら実務パック（19,800円）です。<br />
+          月額は、規則を覚えさせて継続して相談する方向けです。
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+          無料プランから始められ、登録にクレジットカードは要りません。有料プランは月額3,980円（Entry・1社5名まで）からで、上限人数までは何人で使っても料金は変わりません。
         </p>
         <p className="mt-3 text-sm text-neutral-600">
           無料ツール・パック・月額の違いを先に見る場合は{' '}

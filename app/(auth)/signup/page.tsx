@@ -585,6 +585,12 @@ function SignupForm() {
         </div>
       )}
 
+      {/* 製品定義書 v3 §7.6: 段2の主受け口にしない。先頭に一字一句 */}
+      {!isEn && (
+        <p className="mb-3 rounded-lg bg-neutral-50 px-4 py-3 text-center text-sm leading-relaxed text-neutral-700">
+          カスハラ義務化への対応だけなら、アカウントは不要です。条文と順番は記事側でその場に出ます。
+        </p>
+      )}
       <p className="mb-2 text-center text-sm text-neutral-600">
         {isEn ? 'Start free' : fromZure ? 'この1枚を残す' : '無料で始める'}
       </p>

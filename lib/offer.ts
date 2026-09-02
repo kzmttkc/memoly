@@ -18,17 +18,21 @@ export const OFFER = {
 //   「方針・窓口・手順」は正しいが長い。第一声はジョブ「ずれが1枚」。
 export const HERO_WINNER = 'B' as 'A' | 'B' | null
 
+// 製品定義書 v3 §7.4（2026-09-02）: /zure は「ファイルを既に持っている人の入口」。
+//   ヒーローは正典の2行を一字一句。A/B は据え置き（両方とも同文＝実質停止）。
+//   旧「ファイルを置くと、ずれが1枚になる。」は ZURE_SUB として製品内部の説明にだけ残す。
 export const HERO = {
-  A: '就業規則のファイルを置くと、ずれが1枚になります',
-  B: 'ファイルを置くと、ずれが1枚になる。',
+  A: '就業規則のファイルがある場合。',
+  B: '就業規則のファイルがある場合。',
 } as const
+export const ZURE_SUB = 'ファイルを置くと、ずれが1枚になる。'
 
 /** /zure 第一面の義務化行（見出しの直前）。docs/gap-engine/11-ZURE-COPY.md */
 export const ZURE_OBLIGATION =
   '2026年10月1日から、カスハラ対策はすべての事業主の義務です。'
 
 export const ZURE_LEAD =
-  'PDF・Word・テキストを置くか、本文を貼ると、ずれが1枚になります。'
+  'カスハラの方針・窓口・手順があるかを1枚にします。'
 
 export const HERO_EN = {
   A: 'Place a work rules file, and the gaps become one page',

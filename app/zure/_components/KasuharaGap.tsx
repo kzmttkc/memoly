@@ -118,6 +118,39 @@ export function KasuharaGap() {
         結果はこの画面に出ます（登録不要・無料）。
       </p>
 
+      {/* 製品定義書 v3 §7.4 (1): 結果1枚の直下にメール1項目（アカウント不要）。§8.5 の文言 */}
+      {/* 段2: 控えの送付（画面に出し切ったものと同一の内容） */}
+      <div className="mt-4 rounded-lg bg-neutral-50 p-4">
+        <p className="text-sm font-medium text-neutral-900">この1枚と、不足している措置の条文をメールで残す</p>
+        <p className="mt-0.5 text-xs text-neutral-600">
+          画面に出ている内容と同じものを1通送ります。受け取るのはメールアドレス1つだけです。
+        </p>
+        {mailState !== 'done' ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="メールアドレス"
+              autoComplete="email"
+              className="min-h-11 w-full max-w-sm rounded-lg border border-neutral-500 px-3 py-2 text-sm text-neutral-900"
+            />
+            <button
+              type="button"
+              onClick={sendMail}
+              disabled={mailState === 'busy'}
+              className="inline-flex min-h-11 items-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            >
+              {mailState === 'busy' ? '送信中…' : '控えを受け取る'}
+            </button>
+          </div>
+        ) : null}
+        {mailMsg && (
+          <p className={`mt-2 text-xs ${mailState === 'error' ? 'text-danger-600' : 'text-neutral-600'}`}>{mailMsg}</p>
+        )}
+      </div>
+
+
       {!rows && (
         <div className="mt-3">
           <button
@@ -202,37 +235,6 @@ export function KasuharaGap() {
               {draft}
             </pre>
 
-            {/* 段2: 控えの送付（画面に出し切ったものと同一の内容） */}
-            <div className="mt-4 rounded-lg bg-neutral-50 p-4">
-              <p className="text-sm font-medium text-neutral-900">この結果と追補案の控えをメールで受け取る</p>
-              <p className="mt-0.5 text-xs text-neutral-600">
-                画面に出ている内容と同じものを1通送ります。受け取るのはメールアドレス1つだけです。
-              </p>
-              {mailState !== 'done' ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    autoComplete="email"
-                    className="min-h-11 w-full max-w-sm rounded-lg border border-neutral-500 px-3 py-2 text-sm text-neutral-900"
-                  />
-                  <button
-                    type="button"
-                    onClick={sendMail}
-                    disabled={mailState === 'busy'}
-                    className="inline-flex min-h-11 items-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-                  >
-                    {mailState === 'busy' ? '送信中…' : '控えを受け取る'}
-                  </button>
-                </div>
-              ) : null}
-              {mailMsg && (
-                <p className={`mt-2 text-xs ${mailState === 'error' ? 'text-danger-600' : 'text-neutral-600'}`}>{mailMsg}</p>
-              )}
-            </div>
-
             {/* 次の一手（重い順に2つだけ） */}
             <div className="mt-4 flex flex-col gap-2 text-sm">
               <a
@@ -242,10 +244,10 @@ export function KasuharaGap() {
                 className="text-brand-600 underline underline-offset-2 hover:text-brand-700"
                 onClick={() => track('kasuhara_gap_pack_click', {})}
               >
-                掲示文・対応マニュアル・記録様式までWord一式で揃える（実務パック ¥19,800）→
+                不足を埋める書式一式（実務パック）→
               </a>
               <p className="text-xs text-neutral-500">
-                この規則を覚えさせて、以後この規則前提で相談を続けるには、上の「残す」からアカウントを作れます。
+                この規則を覚えさせて後から相談するには、下の「規則を覚えさせて後から相談する」からアカウントを作れます。
               </p>
             </div>
           </div>

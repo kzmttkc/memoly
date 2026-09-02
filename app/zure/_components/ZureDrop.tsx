@@ -394,11 +394,14 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
 
   const legalOpen = picked || busy || !!sheet
 
-  const headlineNode = headline.includes('。') ? (
+  // 製品定義書 v3 §7.4: ヒーローは正典の1行（読点で折り返さない）。
+  //   旧ロジックは「、」で2行に割り、後半が無いと旧タグラインを補っていた。正典の文には
+  //   読点が無いので、そのまま出す。
+  const headlineNode = headline.includes('、') && headline.includes('。') ? (
     <>
       {headline.replace(/。$/, '').split('、')[0]}、
       <br />
-      {headline.replace(/。$/, '').split('、').slice(1).join('、') || 'ずれが1枚になる'}
+      {headline.replace(/。$/, '').split('、').slice(1).join('、')}
       。
     </>
   ) : (
@@ -612,17 +615,21 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                             {error}
                           </p>
                         )}
+                        {/* 製品定義書 v3 §7.4: 結果1枚の直下は (1) メール1項目 → (2) パック → (3) アカウント作成。
+                            8/31 実測: アカウント作成経路は3人到達・送信0人、メールのみ経路が唯一 lead_captured を生んだ。
+                            KasuharaGap がメール受け口（§8.5）とパック二次を持つ。アカウント作成は三次に下げる。 */}
+                        <KasuharaGap />
                         <div className="zure-drop-chrome mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                           <Link
                             href={saveHref}
                             className={buttonClass({
-                              variant: 'primary',
+                              variant: 'secondary',
                               size: 'lg',
                               className: 'w-full whitespace-normal text-center sm:flex-1 !rounded-[12px]',
                             })}
                             onClick={onSaveClick}
                           >
-                            {authed ? 'この1枚を会社に残す' : OFFER.saveCta}
+                            {authed ? 'この1枚を会社に残す' : '規則を覚えさせて後から相談する'}
                           </Link>
                           <button
                             type="button"
@@ -677,16 +684,6 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                             無料と有料の違い
                           </Link>
                         </p>
-                        {/* 2026-08-31 実測にもとづく配置変更。
-                            段2（名前を取る）の受け口は2つある:
-                              「この1枚を残す」→ アカウント作成 … 8/25以降 3人到達 / **送信ボタンまで0人**
-                              このメールのみの受け口          … 見た2人のうち1人が完了（lead_captured）
-                            banto-roumu.com で lead_captured を生んだ経路はこちらだけ。
-                            にもかかわらず 1枚を見た4人中2人しか到達しておらず、
-                            二次リンク（別のファイル/貼り直す/共有/消す）の後ろに埋まっていた。
-                            **コピーと主CTAの序列は変えず、位置だけ主CTA直後へ上げる。**
-                            判定は H51（2026-09-24）。効かなければ元へ戻す（この差分だけ revert）。 */}
-                        <KasuharaGap />
                         <div className="zure-drop-chrome">
                           <button
                             type="button"
