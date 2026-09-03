@@ -83,6 +83,17 @@ export function GapSheetView({
             {block.next_step ? (
               <p className="mt-1 text-xs leading-relaxed text-[var(--lh-muted)]">次: {block.next_step}</p>
             ) : null}
+            {/* 2026-09-04（執行部 9/1 発注）: 判定の根拠になった原文を出す。精度100%は望めないので、
+                読んだ人が自分の条文と突き合わせて正誤を確かめられるようにする。無いときは出さない。 */}
+            {block.citations?.filter(c => c?.quote?.trim()).slice(0, 2).map((c, i) => (
+              <blockquote
+                key={i}
+                className="mt-1 border-l-2 border-[var(--lh-line)] pl-3 text-xs leading-relaxed text-[var(--lh-muted)]"
+              >
+                原文: 「{c.quote.trim()}」
+                {c.approx_locus ? <span className="ml-1">（{c.approx_locus}）</span> : null}
+              </blockquote>
+            ))}
           </li>
         ))}
       </ol>
