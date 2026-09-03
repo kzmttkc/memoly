@@ -93,6 +93,10 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
   const params = useSearchParams()
   const fromKabau = params.get('utm_source') === 'kabau'
   const [busy, setBusy] = useState(false)
+  // 2026-09-04（執行部 9/1 発注「40秒の無情報待機」）: 待ち時間を見える化し、途中で止められ、
+  //   貼った本文を失わないようにする。LLM の分割並列・締切・フォールバック自体は触らない（正典 §4-16）。
+  const [elapsed, setElapsed] = useState(0)
+  const abortRef = useRef<AbortController | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [storageWarn, setStorageWarn] = useState(false)
   const [sheet, setSheet] = useState<GapSheet | null>(null)
@@ -122,6 +126,24 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
     : variant === 'B'
       ? HERO.B
       : HERO.A
+
+  useEffect(() => {
+    if (!busy) return
+    const t0 = Date.now()
+    const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 1000)
+    const guard = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', guard)
+    return () => { window.clearInterval(id); window.removeEventListener('beforeunload', guard) }
+  }, [busy])
+
+  // 読み取り中に離脱して失った下書きを、次に開いたとき貼り付け欄へ戻す
+  useEffect(() => {
+    try {
+      const d = sessionStorage.getItem('banto_zure_draft')
+      if (d && !paste) setPaste(d)
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     void createClient()
@@ -201,6 +223,7 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
         return
       }
       setBusy(true)
+      setElapsed(0)
       setPicked(true)
       setError(null)
       setStorageWarn(false)
@@ -212,7 +235,13 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
       try {
         const form = new FormData()
         form.set('file', file)
-        const res = await fetch('/api/zure/extract', { method: 'POST', body: form })
+        // 貼った本文は送る前に控える（待機中に離脱しても消えない）。成功したら消す
+        if (file.name === 'pasted.txt') {
+          try { sessionStorage.setItem('banto_zure_draft', await file.text()) } catch {}
+        }
+        const ac = new AbortController()
+        abortRef.current = ac
+        const res = await fetch('/api/zure/extract', { method: 'POST', body: form, signal: ac.signal })
         const data = await res.json().catch(() => ({}))
         if (res.status === 429) {
           const until = retryUntilMs(res.headers.get('Retry-After'), Date.now())
@@ -242,6 +271,7 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
         setSheet(nextSheet)
         // 成功が確定してから貼り付け欄を空にする（失敗時は残して貼り直しを不要にする）
         setPaste('')
+        try { sessionStorage.removeItem('banto_zure_draft') } catch {}
         setPendingText(String(data.text ?? ''))
         const saved = savePendingZure({
           filename: String(data.filename ?? file.name),
@@ -260,9 +290,14 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
           ms: typeof data.ms === 'number' ? data.ms : 0,
           engine: typeof data.engine === 'string' ? data.engine : undefined,
         })
-      } catch {
-        setError('通信を確認してください。同じファイルをもう一度置くか、本文を貼ってください。')
+      } catch (e) {
+        if ((e as Error)?.name === 'AbortError') {
+          setError('読み取りを止めました。貼った本文はそのまま残っています。')
+        } else {
+          setError('通信を確認してください。同じファイルをもう一度置くか、本文を貼ってください。')
+        }
       } finally {
+        abortRef.current = null
         setBusy(false)
       }
     },
@@ -465,6 +500,22 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
 
   const statusBits = (
     <>
+      {busy && (
+        <p
+          className="mt-4 rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-fill)] px-4 py-3 text-sm leading-relaxed text-[var(--lh-ink)]"
+          role="status"
+          aria-live="polite"
+        >
+          読んでいます… {elapsed}秒。だいたい40秒かかります。この画面を閉じないでください。{' '}
+          <button
+            type="button"
+            className="ml-2 underline underline-offset-2"
+            onClick={() => abortRef.current?.abort()}
+          >
+            やめる
+          </button>
+        </p>
+      )}
       {fromKabau && (
         <p className="mt-4 text-sm leading-relaxed text-[var(--lh-muted)]">{KABAU_LINE}</p>
       )}

@@ -123,16 +123,16 @@ export default function PricingPage() {
         {/* 製品定義書 v3 §7.6: ページ先頭に一字一句 */}
         <p className="mt-4 text-base leading-relaxed text-neutral-700">
           10月1日のカスハラ措置に間に合わせるだけなら、月額は不要です。<br />
-          先に条文と届出の順番を出し、必要なら実務パック（19,800円）です。<br />
+          先に条文と届出の順番を出し、必要なら<a href="https://sharoushi-agent.com/kasuhara-pack.html?utm_source=banto&utm_medium=pricing&utm_campaign=pack_from_pricing" className="font-medium text-brand-700 underline underline-offset-2" rel="noopener noreferrer">実務パック（19,800円）</a>です。<br />
           月額は、規則を覚えさせて継続して相談する方向けです。
         </p>
         <p className="mt-3 text-sm leading-relaxed text-neutral-600">
           無料プランから始められ、登録にクレジットカードは要りません。有料プランは月額3,980円（Entry・1社5名まで）からで、上限人数までは何人で使っても料金は変わりません。
         </p>
         <p className="mt-3 text-sm text-neutral-600">
-          無料ツール・パック・月額の違いを先に見る場合は{' '}
+          どれをいくらで買えるか（無料・実務パック 19,800円・月額）を1枚で見るなら{' '}
           <Link href="/offer" className="font-medium text-brand-700 underline-offset-2 hover:underline">
-            無料と有料の違い
+            料金の全体像
           </Link>
           をご覧ください。
         </p>
