@@ -6,7 +6,7 @@ import { createAnthropicClient } from '@/lib/gap-engine/engine/anthropicClient'
 import { runGapSheet, PROMPT_VERSION } from '@/lib/gap-engine/engine/runGapSheet'
 import { redactPii } from '@/lib/gap-engine/anonymize/redact'
 import { heuristicGapSheet } from '@/lib/gap-engine/fallback'
-import { CHAT_MODEL } from '@/lib/claude'
+import { MEMORY_MODEL } from '@/lib/claude'
 import type { GapSheet } from '@/lib/gap-engine/engine/types'
 
 export const runtime = 'nodejs'
@@ -51,7 +51,11 @@ async function buildGapSheet(args: {
   const key = process.env.ANTHROPIC_API_KEY
   if (key && text.trim().length >= 80) {
     try {
-      const sheet = await runGapSheet(createAnthropicClient(key, CHAT_MODEL), input)
+      // 2026-09-04 実測（執行部の 5KB・32条サンプル）: sonnet は 4分割で 50.3秒・8分割でも 39.8秒と
+      //   締切 42秒に張り付き、本番は毎回ヒューリスティックへ落ちていた（engine=heuristic ms=42020）。
+      //   haiku は 4分割 33.2秒、正解データ 10/10（sonnet 9/10・41秒）。分割・締切・フォールバックの
+      //   設計は変えず、モデルだけを haiku にする（製品定義 v3 §4-16「作り直さない」の範囲内）。
+      const sheet = await runGapSheet(createAnthropicClient(key, MEMORY_MODEL), input)
       if (args.unreadNote) {
         sheet.summary.unread_note = [sheet.summary.unread_note, args.unreadNote]
           .filter(Boolean)
