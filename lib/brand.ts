@@ -16,7 +16,10 @@ export const BRAND_NAME_JA = '就業規則AI'
 /** サブタイトル。名称が既に機能を語るため、範囲の補足だけを担う。 */
 export const BRAND_TAGLINE = '就業規則のファイルを置くと、ずれが1枚に'
 
-/** 旧名。SEOの連続性（alternateName）と /about の1段落にだけ使う。表のフッタには出さない。 */
+/** 旧名。**出してよいのは JSON-LD の alternateName・/about の1段落・規約/特商法の名義だけ**。
+ *  2026-09-04 実測: 旧名での検索は3週間で表示36・**クリック0**。誰も旧名で来ていないので、
+ *  読者の目に触れる面（フッタ・/zure・/offer）からは外した。Takeshi 指示「Kabauや番頭の存在を
+ *  早期に消すことが複雑さをなくす鍵」。 */
 export const BRAND_LEGACY_NAME = 'Kabau（カバウ）・番頭(Banto)'
 
 /** 契約主体（会計・特商法） */

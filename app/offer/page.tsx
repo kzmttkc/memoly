@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
-import { BRAND_NAME, BRAND_TRANSITION_NOTE } from '@/lib/brand'
+import { BRAND_NAME } from '@/lib/brand'
 import { PLANS } from '@/lib/plans'
 import { OfferViewTrack } from './OfferViewTrack'
 import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
@@ -140,9 +140,6 @@ export default function OfferBoundaryPage() {
           </ul>
         </section>
 
-        <p className="mt-10 text-xs leading-relaxed text-neutral-500">
-          {BRAND_TRANSITION_NOTE}
-        </p>
         <p className="mt-3 text-xs leading-relaxed text-neutral-500">
           本ページの情報は一般的なご案内です。最終的な判断は、必要に応じて専門家にご確認ください。
           詳細な料金条件は <Link href="/pricing" className="underline hover:text-brand-700">料金ページ</Link>

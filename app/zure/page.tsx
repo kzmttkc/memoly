@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { Suspense } from 'react'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { VARIANT_HEADER, type LpVariant, isLpVariant } from '@/app/business/_lib/variant-shared'
-import { BRAND_LEGACY_NAME, SUPPORT_EMAIL } from '@/lib/brand'
+import { SUPPORT_EMAIL } from '@/lib/brand'
 import { OFFER, daysUntilKill } from '@/lib/offer'
 import { LinearNav } from '@/linear-house/components/Nav'
 import { ZureDrop } from './_components/ZureDrop'
@@ -48,7 +48,7 @@ export default async function ZurePage() {
       </main>
       <PublicFooter showCrossCta={false} omitServiceHrefs={['/zure']} />
       <p className="mx-auto max-w-2xl px-6 pb-8 text-center text-xs text-[var(--lh-muted)]">
-        旧称: {BRAND_LEGACY_NAME} · お問い合わせ{' '}
+        お問い合わせ{' '}
         <a className="underline underline-offset-2" href={`mailto:${SUPPORT_EMAIL}`}>
           {SUPPORT_EMAIL}
         </a>
