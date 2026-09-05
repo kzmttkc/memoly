@@ -389,16 +389,22 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
     })
   }
 
+  /** 10措置の照合まで済んでいるか。控えの中身がここで 2,242字ちがう。 */
+  const hasMeasures = !!extras.rows?.length
+
   function downloadSheet() {
     if (!sheet) return
     const blob = new Blob([takeawayText(sheet)], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
+    // 2026-09-05 再監査: 照合前と照合後で中身が 2,242字ちがうのに**ファイル名が同じ**だったので、
+    // 薄い方を持ち帰ったことに気づけなかった。同じ名前で違う中身を配らない。
+    const base = sheetTitle(sheet).replace(/[/\\?%*:|"<>]/g, '').slice(0, 40)
     a.href = url
-    a.download = `${sheetTitle(sheet).replace(/[/\\?%*:|"<>]/g, '').slice(0, 40)}.txt`
+    a.download = `${base}${hasMeasures ? '_10措置照合済み' : '_10措置照合前'}.txt`
     a.click()
     URL.revokeObjectURL(url)
-    track('zure_sheet_downloaded')
+    track('zure_sheet_downloaded', { with_measures: hasMeasures })
   }
 
   function printSheet() {
@@ -691,6 +697,18 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                             1枚をコピー
                           </button>
                         </div>
+                        {/* 2026-09-05 再監査: このボタンは照合前に押せる位置にあるので、下部の同名ボタンと
+                            中身が 2,242字ちがう控えが同じ体裁で配られていた。欠けるのは10措置の○△×と
+                            規程追補案の全文——無料で一番価値のある部分。欠けることを押す前に書く。 */}
+                        {!hasMeasures && (
+                          <p className="mt-2 text-xs leading-relaxed text-[var(--lh-muted)]">
+                            いまの保存・コピーには、
+                            <strong className="font-medium text-[var(--lh-ink)]">
+                              カスハラ10措置の照合結果（○△×）と規程追補案の全文は入りません
+                            </strong>
+                            。先に「10措置と照合する」を実行すると、同じ1枚に両方が入ります。
+                          </p>
+                        )}
                       </div>
                     }
                     footer={

@@ -33,7 +33,11 @@ export function GapSheetView({
   topActions?: ReactNode
   footer?: ReactNode
 }) {
-  const [openOnly, setOpenOnly] = useState(false)
+  // 2026-09-05 再監査の実測: 375×812 で結果セクションが 16,825px＝**20.7画面**
+  // （デスクトップ1280でも12.3画面）。畳む唯一の手段が 12px・144×16px の下線リンク1個で
+  // 初期値OFF——**増やした情報を畳む道具が、増やした情報より見つけにくかった**。
+  // 既定で「手当てが要るもの」だけ出す。手当てが要るものが無いときは畳んでも空になるので全件。
+  const [openOnly, setOpenOnly] = useState(() => sheet.blocks.some(isOpenBlock))
   const d = days ?? daysUntilKill()
   const doc = sheet.document
   const pageCount = doc?.page_count ?? 0
@@ -124,17 +128,26 @@ export function GapSheetView({
 
       {topActions}
 
-      <div className="mt-6 flex flex-wrap items-baseline justify-between gap-2">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-medium text-[var(--lh-ink)]">
           {sheet.blocks.length}項目のうち、手当てが要るもの {openCount}件
+          {openOnly && openCount < sheet.blocks.length && (
+            <span className="ml-2 text-xs font-normal text-[var(--lh-muted)]">
+              その{openCount}件だけを出しています
+            </span>
+          )}
         </p>
+        {/* 2026-09-05: 12px・144×16px の下線リンク（タップ目標44px未満）だったものを
+            44px以上のボタンにする。既定は「手当てが要るものだけ」で、ここで全件へ戻せる。
+            `lh-btn` は使わない——house-lock.css の `.zure-surface .lh-btn` が
+            `height:40px !important` で固定しており、44px にできないため。 */}
         <button
           type="button"
-          className="zure-drop-chrome text-xs text-[var(--lh-ink)] underline underline-offset-2"
+          className="zure-drop-chrome inline-flex min-h-[44px] items-center rounded-[12px] border border-[var(--lh-line)] px-4 text-sm font-medium text-[var(--lh-ink)] transition-colors hover:bg-[var(--lh-fill)]"
           aria-pressed={openOnly}
           onClick={() => setOpenOnly(v => !v)}
         >
-          {openOnly ? 'すべての項目を出す' : '手当てが要るものだけ出す'}
+          {openOnly ? `すべての項目を出す（${sheet.blocks.length}件）` : `手当てが要るものだけ出す（${openCount}件）`}
         </button>
       </div>
 
@@ -169,8 +182,11 @@ export function GapSheetView({
                     <p className="mt-1 text-sm leading-relaxed text-[var(--lh-muted)]">{block.what_not_found}</p>
                   ) : null}
                   {/* 2026-09-05: why_it_matters は34項目すべてに生成されていたのに0件表示だった。
-                      「なぜ直すのか」は判定そのものより先に知りたい情報なので、原文引用と並べて出す。 */}
-                  {block.why_it_matters ? (
+                      「なぜ直すのか」は判定そのものより先に知りたい情報なので、原文引用と並べて出す。
+                      同日の再監査: 直すものが無い項目（規程にある／置いていない）にも付いていたので、
+                      手当てが要るものにだけ出す（enforceTaxonomy でも落としている。保存済みの
+                      古い1枚を復元したときのための二重ガード）。 */}
+                  {block.why_it_matters && isOpenBlock(block) ? (
                     <p className="mt-1.5 text-sm leading-relaxed text-[var(--lh-ink)]">
                       <span className="text-[var(--lh-muted)]">なぜ: </span>
                       {block.why_it_matters}

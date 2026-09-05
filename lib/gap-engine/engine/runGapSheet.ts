@@ -121,11 +121,23 @@ export async function runGapSheet(
     for (const b of s?.blocks ?? []) if (b?.id) byId.set(b.id, b);
   }
 
+  // 生き残ったバッチの1本を器として使う。**中身は全バッチから作り直す**——
+  // 2026-09-05 の再監査まで、blocks / contradictions / followups だけを作り直し、
+  // summary.headline は器（＝先頭バッチ）のものをそのまま出していた。先頭バッチは
+  // TAXONOMY の先頭9件＝すべてカスハラなので、「年5日の時季指定」「時間外労働の上限」
+  // 「割増賃金の率」は構造上その結論に載らず、先頭バッチが落ちれば2本目の結論が
+  // 全体の結論として出ていた。結論は enforceTaxonomy が34項目の実数から組み立てる。
   const parsed = settled.find((s) => s !== null)!;
   parsed.blocks = TAXONOMY.map((item) => byId.get(item.id) ?? fallbackById.get(item.id))
     .filter((b): b is GapBlock => Boolean(b));
   parsed.contradictions = settled.flatMap((s) => s?.contradictions ?? []);
   parsed.followups = [...new Set(settled.flatMap((s) => s?.followups ?? []))];
+  parsed.summary = {
+    ...parsed.summary,
+    headline: "",
+    unread_note:
+      settled.map((s) => s?.summary?.unread_note).find((v) => v) ?? null,
+  };
   parsed.document = {
     title_guess: parsed.document?.title_guess || input.titleGuess || "",
     page_count: input.pageCount ?? parsed.document?.page_count ?? 0,
