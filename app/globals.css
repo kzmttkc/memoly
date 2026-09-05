@@ -552,6 +552,17 @@ body {
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
   }
 }
+/* 2026-09-05: 結果1枚は 7,359px（8.2画面）あり、次の行動は最下部の1箇所だけだった。
+   長さは画面幅で変わらないので、結果を出しているあいだの帯は幅にかかわらず出す。
+   帯の裏に問い合わせ先が取り残されないよう、面の下端も同じ分だけ空ける。 */
+.zure-sticky-cta--sheet {
+  display: block;
+}
+@media (min-width: 640px) {
+  .zure-surface:has(.zure-sticky-cta--sheet) {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+}
 .zure-hero-enter {
   animation: zureHeroIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

@@ -12,6 +12,14 @@ export interface PendingZure {
   unreadNote: string | null
   /** gap-engine の1枚。無い古い控えは UI 側で再生成する */
   gapSheet?: unknown
+  /**
+   * カスハラ10措置の照合結果（○△×）。
+   * 2026-09-05 まで控えていたのは gapSheet だけで、開き直すと34項目は戻るのに
+   * 10措置と規程追補案は16秒かけて回し直しだった。同じ控えに併せて残す。
+   */
+  measures?: unknown
+  /** 規程追補案の差し込みに使う会社名。画面内だけで使い、サーバへは送らない。 */
+  companyName?: string
   savedAt?: number
 }
 
@@ -36,6 +44,9 @@ export function parsePendingRaw(raw: string | null, now = Date.now()): PendingZu
       text: parsed.text.slice(0, 100_000),
       unreadNote: typeof parsed.unreadNote === 'string' ? parsed.unreadNote : null,
       gapSheet: parsed.gapSheet,
+      measures: Array.isArray(parsed.measures) ? parsed.measures : undefined,
+      companyName:
+        typeof parsed.companyName === 'string' ? parsed.companyName.slice(0, 60) : undefined,
       savedAt: typeof parsed.savedAt === 'number' ? parsed.savedAt : undefined,
     }
   } catch {
@@ -107,6 +118,16 @@ export function savePendingZure(pending: PendingZure): boolean {
 
 export function readPendingZure(): PendingZure | null {
   return readPendingFromStores(browserStores())
+}
+
+/**
+ * 既存の控えに項目を足す（本文・1枚は消さない）。
+ * 控えが無ければ何もしない——本文の無い控えを作ると復元側で判別できなくなるため。
+ */
+export function updatePendingZure(patch: Partial<PendingZure>): boolean {
+  const current = readPendingZure()
+  if (!current) return false
+  return writePendingToStores(browserStores(), { ...current, ...patch, savedAt: current.savedAt })
 }
 
 export function clearPendingZure(): void {

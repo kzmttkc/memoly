@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { FileUp, LoaderCircle } from 'lucide-react'
 import { buttonClass } from '@/components/ui/Button'
 import { track, trackOncePerVisit } from '@/lib/analytics'
-import { KasuharaGap } from './KasuharaGap'
+import { KasuharaGap, type GapRow } from './KasuharaGap'
 import {
   HERO,
   HERO_EN,
@@ -30,9 +30,9 @@ import {
 } from '@/lib/zure-pending'
 import { retryUntilMs, retryWaitMessage } from '@/lib/zure-rate-limit'
 import { ZURE_SAMPLE_FILENAME, ZURE_SAMPLE_TEXT, isZureSampleFilename } from '@/lib/zure-sample'
-import { DISCLAIMER } from '@/lib/gap-engine/taxonomy/items'
 import { heuristicGapSheet } from '@/lib/gap-engine/fallback'
-import { sortBlocks, blockLine } from '@/lib/gap-engine/ui/renderSheet'
+import { sheetPlainText, sheetTitle } from '@/lib/gap-engine/ui/renderSheet'
+import { PLANS } from '@/lib/plans'
 import type { GapSheet } from '@/lib/gap-engine/engine/types'
 import type { LpVariant } from '@/app/business/_lib/variant-shared'
 import { ZureLpBelow } from './ZureLpBelow'
@@ -45,23 +45,6 @@ const ACCEPT =
 
 function isGapSheet(v: unknown): v is GapSheet {
   return !!v && typeof v === 'object' && Array.isArray((v as GapSheet).blocks)
-}
-
-function sheetTitle(sheet: GapSheet): string {
-  const guess = sheet.document?.title_guess?.trim()
-  if (guess) return `${guess.replace(/\.[^.]+$/, '')}のずれ1枚`
-  return sheet.summary?.headline || 'ずれ1枚'
-}
-
-function sheetPlainText(sheet: GapSheet): string {
-  const lines = sortBlocks(sheet)
-    .map(b => {
-      const body = [b.what_found, b.what_not_found, b.next_step].filter(Boolean).join('\n')
-      return `・${blockLine(b.status, b.title)}\n${body}`
-    })
-    .join('\n\n')
-  const unread = sheet.summary?.unread_note ? `\n\n未読: ${sheet.summary.unread_note}` : ''
-  return `${sheetTitle(sheet)}\n\n${lines}${unread}\n\n${DISCLAIMER}\n`
 }
 
 function trackSheetEvents(
@@ -111,7 +94,13 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
   const [remainHours, setRemainHours] = useState<number | null>(null)
   const [clearAsk, setClearAsk] = useState(false)
   const [picked, setPicked] = useState(false)
+  // 2026-09-05: 10措置の照合結果と規程追補案を、保存・コピーの中身に載せるために受け取る。
+  const [extras, setExtras] = useState<{ rows: GapRow[] | null; draft: string }>({
+    rows: null,
+    draft: '',
+  })
   const sheetRef = useRef<HTMLElement>(null)
+  const nextRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const pasteRef = useRef<HTMLTextAreaElement>(null)
   const pasteBoxRef = useRef<HTMLDetailsElement>(null)
@@ -355,6 +344,9 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
   }, [busy])
 
   function openPaste() {
+    // 2026-09-05: 「本文を貼り直す」で欄が空になり、控えに本文が残っているのに
+    //   2,000字を貼り直させていた。控えから戻す（利用者が消したいときは選択して消せる）。
+    if (!paste && pendingText) setPaste(pendingText)
     const box = pasteBoxRef.current
     if (box) box.open = true
     const reduce =
@@ -383,9 +375,23 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
     }
   }
 
+  function scrollToNext() {
+    const reduce =
+      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    nextRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+  }
+
+  /** 保存・コピー・共有で持ち帰る本文。原文引用・10措置・規程追補案まで含める。 */
+  function takeawayText(s: GapSheet): string {
+    return sheetPlainText(s, {
+      measures: extras.rows ?? undefined,
+      draft: extras.draft || undefined,
+    })
+  }
+
   function downloadSheet() {
     if (!sheet) return
-    const blob = new Blob([sheetPlainText(sheet)], { type: 'text/plain;charset=utf-8' })
+    const blob = new Blob([takeawayText(sheet)], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -404,7 +410,7 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
     if (!sheet) return
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: sheetTitle(sheet), text: sheetPlainText(sheet) })
+        await navigator.share({ title: sheetTitle(sheet), text: takeawayText(sheet) })
         track('zure_sheet_shared')
         return
       } catch (err) {
@@ -417,7 +423,7 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
   async function copySheet() {
     if (!sheet) return
     try {
-      await navigator.clipboard.writeText(sheetPlainText(sheet))
+      await navigator.clipboard.writeText(takeawayText(sheet))
       setCopied(true)
       track('zure_sheet_copied')
       window.setTimeout(() => setCopied(false), 4000)
@@ -654,6 +660,39 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                   <GapSheetView
                     sheet={sheet}
                     days={days}
+                    topActions={
+                      /* 2026-09-05 実測: 結果ページは 7,359px（8.2画面）で、次の行動は y=6,662 に
+                         1箇所だけ・追従バーも無かった。持ち帰りと控えの受け口を上部にも置く。 */
+                      <div className="zure-drop-chrome mt-5 rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-fill)] px-4 py-3">
+                        <p className="text-xs font-medium text-[var(--lh-muted)]">この結果でできること</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="lh-btn lh-btn-ink h-10 rounded-[12px] px-3.5"
+                            onClick={() => {
+                              track('zure_next_jump_clicked', { location: 'top' })
+                              scrollToNext()
+                            }}
+                          >
+                            控えを受け取る・10措置と照合する
+                          </button>
+                          <button
+                            type="button"
+                            className="lh-btn lh-btn-ghost h-10 rounded-[12px] px-3.5"
+                            onClick={downloadSheet}
+                          >
+                            1枚を保存
+                          </button>
+                          <button
+                            type="button"
+                            className="lh-btn lh-btn-ghost h-10 rounded-[12px] px-3.5"
+                            onClick={() => void copySheet()}
+                          >
+                            1枚をコピー
+                          </button>
+                        </div>
+                      </div>
+                    }
                     footer={
                       <>
                         {busy && (
@@ -669,7 +708,9 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                         {/* 製品定義書 v3 §7.4: 結果1枚の直下は (1) メール1項目 → (2) パック → (3) アカウント作成。
                             8/31 実測: アカウント作成経路は3人到達・送信0人、メールのみ経路が唯一 lead_captured を生んだ。
                             KasuharaGap がメール受け口（§8.5）とパック二次を持つ。アカウント作成は三次に下げる。 */}
-                        <KasuharaGap />
+                        <div ref={nextRef} id="zure-next" className="scroll-mt-4">
+                          <KasuharaGap onResult={setExtras} />
+                        </div>
                         <div className="zure-drop-chrome mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                           <Link
                             href={saveHref}
@@ -721,12 +762,28 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
                             コピーしました。メールやチャットに貼れます。
                           </p>
                         )}
+                        {/* 2026-09-05: ここに「チャットはまだ開きません」と書いてあり、/pricing の
+                            「AIチャット相談 1日20回まで（無料）」と矛盾していた。実装は /company/chat が
+                            動いており free の上限は 1日20回（lib/plans.ts）。実態に合わせる。 */}
                         <p className="zure-drop-chrome mt-2 text-center text-xs text-[var(--lh-muted)]">
                           {authed
                             ? '会社の書類台帳の最初の1枚として残します。'
-                            : '残すときに登録します。台帳が始まります。チャットはまだ開きません。'}
+                            : `残すときに登録します。台帳が始まり、この規則を前提にした相談が1日${PLANS.free.limits.chat}回まで無料で使えます。`}
                         </p>
+                        {/* 2026-09-05: 診断後の画面に価格が1つも無かった（本文の「円」が0件）。
+                            料金ブロックは診断前にしか無く、結果に置き換わって消えていた。 */}
                         <p className="zure-drop-chrome mt-3 text-center text-xs text-[var(--lh-muted)]">
+                          無料のまま使えます。規程{PLANS.free.documentCap}本・1日
+                          {PLANS.free.limits.chat}回まで。足りなくなったら
+                          {PLANS.starter.displayName}（月額{PLANS.starter.monthlyJpy.toLocaleString('ja-JP')}円）へ。{' '}
+                          <Link
+                            href="/pricing"
+                            className="underline underline-offset-2"
+                            onClick={() => track('pricing_nav_clicked', { location: 'zure_after_sheet' })}
+                          >
+                            料金
+                          </Link>
+                          {' / '}
                           <Link
                             href="/offer"
                             className="underline underline-offset-2"
@@ -817,6 +874,23 @@ export function ZureDrop({ variant, days }: { variant: LpVariant; days: number }
             onClick={() => fileRef.current?.click()}
           >
             ファイルを置く
+          </button>
+        </div>
+      )}
+
+      {/* 2026-09-05: 結果は 8画面ぶんの長さで、次の行動まで 6,000px の34枚を抜けるしかなかった。
+          読んでいる途中のどこからでも次の行動へ行けるようにする。 */}
+      {sheet && (
+        <div className="zure-sticky-cta zure-sticky-cta--sheet zure-drop-chrome">
+          <button
+            type="button"
+            className="lh-btn lh-btn-ink h-10 w-full rounded-[12px] px-3.5"
+            onClick={() => {
+              track('zure_next_jump_clicked', { location: 'sticky' })
+              scrollToNext()
+            }}
+          >
+            控えを受け取る・10措置と照合する
           </button>
         </div>
       )}

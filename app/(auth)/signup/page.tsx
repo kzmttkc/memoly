@@ -568,7 +568,7 @@ function SignupForm() {
             {isEn
               ? 'This sign-up lets you continue with your own company’s context.'
               : fromZure
-                ? 'さきほどの1枚を、この会社に残すための登録です。チャットはまだ開きません。'
+                ? 'さきほどの1枚を、この会社に残すための登録です。登録すると、その規則を前提にした相談が無料のまま1日20回まで使えます。'
                 : fromTool
                   ? 'さきほどの点検結果を、自社の前提でそのまま受け取るための登録です。'
                   : 'さきほどの答え方を、自社の前提でそのまま受け取るための登録です。'}

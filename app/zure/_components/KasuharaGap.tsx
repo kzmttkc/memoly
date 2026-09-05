@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { track } from '@/lib/analytics'
-import { readPendingZure } from '@/lib/zure-pending'
+import { readPendingZure, updatePendingZure } from '@/lib/zure-pending'
 import { buildPolicyDraft } from '@/lib/kasuhara/policy'
 import type { MeasureVerdict } from '@/lib/kasuhara/measures'
 
@@ -16,13 +16,17 @@ import type { MeasureVerdict } from '@/lib/kasuhara/measures'
 // 語り口: ×は「違法」ではなく「該当する定めが見つからない」。適法性の断定をしない。
 // ============================================================================
 
-interface GapRow {
+export interface GapRow {
   n: number
   title: string
   verdict: MeasureVerdict
   evidence: string
   note: string
   guideHref: string
+}
+
+function isGapRows(v: unknown): v is GapRow[] {
+  return Array.isArray(v) && v.length > 0 && v.every(r => !!r && typeof (r as GapRow).n === 'number')
 }
 
 const MARK: Record<MeasureVerdict, string> = { ok: '○', weak: '△', missing: '×' }
@@ -32,7 +36,12 @@ const MARK_LABEL: Record<MeasureVerdict, string> = {
   missing: '見つからない',
 }
 
-export function KasuharaGap() {
+export function KasuharaGap({
+  onResult,
+}: {
+  /** 1枚の保存・コピーへ照合結果と追補案を載せるための報告口（2026-09-05）。 */
+  onResult?: (result: { rows: GapRow[] | null; draft: string }) => void
+} = {}) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rows, setRows] = useState<GapRow[] | null>(null)
@@ -41,6 +50,7 @@ export function KasuharaGap() {
   const [email, setEmail] = useState('')
   const [mailState, setMailState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
   const [mailMsg, setMailMsg] = useState('')
+  const [draftCopied, setDraftCopied] = useState(false)
 
   const missingCount = useMemo(
     () => (rows ?? []).filter(r => r.verdict !== 'ok').length,
@@ -50,6 +60,37 @@ export function KasuharaGap() {
     () => (rows ? buildPolicyDraft({ companyName, verdicts: rows }) : ''),
     [rows, companyName],
   )
+
+  // 2026-09-05: 控えに残した照合結果を戻す。開き直すたびに16秒かけて回し直していた。
+  //   初期値では読めない（localStorage はサーバに無く、hydration がずれる）ので effect で入れる。
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const pending = readPendingZure()
+    if (!pending) return
+    if (isGapRows(pending.measures)) setRows(pending.measures)
+    if (pending.companyName) setCompanyName(pending.companyName)
+  }, [])
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // 照合結果と会社名を控えへ書き戻し、同じ内容を1枚の保存・コピーへ渡す
+  useEffect(() => {
+    onResult?.({ rows, draft })
+    if (rows) updatePendingZure({ measures: rows, companyName })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, draft, companyName])
+
+  async function copyDraft() {
+    if (!draft) return
+    try {
+      await navigator.clipboard.writeText(draft)
+      setDraftCopied(true)
+      track('kasuhara_draft_copied', {})
+      window.setTimeout(() => setDraftCopied(false), 4000)
+    } catch {
+      setDraftCopied(false)
+      setError('コピーできませんでした。本文を選んで手でコピーしてください。')
+    }
+  }
 
   async function run() {
     if (busy) return
@@ -231,6 +272,22 @@ export function KasuharaGap() {
                 className="mt-1 block w-full max-w-sm rounded-lg border border-neutral-500 px-3 py-2 text-sm text-neutral-900"
               />
             </label>
+            {/* 2026-09-05: この追補案ブロックにはコピーボタンが1つも無く、無料で一番価値のある
+                「そのまま貼れる条文」を持ち帰る手段が無かった（全button実測）。 */}
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void copyDraft()}
+                className="inline-flex min-h-11 items-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50"
+              >
+                追補案をコピー
+              </button>
+              {draftCopied && (
+                <span className="text-xs text-neutral-600" role="status">
+                  コピーしました。Wordや規程ファイルに貼れます。
+                </span>
+              )}
+            </div>
             <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-neutral-50 p-4 text-xs leading-relaxed text-neutral-800">
               {draft}
             </pre>
