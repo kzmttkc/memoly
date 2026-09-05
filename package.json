@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test:unit": "node --test tests/unit/*.test.ts",
-    "ceo:scoreboard": "node scripts/p0_scoreboard.mjs",
     "ceo:pdca": "node scripts/ceo_weekly_pdca.mjs",
+    "ceo:scoreboard": "node scripts/p0_scoreboard.mjs",
+    "dev": "next dev",
     "eval:gap-offline": "npx --yes tsx eval/gap-engine/offline.test.ts && npx --yes tsx --test tests/unit/gap-engine-sanitize.test.ts",
+    "lint": "eslint",
+    "prebuild": "node --test tests/unit/kasuhara-claim.test.ts",
+    "start": "next start",
+    "test:unit": "node --test tests/unit/*.test.ts",
     "verify:prod": "node scripts/verify_production_state.mjs"
   },
   "overrides": {
