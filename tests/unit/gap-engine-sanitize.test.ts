@@ -111,3 +111,29 @@ test('本文に無い引用は、別名で来ても通さない', () => {
   assert.equal(out.status, 'unmentioned', '捏造引用は written にしない')
   assert.equal(out.citations.length, 0)
 })
+
+// 2026-09-06: 禁止語の関門は blocks と followups には効いていたが、
+//   **結論（headline）と未読注記は素通り**だった。監査で誤りが出た位置のひとつは結論の隣で、
+//   結論は1枚でいちばん大きく出る。LLM が書く経路を全部通すことを固定する。
+test('禁止語は、結論・未読注記・followups・項目のどこに来ても落とす', () => {
+  const source = '第24条 会社は、顧客等からの著しい迷惑行為から従業員を守るため、対応方針を定める。'
+  const sheet = {
+    schema_version: 'x',
+    disclaimer: '',
+    document: { title_guess: 't', page_count: 1, pages_read: 1, pages_unread: [], char_count: 40, extracted_ok: false },
+    summary: {
+      headline: '2026年10月1日の努力義務化に向けて、方針の整備が要ります。読み取りは途中までです。',
+      written_count: 0, ops_missing_count: 0, unmentioned_count: 0,
+      unread_note: '未読が2ページあります。努力義務化の範囲は確認できていません。',
+    },
+    blocks: [],
+    contradictions: [],
+    followups: ['努力義務化に向けて窓口を決めてください。', '相談窓口の担当者を決めてください。'],
+  } as unknown as GapSheet
+
+  const out = enforceTaxonomy(sheet, source)
+  const all = JSON.stringify({ h: out.summary.headline, u: out.summary.unread_note, f: out.followups })
+  assert.ok(!all.includes('努力義務'), '結論・未読注記・followups から禁止語が消えている: ' + all)
+  assert.ok(out.summary.headline.length > 0, '結論が空にならない（文単位で落とす）')
+  assert.ok(out.followups.some(f => f.includes('相談窓口')), '問題の無い followups は残す')
+})

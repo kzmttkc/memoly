@@ -199,10 +199,15 @@ export function enforceTaxonomy(sheet: GapSheet, source: string): GapSheet {
 
   // 本文が読めなかったときは、数え直した内訳を結論にすると「34件触れていない」と誤報になる。
   // そのときだけ呼び出し側の一文（理由）を残す。
-  const headline =
+  // 2026-09-06: 禁止語の関門が blocks と followups には効いていたのに、
+  //   **結論（headline）と未読注記は素通り**だった。監査で誤りが出た位置のひとつは
+  //   「結論の隣」で、結論そのものは1枚でいちばん大きく出る。LLM が書く経路は全部通す。
+  //   buildHeadline は集計から機械で組むので安全だが、読めなかったときだけ LLM の文が入る。
+  const headline = scrubForbidden(
     sheet.document?.extracted_ok === false
       ? sheet.summary?.headline || "本文を読めませんでした"
-      : buildHeadline(blocks);
+      : buildHeadline(blocks),
+  );
 
   return {
     schema_version: "2026-08-29.1",
@@ -213,7 +218,7 @@ export function enforceTaxonomy(sheet: GapSheet, source: string): GapSheet {
       written_count: written,
       ops_missing_count: ops,
       unmentioned_count: un,
-      unread_note: sheet.summary?.unread_note ?? null,
+      unread_note: sheet.summary?.unread_note ? scrubForbidden(sheet.summary.unread_note) || null : null,
     },
     blocks,
     contradictions: (sheet.contradictions ?? []).filter(
