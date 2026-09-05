@@ -50,8 +50,12 @@ test('契約名・SKU・特商法が one-product に揃う', () => {
   assert.match(offer, /登録前/)
   assert.match(offer, /カスハラ実務パック/)
   assert.doesNotMatch(offer, /layer: '記録台帳'/)
+  // 2026-09-04 Takeshi指示「Kabauや番頭の存在を早期に消すことが複雑さをなくす鍵」により、
+  //   全ページのフッタから旧称行を外した。根拠は実測——GSC 3週間で旧名クエリは表示36・**クリック0**。
+  //   旧称を残すのは3箇所だけ: JSON-LD の alternateName / /about の1段落 /
+  //   規約・特商法の名義（上の SERVICE_LEGAL_NAME の検査で担保している）。
   const footer = read('components/ui/PublicFooter.tsx')
-  assert.match(footer, /旧称: Kabau/)
+  assert.doesNotMatch(footer, /旧称|Kabau|番頭/)
   const webhook = read('app/api/company/billing/webhook/route.ts')
   assert.match(webhook, /handlePackInvite/)
   assert.match(webhook, /isPackCheckout/)
