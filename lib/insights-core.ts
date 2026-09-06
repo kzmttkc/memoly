@@ -1,9 +1,10 @@
-import { anthropic, CHAT_MODEL } from '@/lib/claude'
+import { anthropic, CHAT_MODEL } from './claude.ts'
 import {
   buildSubsidySystemPrompt,
   buildLawChangeSystemPrompt,
-} from '@/lib/prompts'
-import type { CompanyProfileKV } from '@/lib/prompts'
+} from './prompts.ts'
+import type { CompanyProfileKV } from './prompts.ts'
+import type { InsightsSource } from './insights-fallback.ts'
 
 // ============================================================================
 // insights-core.ts — 能動インサイト（助成金 / 法改正）の生成ロジックの共通実装。
@@ -36,13 +37,18 @@ export interface LawChange {
  *   毎回 sonnet フォールバックしていた（待ち時間と SPOF のみのコスト）。
  *   戦略上、助成金は「該当可能性の気づき」までで足りるため Dify 依存を撤去し
  *   sonnet を正路にした（CEO裁定 2026-06-27 / 実測 subsidiesSource=sonnet）。
- *   source は後方互換のため残すが常に 'sonnet'。
+ *
+ *   source の意味（2026-09-07 是正）:
+ *     モデル呼び出しが落ちたときも source:'sonnet' で空配列を返していたため、
+ *     下流は「調べた結果0件」と区別できず、画面が「見つかりませんでした」と断定していた。
+ *     ＝Anthropic の障害が「該当なし」という事実主張に化けていた。失敗は 'unavailable'
+ *     を名乗り、0件と失敗を呼び出し側が必ず区別できるようにする。
  */
 export async function loadSubsidies(
   companyName: string,
   profiles: CompanyProfileKV[],
   _companyId: string,
-): Promise<{ subsidies: Subsidy[]; source: 'dify' | 'sonnet' }> {
+): Promise<{ subsidies: Subsidy[]; source: InsightsSource }> {
   // sonnet で JSON 構造化
   try {
     const resp = await anthropic.messages.create({
@@ -67,17 +73,23 @@ export async function loadSubsidies(
     return { subsidies, source: 'sonnet' }
   } catch (e) {
     console.error('[insights-core] subsidy sonnet failed', (e as Error).message)
-    return { subsidies: [], source: 'sonnet' }
+    // 空配列は「0件だった」ではなく「分からなかった」。source でそれを明示する。
+    return { subsidies: [], source: 'unavailable' }
   }
 }
 
 /**
  * (D) 法改正: sonnet で JSON 構造化（項目/概要/自社への影響/対応の方向性）。
+ *
+ *   戻り値は配列でなく { lawChanges, source }（2026-09-07 是正）。
+ *   従来は失敗時も空配列を返すだけで、呼び出し側から「自社に関係する法改正は無い」と
+ *   区別がつかなかった。2026年10月1日施行を控えた製品が、障害中に「関係する法改正は
+ *   ありません」と言ってしまう状態だったので、助成金側と同じ形へ揃える。
  */
 export async function loadLawChanges(
   companyName: string,
   profiles: CompanyProfileKV[],
-): Promise<LawChange[]> {
+): Promise<{ lawChanges: LawChange[]; source: InsightsSource }> {
   try {
     const resp = await anthropic.messages.create({
       model: CHAT_MODEL,
@@ -90,7 +102,7 @@ export async function loadLawChanges(
     const raw = resp.content.find(b => b.type === 'text')?.text?.trim() ?? ''
     const parsed = parseJsonObject(raw)
     const arr = Array.isArray(parsed?.lawChanges) ? parsed!.lawChanges : []
-    return arr
+    const lawChanges: LawChange[] = arr
       .filter((it): it is Record<string, unknown> => !!it && typeof it === 'object')
       .map(it => ({
         title: String(it.title ?? '').trim(),
@@ -99,9 +111,11 @@ export async function loadLawChanges(
         action: String(it.action ?? '').trim(),
       }))
       .filter(l => l.title)
+    return { lawChanges, source: 'sonnet' }
   } catch (e) {
     console.error('[insights-core] lawChange sonnet failed', (e as Error).message)
-    return []
+    // 空配列は「関係する法改正が無い」ではなく「調べられなかった」。
+    return { lawChanges: [], source: 'unavailable' }
   }
 }
 

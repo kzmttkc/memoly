@@ -9,6 +9,7 @@ import { INDUSTRY_MAJORS } from '@/lib/company-attributes'
 import { checkAndIncrement } from '@/lib/rate-limit'
 import type { PlanId } from '@/lib/plans'
 import { loadSubsidies, loadLawChanges } from '@/lib/insights-core'
+import { isInsightsUnavailable, type InsightsSource } from '@/lib/insights-fallback'
 import type { CompanyProfileKV } from '@/lib/prompts'
 import { detectRiskWorsening } from '@/lib/risk-trend'
 import { detectDecisionConflicts } from '@/lib/decision-conflict'
@@ -65,8 +66,10 @@ export interface DigestCard {
 export interface DigestPayload {
   /** カード（対象になりうるものだけ＝ノイズ抑制）。優先度順。 */
   cards: DigestCard[]
-  /** 助成金の取得元（dify/sonnet）。デバッグ・将来の出典表示用。 */
-  subsidiesSource: 'dify' | 'sonnet'
+  /** 助成金の取得元。'unavailable' はモデル呼び出しが落ちた（0件ではない）。 */
+  subsidiesSource: InsightsSource
+  /** 法改正の取得元。同上。旧キャッシュ payload には無いので undefined を許す。 */
+  lawChangesSource?: InsightsSource
   /** この週分の生成時点（ISO文字列）。 */
   generatedAt: string
   /** 免責（Phase1・コード強制付与）。 */
@@ -321,11 +324,12 @@ export async function getOrGenerateDigest(
   const attributes = await loadCompanyAttributes(companyId)
   const profiles: CompanyProfileKV[] = [...attributesToProfileKV(attributes), ...ctx.profiles]
 
-  const [subsidyResult, lawChanges, liveCards] = await Promise.all([
+  const [subsidyResult, lawChangeResult, liveCards] = await Promise.all([
     loadSubsidies(companyName, profiles, companyId),
     loadLawChanges(companyName, profiles),
     buildDeterministicCards(companyId, ctx.decisions),
   ])
+  const lawChanges = lawChangeResult.lawChanges
 
   // 決定的カードは「キャッシュに焼かない」。LLMカードのみキャッシュへ書き、
   // 決定的カードは返却時だけ前置きする（鮮度維持のため毎回計算する設計）。
@@ -334,23 +338,38 @@ export async function getOrGenerateDigest(
   const payload: DigestPayload = {
     cards: llmCards,
     subsidiesSource: subsidyResult.source,
+    lawChangesSource: lawChangeResult.source,
     generatedAt: new Date().toISOString(),
     disclaimer: FEED_DISCLAIMER,
     humanReview: HUMAN_REVIEW_NOTE,
   }
 
-  // service role で会社×週へ upsert（同週の再生成を冪等に防ぐ。書込みは service role 限定）。
-  try {
-    const admin = createAdminClient()
-    await admin
-      .from('company_digests')
-      .upsert(
-        { company_id: companyId, period, payload, generated_at: payload.generatedAt },
-        { onConflict: 'company_id,period' },
-      )
-  } catch (e) {
-    // 書込み失敗（テーブル未適用等）はフィード表示を止めない。今回分は生成済みを返す。
-    console.error('[digest] cache upsert failed (returning fresh)', (e as Error).message)
+  // ★取得に失敗した週はキャッシュへ焼かない（2026-09-07）。
+  //   従来は Anthropic が落ちた回の空 payload をそのまま会社×週へ upsert していたため、
+  //   一度の障害が「今週、自社に直接関係しそうな新しい変更は見つかりませんでした」を
+  //   その週いっぱい固定してしまった（障害が1週間分の誤った事実提示に化ける）。
+  //   失敗回は焼かずに次回の再生成へ回す。今回分は生成済みのものを返す。
+  const unavailable = isInsightsUnavailable(subsidyResult.source, lawChangeResult.source)
+
+  if (unavailable) {
+    console.error('[digest] insights unavailable; cache upsert skipped', {
+      subsidies: subsidyResult.source,
+      lawChanges: lawChangeResult.source,
+    })
+  } else {
+    // service role で会社×週へ upsert（同週の再生成を冪等に防ぐ。書込みは service role 限定）。
+    try {
+      const admin = createAdminClient()
+      await admin
+        .from('company_digests')
+        .upsert(
+          { company_id: companyId, period, payload, generated_at: payload.generatedAt },
+          { onConflict: 'company_id,period' },
+        )
+    } catch (e) {
+      // 書込み失敗（テーブル未適用等）はフィード表示を止めない。今回分は生成済みを返す。
+      console.error('[digest] cache upsert failed (returning fresh)', (e as Error).message)
+    }
   }
 
   // 返却は決定的カードを前置きしたもの（キャッシュへ書いた payload は LLM カードのみ）。

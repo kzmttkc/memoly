@@ -12,10 +12,12 @@ import {
   RefreshCw,
   TrendingDown,
   Gavel,
+  AlertTriangle,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { buttonClass } from '@/components/ui/Button'
+import { INSIGHTS_UNAVAILABLE_NOTICE } from '@/lib/insights-fallback'
 
 // ============================================================================
 // WeeklyDigest — 「今週、自社に関係する変更」アプリ内能動フィード（常設）。
@@ -49,6 +51,8 @@ interface DigestResponse {
   cached?: boolean
   disclaimer?: string
   humanReview?: string
+  /** true=生成が落ちた（＝「今週は変更なし」ではない。断定しない）。 */
+  insightsUnavailable?: boolean
   error?: string
 }
 
@@ -61,6 +65,8 @@ type State =
       cards: DigestCard[]
       disclaimer: string
       humanReview: string
+      /** 生成が落ちた回。カード0件でも「変更なし」と断定しない。 */
+      unavailable: boolean
     }
 
 export function WeeklyDigest({ companyId }: { companyId: string }) {
@@ -93,6 +99,7 @@ export function WeeklyDigest({ companyId }: { companyId: string }) {
           cards: data.cards ?? [],
           disclaimer: data.disclaimer ?? '',
           humanReview: data.humanReview ?? '',
+          unavailable: data.insightsUnavailable === true,
         })
       } catch {
         if (ignore?.()) return
@@ -182,7 +189,25 @@ export function WeeklyDigest({ companyId }: { companyId: string }) {
         </Card>
       )}
 
-      {state.status === 'ready' && state.cards.length === 0 && (
+      {/* 生成が落ちた回。「見つかりませんでした」は、調べた結果0件のときだけ出す
+          （2026-09-07 是正・insights ページと同じ規律）。 */}
+      {state.status === 'ready' && state.unavailable && (
+        <Card className="border-warning-500/40 bg-warning-50">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning-600" aria-hidden />
+            <div>
+              <p className="text-sm font-semibold text-neutral-900">
+                {INSIGHTS_UNAVAILABLE_NOTICE.title}
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+                {INSIGHTS_UNAVAILABLE_NOTICE.body}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {state.status === 'ready' && !state.unavailable && state.cards.length === 0 && (
         <Card>
           <p className="text-sm text-neutral-600">
             今週、自社に直接関係しそうな新しい変更は見つかりませんでした。自社ルールを増やすと精度が上がります。

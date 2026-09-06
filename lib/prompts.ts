@@ -1,5 +1,5 @@
-import { selectFactsForQuery, formatFactsBlock } from './legal-facts'
-import { PLANS } from './plans'
+import { selectFactsForQuery, formatFactsBlock } from './legal-facts.ts'
+import { PLANS } from './plans.ts'
 
 // ============================================================================
 // 就業規則AIという製品そのものについての確定仕様（2026-07-24 Loop3ドッグフーディング是正）
@@ -570,7 +570,7 @@ ${formatCompanyProfileForPrompt(profiles)}
 // 労務リスク診断の免責（Phase1）。API側でコード強制付与。
 //   実体は lib/risk-fallback.ts（クライアント安全モジュール）へ移設（S3 サンプル会社モードが
 //   クライアントから import するため。ここから re-export して既存の import 経路を保つ）。
-export { RISK_AUDIT_DISCLAIMER } from './risk-fallback'
+export { RISK_AUDIT_DISCLAIMER } from './risk-fallback.ts'
 
 /** 簡易設問の回答（key/value）を「自社の回答」テキストに整形（プロンプト注入用）。 */
 export function formatRiskAnswersForPrompt(

@@ -158,8 +158,10 @@ test('質問→ファクト選択→整形ブロックが、期待する値と�
 // 構造テストで固定する（配線を外したら落ちる＝ファクトを増やしても呼ばれない事故を防ぐ）。
 test('lib/prompts.ts が確定ファクトを system プロンプトへ連結している（配線の固定）', () => {
   const src = readFileSync(new URL('../../lib/prompts.ts', import.meta.url), 'utf8')
+  // 拡張子の有無は問わない（node --test から import できるよう '.ts' を付ける流儀が
+  // lib/ に既にある: law-citations.ts / zure-sheet.ts など）。見るのは配線の有無だけ。
   assert.ok(
-    src.includes("import { selectFactsForQuery, formatFactsBlock } from './legal-facts'"),
+    /import \{ selectFactsForQuery, formatFactsBlock \} from '\.\/legal-facts(\.ts)?'/.test(src),
     'legal-facts の import が変わっている',
   )
   assert.ok(

@@ -2,17 +2,30 @@
 
 import { Suspense, useState, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Sparkles, Banknote, Scale } from 'lucide-react'
+import { Sparkles, Banknote, Scale, AlertTriangle } from 'lucide-react'
 import { Toast } from '@/components/ui/Toast'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { CompanyGuard } from '../_components/CompanyGuard'
 import { track } from '@/lib/analytics'
+import {
+  insightsSectionState,
+  INSIGHTS_UNAVAILABLE_NOTICE,
+  type InsightsSource,
+} from '@/lib/insights-fallback'
 
 // ============================================================================
 // /company/insights — 能動インサイト（助成金 / 法改正）
 //   「自社が使える助成金」「自社に関係する法改正」を2セクションでカード表示。
+//
+//   ★「見つかりませんでした」は、調べた結果0件だったときだけ出す（2026-09-07 是正）。
+//     従来は Anthropic 呼び出しが落ちても空配列が返るだけで、画面は区別できずに
+//     「該当しそうな助成金は見つかりませんでした」「自社に直接関係しそうな法改正は
+//     見つかりませんでした」と断定していた。障害が「無い」という事実主張に化けており、
+//     労務製品としては誤った提示になる。API の *Source を見て開示へ倒す。
+//     出し分けの判断は lib/insights-fallback.ts の insightsSectionState に一本化する
+//     （リスク診断の riskResultOrigin / RISK_FALLBACK_NOTICE と同じ形）。
 // ============================================================================
 
 interface Subsidy {
@@ -28,6 +41,28 @@ interface LawChange {
   action: string
 }
 
+/**
+ * 取得できなかったセクションの開示（リスク診断のフォールバック開示と同じ見た目・トーン）。
+ * 「見つかりませんでした」の代わりに出す。0件だと断定しないことが要点。
+ */
+function UnavailableNotice() {
+  return (
+    <Card className="border-warning-500/40 bg-warning-50">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning-600" aria-hidden />
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">
+            {INSIGHTS_UNAVAILABLE_NOTICE.title}
+          </p>
+          <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+            {INSIGHTS_UNAVAILABLE_NOTICE.body}
+          </p>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 function InsightsInner() {
   const params = useSearchParams()
   const router = useRouter()
@@ -37,6 +72,9 @@ function InsightsInner() {
   const [loaded, setLoaded] = useState(false)
   const [subsidies, setSubsidies] = useState<Subsidy[]>([])
   const [lawChanges, setLawChanges] = useState<LawChange[]>([])
+  // 生成の出所。'unavailable' なら「0件」ではなく「取得できなかった」。
+  const [subsidiesSource, setSubsidiesSource] = useState<InsightsSource>('sonnet')
+  const [lawChangesSource, setLawChangesSource] = useState<InsightsSource>('sonnet')
   const [disclaimer, setDisclaimer] = useState('')
   const [toast, setToast] = useState<{
     show: boolean
@@ -77,6 +115,8 @@ function InsightsInner() {
       }
       setSubsidies(data.subsidies ?? [])
       setLawChanges(data.lawChanges ?? [])
+      setSubsidiesSource((data.subsidiesSource as InsightsSource) ?? 'sonnet')
+      setLawChangesSource((data.lawChangesSource as InsightsSource) ?? 'sonnet')
       setDisclaimer(data.disclaimer ?? '')
       setLoaded(true)
     } catch {
@@ -109,7 +149,9 @@ function InsightsInner() {
             <p className="mb-4 text-xs leading-relaxed text-neutral-500">
               自社の属性・状況から、対象になりうる助成金の方向性です。
             </p>
-            {subsidies.length === 0 ? (
+            {insightsSectionState(subsidiesSource, subsidies.length) === 'unavailable' ? (
+              <UnavailableNotice />
+            ) : subsidies.length === 0 ? (
               <p className="text-sm text-neutral-500">
                 該当しそうな助成金は見つかりませんでした。自社ルールを登録すると精度が上がります。
               </p>
@@ -141,7 +183,9 @@ function InsightsInner() {
             <p className="mb-4 text-xs leading-relaxed text-neutral-500">
               近時の労務法改正のうち、自社に影響しうるものと見直しの方向性です。
             </p>
-            {lawChanges.length === 0 ? (
+            {insightsSectionState(lawChangesSource, lawChanges.length) === 'unavailable' ? (
+              <UnavailableNotice />
+            ) : lawChanges.length === 0 ? (
               <p className="text-sm text-neutral-500">
                 自社に直接関係しそうな法改正は見つかりませんでした。
               </p>

@@ -8,6 +8,7 @@ import {
   countAnsweredAttributes,
 } from '@/lib/company'
 import { getOrGenerateDigest } from '@/lib/digest'
+import { isInsightsUnavailable } from '@/lib/insights-fallback'
 import { resolvePlan } from '@/lib/plans'
 
 // ============================================================================
@@ -24,7 +25,8 @@ import { resolvePlan } from '@/lib/plans'
 //
 //   返却:
 //     成功 : { period, cached, profileEmpty:false, cards, subsidiesSource,
-//              generatedAt, disclaimer, humanReview }
+//              insightsUnavailable, generatedAt, disclaimer, humanReview }
+//              ※ insightsUnavailable=true は「今週は変更なし」ではなく「取得できなかった」。
 //     空   : { profileEmpty:true, profileCount }
 //     エラー: { error } + 4xx/5xx
 // ============================================================================
@@ -87,6 +89,11 @@ export async function POST(req: NextRequest) {
     cached: result.cached,
     cards: result.payload.cards,
     subsidiesSource: result.payload.subsidiesSource,
+    // 生成が落ちた回は「今週は変更なし」と読める空フィードになるため、画面へ明示する。
+    insightsUnavailable: isInsightsUnavailable(
+      result.payload.subsidiesSource,
+      result.payload.lawChangesSource,
+    ),
     generatedAt: result.payload.generatedAt,
     disclaimer: result.payload.disclaimer,
     humanReview: result.payload.humanReview,

@@ -28,7 +28,9 @@ import { loadSubsidies, loadLawChanges } from '@/lib/insights-core'
 //
 //   Phase1コンプラ: 「社労士監修」「AI社労士」「法的精度」不使用・条件形（プロンプトで強制）。
 //   返却: { subsidies:[{name,reason,nextStep}], lawChanges:[{title,summary,impact,action}],
-//          subsidiesSource:'dify'|'sonnet', disclaimer }
+//          subsidiesSource, lawChangesSource, disclaimer }
+//     ※ *Source は 'sonnet'（調べた結果）/'unavailable'（呼び出しが落ちた）を区別する。
+//        画面が「見つかりませんでした」と断定してよいのは 'sonnet' のときだけ。
 // ============================================================================
 
 export async function POST(req: NextRequest) {
@@ -70,15 +72,19 @@ export async function POST(req: NextRequest) {
   const profiles = ctx.profiles
 
   // (B) 助成金 と (D) 法改正 を並列実行
-  const [subsidyResult, lawChanges] = await Promise.all([
+  const [subsidyResult, lawChangeResult] = await Promise.all([
     loadSubsidies(companyName, profiles, companyId),
     loadLawChanges(companyName, profiles),
   ])
 
+  // source は 'sonnet'（応答あり＝0件でも「調べた結果0件」）と 'unavailable'
+  // （モデル呼び出しが落ちた＝何も分かっていない）を区別する。画面はこれを見て
+  // 「見つかりませんでした」を出すかどうかを決める（app/(app)/company/insights）。
   return NextResponse.json({
     subsidies: subsidyResult.subsidies,
     subsidiesSource: subsidyResult.source,
-    lawChanges,
+    lawChanges: lawChangeResult.lawChanges,
+    lawChangesSource: lawChangeResult.source,
     disclaimer: INSIGHTS_DISCLAIMER,
   })
 }
