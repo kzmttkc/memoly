@@ -1,8 +1,8 @@
-import { TAXONOMY, DISCLAIMER } from "../taxonomy/items";
-import { GAP_SYSTEM } from "../prompts/constitution";
-import type { AnalyzeInput, GapBlock, GapSheet, LlmClient } from "./types";
-import { enforceTaxonomy, parseSheetJson } from "./validateSheet";
-import { heuristicGapSheet } from "../fallback";
+import { TAXONOMY, DISCLAIMER } from "../taxonomy/items.ts";
+import { GAP_SYSTEM } from "../prompts/constitution.ts";
+import type { AnalyzeInput, GapBlock, GapSheet, LlmClient } from "./types.ts";
+import { enforceTaxonomy, parseSheetJson } from "./validateSheet.ts";
+import { heuristicGapSheet } from "../fallback.ts";
 
 export const PROMPT_VERSION = "gap-2026-09-07.1";
 

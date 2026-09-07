@@ -1,4 +1,4 @@
-import type { GapPriority, GapStatus } from "../taxonomy/items";
+import type { GapPriority, GapStatus } from "../taxonomy/items.ts";
 
 export type Citation = {
   quote: string;

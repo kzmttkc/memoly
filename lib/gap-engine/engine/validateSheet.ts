@@ -4,8 +4,8 @@ import {
   PRIORITY_ORDER,
   PRIORITY_SHORT,
   TAXONOMY,
-} from "../taxonomy/items";
-import type { GapSheet, GapBlock } from "./types";
+} from "../taxonomy/items.ts";
+import type { GapSheet, GapBlock } from "./types.ts";
 
 /**
  * 出してはいけない断定。

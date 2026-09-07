@@ -1,4 +1,4 @@
-import type { LlmClient } from "./types";
+import type { LlmClient } from "./types.ts";
 
 /**
  * 呼び出しの締切（ミリ秒）。**関数の maxDuration より必ず短くすること。**

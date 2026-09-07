@@ -1,13 +1,13 @@
-import type { GapBlock, GapSheet } from "../engine/types";
+import type { GapBlock, GapSheet } from "../engine/types.ts";
 import {
   DISCLAIMER,
   PRIORITY_LABEL,
   PRIORITY_NOTE,
   PRIORITY_ORDER,
   taxonomyIndex,
-} from "../taxonomy/items";
+} from "../taxonomy/items.ts";
 
-export { PRIORITY_LABEL, PRIORITY_NOTE } from "../taxonomy/items";
+export { PRIORITY_LABEL, PRIORITY_NOTE } from "../taxonomy/items.ts";
 
 /**
  * 分類のラベル。**「記載の有無」と「内容の適否」を同じ言い方にしない。**

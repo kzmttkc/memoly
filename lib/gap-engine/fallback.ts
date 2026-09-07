@@ -2,9 +2,9 @@
 // Claude 障害時の決定的フォールバック。引用が取れない「ある」は出さない。
 // ============================================================================
 
-import { TAXONOMY, DISCLAIMER } from './taxonomy/items'
-import type { AnalyzeInput, GapBlock, GapSheet } from './engine/types'
-import { enforceTaxonomy } from './engine/validateSheet'
+import { TAXONOMY, DISCLAIMER } from './taxonomy/items.ts'
+import type { AnalyzeInput, GapBlock, GapSheet } from './engine/types.ts'
+import { enforceTaxonomy } from './engine/validateSheet.ts'
 
 function snippetAround(text: string, term: string): string | null {
   const i = text.indexOf(term)

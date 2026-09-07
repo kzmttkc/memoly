@@ -1,5 +1,5 @@
-import { ADVICE_FOOTER } from "../taxonomy/items";
-import type { GapSheet, MemoryRecord } from "../engine/types";
+import { ADVICE_FOOTER } from "../taxonomy/items.ts";
+import type { GapSheet, MemoryRecord } from "../engine/types.ts";
 
 export type MemoInput = {
   companyName: string;
