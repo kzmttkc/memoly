@@ -1,4 +1,5 @@
 import {
+  anchorsFor,
   DISCLAIMER,
   PRIORITY_ORDER,
   PRIORITY_SHORT,
@@ -95,6 +96,33 @@ export function normalizeStatus(s: unknown): GapBlock["status"] | null {
   return STATUS_ALIASES[v] ?? null;
 }
 
+/**
+ * 引用した原文が、**その項目のことを言っているか**を機械で照合する。
+ *
+ * quoteExists は「その文が本文にあるか」しか見ない。本文にある**別の条文**を引いてくれば
+ * 通ってしまう——2026-09-07 の開業社労士の走破で実測した2件はどちらもこれだった。
+ *
+ *   見出し: 制度はあるが運用の書き方がまだない ／ 年5日の時季指定
+ *   本文  : 会社が時季を指定して年5日を取得させる制度の存在は読み取れます。
+ *   引用  : 年次有給休暇は、従業員があらかじめ請求する時季に与える。…
+ *           → 引用に「時季指定」も「年5日」も無い。**請求する時季**は逆の制度。
+ *
+ * 引用を隣に置いたから読み手が照合でき、その照合で外した。照合を機械側でも先にやる。
+ * 見るのは引用（＝モデル自身が根拠として出したもの）で、本文全体ではない——
+ * 本文のどこか別の条に語があるだけでは、その引用の根拠にはならないため。
+ */
+export function evidenceMentionsItem(id: string, citations: { quote: string }[]): boolean {
+  const anchors = anchorsFor(id);
+  if (!anchors) return true; // TAXONOMY 外の id は enforceTaxonomy が捨てる
+  const joined = normalize(citations.map((c) => c?.quote ?? "").join("\n"));
+  return anchors.test(joined);
+}
+
+/** 「ある」と名乗る分類（＝原文に根拠があると主張する側）。 */
+function claimsPresence(status: GapBlock["status"]): boolean {
+  return status === "written" || status === "ops_missing";
+}
+
 export function sanitizeBlock(source: string, block: GapBlock): GapBlock {
   const normalized = normalizeStatus(block.status);
   if (normalized) block = { ...block, status: normalized };
@@ -102,7 +130,8 @@ export function sanitizeBlock(source: string, block: GapBlock): GapBlock {
   const citations = (block.citations ?? []).filter((c) =>
     quoteExists(source, c.quote),
   );
-  if (citations.length === 0 && (block.status === "written" || block.status === "ops_missing")) {
+  const grounded = citations.length > 0 && evidenceMentionsItem(block.id, citations);
+  if (!grounded && claimsPresence(block.status)) {
     return {
       ...block,
       status: "unmentioned",

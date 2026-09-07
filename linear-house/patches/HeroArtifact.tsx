@@ -132,7 +132,7 @@ export function HeroArtifact({
               カスタマーハラスメントの方針
             </li>
             <li className="px-3 py-2.5 text-sm text-[var(--lh-ink)]">
-              <span className="zure-lp-tag">規程にある</span>
+              <span className="zure-lp-tag">記載あり</span>
               始業・終業の時刻
             </li>
             <li className="px-3 py-2.5 text-sm text-[var(--lh-ink)]">

@@ -9,13 +9,29 @@ import {
 
 export { PRIORITY_LABEL, PRIORITY_NOTE } from "../taxonomy/items";
 
+/**
+ * 分類のラベル。**「記載の有無」と「内容の適否」を同じ言い方にしない。**
+ *
+ * 2026-09-07 開業社労士の走破: 原文「従業員の定年は満60歳とし」に対して「規程にある」と
+ * 出していた。同じページに 65歳 も 継続雇用 も 高年齢 も1件も無い。危険の向きが逆で、
+ * **穴を「あり」と見せて素人を安心させる**表示になっていた。
+ * この製品は書いてあるかどうかを見る道具で、書いてある内容が今の法令に合っているかは
+ * 見ていない。ラベルをそこまで言っているように読ませない（判定は足さない。範囲外）。
+ */
 const STATUS_LABEL: Record<string, string> = {
-  written: "規程にある",
-  ops_missing: "制度はあるが運用の書き方がまだない",
+  written: "記載あり",
+  ops_missing: "記載はあるが運用の書き方がまだない",
   unmentioned: "このファイルでは触れていない",
   unread: "未読ページに残している",
   not_applicable: "このファイルでは制度を置いていないと読める",
 };
+
+/**
+ * この1枚が見ている範囲。ラベルのすぐ近くに置く。
+ * 「記載あり」を「内容も今の法令に合っている」と読ませないための一文。
+ */
+export const SCOPE_NOTE =
+  "この1枚は、書いてあるかどうかだけを見ています。書いてある内容が今の法令に合っているかは見ていません。「記載あり」は、その定めが今の法令に合っているという意味ではありません。";
 
 /**
  * 34項目の並べ替え（2026-09-05 再監査で作り直した）。
@@ -138,6 +154,8 @@ export function sheetPlainText(sheet: GapSheet, extras: SheetTextExtras = {}): s
         : `読んだ本文: ${(doc.char_count ?? 0).toLocaleString("ja-JP")}字`,
     );
   }
+
+  out.push("", SCOPE_NOTE);
 
   for (const g of groupByPriority(sheet)) {
     out.push("", `■ ${g.label}（${g.blocks.length}件）`);

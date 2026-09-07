@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { sanitizeBlock, enforceTaxonomy } from '../../lib/gap-engine/engine/validateSheet.ts'
 import { DISCLAIMER } from '../../lib/gap-engine/taxonomy/items.ts'
+import { blockLine, sheetPlainText } from '../../lib/gap-engine/ui/renderSheet.ts'
 import { heuristicGapSheet } from '../../lib/gap-engine/fallback.ts'
 import type { GapBlock, GapSheet } from '../../lib/gap-engine/engine/types.ts'
 
@@ -136,4 +137,123 @@ test('禁止語は、結論・未読注記・followups・項目のどこに来�
   assert.ok(!all.includes('努力義務'), '結論・未読注記・followups から禁止語が消えている: ' + all)
   assert.ok(out.summary.headline.length > 0, '結論が空にならない（文単位で落とす）')
   assert.ok(out.followups.some(f => f.includes('相談窓口')), '問題の無い followups は残す')
+})
+
+// ============================================================================
+// 2026-09-07 開業社労士の走破: 「顧問先に勧めない」の理由が2件。どちらも
+// **引用を隣に置いたおかげで読み手が照合でき、その照合で製品が外した**ものだった。
+// ============================================================================
+
+// (1) 引用した原文にその制度の言葉が1つも無いのに「制度はある」と分類していた。
+//     実測2件: ops.annual_leave_5days（原文に「時季指定」「年5日」が無い）と
+//     abs.wage_cutoff_paydate（第40条は構成・計算方法・支払方法まで。締切・支払日が無い）。
+//     citations は本文に実在する別の条文なので quoteExists は通ってしまう。
+test('引用にその項目の言葉が無ければ、「ある」側の分類にしない', () => {
+  const yukyu =
+    '第37条 年次有給休暇は、従業員があらかじめ請求する時季に与える。ただし、事業の正常な運営を妨げる場合は、他の時季に変更することがある。'
+  const jiki = sanitizeBlock(yukyu, {
+    id: 'ops.annual_leave_5days',
+    group: 'operations',
+    title: '年5日の時季指定',
+    status: 'ops_missing',
+    priority: 'p1_absolute',
+    what_found: '会社が時季を指定して年5日を取得させる制度の存在は読み取れます。',
+    what_not_found: '',
+    why_it_matters: '',
+    next_step: '',
+    citations: [{ quote: '年次有給休暇は、従業員があらかじめ請求する時季に与える。' }],
+  } as GapBlock)
+  assert.ok(
+    jiki.status !== 'ops_missing' && jiki.status !== 'written',
+    `原文に「時季指定」も「年5日」も無いのに ${jiki.status} で出している`,
+  )
+  assert.ok(!jiki.what_found, `根拠の無い要約が残っている: ${jiki.what_found}`)
+
+  const chingin = '第40条 賃金は、基本給及び諸手当をもって構成し、その計算方法及び支払方法は賃金規程に定める。'
+  const shimekiri = sanitizeBlock(chingin, {
+    id: 'abs.wage_cutoff_paydate',
+    group: 'absolute_lsa89',
+    title: '賃金の締切と支払時期',
+    status: 'written',
+    priority: 'p1_absolute',
+    what_found: '第40条で賃金規程への委譲が記載されており、締切と支払時期が別途規程に定められていることが示唆されています。',
+    what_not_found: '',
+    why_it_matters: '',
+    next_step: '',
+    citations: [{ quote: 'その計算方法及び支払方法は賃金規程に定める。' }],
+  } as GapBlock)
+  assert.ok(
+    shimekiri.status !== 'ops_missing' && shimekiri.status !== 'written',
+    `原文に締切も支払日も無いのに ${shimekiri.status} で出している`,
+  )
+})
+
+// 関門が「ある」側を一律に殺していないこと。実際に締切と支払日が書いてあれば written のまま。
+test('引用にその項目の言葉があれば、「ある」側の分類を落とさない', () => {
+  const src = '第5条 賃金は毎月末日締め翌月15日払いとする。'
+  const out = sanitizeBlock(src, {
+    id: 'abs.wage_cutoff_paydate',
+    group: 'absolute_lsa89',
+    title: '賃金の締切と支払時期',
+    status: 'written',
+    priority: 'p1_absolute',
+    what_found: '締切と支払日が書かれています。',
+    what_not_found: '',
+    why_it_matters: '',
+    next_step: '',
+    citations: [{ quote: '賃金は毎月末日締め翌月15日払いとする。' }],
+  } as GapBlock)
+  assert.equal(out.status, 'written')
+  assert.equal(out.citations.length, 1)
+})
+
+// (2) 原文「従業員の定年は満60歳とし」に対して「規程にある」を出していた。
+//     ページ全体で 65歳・継続雇用・高年齢 は0件。危険の向きが逆で、**穴を「あり」と
+//     見せて安心させている**。高年法の判定はこの製品の範囲外なので、判定を足すのではなく
+//     「記載の有無を見ている／内容の適否は見ていない」が伝わる表示にする。
+test('「ある」側のラベルが、内容が妥当という意味に読めない', () => {
+  const source = '第38条 従業員の定年は満60歳とし、定年に達した日の属する月の末日をもって退職とする。'
+  const sheet = enforceTaxonomy(
+    {
+      schema_version: 'x',
+      disclaimer: '',
+      document: { title_guess: 'teinen.txt', page_count: 0, pages_read: 0, pages_unread: [], char_count: source.length, extracted_ok: true },
+      summary: { headline: '', written_count: 0, ops_missing_count: 0, unmentioned_count: 0, unread_note: null },
+      blocks: [
+        {
+          id: 'abs.retirement',
+          group: 'absolute_lsa89',
+          title: '退職',
+          status: 'written',
+          priority: 'p1_absolute',
+          what_found: '定年は満60歳と書かれています。',
+          what_not_found: '',
+          why_it_matters: '',
+          next_step: '',
+          citations: [{ quote: '従業員の定年は満60歳とし' }],
+        },
+      ],
+      contradictions: [],
+      followups: [],
+    } as unknown as GapSheet,
+    source,
+  )
+
+  const teinen = sheet.blocks.find(b => b.id === 'abs.retirement')
+  assert.equal(teinen?.status, 'written', '記載そのものは読めているので「ある」側は維持する')
+
+  const label = blockLine('written', '').trim()
+  assert.ok(
+    !/規程にある|規定にある|問題な|適合|妥当|対応済|OK|大丈夫/.test(label),
+    `「ある」側のラベルが内容の適否まで言っていると読める: ${label}`,
+  )
+  assert.ok(/記載|書いて/.test(label), `ラベルが「記載の有無」を指していない: ${label}`)
+
+  // 1枚のどこかに、見ている範囲（記載の有無であって内容の適否ではない）が書いてある。
+  const text = sheetPlainText(sheet)
+  const scope = text
+    .split('\n')
+    .find(line => /内容/.test(line) && /見ていません|判断していません|確認していません|していません/.test(line))
+  assert.ok(scope, '「内容が今の法令に合っているかは見ていない」と読める行が1枚に無い')
+  assert.ok(/法令|法律/.test(scope!), `見ている範囲の説明が内容の適否に触れていない: ${scope}`)
 })

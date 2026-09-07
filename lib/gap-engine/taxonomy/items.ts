@@ -24,6 +24,21 @@ export type TaxonomyItem = {
   priority: GapPriority;
   deadline?: string;
   lookFor: string;
+  /**
+   * その項目の「根拠語」。**引用した原文にこの語が1つも無ければ、
+   * 「ある」側の分類（written / ops_missing）を名乗らせない**（validateSheet.ts）。
+   *
+   * 2026-09-07 開業社労士の走破で実測: 引用は本文に実在する別の条文なので quoteExists は
+   * 通り、その隣に「会社が時季を指定して年5日を取得させる制度の存在は読み取れます」と出た。
+   * 引用した原文は「年次有給休暇は、従業員があらかじめ請求する時季に与える。」——
+   * **「時季指定」も「年5日」も一文字も無い**。同型がもう1件（賃金の締切と支払時期。
+   * 引用は第40条の構成・計算方法・支払方法までで、締切にも支払日にも触れていない）。
+   *
+   * 語は**広めに**取る（言い換えを1つでも拾えば通す）。狭くすると、正しい「ある」を
+   * 「触れていない」へ落とす——それは本文に無いことを言い足すより静かな壊れ方になる。
+   * lookFor（モデルへ渡す散文のヒント）とは用途が別なので、別の項目にする。
+   */
+  anchors: RegExp;
   allowNotApplicable: boolean;
 };
 
@@ -35,6 +50,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "顧客等からの著しい迷惑行為、カスハラ、カスタマーハラスメントへの方針",
+    anchors: /カスタマーハラスメント|カスハラ|著しい迷惑行為|悪質なクレーム|迷惑行為/,
     allowNotApplicable: false,
   },
   {
@@ -44,6 +60,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "どのような行為を対象にするか、その場での対処",
+    anchors: /カスタマーハラスメント|カスハラ|著しい迷惑行為|悪質なクレーム|迷惑行為|対象となる行為|該当する行為/,
     allowNotApplicable: false,
   },
   {
@@ -53,6 +70,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "相談窓口、担当、連絡方法",
+    anchors: /窓口|相談|申出|苦情|担当者|連絡先|通報/,
     allowNotApplicable: false,
   },
   {
@@ -62,6 +80,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "窓口担当の役割、研修、引き継ぎ",
+    anchors: /窓口|相談|担当|研修|教育|体制|引継|引き継/,
     allowNotApplicable: false,
   },
   {
@@ -71,6 +90,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "事実確認の手順",
+    anchors: /事実|確認|調査|聴取|ヒアリング|報告/,
     allowNotApplicable: false,
   },
   {
@@ -80,6 +100,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "安全確保、配置、メンタル面の配慮",
+    anchors: /配慮|安全|配置|メンタル|健康|休職|保護|支援|ケア/,
     allowNotApplicable: false,
   },
   {
@@ -89,6 +110,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "再発防止、周知のやり直し",
+    anchors: /再発|防止|周知|研修|教育|啓発/,
     allowNotApplicable: false,
   },
   {
@@ -98,6 +120,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "出入り禁止、警察連絡、取引停止などの方針",
+    anchors: /出入り禁止|出入禁止|警察|取引停止|法的措置|退去|通報|悪質|刑事|弁護士/,
     allowNotApplicable: false,
   },
   {
@@ -107,6 +130,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "相談内容の秘密、プライバシー保護",
+    anchors: /プライバシー|秘密|守秘|個人情報|漏らさ/,
     allowNotApplicable: false,
   },
   {
@@ -116,6 +140,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "相談したことを理由とする不利益取扱いの禁止",
+    anchors: /不利益|報復|解雇|不当な取扱/,
     allowNotApplicable: false,
   },
   {
@@ -125,6 +150,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     priority: "p0_deadline",
     deadline: "2026-10-01",
     lookFor: "採用選考、求職者、応募者に対するセクシュアルハラスメント",
+    anchors: /求職者|応募者|採用|就職活動|インターン|セクシュアルハラスメント|セクハラ|性的/,
     allowNotApplicable: false,
   },
   {
@@ -133,6 +159,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "始業・終業の時刻",
     priority: "p1_absolute",
     lookFor: "始業、終業、勤務時間の開始と終了",
+    anchors: /始業|終業|所定労働時間|勤務時間|就業時間|労働時間|午前|午後|時から/,
     allowNotApplicable: false,
   },
   {
@@ -141,6 +168,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "休憩時間",
     priority: "p1_absolute",
     lookFor: "休憩",
+    anchors: /休憩/,
     allowNotApplicable: false,
   },
   {
@@ -149,6 +177,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "休日",
     priority: "p1_absolute",
     lookFor: "休日、週休、振替休日",
+    anchors: /休日|週休|振替|日曜|土曜|祝日/,
     allowNotApplicable: false,
   },
   {
@@ -157,6 +186,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "休暇（年次有給を含む）",
     priority: "p1_absolute",
     lookFor: "年次有給休暇、休暇",
+    anchors: /有給|休暇|年休/,
     allowNotApplicable: false,
   },
   {
@@ -165,6 +195,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "交替制の就業時転換",
     priority: "p1_absolute",
     lookFor: "交替、シフト、勤務の転換",
+    anchors: /交替|交代|シフト|勤務の転換|就業時転換|変形労働|番方/,
     allowNotApplicable: true,
   },
   {
@@ -173,6 +204,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "賃金の決定・計算・支払方法",
     priority: "p1_absolute",
     lookFor: "賃金、給与の計算、支払方法",
+    anchors: /賃金|給与|給料|手当|支払|支給|計算/,
     allowNotApplicable: false,
   },
   {
@@ -181,6 +213,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "賃金の締切と支払時期",
     priority: "p1_absolute",
     lookFor: "締切、支払日",
+    anchors: /締切|締め切|締日|締め日|〆|日締|賃金計算期間|計算期間|支払日|支給日|支払期日|翌月\d+日|毎月\d+日|\d+日払|\d+日までに支払/,
     allowNotApplicable: false,
   },
   {
@@ -189,6 +222,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "昇給",
     priority: "p1_absolute",
     lookFor: "昇給",
+    anchors: /昇給|給与改定|賃金改定|昇格|ベースアップ/,
     allowNotApplicable: false,
   },
   {
@@ -197,6 +231,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "退職",
     priority: "p1_absolute",
     lookFor: "退職、自己都合、定年",
+    anchors: /退職|定年|辞職|自己都合|退社/,
     allowNotApplicable: false,
   },
   {
@@ -205,6 +240,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "解雇事由",
     priority: "p1_absolute",
     lookFor: "解雇、普通解雇、懲戒解雇",
+    anchors: /解雇|解職|退職を命/,
     allowNotApplicable: false,
   },
   {
@@ -213,6 +249,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "有給の付与起算と日数",
     priority: "p1_absolute",
     lookFor: "雇入れ、6か月、付与日数、出勤率",
+    anchors: /付与|雇入|雇い入|継続勤務|出勤率|勤続|所定労働日数|労働日|比例/,
     allowNotApplicable: false,
   },
   {
@@ -221,6 +258,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "年5日の時季指定",
     priority: "p1_absolute",
     lookFor: "年5日、時季指定、10日以上付与",
+    anchors: /年5日|5日|五日|時季指定|時季を指定|使用者が時季|10日以上|十日以上/,
     allowNotApplicable: false,
   },
   {
@@ -229,6 +267,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "36協定への言及",
     priority: "p1_absolute",
     lookFor: "時間外労働、36協定、労使協定",
+    anchors: /36協定|三六協定|時間外労働|時間外|労使協定|残業|休日労働/,
     allowNotApplicable: false,
   },
   {
@@ -237,6 +276,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "時間外労働の上限の考え方",
     priority: "p1_absolute",
     lookFor: "月45時間、年360時間、特別条項",
+    anchors: /45時間|360時間|特別条項|限度時間|上限|時間を超え/,
     allowNotApplicable: false,
   },
   {
@@ -245,6 +285,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "割増賃金の率",
     priority: "p1_absolute",
     lookFor: "割増、1.25、深夜、休日労働",
+    anchors: /割増|1\.25|125|2割5分|25%|深夜|休日労働|35%|1\.35|3割5分|5割|1\.5|60時間/,
     allowNotApplicable: false,
   },
   {
@@ -253,6 +294,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "パワーハラスメント",
     priority: "p2_dispute",
     lookFor: "パワーハラスメント、パワハラ",
+    anchors: /パワーハラスメント|パワハラ|優越的な関係|いじめ|嫌がらせ|職場におけるハラスメント/,
     allowNotApplicable: false,
   },
   {
@@ -261,6 +303,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "セクシュアルハラスメント",
     priority: "p2_dispute",
     lookFor: "セクシュアルハラスメント、セクハラ",
+    anchors: /セクシュアルハラスメント|セクハラ|性的な言動|性的/,
     allowNotApplicable: false,
   },
   {
@@ -269,6 +312,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "育児・介護休業",
     priority: "p2_dispute",
     lookFor: "育児休業、介護休業、子の看護",
+    anchors: /育児|介護|子の看護|出生時|産前|産後|養育/,
     allowNotApplicable: false,
   },
   {
@@ -277,6 +321,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "柔軟な働き方を実現するための措置",
     priority: "p2_dispute",
     lookFor: "フレックスタイム、テレワーク、時差出勤、短時間、柔軟な働き方",
+    anchors: /フレックス|テレワーク|在宅|時差出勤|短時間勤務|繰上げ|繰下げ|柔軟な働き方|所定外労働の制限|時間単位/,
     allowNotApplicable: false,
   },
   {
@@ -285,6 +330,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "無期転換",
     priority: "p2_dispute",
     lookFor: "無期転換、通算5年",
+    anchors: /無期転換|無期労働契約|通算5年|通算して5年|期間の定めのない/,
     allowNotApplicable: true,
   },
   {
@@ -293,6 +339,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "副業・兼業",
     priority: "p3_optional",
     lookFor: "副業、兼業",
+    anchors: /副業|兼業|他社の業務|他の会社の業務/,
     allowNotApplicable: true,
   },
   {
@@ -301,6 +348,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "テレワーク",
     priority: "p3_optional",
     lookFor: "テレワーク、在宅勤務、リモート",
+    anchors: /テレワーク|在宅勤務|リモート|サテライトオフィス/,
     allowNotApplicable: true,
   },
   {
@@ -309,6 +357,7 @@ export const TAXONOMY: TaxonomyItem[] = [
     title: "懲戒",
     priority: "p2_dispute",
     lookFor: "懲戒、譴責、減給、出勤停止",
+    anchors: /懲戒|譴責|けん責|減給|出勤停止|停職|訓告|戒告|論旨|降格/,
     allowNotApplicable: true,
   },
 ];
@@ -370,4 +419,11 @@ const TAXONOMY_INDEX = new Map(TAXONOMY.map((t, i) => [t.id, i]));
 
 export function taxonomyIndex(id: string): number {
   return TAXONOMY_INDEX.get(id) ?? Number.MAX_SAFE_INTEGER;
+}
+
+/** 項目 id → 根拠語。未知の id には何も返さない（下流はそのとき素通しにしない）。 */
+const ANCHORS = new Map(TAXONOMY.map((t) => [t.id, t.anchors]));
+
+export function anchorsFor(id: string): RegExp | null {
+  return ANCHORS.get(id) ?? null;
 }

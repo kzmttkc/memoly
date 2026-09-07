@@ -6,6 +6,7 @@ import {
   blockLine,
   groupByPriority,
   isOpenBlock,
+  SCOPE_NOTE,
   sheetTitle,
   sortFollowups,
 } from '@/lib/gap-engine/ui/renderSheet'
@@ -150,6 +151,13 @@ export function GapSheetView({
           {openOnly ? `すべての項目を出す（${sheet.blocks.length}件）` : `手当てが要るものだけ出す（${openCount}件）`}
         </button>
       </div>
+
+      {/* 2026-09-07 開業社労士の走破: 定年60歳の1行を「規程にある」で通していた（同じページに
+          65歳・継続雇用・高年齢は0件）。ラベルを「記載あり」に変えたうえで、見ている範囲を
+          分類のすぐ上に置く。内容の適否の判定はこの製品の範囲外——だから黙らずに、そう書く。 */}
+      <p className="mt-3 rounded-[var(--lh-radius)] border border-[var(--lh-line)] bg-[var(--lh-fill)] px-3 py-2 text-xs leading-relaxed text-[var(--lh-ink)]">
+        {SCOPE_NOTE}
+      </p>
 
       {groups.map(group => {
         const blocks = openOnly ? group.blocks.filter(isOpenBlock) : group.blocks

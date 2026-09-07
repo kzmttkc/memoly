@@ -4,7 +4,7 @@ import type { AnalyzeInput, GapBlock, GapSheet, LlmClient } from "./types";
 import { enforceTaxonomy, parseSheetJson } from "./validateSheet";
 import { heuristicGapSheet } from "../fallback";
 
-export const PROMPT_VERSION = "gap-2026-08-31.1";
+export const PROMPT_VERSION = "gap-2026-09-07.1";
 
 /**
  * チェック項目を何分割して並列に投げるか。
