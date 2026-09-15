@@ -66,10 +66,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '一時的に送れません。画面の本文はそのまま使えます。' }, { status: 500 })
   }
 
+  // 2026-09-15: 届出に使う書類（答えで1〜3枚）も添付する。画面ではその場でダウンロードさせている
+  const formsText = PageDocEngine.buildForms(values)
+  const formsList = PageDocEngine.forms('kitei', values)
+  const files = formsList.map(f => f.id).join(',')
+
   const mailText = [
     text,
     '',
-    'このメールに Word ファイル（.docx）を添付しています。開いてそのまま社内の書式へ貼れます。',
+    formsText
+      ? 'このメールに Word ファイル（.docx）を2つ添付しています。条文と順番のほかに、届出に使う書類（' + formsList.map(f => f.title).join('・') + '）です。'
+      : 'このメールに Word ファイル（.docx）を添付しています。開いてそのまま社内の書式へ貼れます。',
     '同じ内容は記事の画面にも出ています: https://banto-roumu.com/roumu/' + slug,
     '条文例と解説: https://sharoushi-agent.com/kasuhara-shugyokisoku-kitei-guide.html',
     '',
@@ -87,7 +94,9 @@ export async function POST(req: NextRequest) {
         to: [email],
         subject: PageDocEngine.SUBJECT.kitei,
         text: mailText,
-        attachments: [{ filename: '足す条文と10月1日までの順番.docx', content: buildDocx(text).toString('base64') }],
+        attachments: [{ filename: '足す条文と10月1日までの順番.docx', content: buildDocx(text).toString('base64') }].concat(
+          formsText ? [{ filename: '届出の書類（' + formsList.map(f => f.title).join('・') + '）.docx', content: buildDocx(formsText).toString('base64') }] : [],
+        ),
       }),
     })
     if (!res.ok) {
@@ -106,7 +115,7 @@ export async function POST(req: NextRequest) {
   if (url && anon) {
     const supabase = createClient(url, anon, { auth: { autoRefreshToken: false, persistSession: false } })
     const { error } = await supabase.from('company_leads').insert({
-      email, source: SOURCE, meta: { slug, size: values.size, union: values.union, rules: values.rules },
+      email, source: SOURCE, meta: { slug, size: values.size, union: values.union, rules: values.rules, offer: 'todoke3', files },
     })
     if (error) console.error('[roumu:page-doc] company_leads insert failed', { code: error.code, msg: error.message })
     else recorded = true

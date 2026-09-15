@@ -5,6 +5,8 @@ declare const PageDocEngine: {
   build(kind: 'kitei' | 'hoshin', v: Record<string, string>): string | null
   valid(kind: 'kitei' | 'hoshin', v: Record<string, string>): boolean
   deadlines(kind: 'kitei' | 'hoshin', v: Record<string, string>): Deadline[]
+  forms(kind: 'kitei' | 'hoshin', v: Record<string, string>): Array<{ id: string; title: string }>
+  buildForms(v: Record<string, string>): string | null
   LABELS: Record<string, Record<string, Record<string, string>>>
   SUBJECT: Record<string, string>
 }
