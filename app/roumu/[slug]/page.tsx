@@ -13,6 +13,7 @@ import { checkSheetItems } from '@/lib/article-checksheet'
 import { OFFER, zureHref } from '@/lib/offer'
 import { TrackedCTA } from '@/app/business/_components/TrackedCTA'
 import KasuharaSelfCheck from './_components/KasuharaSelfCheck'
+import PageDocBox from './_components/PageDocBox'
 import KabauPackCta from './_components/KabauPackCta'
 import { isKasuharaUseCase } from '@/lib/kabau-pack'
 import { PublicFooter } from '@/components/ui/PublicFooter'
@@ -195,6 +196,10 @@ export default async function RoumuUseCasePage({
         )}
         {/* ===== 登録不要の軽量導線（2026-08-03・直帰98%対策・重いCTAより上に配置） =====
             対象は kasuhara-gimuka-2026 のみ。他LPの構造は変えない。 */}
+        {/* 2026-09-15 段2: このドメインの訪問の8割が来る上位2記事に、就業規則AI(サイト)の規定例で
+            名前が取れている交換（3つ選ぶ→条文と順番→Word をメール）を先頭の主CTAとして置く。
+            既存のセルフチェック・確認シートは消さない。 */}
+        {(u.slug === 'kasuhara-gimuka-2026' || u.slug === 'kashara-kiyaku-kisoku-kiji-rei') && <PageDocBox slug={u.slug} />}
         {u.slug === 'kasuhara-gimuka-2026' && <KasuharaSelfCheck />}
         <div className="mt-7 flex flex-wrap items-center gap-3">
           {/* 2026-08-10 計測是正: 従来は素の<Link>でsignup_cta_clickedが未計測だった

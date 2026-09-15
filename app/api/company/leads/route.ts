@@ -53,6 +53,9 @@ const ALLOWED_SOURCES = new Set([
   'kabau_updates',           // 更新案内オプトイン（email-updates）
   'kasuhara_gap',            // /zure の10措置照合（控えの送付・Phase 2）
   'kabau_invoice_request',   // パックLPの請求書払い申込（invoice-request・製品定義書 v3 §12.2）
+  // 2026-09-15: /roumu の上位2記事の「足す条文と順番を Word でメール」（/api/roumu/page-doc が直接 INSERT する。
+  // ここを通らないが、許可リストを正典として揃えておく）
+  'app_page_doc',
   'unknown',
 ])
 
