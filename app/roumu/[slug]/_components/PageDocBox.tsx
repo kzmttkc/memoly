@@ -17,6 +17,9 @@ import PageDocEngine from '@/lib/page-doc-engine.js'
 //   計測（サイト側と同じ名前・source で面を分ける）:
 //     free_cta_section_view は使わない（サイト側の到達と混ざる）。
 //     page_doc_revealed / page_doc_submit / lead_captured に source=app_roumu と slug を付ける。
+//
+//   2026-09-16 PR4: kasuhara-gimuka-2026 の主ボタンだけは、記事内生成を止め、
+//   計測済みの sharoushi-agent.com/#app へ同じラベルで送る（/r/{id}・sheet_completed を拾う）。
 // ============================================================================
 
 const SOURCE = 'app_roumu'
@@ -25,7 +28,57 @@ const OFFER = 'todoke3'
 type Val = { size: string; union: string; rules: string }
 const Q: Array<[keyof Val, string]> = [['size', 'Q1 従業員数'], ['union', 'Q2 過半数労働組合'], ['rules', 'Q3 就業規則']]
 
-export default function PageDocBox({ slug }: { slug: string }) {
+const GENERATOR_CTA_SLUG = 'kasuhara-gimuka-2026'
+const GENERATOR_HREF =
+  'https://sharoushi-agent.com/#app?utm_source=roumu_kasuhara2026&utm_medium=article&utm_campaign=cta_generator'
+const CTA_LABEL = '足す条文と、届出までの順番を出す'
+
+function QuestionExplain({ L }: { L: typeof PageDocEngine.LABELS.kitei }) {
+  return (
+    <>
+      {Q.map(([key, legend]) => (
+        <fieldset key={key} className="mt-4">
+          <legend className="text-sm font-bold text-neutral-900">{legend}</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {Object.entries(L[key]).map(([val, label]) => (
+              <span
+                key={val}
+                className="rounded border border-[#9A9078] bg-white px-3 py-2 text-sm text-neutral-800"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        </fieldset>
+      ))}
+    </>
+  )
+}
+
+/** 主CTAを計測済みジェネレータへ送る枠（記事内では PageDocEngine を回さない） */
+function GeneratorCtaBox({ slug }: { slug: string }) {
+  const L = PageDocEngine.LABELS.kitei
+  return (
+    <Card className="mt-7 border-[#165E83] p-5 sm:p-6">
+      <p className="text-lg font-bold leading-snug text-neutral-900">自社の就業規則に、10月1日のカスハラ条項があるか。</p>
+      <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+        人数と、組合の有無と、就業規則があるかを選ぶと、御社の場合に足す条文と、10月1日までの順番が出ます。
+        アカウントは不要です。
+      </p>
+      <QuestionExplain L={L} />
+      <a
+        href={GENERATOR_HREF}
+        className={buttonClass({ variant: 'primary', size: 'lg' }) + ' mt-5 inline-flex w-full justify-center sm:w-auto'}
+        onClick={() => track('page_doc_outbound', { doc: 'kitei', source: SOURCE, slug, dest: 'sharoushi_generator' })}
+      >
+        {CTA_LABEL}
+      </a>
+    </Card>
+  )
+}
+
+/** 他記事向け: 従来どおり記事内で条文・順番を出し、Word をメール交換する */
+function InlinePageDocBox({ slug }: { slug: string }) {
   const L = PageDocEngine.LABELS.kitei
   const [v, setV] = useState<Val>({ size: '', union: '', rules: '' })
   const [out, setOut] = useState<string | null>(null)
@@ -112,7 +165,7 @@ export default function PageDocBox({ slug }: { slug: string }) {
         </fieldset>
       ))}
       <button type="button" onClick={reveal} disabled={!!out} className={buttonClass({ variant: 'primary', size: 'lg' }) + ' mt-5 w-full sm:w-auto'}>
-        {out ? '出しました' : '足す条文と、届出までの順番を出す'}
+        {out ? '出しました' : CTA_LABEL}
       </button>
       {msg && <p className={`mt-3 text-sm ${state === 'error' ? 'text-[#B94047]' : 'text-[#10714C]'}`} role="status">{msg}</p>}
       {out && (
@@ -143,4 +196,9 @@ export default function PageDocBox({ slug }: { slug: string }) {
       )}
     </Card>
   )
+}
+
+export default function PageDocBox({ slug }: { slug: string }) {
+  if (slug === GENERATOR_CTA_SLUG) return <GeneratorCtaBox slug={slug} />
+  return <InlinePageDocBox slug={slug} />
 }
