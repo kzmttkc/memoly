@@ -19,7 +19,8 @@ import PageDocEngine from '@/lib/page-doc-engine.js'
 //     page_doc_revealed / page_doc_submit / lead_captured に source=app_roumu と slug を付ける。
 //
 //   2026-09-16 PR4: kasuhara-gimuka-2026 の主ボタンだけは、記事内生成を止め、
-//   計測済みの sharoushi-agent.com/#app へ同じラベルで送る（/r/{id}・sheet_completed を拾う）。
+//   計測済みの sharoushi-agent.com へ同じラベルで送る（/r/{id}・sheet_completed を拾う）。
+//   2026-09-17 PR5: UTM はハッシュの前（?utm_…#app）。押しても送られない Q1〜Q3 は外す。
 // ============================================================================
 
 const SOURCE = 'app_roumu'
@@ -30,34 +31,11 @@ const Q: Array<[keyof Val, string]> = [['size', 'Q1 従業員数'], ['union', 'Q
 
 const GENERATOR_CTA_SLUG = 'kasuhara-gimuka-2026'
 const GENERATOR_HREF =
-  'https://sharoushi-agent.com/#app?utm_source=roumu_kasuhara2026&utm_medium=article&utm_campaign=cta_generator'
+  'https://sharoushi-agent.com/?utm_source=roumu_kasuhara2026&utm_medium=article&utm_campaign=cta_generator#app'
 const CTA_LABEL = '足す条文と、届出までの順番を出す'
-
-function QuestionExplain({ L }: { L: typeof PageDocEngine.LABELS.kitei }) {
-  return (
-    <>
-      {Q.map(([key, legend]) => (
-        <fieldset key={key} className="mt-4">
-          <legend className="text-sm font-bold text-neutral-900">{legend}</legend>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {Object.entries(L[key]).map(([val, label]) => (
-              <span
-                key={val}
-                className="rounded border border-[#9A9078] bg-white px-3 py-2 text-sm text-neutral-800"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        </fieldset>
-      ))}
-    </>
-  )
-}
 
 /** 主CTAを計測済みジェネレータへ送る枠（記事内では PageDocEngine を回さない） */
 function GeneratorCtaBox({ slug }: { slug: string }) {
-  const L = PageDocEngine.LABELS.kitei
   return (
     <Card className="mt-7 border-[#165E83] p-5 sm:p-6">
       <p className="text-lg font-bold leading-snug text-neutral-900">自社の就業規則に、10月1日のカスハラ条項があるか。</p>
@@ -65,7 +43,6 @@ function GeneratorCtaBox({ slug }: { slug: string }) {
         人数と、組合の有無と、就業規則があるかを選ぶと、御社の場合に足す条文と、10月1日までの順番が出ます。
         アカウントは不要です。
       </p>
-      <QuestionExplain L={L} />
       <a
         href={GENERATOR_HREF}
         className={buttonClass({ variant: 'primary', size: 'lg' }) + ' mt-5 inline-flex w-full justify-center sm:w-auto'}
