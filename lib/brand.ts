@@ -25,6 +25,11 @@ export const BRAND_LEGACY_NAME = 'Kabau（カバウ）・番頭(Banto)'
 /** 契約主体（会計・特商法） */
 export const LEGAL_ENTITY = 'KIZUNA Creation（Kazumoto Takeshi 個人事業）'
 
+/** 所在地（対外表示）。出所は ~/Takeshi_Automation/.company/steering/business-facts.md
+ *  「所在地（対外表示）」の1行（2026-09-06 Takeshi 決裁）。特商法・見積書・事業者欄は
+ *  すべてこの値を使い、これ以外の住所を対外に書かない。正典が変わったらここ1箇所を直す。 */
+export const BUSINESS_ADDRESS = '東京都渋谷区桜丘町16-13 桜丘フロントⅡビル'
+
 /** 問い合わせ一本化（集客面・SaaS面共通） */
 export const SUPPORT_EMAIL = 'support@banto-roumu.com'
 

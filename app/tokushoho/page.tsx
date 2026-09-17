@@ -3,7 +3,7 @@ import { PLANS, PAID_PLAN_IDS, billingEnabled } from '@/lib/plans'
 import { SEIDO_KIT_PRICE_JPY } from '@/lib/seido-kit'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { PublicHeader } from '@/components/ui/PublicHeader'
-import { SERVICE_LEGAL_NAME, SUPPORT_EMAIL } from '@/lib/brand'
+import { BUSINESS_ADDRESS, SERVICE_LEGAL_NAME, SUPPORT_EMAIL } from '@/lib/brand'
 
 /** 表形式の1行。特商法の必須項目を dl で列挙する。 */
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -42,7 +42,7 @@ export default function TokushohoPage() {
             入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">特定商取引法に基づく表記</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月30日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年9月17日</p>
         </div>
 
         {/* 2026-07-28 CTO修正（L1監査#10）: BILLING_ENABLED は現在 false（意図的に
@@ -84,10 +84,16 @@ export default function TokushohoPage() {
               （ペルソナ4指摘）。特定商取引法の請求開示特例は住所・電話番号のみが
               対象で、氏名は常時表示が原則のため、氏名はここでも直接開示し、
               住所・電話番号のみ請求開示のままとする（新規の個人情報開示は行わない
-              ＝他ページで既に公開済みの氏名を、この一覧にも一致させるのみ）。 */}
+              ＝他ページで既に公開済みの氏名を、この一覧にも一致させるのみ）。
+              ※ 2026-09-17 以降、住所は常時表示（下の「所在地」行）。請求開示は電話番号のみ。 */}
           <Row label="代表者の氏名">Kazumoto Takeshi</Row>
 
-          <Row label="所在地・電話番号">
+          {/* 2026-09-17: 所在地は 2026-09-06 Takeshi 決裁で常時表示に切り替えた
+              （稟議を書く総務が法定表示の住所を根拠にするため）。値は lib/brand.ts の
+              BUSINESS_ADDRESS 1箇所から引く。請求開示のままにするのは電話番号だけ。 */}
+          <Row label="所在地">{BUSINESS_ADDRESS}</Row>
+
+          <Row label="電話番号">
             個人事業主として運営しているため、特定商取引法の定めに基づき、常時表示ではなく
             消費者からのご請求により遅滞なく開示する方式を採用しています（法令上認められた表示方法です）。
             開示をご希望の方は、下記のお問い合わせ窓口（

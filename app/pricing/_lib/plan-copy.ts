@@ -32,7 +32,8 @@ export const PLAN_COPY = [
   {
     name: PLANS.starter.displayName,
     price: PLANS.starter.monthlyJpy.toLocaleString(),
-    unit: `/月（1社あたり・${PLANS.starter.seatCap}名まで）`,
+    // 2026-09-17: 何本の規程を残せるかを価格の隣に（取り込みの上限は documentCap で強制済み）。
+    unit: `/月（1社あたり・${PLANS.starter.seatCap}名・規程${PLANS.starter.documentCap}本まで）`,
     yearly: PLANS.starter.yearlyJpy,
     tagline: 'まず使ってみる',
     badge: 'おすすめ',
@@ -56,7 +57,7 @@ export const PLAN_COPY = [
   {
     name: PLANS.standard.displayName,
     price: PLANS.standard.monthlyJpy.toLocaleString(),
-    unit: `/月（1社あたり・${PLANS.standard.seatCap}名まで）`,
+    unit: `/月（1社あたり・${PLANS.standard.seatCap}名・規程${PLANS.standard.documentCap}本まで）`,
     yearly: PLANS.standard.yearlyJpy,
     tagline: 'チームでしっかり使う',
     badge: null,
