@@ -190,6 +190,9 @@ export default async function RoumuUseCasePage({
         <h1 className="text-2xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-3xl">
           {u.h1}
         </h1>
+        {/* 2026-09-19 PR6: kasuhara-gimuka-2026 だけ、既存の主CTAカードを H1 直後へ（位置だけ）。
+            リード文の前に置き、第一画面が「読む」で終わらないようにする。ボタンは増やさない。 */}
+        {u.slug === 'kasuhara-gimuka-2026' && <PageDocBox slug={u.slug} />}
         <p className="mt-4 text-base leading-relaxed text-neutral-700">{u.lead}</p>
         {u.updatedAt && (
           <p className="mt-3 text-xs text-neutral-500">更新日：{u.updatedAt}</p>
@@ -199,7 +202,7 @@ export default async function RoumuUseCasePage({
         {/* 2026-09-15 段2: このドメインの訪問の8割が来る上位2記事に、就業規則AI(サイト)の規定例で
             名前が取れている交換（3つ選ぶ→条文と順番→Word をメール）を先頭の主CTAとして置く。
             既存のセルフチェック・確認シートは消さない。 */}
-        {(u.slug === 'kasuhara-gimuka-2026' || u.slug === 'kashara-kiyaku-kisoku-kiji-rei') && <PageDocBox slug={u.slug} />}
+        {u.slug === 'kashara-kiyaku-kisoku-kiji-rei' && <PageDocBox slug={u.slug} />}
         {u.slug === 'kasuhara-gimuka-2026' && <KasuharaSelfCheck />}
         <div className="mt-7 flex flex-wrap items-center gap-3">
           {/* 2026-08-10 計測是正: 従来は素の<Link>でsignup_cta_clickedが未計測だった
