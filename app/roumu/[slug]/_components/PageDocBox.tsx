@@ -21,6 +21,8 @@ import PageDocEngine from '@/lib/page-doc-engine.js'
 //   2026-09-16 PR4: kasuhara-gimuka-2026 の主ボタンだけは、記事内生成を止め、
 //   計測済みの sharoushi-agent.com へ同じラベルで送る（/r/{id}・sheet_completed を拾う）。
 //   2026-09-17 PR5: UTM はハッシュの前（?utm_…#app）。押しても送られない Q1〜Q3 は外す。
+//   2026-09-20: 引き換え物の言い方をサイト側（site/js/page-doc.js）へ揃えた。渡すのは .docx 1つなので
+//   枚数を主張しない。入力欄のラベル・空欄と形式違いの分離も同じ形。関門は tests/unit/page-doc-box-copy.test.ts。
 // ============================================================================
 
 const SOURCE = 'app_roumu'
@@ -69,7 +71,11 @@ function InlinePageDocBox({ slug }: { slug: string }) {
     const text = PageDocEngine.build('kitei', v)
     if (!text) { setMsg('選択を読み取れませんでした。もう一度選んでください。'); return }
     setOut(text)
-    setMsg('この画面に全文が出ています。印刷もできます。')
+    // 2026-09-20: サイト側（site/js/page-doc.js の say(...)）と同じ一言。条文を出した直後に、
+    //   この場で渡せる物を名指しする。書類が無い組み合わせは従来の文のまま（kitei では起きない）。
+    setMsg(PageDocEngine.forms('kitei', v).length
+      ? 'この画面に全文が出ています。印刷もできます。届出に使う書類（Word ファイル1つ・御社の答えを差し込み済み）は、すぐ下でダウンロードできます。'
+      : 'この画面に全文が出ています。印刷もできます。残すならメールを書いてください。')
     track('page_doc_revealed', { doc: 'kitei', source: SOURCE, slug, ...v })
   }
 
@@ -99,7 +105,20 @@ function InlinePageDocBox({ slug }: { slug: string }) {
   async function send() {
     const normalized = email.replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xfee0)).replace(/\s/g, '')
     if (normalized !== email) setEmail(normalized)
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) { setMsg('メールアドレスを半角で入れ直してください。全角の＠は通りません。'); return }
+    // 2026-09-20: サイト側と同じく空欄（empty_email）と形式違い（invalid_email）を分ける。
+    //   一緒に数えると「出し渋っている」と「弾かれている」を取り違える（2026-08-31）。
+    if (!normalized) {
+      setState('error')
+      setMsg('メールアドレスを入れてから押してください。')
+      track('page_doc_failed', { doc: 'kitei', source: SOURCE, slug, reason: 'empty_email' })
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+      setState('error')
+      setMsg('メールアドレスを半角で入れ直してください。全角の＠は通りません。')
+      track('page_doc_failed', { doc: 'kitei', source: SOURCE, slug, reason: 'invalid_email' })
+      return
+    }
     setState('sending')
     const files = PageDocEngine.forms('kitei', v).map(f => f.id).join(',')
     track('page_doc_submit', { doc: 'kitei', source: SOURCE, slug, offer: OFFER })
@@ -150,13 +169,17 @@ function InlinePageDocBox({ slug }: { slug: string }) {
           <pre className="mt-4 overflow-x-auto whitespace-pre-wrap rounded border border-[#E2DCCE] bg-white p-4 font-mono text-[13px] leading-7 text-neutral-900">{out}</pre>
           {state !== 'done' && (
             <div className="mt-4">
+              {/* 2026-09-20: 「Word・N枚」をやめた。/api/roumu/page-doc/forms は 3 書類を改ページで区切った
+                  .docx を1つ返す（メールの添付も同じ1ファイル）ので、枚数で言うと受け取った人が
+                  ファイルを N 個探す。文はサイト側 #pd-promise と同じ。 */}
               <p className="mb-3 rounded bg-[#EDF3F6] px-3 py-2 text-sm leading-relaxed text-neutral-900">
-                メールアドレスを入れると、届出に使う書類をこの場でダウンロードできます（Word・{PageDocEngine.forms('kitei', v).length}枚・御社の答えを差し込み済み）:{' '}
-                {PageDocEngine.forms('kitei', v).map(f => f.title).join('・')}
+                メールアドレスを入れると、届出に使う書類をこの場でダウンロードできます。Word ファイル1つに、御社の答えを差し込んだ
+                {PageDocEngine.forms('kitei', v).map(f => f.title).join('・')}が入っています。
               </p>
-              <label htmlFor={`pd-email-${slug}`} className="block text-sm font-bold text-neutral-900">届出に使う書類を Word でダウンロードする</label>
+              {/* ラベルはボタンの動作の言い直しではなく、入力欄が何かを言う（サイト側 .pd-label と同文） */}
+              <label htmlFor={`pd-email-${slug}`} className="block text-sm font-bold text-neutral-900">メールアドレス（必須・同じ書類をこの宛先にも送ります）</label>
               <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                <input id={`pd-email-${slug}`} type="email" inputMode="email" autoComplete="email" placeholder="メールアドレス"
+                <input id={`pd-email-${slug}`} type="email" inputMode="email" autoComplete="email" placeholder="メールアドレス" aria-required="true"
                   value={email} onChange={e => setEmail(e.target.value)}
                   className="min-h-[46px] flex-1 rounded border border-[#9A9078] bg-white px-3 text-base" />
                 <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={website} onChange={e => setWebsite(e.target.value)} className="hidden" />
