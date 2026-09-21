@@ -23,6 +23,8 @@ import PageDocEngine from '@/lib/page-doc-engine.js'
 //   2026-09-17 PR5: UTM はハッシュの前（?utm_…#app）。押しても送られない Q1〜Q3 は外す。
 //   2026-09-20: 引き換え物の言い方をサイト側（site/js/page-doc.js）へ揃えた。渡すのは .docx 1つなので
 //   枚数を主張しない。入力欄のラベル・空欄と形式違いの分離も同じ形。関門は tests/unit/page-doc-box-copy.test.ts。
+//   2026-09-21 PR7b: クロスドメインクリックは打ち切り。既存 /embed を iframe で出し、
+//   同じ URL のテキストリンクをフォールバックに残す。PageDocEngine は記事に複製しない。
 // ============================================================================
 
 const SOURCE = 'app_roumu'
@@ -32,11 +34,11 @@ type Val = { size: string; union: string; rules: string }
 const Q: Array<[keyof Val, string]> = [['size', 'Q1 従業員数'], ['union', 'Q2 過半数労働組合'], ['rules', 'Q3 就業規則']]
 
 const GENERATOR_CTA_SLUG = 'kasuhara-gimuka-2026'
-const GENERATOR_HREF =
-  'https://sharoushi-agent.com/?utm_source=roumu_kasuhara2026&utm_medium=article&utm_campaign=cta_generator#app'
+const EMBED_HREF =
+  'https://sharoushi-agent.com/embed?utm_source=roumu_kasuhara2026&utm_medium=article&utm_campaign=embed_generator'
 const CTA_LABEL = '足す条文と、届出までの順番を出す'
 
-/** 主CTAを計測済みジェネレータへ送る枠（記事内では PageDocEngine を回さない） */
+/** 既存 /embed を iframe で出す（記事内では PageDocEngine を回さない） */
 function GeneratorCtaBox({ slug }: { slug: string }) {
   return (
     <Card className="mt-7 border-[#165E83] p-5 sm:p-6">
@@ -45,13 +47,26 @@ function GeneratorCtaBox({ slug }: { slug: string }) {
         人数と、組合の有無と、就業規則があるかを選ぶと、御社の場合に足す条文と、10月1日までの順番が出ます。
         アカウントは不要です。
       </p>
-      <a
-        href={GENERATOR_HREF}
-        className={buttonClass({ variant: 'primary', size: 'lg' }) + ' mt-5 inline-flex w-full justify-center sm:w-auto'}
-        onClick={() => track('page_doc_outbound', { doc: 'kitei', source: SOURCE, slug, dest: 'sharoushi_generator' })}
-      >
-        {CTA_LABEL}
-      </a>
+      <iframe
+        title={CTA_LABEL}
+        src={EMBED_HREF}
+        className="mt-5 h-[min(80vh,840px)] w-full rounded border border-[#E2DCCE] bg-white"
+        loading="lazy"
+        referrerPolicy="strict-origin-when-cross-origin"
+        onLoad={() => track('page_doc_embed_loaded', { doc: 'kitei', source: SOURCE, slug })}
+      />
+      <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+        <a
+          href={EMBED_HREF}
+          className="font-semibold text-[#165E83] underline underline-offset-2"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => track('page_doc_outbound', { doc: 'kitei', source: SOURCE, slug, dest: 'sharoushi_embed' })}
+        >
+          {CTA_LABEL}
+        </a>
+        （別の画面で開く）
+      </p>
     </Card>
   )
 }

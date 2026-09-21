@@ -81,9 +81,9 @@ const nextConfig: NextConfig = {
     //   維持しつつ、次の「壊れない範囲の最大強化」を enforce する:
     //     - script-src-attr 'none': インラインイベントハンドラ(onclick=等)を全面禁止。
     //       属性注入型XSSの実行経路を塞ぐ（React は addEventListener 経由なので無影響）。
-    //     - object-src 'none' / base-uri 'self' / form-action 'self' / frame-src 'none':
-    //       プラグイン実行・<base>すり替え・フォーム送信先すり替え・iframe埋込を禁止
-    //       （リポジトリ全走査で iframe / 外部フォーム送信は不使用と確認済み）。
+    //     - object-src 'none' / base-uri 'self' / form-action 'self' / frame-src（下）:
+    //       プラグイン実行・<base>すり替え・フォーム送信先すり替えを禁止。
+    //       iframe は原則禁止だが、2026-09-21 PR7b で記事が sharoushi /embed だけを読む。
     //     - upgrade-insecure-requests: 混在コンテンツを https へ昇格。
     //   'unsafe-inline' の完全撤去は、Next が静的ページの inline script hash 出力を
     //   標準サポートするか、動的化の意思決定をした時点で再評価する。
@@ -121,7 +121,8 @@ const nextConfig: NextConfig = {
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "frame-src 'none'",
+      // 2026-09-21 PR7b: kasuhara-gimuka が sharoushi /embed を iframe で読む（二号機は作らない）
+      "frame-src https://sharoushi-agent.com",
       "frame-ancestors 'none'",
       "upgrade-insecure-requests",
     ].join("; ");
@@ -141,7 +142,7 @@ const nextConfig: NextConfig = {
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "frame-src 'none'",
+      "frame-src https://sharoushi-agent.com",
       "frame-ancestors 'none'",
       "report-uri /api/csp-report",
       "report-to csp-endpoint",
