@@ -998,8 +998,8 @@ export default async function BusinessLandingPage({
                     抜け落ちて見え、プライバシーポリシーの記載範囲より狭く見えていた
                     （ペルソナ4指摘）。整合させる。 */}
                 入力した相談内容や自社データを、AIモデルの学習には使用しません
-                （Anthropic・OpenAIの各APIは既定で入力を学習に用いません。法令照会には
-                Difyも一部利用します）。連携先の詳細は
+                （Anthropic・OpenAIの各APIは既定で入力を学習に用いません。法令照会と一部の書類の下書きには
+                Difyも利用します）。連携先の詳細は
                 <Link href="/privacy" className="underline hover:text-brand-700">プライバシーポリシー</Link>
                 をご覧ください。
               </p>

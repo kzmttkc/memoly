@@ -16,7 +16,7 @@ export default function TermsPage() {
             入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">利用規約</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月30日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年9月23日</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
@@ -93,8 +93,8 @@ export default function TermsPage() {
             <h3 className="mb-1 mt-4 font-semibold text-neutral-900">5.3 再委託先（外部サービス）と目的</h3>
             <p>運営者は、本サービスの提供に必要な範囲で、以下の外部事業者に取扱いを再委託します。各社の所在地・詳細は<Link href="/privacy" className="text-brand-600 underline">プライバシーポリシー</Link>に記載しています。</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-neutral-600">
-              <li><span className="text-neutral-800">Anthropic・OpenAI（米国）</span>：AIによる回答生成および記憶の意味検索。両社の商用API規約上、送信内容は既定でAIモデルの学習に利用されません。</li>
-              <li><span className="text-neutral-800">Dify（米国）</span>：法令ナレッジベースへの照会（法令に関する質問テキストを送信する場合があります）。</li>
+              <li><span className="text-neutral-800">Anthropic・OpenAI（米国）</span>：AIによる回答生成および記憶の意味検索（OpenAI には記憶の要約テキストと、関連する記憶を探すための相談文を送信します）。両社の商用API規約上、送信内容は既定でAIモデルの学習に利用されません。</li>
+              <li><span className="text-neutral-800">Dify（米国）</span>：法令ナレッジベースへの照会と書類の下書き作成（法令に関わる言葉を含む相談文の全体、書類の下書きを作るときは会社名と登録された自社ルール・制度、規程の点検では貼り付けた本文の先頭1,000字を送信する場合があります）。</li>
               <li><span className="text-neutral-800">Supabase（米国）</span>：データベースおよび認証基盤。</li>
               <li><span className="text-neutral-800">Vercel（米国）</span>：本サービスのホスティング。</li>
               <li><span className="text-neutral-800">Resend（米国）</span>：お知らせ・ダイジェストメールの送信（本文に会社の状況の要約を含む場合があります）。</li>

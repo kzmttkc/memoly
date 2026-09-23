@@ -46,8 +46,8 @@
 | 事業者 | 呼び出し箇所 | 送るもの |
 |---|---|---|
 | Anthropic | `next.config.ts` CSP `api.anthropic.com`、チャット／文書API | 相談内容・会社プロファイル・記憶 |
-| OpenAI | 記憶のベクトル化 | 記憶の要約テキスト |
-| Dify | `lib/dify.ts`（`https://api.dify.ai/v1/chat-messages`）← `app/api/company/chat`・`document/generate`・`document/review` | 法令に関する質問テキスト |
+| OpenAI | 記憶のベクトル化（`app/api/company/memory`・`lib/company.ts` の想起） | 記憶の要約テキスト・相談文（最新のユーザー発話） |
+| Dify | `lib/dify.ts`（`https://api.dify.ai/v1/chat-messages`）← `app/api/company/chat`・`document/generate`・`document/review` | chat: 法令キーワードに当たった相談文の全体（最大4,000字）／document/generate: 会社名と自社ルール全件（4書類）／document/review: 貼付本文の先頭1,000字／全経路で user=会社ID（2026-09-23 実装に合わせて訂正） |
 | Supabase | DB・認証 | 全保存データ |
 | Vercel | ホスティング | リクエスト全般 |
 | Resend | メール送信 | 会社の状況の要約を含む本文 |

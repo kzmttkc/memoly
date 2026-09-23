@@ -35,7 +35,7 @@ export default function PrivacyEnglishPage() {
             Back to top
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">Privacy Policy</h1>
-          <p className="mt-1 text-sm text-neutral-500">Last updated: August 12, 2026</p>
+          <p className="mt-1 text-sm text-neutral-500">Last updated: September 23, 2026</p>
           <p className="mt-1 text-xs text-neutral-500">
             English translation for reference. The <Link href="/privacy" className="underline">Japanese version</Link> is the governing text in case of any discrepancy.
           </p>
@@ -97,8 +97,8 @@ export default function PrivacyEnglishPage() {
               <li><strong className="text-neutral-800">Vercel</strong>: hosting (US)</li>
               <li><strong className="text-neutral-800">Plausible Analytics</strong>: anonymous, cookie-free analytics (EU). <a href="https://plausible.io/data-policy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Plausible Data Policy</a></li>
               <li><strong className="text-neutral-800">Resend</strong>: notification email delivery (US)</li>
-              <li><strong className="text-neutral-800">Dify</strong>: lookups against a legal knowledge base (US). Question text related to laws/regulations may be sent.</li>
-              <li><strong className="text-neutral-800">OpenAI</strong>: vectorization for semantic memory search (US). Summary text of memories is sent. Data sent via the API is not used for model training by default. <a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">OpenAI API Data Usage Policy</a></li>
+              <li><strong className="text-neutral-800">Dify</strong>: lookups against a legal knowledge base and drafting of documents (US). When a consultation contains law-related keywords, the full consultation text (up to 4,000 characters per message) is sent as-is; if you describe an employee's leave, illness or similar circumstances, that content is sent too. When drafting a 36 Agreement, work rules, wage rules or a notice of employment terms, your company name and all registered company rules/policies are sent. When reviewing rules, the first 1,000 characters of the pasted text may be sent. In each case a per-company identifier (company ID) is attached to separate conversations.</li>
+              <li><strong className="text-neutral-800">OpenAI</strong>: vectorization for semantic memory search (US). Summary text of memories, and the consultation text used to find related memories, are sent. Data sent via the API is not used for model training by default. <a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">OpenAI API Data Usage Policy</a></li>
               <li><strong className="text-neutral-800">Stripe</strong>: payment processing for paid plans (US). Card data is handled directly by Stripe and is not stored on 就業規則AI&apos;s servers. <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripe Privacy Policy</a></li>
               {/* 2026-08-12 法務修正（越境移転レビュー C）: 日本語版 §3 と /terms 5.3 には
                   Slack があるのに、この英語版の一覧にだけ Slack が欠落していた。

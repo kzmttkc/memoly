@@ -33,7 +33,7 @@ export default function SecurityPage() {
             入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">セキュリティとデータ保護</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月22日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年9月23日</p>
           <p className="mt-4 text-sm leading-relaxed text-neutral-600">
             就業規則AIは、会社の規程や労務相談という機微な情報をお預かりするサービスです。このページでは、実際に実装している保護の仕組みを、誇張なくそのまま説明します。
           </p>
@@ -113,8 +113,8 @@ export default function SecurityPage() {
             <ul className="mt-2 list-inside list-disc space-y-1 text-neutral-600">
               <li><span className="font-medium text-neutral-800">Supabase</span>（米国）：データベース・認証</li>
               <li><span className="font-medium text-neutral-800">Anthropic</span>（米国）：AI回答の生成（Claude API・学習不使用）</li>
-              <li><span className="font-medium text-neutral-800">Dify</span>（米国）：法令ナレッジへの照会（相談テキストの該当部分を送信）</li>
-              <li><span className="font-medium text-neutral-800">OpenAI</span>（米国）：記憶の意味検索用のベクトル化（APIデータは既定で学習不使用）</li>
+              <li><span className="font-medium text-neutral-800">Dify</span>（米国）：法令ナレッジへの照会と書類の下書き作成（法令に関わる言葉を含む相談文の全体・下書き作成時の会社名と自社ルール・規程点検時の本文先頭1,000字）</li>
+              <li><span className="font-medium text-neutral-800">OpenAI</span>（米国）：記憶の意味検索用のベクトル化（記憶の要約と相談文・APIデータは既定で学習不使用）</li>
               <li><span className="font-medium text-neutral-800">Vercel</span>（米国）：ホスティング</li>
               <li><span className="font-medium text-neutral-800">Resend</span>（米国）：メール送信</li>
               <li><span className="font-medium text-neutral-800">Stripe</span>（米国）：決済（有料プラン利用時。カード番号は就業規則AIのサーバーを通りません）</li>

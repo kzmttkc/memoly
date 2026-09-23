@@ -16,7 +16,7 @@ export default function PrivacyPage() {
             入口に戻る
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-neutral-900">プライバシーポリシー</h1>
-          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年8月30日</p>
+          <p className="mt-1 text-sm text-neutral-500">最終更新：2026年9月23日</p>
         </div>
 
         <div className="space-y-8 text-sm leading-relaxed text-neutral-700">
@@ -94,8 +94,8 @@ export default function PrivacyPage() {
               <li><strong className="text-neutral-800">Vercel</strong>：ホスティング（米国）</li>
               <li><strong className="text-neutral-800">Plausible Analytics</strong>：匿名アクセス解析（EU）。Cookieを使用せず、個人を特定しない形でページビュー等の統計のみを収集します。<a href="https://plausible.io/data-policy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Plausibleのデータポリシー</a></li>
               <li><strong className="text-neutral-800">Resend</strong>：お知らせメールの送信（米国）</li>
-              <li><strong className="text-neutral-800">Dify</strong>：法令ナレッジベースへの照会（米国）。相談内容のうち法令に関する質問テキストを送信する場合があります。</li>
-              <li><strong className="text-neutral-800">OpenAI</strong>：記憶の意味検索用のベクトル化（米国）。記憶の要約テキストを送信します。APIで送信されたデータは既定でAIモデルの学習に使用されません。<a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">OpenAIのAPIデータ利用ポリシー</a></li>
+              <li><strong className="text-neutral-800">Dify</strong>：法令ナレッジベースへの照会と、書類の下書き作成（米国）。法令に関わる言葉を含む相談は、その相談文（1回あたり最大4,000字）をそのまま送信します。相談文に従業員の休職・傷病などの事情を書いた場合は、その内容も送信されます。36協定・就業規則・賃金規程・労働条件通知書の下書きを作るときは、会社名と登録された自社ルール・制度の全件を送信します。規程の点検では、貼り付けた本文の先頭1,000字を送信する場合があります。いずれも、会話を分けるために会社ごとの識別子（会社ID）を添えます。</li>
+              <li><strong className="text-neutral-800">OpenAI</strong>：記憶の意味検索用のベクトル化（米国）。記憶の要約テキストと、関連する記憶を探すための相談文を送信します。APIで送信されたデータは既定でAIモデルの学習に使用されません。<a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">OpenAIのAPIデータ利用ポリシー</a></li>
               <li><strong className="text-neutral-800">Stripe</strong>：有料プランの決済処理（米国）。カード情報はStripeが直接取り扱い、就業規則AIのサーバーには保存されません。<a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Stripeのプライバシーポリシー</a></li>
               {/* 2026-07-30 法務追加（法務監査#6）: weekly-email / deadline-reminder が
                   lib/slack.ts 経由で hooks.slack.com へ本文を送っているのに、本一覧にも
