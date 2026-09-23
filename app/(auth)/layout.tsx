@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 
 // ============================================================================
@@ -21,6 +22,16 @@ import Link from 'next/link'
 //   ルートセグメント単位で確実に動的レンダリングへ切り替える。
 // ============================================================================
 export const dynamic = 'force-dynamic'
+
+// 2026-09-23: 認証画面（/signup /login /forgot-password /reset-password）は検索の入口にしない。
+//   検索から来る人の着地は /zure（sitemap の獲得の顔）で、そこから /signup へ進む。
+//   以前は root layout の canonical "/"（/zure へリダイレクトする URL）をそのまま継承しており、
+//   GSC は /signup を「URL is unknown to Google」と出し続けていた。意図を明示する:
+//   索引しない・リンクは辿る・canonical は出さない（noindex と別URLの canonical を混ぜない）。
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+  alternates: { canonical: null },
+}
 
 export default function AuthLayout({
   children,
