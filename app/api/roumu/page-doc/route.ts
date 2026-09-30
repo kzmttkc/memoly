@@ -56,7 +56,11 @@ export async function POST(req: NextRequest) {
   const src = (body.values && typeof body.values === 'object' ? body.values : {}) as Record<string, unknown>
   const values: Record<string, string> = {}
   for (const k of Object.keys(PageDocEngine.LABELS.kitei)) values[k] = typeof src[k] === 'string' ? String(src[k]).slice(0, 12) : ''
-  const text = PageDocEngine.build('kitei', values)
+  // 2026-09-30: today を省略するとサーバ時刻の日付になる。Vercel は UTC なので、JST 10-01 00:00〜09:00 に
+  //   届くメールだけ見出しが「10月1日までの順番」、本文が「あと1日」になる（画面は利用者の端末時刻で正しい）。
+  //   日付の境目は JST に寄せて渡す（lib/email-seasonal.ts の jstToday と同じ寄せ方）。
+  const todayJst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const text = PageDocEngine.build('kitei', values, todayJst)
   if (!text) return NextResponse.json({ error: '上の3つを選んでから押してください。' }, { status: 400 })
 
   const RESEND_API_KEY = process.env.RESEND_API_KEY
@@ -94,7 +98,7 @@ export async function POST(req: NextRequest) {
         to: [email],
         subject: PageDocEngine.SUBJECT.kitei,
         text: mailText,
-        attachments: [{ filename: '足す条文と10月1日までの順番.docx', content: buildDocx(text).toString('base64') }].concat(
+        attachments: [{ filename: todayJst >= PageDocEngine.ENFORCE_DATE ? '足す条文といま着手する順番.docx' : '足す条文と10月1日までの順番.docx', content: buildDocx(text).toString('base64') }].concat(
           formsText ? [{ filename: '届出の書類（' + formsList.map(f => f.title).join('・') + '）.docx', content: buildDocx(formsText).toString('base64') }] : [],
         ),
       }),

@@ -2,12 +2,13 @@
 export type KiteiValues = { size: string; union: string; rules: string }
 export interface Deadline { date: string; label: string }
 declare const PageDocEngine: {
-  build(kind: 'kitei' | 'hoshin', v: Record<string, string>): string | null
+  build(kind: 'kitei' | 'hoshin', v: Record<string, string>, today?: Date | string): string | null
   valid(kind: 'kitei' | 'hoshin', v: Record<string, string>): boolean
-  deadlines(kind: 'kitei' | 'hoshin', v: Record<string, string>): Deadline[]
+  deadlines(kind: 'kitei' | 'hoshin', v: Record<string, string>, today?: Date | string): Deadline[]
   forms(kind: 'kitei' | 'hoshin', v: Record<string, string>): Array<{ id: string; title: string }>
   buildForms(v: Record<string, string>): string | null
   LABELS: Record<string, Record<string, Record<string, string>>>
   SUBJECT: Record<string, string>
+  ENFORCE_DATE: string
 }
 export default PageDocEngine

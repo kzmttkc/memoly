@@ -44,7 +44,7 @@ function GeneratorCtaBox({ slug }: { slug: string }) {
     <Card className="mt-7 border-[#165E83] p-5 sm:p-6">
       <p className="text-lg font-bold leading-snug text-neutral-900">自社の就業規則に、10月1日のカスハラ条項があるか。</p>
       <p className="mt-2 text-sm leading-relaxed text-neutral-700">
-        人数と、組合の有無と、就業規則があるかを選ぶと、御社の場合に足す条文と、10月1日までの順番が出ます。
+        人数と、組合の有無と、就業規則があるかを選ぶと、御社の場合に足す条文と、着手する順番が出ます。
         アカウントは不要です。
       </p>
       <iframe
@@ -159,7 +159,7 @@ function InlinePageDocBox({ slug }: { slug: string }) {
     <Card className="mt-7 border-[#165E83] p-5 sm:p-6">
       <p className="text-lg font-bold leading-snug text-neutral-900">自社の就業規則に、10月1日のカスハラ条項があるか。</p>
       <p className="mt-2 text-sm leading-relaxed text-neutral-700">
-        人数と、組合の有無と、就業規則があるかを選ぶと、御社の場合に足す条文と、10月1日までの順番が出ます。
+        人数と、組合の有無と、就業規則があるかを選ぶと、御社の場合に足す条文と、着手する順番が出ます。
         アカウントは不要です。
       </p>
       {Q.map(([key, legend]) => (
