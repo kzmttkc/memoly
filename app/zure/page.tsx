@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { PublicFooter } from '@/components/ui/PublicFooter'
 import { VARIANT_HEADER, type LpVariant, isLpVariant } from '@/app/business/_lib/variant-shared'
 import { SUPPORT_EMAIL } from '@/lib/brand'
-import { OFFER, daysUntilKill } from '@/lib/offer'
+import { OFFER, ZURE_OBLIGATION, daysUntilKill } from '@/lib/offer'
 import { LinearNav } from '@/linear-house/components/Nav'
 import { ZureDrop } from './_components/ZureDrop'
 
@@ -38,7 +38,7 @@ export default async function ZurePage() {
     <div className="company-light zure-surface min-h-[100dvh]">
       {/* 期限はヒーロー見本メタへ。帯は出さない（data-deadline-bar は lock で非表示） */}
       <p className="sr-only" data-deadline-bar>
-        2026年10月1日のカスハラ対策義務化まで {days}日
+        {days > 0 ? `2026年10月1日のカスハラ対策義務化まで ${days}日` : ZURE_OBLIGATION}
       </p>
       <LinearNav />
       <main>

@@ -47,12 +47,23 @@ export const TOOL_NEXT = {
 export const KABAU_LINE =
   'パックの次は、店の就業規則のファイルです。置くと、ずれが1枚になります。'
 
-/** killDate までの残日（JST暦日）。帯表示用。 */
+/** killDate までの残日（JST暦日）。帯表示用。
+ *  2026-10-01 夜: サーバ（Vercel）は UTC なので、getFullYear/getDate では JST 0〜9時に1日多く数えていた。
+ *  JST の暦日に直してから数える（lib/email-seasonal.ts の jstToday と同じやり方）。 */
 export function daysUntilKill(now = new Date()): number {
   const [y, m, d] = OFFER.killDate.split('-').map(Number)
   const kill = Date.UTC(y, m - 1, d)
-  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+  const today = Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate())
   return Math.max(0, Math.round((kill - today) / 86_400_000))
+}
+
+/** 施行日までの残日を出す欄の札と値。施行日（10-01）以降は「施行まで 0日」と出さず、施行済みと言う。
+ *  2026-10-01 夜: /zure の第一画面と結果の1枚が、施行日当日から「施行まで 0日」と出していた。 */
+export function enforcementMetric(days: number): { label: string; value: string } {
+  return days > 0
+    ? { label: '施行まで', value: `${days}日` }
+    : { label: '施行済み', value: `${Number(OFFER.killDate.slice(5, 7))}月${Number(OFFER.killDate.slice(8, 10))}日` }
 }
 
 const FORBIDDEN = [

@@ -123,8 +123,14 @@ export function HeroArtifact({
 
         <div className="mt-6 border-t border-[var(--lh-line)] pt-6">
           <p className="text-xs text-[var(--lh-muted)]">
-            ずれ1枚の見本 · 施行まで <strong className="font-semibold tabular-nums text-[var(--lh-ink)]">{days}</strong>
-            日 · 表示の例です
+            {days > 0 ? (
+              <>
+                ずれ1枚の見本 · 施行まで <strong className="font-semibold tabular-nums text-[var(--lh-ink)]">{days}</strong>
+                日 · 表示の例です
+              </>
+            ) : (
+              <>ずれ1枚の見本 · 2026年10月1日施行済み · 表示の例です</>
+            )}
           </p>
           <ol className="mt-3 divide-y divide-[var(--lh-line)] border border-[var(--lh-line)]">
             <li className="px-3 py-2.5 text-sm text-[var(--lh-ink)]">

@@ -11,7 +11,7 @@ import {
   sortFollowups,
 } from '@/lib/gap-engine/ui/renderSheet'
 import { DISCLAIMER } from '@/lib/gap-engine/taxonomy/items'
-import { daysUntilKill } from '@/lib/offer'
+import { daysUntilKill, enforcementMetric } from '@/lib/offer'
 
 const STATUS_CLASS: Record<string, string> = {
   written: 'bg-[var(--lh-fill)] text-[var(--lh-muted)]',
@@ -40,6 +40,7 @@ export function GapSheetView({
   // 既定で「手当てが要るもの」だけ出す。手当てが要るものが無いときは畳んでも空になるので全件。
   const [openOnly, setOpenOnly] = useState(() => sheet.blocks.some(isOpenBlock))
   const d = days ?? daysUntilKill()
+  const metric = enforcementMetric(d)
   const doc = sheet.document
   const pageCount = doc?.page_count ?? 0
   const pagesRead = doc?.pages_read ?? 0
@@ -93,8 +94,8 @@ export function GapSheetView({
 
       <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-[var(--lh-radius)] border border-[var(--lh-line)] px-3 py-2">
-          <dt className="text-xs text-[var(--lh-muted)]">施行まで</dt>
-          <dd className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--lh-ink)]">{d}日</dd>
+          <dt className="text-xs text-[var(--lh-muted)]">{metric.label}</dt>
+          <dd className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--lh-ink)]">{metric.value}</dd>
         </div>
         {/* 2026-09-05: 貼り付け入力ではページ数が構造上0になる。それを「読めたページ 0／未読 0」と
             出していたので、初見は「0ページしか読めなかった」と読む。ページが無い入力では
