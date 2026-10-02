@@ -31,13 +31,14 @@ import type { UseCase } from '../../lib/usecase.ts'
 /** 施行日の正典。ここを直せば検査もエラーメッセージも一斉に変わる。 */
 const ENFORCEMENT_DATE = '2026年10月1日'
 
-const KASUHARA = /カスハラ|カスタマーハラスメント/
+// 東京都条例の正式名は「カスタマー・ハラスメント」（中黒あり）。中黒の有無で検査から漏らさない
+const KASUHARA = /カスハラ|カスタマー・?ハラスメント/
 
 /**
  * カスハラの措置義務について、2026年10月1日以降は端的に誤りになる断定。
  * 「まだ義務ではない」と読者に思わせる表現を機械で止める。
  */
-const FORBIDDEN: { re: RegExp; why: string }[] = [
+const FORBIDDEN: { re: RegExp; why: string; anySentence?: boolean }[] = [
   { re: /努力義務/, why: '国のカスハラ対策は2026年10月1日から措置義務。努力義務ではない' },
   { re: /義務ではありません|義務ではない|義務ではあ(り|)ま[せ]ん/, why: '措置義務である' },
   { re: /義務化されていません|義務化されていない/, why: '2026年10月1日から義務化される' },
@@ -51,7 +52,9 @@ const FORBIDDEN: { re: RegExp; why: string }[] = [
   },
   { re: /指針・推奨レベル/, why: '指針ではなく法律上の措置義務' },
   { re: /罰則付きで義務化する法律はまだ施行されていません/, why: '2026年10月1日施行が確定している' },
-  { re: /義務化が議論される段階|義務化に向けた議論|法整備に向けた議論|法制化が検討|法制化の議論/, why: '議論ではなく成立・公布済みで施行日も確定' },
+  // anySentence: カスハラ語を含まない文（「法制化の議論が進んでいます。」だけの文）も見る。
+  // 2026-10-02 検証役の指摘: カスハラ語の無い文は素通りしていて、この型は効いていなかった
+  { re: /義務化が議論される段階|義務化に向けた議論|法整備に向けた議論|法制化が検討|法制化の議論/, why: '議論ではなく成立・公布済みで施行日も確定', anySentence: true },
   { re: /今後は罰則を伴う義務規定へ移行する可能性|今後国の指針改正によって|義務化の範囲が広がる可能性/, why: '可能性ではなく確定した施行日がある' },
   { re: /2026年6月/, why: 'カスハラ義務化の施行日は2026年10月1日。2026年6月は誤り' },
   { re: /2025年6月11日から|2025年6月11日に施行|2025年6月11日施行/, why: '2025年6月11日は公布日であって施行日ではない' },
@@ -69,6 +72,16 @@ const FORBIDDEN: { re: RegExp; why: string }[] = [
  * 事実確認等への協力を求められた場合に、これに応じるよう努める義務。
  */
 const LEGITIMATE_EFFORT_DUTY = /取引先/
+
+/**
+ * もう一つの正しい「努力義務」: 東京都カスタマー・ハラスメント防止条例（2025年4月1日施行）。
+ * 事業者の責務（9条）も措置（14条）も「講ずるよう努めなければならない」＝努力義務で、罰則は無い。
+ *   https://www.reiki.metro.tokyo.lg.jp/reiki/reiki_honbun/g101RG00005328.html（2026-10-02 確認）
+ * 国の法律（労働施策総合推進法）の話を同じ文でしていれば、ここは通さない。
+ */
+function isTokyoOrdinanceOnly(s: string): boolean {
+  return /東京都|都条例/.test(s) && /条例/.test(s) && !/労働施策総合推進法|措置義務|2026年10月|(?<!全)国|改正法|法律/.test(s)
+}
 
 /** 各記事の全文（検査対象の文字列を1本にまとめる） */
 function textsOf(u: UseCase): { path: string; text: string }[] {
@@ -118,11 +131,12 @@ test('カスハラの措置義務を「努力義務」「義務ではない」�
       for (const s of sentences(text)) {
         // 判定は「カスハラの話をしている文」に限る。
         // 育児介護休業法や女性活躍推進法の努力義務まで巻き込まない。
-        if (!KASUHARA.test(s) && !/顧客等/.test(s)) continue
-        for (const { re, why } of FORBIDDEN) {
+        const aboutKasuhara = KASUHARA.test(s) || /顧客等/.test(s)
+        for (const { re, why, anySentence } of FORBIDDEN) {
+          if (!aboutKasuhara && !anySentence) continue
           if (!re.test(s)) continue
-          // 33条3項（取引先事業主への協力）は本当に努力義務なので通す
-          if (re.source.includes('努力義務') && LEGITIMATE_EFFORT_DUTY.test(s)) continue
+          // 33条3項（取引先事業主への協力）と東京都条例は本当に努力義務なので通す
+          if (re.source.includes('努力義務') && (LEGITIMATE_EFFORT_DUTY.test(s) || isTokyoOrdinanceOnly(s))) continue
           violations.push(`${u.slug} ${path}\n      理由: ${why}\n      該当: ${s.trim()}`)
         }
       }
@@ -180,9 +194,8 @@ test('施行日（2026年10月1日）以降、カスハラ記事に施行前の�
         // カスハラ記事の中の文は全部見る（主語の無い「施行日までに…」も読者には同じ誤り）。
         // 東京都条例（2025年4月1日施行）だけを語る文は対象外
         if (/東京都|条例/.test(s) && !/2026年10月|措置義務/.test(s)) continue
-        for (const re of PRE_ENFORCEMENT) {
-          if (re.test(s)) violations.push(`${u.slug} ${path}\n      該当: ${s.trim()}`)
-        }
+        // 1文は1件に数える（「施行に間に合」と「施行…間に合わ」の両方に当たって二重に数えていた）
+        if (PRE_ENFORCEMENT.some((re) => re.test(s))) violations.push(`${u.slug} ${path}\n      該当: ${s.trim()}`)
       }
     }
   }
@@ -217,6 +230,41 @@ test('東京都カスタマーハラスメント防止条例の施行日を誤�
   }
   assert.deepEqual(violations, [], `東京都条例の施行日の誤り ${violations.length} 件:\n` +
     violations.map((v) => `  - ${v}`).join('\n'))
+})
+
+/**
+ * 2026-10-02: 東京都カスタマー・ハラスメント防止条例を「防止措置が義務化」「措置義務が課されています」と
+ * 書いた文が4つあった。条例の9条・14条はどちらも「講ずるよう努めなければならない」（努力義務・罰則なし）。
+ * 国の措置義務（2026年10月1日施行）と混ぜると、都外の読者は「東京だけの話」、都内の読者は
+ * 「もう1年半前から義務だった」と誤って読む。
+ *   一次情報: https://www.reiki.metro.tokyo.lg.jp/reiki/reiki_honbun/g101RG00005328.html
+ *
+ * 判定は「条例」の語の後ろ、国の話（国では／労働施策総合推進法 等）が始まるまでの範囲だけを見る。
+ * 「東京都は2025年4月1日に条例を施行し、国では…措置義務が2026年10月1日から施行」という正しい並べ方は通す。
+ */
+const ORDINANCE_DUTY = /(?<!努力)義務(化|が課|を課|付け|づけ|となり|となって|です|があ|として|を負|が生じ)|(?<!努力)措置義務|講じる義務|講ずる義務/
+const NATIONAL_TOPIC = /(?<!全)国(では|でも|レベル|の法|は|の措置)|労働施策総合推進法/
+
+test('東京都カスタマー・ハラスメント防止条例を「義務」と書いていない（正: 努力義務）', () => {
+  const violations: string[] = []
+  for (const u of kasuharaArticles()) {
+    for (const { path, text } of textsOf(u)) {
+      for (const s of sentences(text)) {
+        if (!/東京都|都条例/.test(s)) continue
+        for (let i = s.indexOf('条例'); i !== -1; i = s.indexOf('条例', i + 1)) {
+          const after = s.slice(i)
+          const stop = after.search(NATIONAL_TOPIC)
+          const scope = stop === -1 ? after : after.slice(0, stop)
+          if (ORDINANCE_DUTY.test(scope)) {
+            violations.push(`${u.slug} ${path}\n      該当: ${s.trim()}`)
+            break
+          }
+        }
+      }
+    }
+  }
+  assert.deepEqual(violations, [], `東京都条例を義務と書いた文 ${violations.length} 件（条例は努力義務・罰則なし）:\n` +
+    violations.map((v) => `  - ${v}`).join('\n\n'))
 })
 
 test('全記事に「番頷」等の製品名の誤字が無い', () => {
